@@ -1,12 +1,11 @@
-//
-//  ContentView.swift
-//  calorietracker
-//
-//  Created by Apoorv Darshan on 05/02/26.
-//
-
 import SwiftUI
 import UIKit
+
+// MARK: - Camera Mode
+enum CameraMode {
+    case snapFood
+    case nutritionLabel
+}
 
 // MARK: - Main Content View
 struct ContentView: View {
@@ -18,7 +17,7 @@ struct ContentView: View {
                     Text("Home")
                 }
 
-            ProgressView()
+            ProgressTabView()
                 .tabItem {
                     Image(systemName: "chart.bar.fill")
                     Text("Progress")
@@ -41,26 +40,37 @@ struct ContentView: View {
 
 // MARK: - Home View (Main Dashboard)
 struct HomeView: View {
+    @Environment(FoodStore.self) private var foodStore
     @State private var showCamera = false
     @State private var capturedImage: UIImage?
+    @State private var cameraMode: CameraMode = .snapFood
+    @State private var showAnalyzing = false
+    @State private var showFoodResult = false
+    @State private var showServingSize = false
+    @State private var showError = false
+    @State private var errorMessage = ""
+
+    @State private var currentFoodResult: GeminiService.FoodAnalysis?
+    @State private var currentLabelResult: GeminiService.NutritionLabelAnalysis?
+    @State private var currentImage: UIImage?
 
     var body: some View {
         NavigationStack {
             List {
-                // Week Selector
                 Section {
                     WeekSelectorView()
                 }
 
-                // Calorie Summary
                 Section("Calories") {
-                    CalorieRow()
+                    CalorieRow(eaten: foodStore.todayCalories, goal: 2500)
                 }
 
-                // Log Food
                 Section("Log Food") {
                     HStack(spacing: 12) {
-                        Button(action: { showCamera = true }) {
+                        Button(action: {
+                            cameraMode = .snapFood
+                            showCamera = true
+                        }) {
                             VStack(spacing: 8) {
                                 Image(systemName: "camera.fill")
                                     .font(.title2)
@@ -74,7 +84,10 @@ struct HomeView: View {
                         .buttonStyle(.bordered)
                         .tint(.accentColor)
 
-                        Button(action: { showCamera = true }) {
+                        Button(action: {
+                            cameraMode = .nutritionLabel
+                            showCamera = true
+                        }) {
                             VStack(spacing: 8) {
                                 Image(systemName: "text.viewfinder")
                                     .font(.title2)
@@ -91,18 +104,22 @@ struct HomeView: View {
                     .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                 }
 
-                // Macros
                 Section("Macros") {
-                    MacroRow(name: "Protein", current: 75, goal: 150, unit: "g", color: .orange)
-                    MacroRow(name: "Carbs", current: 138, goal: 275, unit: "g", color: .yellow)
-                    MacroRow(name: "Fat", current: 35, goal: 70, unit: "g", color: .blue)
+                    MacroRow(name: "Protein", current: foodStore.todayProtein, goal: 150, unit: "g", color: .orange)
+                    MacroRow(name: "Carbs", current: foodStore.todayCarbs, goal: 275, unit: "g", color: .yellow)
+                    MacroRow(name: "Fat", current: foodStore.todayFat, goal: 70, unit: "g", color: .blue)
                 }
 
-                // Recently Uploaded
                 Section("Recently uploaded") {
-                    FoodRow(name: "Grilled Salmon", calories: 550, time: "12:37pm")
-                    FoodRow(name: "Caesar Salad", calories: 330, time: "6:21pm")
-                    FoodRow(name: "Protein Smoothie", calories: 280, time: "8:15am")
+                    if foodStore.todayEntries.isEmpty {
+                        Text("No foods logged today")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(foodStore.todayEntries) { entry in
+                            FoodRow(entry: entry)
+                        }
+                        .onDelete(perform: deleteEntries)
+                    }
                 }
             }
             .navigationTitle("Cal AI")
@@ -120,6 +137,90 @@ struct HomeView: View {
                 CameraView(image: $capturedImage)
                     .ignoresSafeArea()
             }
+            .onChange(of: capturedImage) { oldValue, newValue in
+                guard let image = newValue else { return }
+                capturedImage = nil
+                currentImage = image
+                startAnalysis(image: image, mode: cameraMode)
+            }
+            .sheet(isPresented: $showAnalyzing) {
+                if let image = currentImage {
+                    AnalyzingView(image: image)
+                        .interactiveDismissDisabled()
+                }
+            }
+            .sheet(isPresented: $showFoodResult) {
+                if let image = currentImage, let result = currentFoodResult {
+                    FoodResultView(
+                        image: image,
+                        source: cameraMode == .snapFood ? .snapFood : .nutritionLabel,
+                        name: result.name,
+                        calories: result.calories,
+                        protein: result.protein,
+                        carbs: result.carbs,
+                        fat: result.fat,
+                        onLog: { entry in
+                            foodStore.addEntry(entry)
+                        }
+                    )
+                }
+            }
+            .sheet(isPresented: $showServingSize) {
+                if let image = currentImage, let labelResult = currentLabelResult {
+                    ServingSizeInputView(
+                        image: image,
+                        labelAnalysis: labelResult,
+                        onContinue: { scaled in
+                            showServingSize = false
+                            currentFoodResult = scaled
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                showFoodResult = true
+                            }
+                        }
+                    )
+                }
+            }
+            .alert("Error", isPresented: $showError) {
+                Button("OK") { }
+            } message: {
+                Text(errorMessage)
+            }
+        }
+    }
+
+    private func startAnalysis(image: UIImage, mode: CameraMode) {
+        showAnalyzing = true
+
+        Task {
+            do {
+                switch mode {
+                case .snapFood:
+                    let result = try await GeminiService.analyzeFood(image: image)
+                    showAnalyzing = false
+                    currentFoodResult = result
+                    try? await Task.sleep(for: .milliseconds(300))
+                    showFoodResult = true
+
+                case .nutritionLabel:
+                    let result = try await GeminiService.analyzeNutritionLabel(image: image)
+                    showAnalyzing = false
+                    currentLabelResult = result
+                    try? await Task.sleep(for: .milliseconds(300))
+                    showServingSize = true
+                }
+            } catch {
+                showAnalyzing = false
+                errorMessage = error.localizedDescription
+                try? await Task.sleep(for: .milliseconds(300))
+                showError = true
+            }
+        }
+    }
+
+    private func deleteEntries(at offsets: IndexSet) {
+        let entries = foodStore.todayEntries
+        for index in offsets {
+            foodStore.deleteEntry(entries[index])
         }
     }
 }
@@ -200,8 +301,8 @@ struct WeekSelectorView: View {
 
 // MARK: - Calorie Row
 struct CalorieRow: View {
-    let eaten: Int = 1250
-    let goal: Int = 2500
+    let eaten: Int
+    let goal: Int
 
     var body: some View {
         HStack {
@@ -255,29 +356,35 @@ struct MacroRow: View {
 
 // MARK: - Food Row
 struct FoodRow: View {
-    let name: String
-    let calories: Int
-    let time: String
+    let entry: FoodEntry
 
     var body: some View {
         HStack {
-            Image(systemName: "photo")
-                .font(.title)
-                .frame(width: 44, height: 44)
-                .background(.quaternary)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+            if let imageData = entry.imageData, let uiImage = UIImage(data: imageData) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 44, height: 44)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            } else {
+                Image(systemName: "photo")
+                    .font(.title)
+                    .frame(width: 44, height: 44)
+                    .background(.quaternary)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
 
             VStack(alignment: .leading) {
-                Text(name)
+                Text(entry.name)
                     .fontWeight(.medium)
-                Label("\(calories) cal", systemImage: "flame.fill")
+                Label("\(entry.calories) cal", systemImage: "flame.fill")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
             Spacer()
 
-            Text(time)
+            Text(entry.timeString)
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
@@ -285,7 +392,7 @@ struct FoodRow: View {
 }
 
 // MARK: - Placeholder Views for Other Tabs
-struct ProgressView: View {
+struct ProgressTabView: View {
     var body: some View {
         NavigationStack {
             List {
@@ -353,4 +460,5 @@ struct ProfileView: View {
 
 #Preview {
     ContentView()
+        .environment(FoodStore())
 }

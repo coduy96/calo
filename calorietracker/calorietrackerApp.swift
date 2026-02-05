@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct calorietrackerApp: App {
+    @State private var foodStore = FoodStore()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(foodStore)
                 .preferredColorScheme(.light)
         }
     }
