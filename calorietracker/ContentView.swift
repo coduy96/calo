@@ -59,37 +59,36 @@ struct HomeView: View {
 
                 // Log Food
                 Section("Log Food") {
-                    Button(action: { showCamera = true }) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "camera.fill")
-                                .font(.title2)
-                                .foregroundStyle(.white)
-                                .frame(width: 50, height: 50)
-                                .background(Color.accentColor)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Snap a photo")
-                                    .font(.headline)
-                                    .foregroundStyle(.primary)
-                                Text("Take a picture and we'll count the calories")
+                    HStack(spacing: 12) {
+                        Button(action: { showCamera = true }) {
+                            VStack(spacing: 8) {
+                                Image(systemName: "camera.fill")
+                                    .font(.title2)
+                                Text("Snap Food")
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .fontWeight(.medium)
                             }
-
-                            Spacer()
-
-                            Image(systemName: "chevron.right")
-                                .foregroundStyle(.tertiary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
                         }
-                    }
+                        .buttonStyle(.bordered)
+                        .tint(.accentColor)
 
-                    HStack(spacing: 16) {
-                        LogOptionButton(icon: "barcode.viewfinder", label: "Barcode")
-                        LogOptionButton(icon: "text.viewfinder", label: "Food Label")
-                        LogOptionButton(icon: "magnifyingglass", label: "Search")
+                        Button(action: {}) {
+                            VStack(spacing: 8) {
+                                Image(systemName: "text.viewfinder")
+                                    .font(.title2)
+                                Text("Nutrition Label")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.accentColor)
                     }
-                    .frame(maxWidth: .infinity)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                 }
 
                 // Macros
@@ -125,26 +124,6 @@ struct HomeView: View {
     }
 }
 
-// MARK: - Log Option Button
-struct LogOptionButton: View {
-    let icon: String
-    let label: String
-
-    var body: some View {
-        Button(action: {}) {
-            VStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.title3)
-                Text(label)
-                    .font(.caption2)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-        }
-        .buttonStyle(.bordered)
-        .tint(.primary)
-    }
-}
 
 // MARK: - Camera View (UIKit wrapper)
 struct CameraView: UIViewControllerRepresentable {
