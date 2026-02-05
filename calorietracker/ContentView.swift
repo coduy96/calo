@@ -74,7 +74,7 @@ struct HomeView: View {
                         .buttonStyle(.bordered)
                         .tint(.accentColor)
 
-                        Button(action: {}) {
+                        Button(action: { showCamera = true }) {
                             VStack(spacing: 8) {
                                 Image(systemName: "text.viewfinder")
                                     .font(.title2)
