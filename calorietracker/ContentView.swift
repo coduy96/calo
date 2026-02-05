@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 // MARK: - Main Content View
 struct ContentView: View {
@@ -40,6 +41,9 @@ struct ContentView: View {
 
 // MARK: - Home View (Main Dashboard)
 struct HomeView: View {
+    @State private var showCamera = false
+    @State private var capturedImage: UIImage?
+
     var body: some View {
         NavigationStack {
             List {
@@ -51,6 +55,41 @@ struct HomeView: View {
                 // Calorie Summary
                 Section("Calories") {
                     CalorieRow()
+                }
+
+                // Log Food
+                Section("Log Food") {
+                    Button(action: { showCamera = true }) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "camera.fill")
+                                .font(.title2)
+                                .foregroundStyle(.white)
+                                .frame(width: 50, height: 50)
+                                .background(Color.accentColor)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Snap a photo")
+                                    .font(.headline)
+                                    .foregroundStyle(.primary)
+                                Text("Take a picture and we'll count the calories")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+
+                    HStack(spacing: 16) {
+                        LogOptionButton(icon: "barcode.viewfinder", label: "Barcode")
+                        LogOptionButton(icon: "text.viewfinder", label: "Food Label")
+                        LogOptionButton(icon: "magnifyingglass", label: "Search")
+                    }
+                    .frame(maxWidth: .infinity)
                 }
 
                 // Macros
@@ -67,7 +106,7 @@ struct HomeView: View {
                     FoodRow(name: "Protein Smoothie", calories: 280, time: "8:15am")
                 }
             }
-            .navigationTitle("Calorie Tracker")
+            .navigationTitle("Cal AI")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 4) {
@@ -77,7 +116,69 @@ struct HomeView: View {
                             .fontWeight(.semibold)
                     }
                 }
-                            }
+            }
+            .sheet(isPresented: $showCamera) {
+                CameraView(image: $capturedImage)
+            }
+        }
+    }
+}
+
+// MARK: - Log Option Button
+struct LogOptionButton: View {
+    let icon: String
+    let label: String
+
+    var body: some View {
+        Button(action: {}) {
+            VStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.title3)
+                Text(label)
+                    .font(.caption2)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+        }
+        .buttonStyle(.bordered)
+        .tint(.primary)
+    }
+}
+
+// MARK: - Camera View (UIKit wrapper)
+struct CameraView: UIViewControllerRepresentable {
+    @Binding var image: UIImage?
+    @Environment(\.dismiss) private var dismiss
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let parent: CameraView
+
+        init(_ parent: CameraView) {
+            self.parent = parent
+        }
+
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let image = info[.originalImage] as? UIImage {
+                parent.image = image
+            }
+            parent.dismiss()
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            parent.dismiss()
         }
     }
 }
