@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 import UIKit
 
 // MARK: - Camera Mode
@@ -44,6 +45,9 @@ struct HomeView: View {
     @State private var showCamera = false
     @State private var capturedImage: UIImage?
     @State private var cameraMode: CameraMode = .snapFood
+    @State private var showPhotoModeChoice = false
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var showPhotoPicker = false
     @State private var showAnalyzing = false
     @State private var showFoodResult = false
     @State private var showServingSize = false
@@ -92,6 +96,20 @@ struct HomeView: View {
                                 Image(systemName: "text.viewfinder")
                                     .font(.title2)
                                 Text("Nutrition Label")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.accentColor)
+
+                        Button(action: { showPhotoModeChoice = true }) {
+                            VStack(spacing: 8) {
+                                Image(systemName: "photo.on.rectangle")
+                                    .font(.title2)
+                                Text("From Photos")
                                     .font(.caption)
                                     .fontWeight(.medium)
                             }
@@ -178,6 +196,28 @@ struct HomeView: View {
                             }
                         }
                     )
+                }
+            }
+            .confirmationDialog("What are you uploading?", isPresented: $showPhotoModeChoice) {
+                Button("Food Photo") {
+                    cameraMode = .snapFood
+                    showPhotoPicker = true
+                }
+                Button("Nutrition Label") {
+                    cameraMode = .nutritionLabel
+                    showPhotoPicker = true
+                }
+            }
+            .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .images)
+            .onChange(of: selectedPhotoItem) { oldValue, newValue in
+                guard let item = newValue else { return }
+                selectedPhotoItem = nil
+                Task {
+                    if let data = try? await item.loadTransferable(type: Data.self),
+                       let image = UIImage(data: data) {
+                        currentImage = image
+                        startAnalysis(image: image, mode: cameraMode)
+                    }
                 }
             }
             .alert("Error", isPresented: $showError) {
