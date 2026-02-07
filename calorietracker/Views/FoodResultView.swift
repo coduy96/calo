@@ -9,6 +9,7 @@ struct FoodResultView: View {
     @State var protein: Int
     @State var carbs: Int
     @State var fat: Int
+    @State var mealType: MealType = .snack
 
     var onLog: (FoodEntry) -> Void
     @Environment(\.dismiss) private var dismiss
@@ -65,6 +66,16 @@ struct FoodResultView: View {
                     NutritionField(label: "Fat", value: $fat, unit: "g")
                 }
 
+                Section("Meal") {
+                    Picker("Meal Type", selection: $mealType) {
+                        ForEach(MealType.allCases, id: \.self) { meal in
+                            Label(meal.displayName, systemImage: meal.icon)
+                                .tag(meal)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+
                 Section {
                     Button(action: logFood) {
                         Text("Log Food")
@@ -93,7 +104,8 @@ struct FoodResultView: View {
             carbs: carbs,
             fat: fat,
             imageData: image.jpegData(compressionQuality: 0.5),
-            source: source
+            source: source,
+            mealType: mealType
         )
         onLog(entry)
         dismiss()

@@ -54,6 +54,11 @@ struct HomeView: View {
     @State private var showError = false
     @State private var errorMessage = ""
 
+    private enum PendingSheet {
+        case foodResult, servingSize, error
+    }
+    @State private var pendingSheet: PendingSheet?
+
     @State private var currentFoodResult: GeminiService.FoodAnalysis?
     @State private var currentLabelResult: GeminiService.NutritionLabelAnalysis?
     @State private var currentImage: UIImage?
@@ -128,15 +133,25 @@ struct HomeView: View {
                     MacroRow(name: "Fat", current: foodStore.todayFat, goal: 70, unit: "g", color: .blue)
                 }
 
-                Section("Recently uploaded") {
-                    if foodStore.todayEntries.isEmpty {
+                if foodStore.todayEntriesByMeal.isEmpty {
+                    Section("Today's Food") {
                         Text("No foods logged today")
                             .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(foodStore.todayEntries) { entry in
-                            FoodRow(entry: entry)
+                    }
+                } else {
+                    ForEach(foodStore.todayEntriesByMeal, id: \.meal) { group in
+                        Section {
+                            ForEach(group.entries) { entry in
+                                FoodRow(entry: entry)
+                            }
+                            .onDelete { offsets in
+                                for index in offsets {
+                                    foodStore.deleteEntry(group.entries[index])
+                                }
+                            }
+                        } header: {
+                            Label(group.meal.displayName, systemImage: group.meal.icon)
                         }
-                        .onDelete(perform: deleteEntries)
                     }
                 }
             }
@@ -161,7 +176,15 @@ struct HomeView: View {
                 currentImage = image
                 startAnalysis(image: image, mode: cameraMode)
             }
-            .sheet(isPresented: $showAnalyzing) {
+            .sheet(isPresented: $showAnalyzing, onDismiss: {
+                switch pendingSheet {
+                case .foodResult: showFoodResult = true
+                case .servingSize: showServingSize = true
+                case .error: showError = true
+                case nil: break
+                }
+                pendingSheet = nil
+            }) {
                 if let image = currentImage {
                     AnalyzingView(image: image)
                         .interactiveDismissDisabled()
@@ -183,17 +206,18 @@ struct HomeView: View {
                     )
                 }
             }
-            .sheet(isPresented: $showServingSize) {
+            .sheet(isPresented: $showServingSize, onDismiss: {
+                if currentFoodResult != nil {
+                    showFoodResult = true
+                }
+            }) {
                 if let image = currentImage, let labelResult = currentLabelResult {
                     ServingSizeInputView(
                         image: image,
                         labelAnalysis: labelResult,
                         onContinue: { scaled in
-                            showServingSize = false
                             currentFoodResult = scaled
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                showFoodResult = true
-                            }
+                            showServingSize = false
                         }
                     )
                 }
@@ -236,33 +260,24 @@ struct HomeView: View {
                 switch mode {
                 case .snapFood:
                     let result = try await GeminiService.analyzeFood(image: image)
-                    showAnalyzing = false
                     currentFoodResult = result
-                    try? await Task.sleep(for: .milliseconds(300))
-                    showFoodResult = true
+                    pendingSheet = .foodResult
+                    showAnalyzing = false
 
                 case .nutritionLabel:
                     let result = try await GeminiService.analyzeNutritionLabel(image: image)
-                    showAnalyzing = false
                     currentLabelResult = result
-                    try? await Task.sleep(for: .milliseconds(300))
-                    showServingSize = true
+                    pendingSheet = .servingSize
+                    showAnalyzing = false
                 }
             } catch {
-                showAnalyzing = false
                 errorMessage = error.localizedDescription
-                try? await Task.sleep(for: .milliseconds(300))
-                showError = true
+                pendingSheet = .error
+                showAnalyzing = false
             }
         }
     }
 
-    private func deleteEntries(at offsets: IndexSet) {
-        let entries = foodStore.todayEntries
-        for index in offsets {
-            foodStore.deleteEntry(entries[index])
-        }
-    }
 }
 
 
@@ -399,35 +414,60 @@ struct FoodRow: View {
     let entry: FoodEntry
 
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
             if let imageData = entry.imageData, let uiImage = UIImage(data: imageData) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 44, height: 44)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .frame(width: 64, height: 64)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
             } else {
                 Image(systemName: "photo")
                     .font(.title)
-                    .frame(width: 44, height: 44)
+                    .frame(width: 64, height: 64)
                     .background(.quaternary)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
             }
 
-            VStack(alignment: .leading) {
-                Text(entry.name)
-                    .fontWeight(.medium)
-                Label("\(entry.calories) cal", systemImage: "flame.fill")
-                    .font(.caption)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(entry.name)
+                        .fontWeight(.medium)
+                    Spacer()
+                    Text(entry.timeString)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+
+                Text("\(entry.calories) cal")
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
+
+                HStack(spacing: 6) {
+                    MacroPill(label: "P", value: entry.protein, color: .orange)
+                    MacroPill(label: "C", value: entry.carbs, color: .yellow)
+                    MacroPill(label: "F", value: entry.fat, color: .blue)
+                }
             }
-
-            Spacer()
-
-            Text(entry.timeString)
-                .font(.caption)
-                .foregroundStyle(.tertiary)
         }
+        .padding(.vertical, 4)
+    }
+}
+
+struct MacroPill: View {
+    let label: String
+    let value: Int
+    let color: Color
+
+    var body: some View {
+        Text("\(label): \(value)g")
+            .font(.caption2)
+            .fontWeight(.medium)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(color.opacity(0.15))
+            .foregroundStyle(color)
+            .clipShape(Capsule())
     }
 }
 

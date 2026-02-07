@@ -18,6 +18,18 @@ class FoodStore {
             .sorted { $0.timestamp > $1.timestamp }
     }
 
+    var todayEntriesByMeal: [(meal: MealType, entries: [FoodEntry])] {
+        let calendar = Calendar.current
+        let today = entries
+            .filter { calendar.isDateInToday($0.timestamp) }
+            .sorted { $0.timestamp > $1.timestamp }
+
+        return MealType.allCases.compactMap { meal in
+            let mealEntries = today.filter { $0.mealType == meal }
+            return mealEntries.isEmpty ? nil : (meal, mealEntries)
+        }
+    }
+
     var todayCalories: Int {
         todayEntries.reduce(0) { $0 + $1.calories }
     }
