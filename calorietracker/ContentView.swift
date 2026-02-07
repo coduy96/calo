@@ -197,7 +197,7 @@ struct HomeView: View {
                 }
             }
             .interactiveDismissDisabled(activeSheet == .analyzing)
-            .confirmationDialog("What are you uploading?", isPresented: $showPhotoModeChoice) {
+            .alert("What are you uploading?", isPresented: $showPhotoModeChoice) {
                 Button("Food Photo") {
                     cameraMode = .snapFood
                     showPhotoPicker = true
@@ -206,6 +206,7 @@ struct HomeView: View {
                     cameraMode = .nutritionLabel
                     showPhotoPicker = true
                 }
+                Button("Cancel", role: .cancel) { }
             }
             .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .images)
             .onChange(of: selectedPhotoItem) { oldValue, newValue in
