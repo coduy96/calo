@@ -17,8 +17,11 @@ struct OnboardingView: View {
     @State private var selectedPlan: PaywallPlan = .yearly
     @State private var referralSource: String?
     @State private var triedOtherApps: Bool?
+    @State private var targetWeightLbs = 154
+    @State private var targetWeightKg = 70
+    @State private var goalSpeed = 1 // 0=slow, 1=recommended, 2=fast
 
-    private let totalSteps = 11 // 0-10
+    private let totalSteps = 14 // 0-13
 
     private var profile: UserProfile {
         let cm: Double
@@ -47,7 +50,7 @@ struct OnboardingView: View {
 
             VStack(spacing: 0) {
                 // Top bar: back + progress
-                if step > 0 && step < 10 {
+                if step > 0 && step < 13 {
                     HStack(spacing: 16) {
                         Button {
                             withAnimation(.snappy) { step -= 1 }
@@ -84,11 +87,14 @@ struct OnboardingView: View {
                     case 3: heightWeightStep
                     case 4: activityStep
                     case 5: goalStep
-                    case 6: triedOtherAppsStep
-                    case 7: referralStep
-                    case 8: buildingPlanStep
-                    case 9: planReadyStep
-                    case 10: paywallStep
+                    case 6: desiredWeightStep
+                    case 7: motivationStep
+                    case 8: goalSpeedStep
+                    case 9: triedOtherAppsStep
+                    case 10: referralStep
+                    case 11: buildingPlanStep
+                    case 12: planReadyStep
+                    case 13: paywallStep
                     default: EmptyView()
                     }
                 }
@@ -343,12 +349,278 @@ struct OnboardingView: View {
             Spacer()
 
             continueButton {
+                // Set initial target weight based on goal
+                if goal == .lose {
+                    targetWeightLbs = max(90, weightLbs - 10)
+                    targetWeightKg = max(40, weightKg - 5)
+                } else if goal == .gain {
+                    targetWeightLbs = weightLbs + 10
+                    targetWeightKg = weightKg + 5
+                } else {
+                    targetWeightLbs = weightLbs
+                    targetWeightKg = weightKg
+                }
+            }
+        }
+    }
+
+    // MARK: - Step 6: Desired Weight
+
+    private var currentWeightDisplay: Double {
+        isMetric ? Double(weightKg) : Double(weightLbs)
+    }
+
+    private var targetWeightDisplay: Double {
+        isMetric ? Double(targetWeightKg) : Double(targetWeightLbs)
+    }
+
+    private var weightDiffKg: Double {
+        let currentKg = isMetric ? Double(weightKg) : Double(weightLbs) * 0.453592
+        let targetKg = isMetric ? Double(targetWeightKg) : Double(targetWeightLbs) * 0.453592
+        return abs(targetKg - currentKg)
+    }
+
+    private var weightUnit: String { isMetric ? "kg" : "lbs" }
+
+    private var desiredWeightStep: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            stepHeader(title: "What's your\ndesired weight?", subtitle: goal.displayName)
+
+            Spacer()
+
+            VStack(spacing: 8) {
+                if isMetric {
+                    Text("\(targetWeightKg) kg")
+                        .font(.system(size: 48, weight: .bold, design: .rounded))
+                        .contentTransition(.numericText())
+                        .animation(.snappy, value: targetWeightKg)
+                } else {
+                    Text("\(targetWeightLbs) lbs")
+                        .font(.system(size: 48, weight: .bold, design: .rounded))
+                        .contentTransition(.numericText())
+                        .animation(.snappy, value: targetWeightLbs)
+                }
+            }
+
+            if isMetric {
+                Picker("kg", selection: $targetWeightKg) {
+                    ForEach(30...250, id: \.self) { kg in
+                        Text("\(kg)").tag(kg)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(height: 150)
+                .padding(.horizontal, 24)
+            } else {
+                Picker("lbs", selection: $targetWeightLbs) {
+                    ForEach(60...500, id: \.self) { lb in
+                        Text("\(lb)").tag(lb)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(height: 150)
+                .padding(.horizontal, 24)
+            }
+
+            Spacer()
+
+            continueButton()
+        }
+    }
+
+    // MARK: - Step 7: Motivation
+
+    private var motivationStep: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            VStack(spacing: 20) {
+                if goal == .maintain {
+                    Text("Maintaining your weight\nis a great goal!")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .multilineTextAlignment(.center)
+
+                    Text("Consistency is key. We'll help you\nstay on track every day.")
+                        .font(.system(.callout, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                } else {
+                    let diffText = isMetric
+                        ? "\(abs(targetWeightKg - weightKg)) kg"
+                        : "\(abs(targetWeightLbs - weightLbs)) lbs"
+                    let verb = goal == .lose ? "Losing" : "Gaining"
+
+                    (Text("\(verb) ")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                    + Text(diffText)
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(AppColors.calorie)
+                    + Text(" is a\nrealistic target.\nYou've got this!")
+                        .font(.system(size: 28, weight: .bold, design: .rounded)))
+                    .multilineTextAlignment(.center)
+
+                    Text("Most users see real progress within\nthe first few weeks of tracking.")
+                        .font(.system(.callout, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+            }
+            .padding(.horizontal, 24)
+
+            Spacer()
+
+            continueButton()
+        }
+    }
+
+    // MARK: - Step 8: Goal Speed
+
+    private var speedLabel: String {
+        switch goalSpeed {
+        case 0: "Slow"
+        case 2: "Fast"
+        default: "Recommended"
+        }
+    }
+
+    private var weeklyChangeKg: Double {
+        switch goalSpeed {
+        case 0: 0.25
+        case 2: 1.0
+        default: 0.5
+        }
+    }
+
+    private var estimatedDays: Int {
+        guard weightDiffKg > 0 else { return 0 }
+        let weeks = weightDiffKg / weeklyChangeKg
+        return Int(weeks * 7)
+    }
+
+    private var speedCalorieAdjustment: Int {
+        // rough: 7700 kcal per kg, spread over 7 days
+        let dailyDeficit = Int(weeklyChangeKg * 7700 / 7)
+        return goal == .lose ? -dailyDeficit : (goal == .gain ? dailyDeficit : 0)
+    }
+
+    private var goalSpeedStep: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            stepHeader(
+                title: goal == .maintain ? "Your pace" : "How fast do you want\nto reach your goal?",
+                subtitle: goal == .maintain ? "We'll set a balanced plan" : "\(goal == .lose ? "Weight loss" : "Weight gain") speed per week"
+            )
+
+            if goal == .maintain {
+                Spacer()
+
+                VStack(spacing: 12) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(AppColors.protein)
+
+                    Text("Balanced pace set")
+                        .font(.system(.title3, design: .rounded, weight: .semibold))
+
+                    Text("We'll keep your calories steady\nto maintain your current weight.")
+                        .font(.system(.callout, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+
+                Spacer()
+            } else {
+                Spacer()
+
+                VStack(spacing: 24) {
+                    // Weekly change display
+                    VStack(spacing: 4) {
+                        Text(String(format: "%.1f %@", weeklyChangeKg * (isMetric ? 1 : 2.205), weightUnit))
+                            .font(.system(size: 40, weight: .bold, design: .rounded))
+                            .contentTransition(.numericText())
+                            .animation(.snappy, value: goalSpeed)
+
+                        Text("per week")
+                            .font(.system(.callout, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    // Speed icons
+                    HStack(spacing: 0) {
+                        VStack(spacing: 6) {
+                            Image(systemName: "tortoise.fill")
+                                .font(.system(size: 24))
+                                .foregroundStyle(goalSpeed == 0 ? Color.primary : Color.secondary.opacity(0.4))
+                            Text("Slow")
+                                .font(.system(.caption, design: .rounded, weight: .medium))
+                                .foregroundStyle(goalSpeed == 0 ? .primary : .secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+
+                        VStack(spacing: 6) {
+                            Image(systemName: "hare.fill")
+                                .font(.system(size: 24))
+                                .foregroundStyle(goalSpeed == 1 ? AppColors.calorie : Color.secondary.opacity(0.4))
+                            Text("Recommended")
+                                .font(.system(.caption, design: .rounded, weight: .medium))
+                                .foregroundStyle(goalSpeed == 1 ? AppColors.calorie : .secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+
+                        VStack(spacing: 6) {
+                            Image(systemName: "bolt.fill")
+                                .font(.system(size: 24))
+                                .foregroundStyle(goalSpeed == 2 ? Color.primary : Color.secondary.opacity(0.4))
+                            Text("Fast")
+                                .font(.system(.caption, design: .rounded, weight: .medium))
+                                .foregroundStyle(goalSpeed == 2 ? .primary : .secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .padding(.horizontal, 24)
+
+                    // Slider
+                    Slider(value: Binding(
+                        get: { Double(goalSpeed) },
+                        set: { goalSpeed = Int($0.rounded()) }
+                    ), in: 0...2, step: 1)
+                    .tint(.primary)
+                    .padding(.horizontal, 40)
+
+                    // Info card
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 0) {
+                            Text("You'll reach your goal in ")
+                                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                            Text("\(estimatedDays) days")
+                                .font(.system(.subheadline, design: .rounded, weight: .bold))
+                                .foregroundStyle(AppColors.calorie)
+                        }
+
+                        Text(goalSpeed == 1
+                             ? "The most balanced pace, motivating and sustainable."
+                             : goalSpeed == 0
+                             ? "Gentle and sustainable. Great for long-term habits."
+                             : "Aggressive but doable. Requires strong discipline.")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 14))
+                    .padding(.horizontal, 24)
+                }
+
+                Spacer()
+            }
+
+            continueButton {
                 profile.save()
             }
         }
     }
 
-    // MARK: - Step 6: Tried Other Apps
+    // MARK: - Step 9: Tried Other Apps
 
     private var triedOtherAppsStep: some View {
         VStack(alignment: .leading, spacing: 0) {
