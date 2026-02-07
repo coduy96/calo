@@ -127,8 +127,6 @@ struct OnboardingView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 120, height: 120)
-                    .clipShape(RoundedRectangle(cornerRadius: 28))
-                    .shadow(color: AppColors.calorie.opacity(0.3), radius: 20, y: 10)
 
                 VStack(spacing: 8) {
                     Text("Calorie Tracking")
