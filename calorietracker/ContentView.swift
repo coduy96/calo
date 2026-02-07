@@ -60,76 +60,69 @@ struct HomeView: View {
     @State private var currentFoodResult: GeminiService.FoodAnalysis?
     @State private var currentImage: UIImage?
 
+    private var calorieGoal: Int { 2500 }
+    private var caloriesRemaining: Int { max(calorieGoal - foodStore.todayCalories, 0) }
+
     var body: some View {
         NavigationStack {
             List {
+                // Date header
                 Section {
-                    WeekSelectorView()
+                    Text(Date.now, format: .dateTime.weekday(.wide).month(.wide).day())
+                        .foregroundStyle(.secondary)
                 }
 
-                Section("Calories") {
-                    CalorieRow(eaten: foodStore.todayCalories, goal: 2500)
-                }
-
-                Section("Log Food") {
-                    HStack(spacing: 12) {
-                        Button(action: {
-                            cameraMode = .snapFood
-                            showCamera = true
-                        }) {
-                            VStack(spacing: 8) {
-                                Image(systemName: "camera.fill")
-                                    .font(.title2)
-                                Text("Snap Food")
+                // Calories + Macros
+                Section {
+                    VStack(spacing: 16) {
+                        // Large calorie ring
+                        Gauge(value: Double(foodStore.todayCalories), in: 0...Double(calorieGoal)) {
+                            EmptyView()
+                        } currentValueLabel: {
+                            VStack(spacing: 2) {
+                                Text("\(foodStore.todayCalories)")
+                                    .font(.system(.title, design: .rounded, weight: .bold))
+                                Text("cal")
                                     .font(.caption)
-                                    .fontWeight(.medium)
+                                    .foregroundStyle(.secondary)
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
                         }
-                        .buttonStyle(.bordered)
-                        .tint(.accentColor)
+                        .gaugeStyle(.accessoryCircularCapacity)
+                        .tint(.primary)
+                        .scaleEffect(2.5)
+                        .frame(height: 120)
+                        .padding(.top, 12)
 
-                        Button(action: {
-                            cameraMode = .nutritionLabel
-                            showCamera = true
-                        }) {
-                            VStack(spacing: 8) {
-                                Image(systemName: "text.viewfinder")
-                                    .font(.title2)
-                                Text("Nutrition Label")
+                        // Eaten / Remaining
+                        HStack(spacing: 24) {
+                            VStack(spacing: 2) {
+                                Text("\(foodStore.todayCalories)")
+                                    .font(.headline)
+                                Text("eaten")
                                     .font(.caption)
-                                    .fontWeight(.medium)
+                                    .foregroundStyle(.secondary)
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
+                            VStack(spacing: 2) {
+                                Text("\(caloriesRemaining)")
+                                    .font(.headline)
+                                Text("remaining")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
-                        .buttonStyle(.bordered)
-                        .tint(.accentColor)
+                        .padding(.bottom, 4)
 
-                        Button(action: { showPhotoModeChoice = true }) {
-                            VStack(spacing: 8) {
-                                Image(systemName: "photo.on.rectangle")
-                                    .font(.title2)
-                                Text("From Photos")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
+                        // Macro bars
+                        VStack(spacing: 10) {
+                            MacroBarRow(name: "Protein", current: foodStore.todayProtein, goal: 150, color: .green)
+                            MacroBarRow(name: "Carbs", current: foodStore.todayCarbs, goal: 275, color: .orange)
+                            MacroBarRow(name: "Fat", current: foodStore.todayFat, goal: 70, color: .blue)
                         }
-                        .buttonStyle(.bordered)
-                        .tint(.accentColor)
                     }
-                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                    .padding(.vertical, 4)
                 }
 
-                Section("Macros") {
-                    MacroRow(name: "Protein", current: foodStore.todayProtein, goal: 150, unit: "g", color: .orange)
-                    MacroRow(name: "Carbs", current: foodStore.todayCarbs, goal: 275, unit: "g", color: .yellow)
-                    MacroRow(name: "Fat", current: foodStore.todayFat, goal: 70, unit: "g", color: .blue)
-                }
-
+                // Meal-grouped food list
                 if foodStore.todayEntriesByMeal.isEmpty {
                     Section("Today's Food") {
                         Text("No foods logged today")
@@ -152,14 +145,27 @@ struct HomeView: View {
                     }
                 }
             }
-            .navigationTitle("Cal AI")
+            .navigationTitle("Today")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "flame.fill")
-                            .foregroundColor(.orange)
-                        Text("15")
-                            .fontWeight(.semibold)
+                    Menu {
+                        Button(action: {
+                            cameraMode = .snapFood
+                            showCamera = true
+                        }) {
+                            Label("Camera", systemImage: "camera.fill")
+                        }
+                        Button(action: {
+                            cameraMode = .nutritionLabel
+                            showCamera = true
+                        }) {
+                            Label("Nutrition Label", systemImage: "text.viewfinder")
+                        }
+                        Button(action: { showPhotoModeChoice = true }) {
+                            Label("From Photos", systemImage: "photo.on.rectangle")
+                        }
+                    } label: {
+                        Image(systemName: "plus")
                     }
                 }
             }
@@ -296,90 +302,24 @@ struct CameraView: UIViewControllerRepresentable {
     }
 }
 
-// MARK: - Week Selector View
-struct WeekSelectorView: View {
-    let days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-    let dates = [10, 11, 12, 13, 14, 15, 16]
-    @State private var selectedIndex = 3
-
-    var body: some View {
-        HStack {
-            ForEach(0..<7, id: \.self) { index in
-                VStack(spacing: 4) {
-                    Text(days[index])
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-
-                    Text("\(dates[index])")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(index == selectedIndex ? .white : .primary)
-                        .frame(width: 28, height: 28)
-                        .background(
-                            Circle()
-                                .fill(index == selectedIndex ? Color.accentColor : Color.clear)
-                        )
-                }
-                .frame(maxWidth: .infinity)
-                .onTapGesture {
-                    selectedIndex = index
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Calorie Row
-struct CalorieRow: View {
-    let eaten: Int
-    let goal: Int
-
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading) {
-                Text("\(eaten) / \(goal)")
-                    .font(.title)
-                    .fontWeight(.bold)
-                Text("Calories eaten")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Gauge(value: Double(eaten), in: 0...Double(goal)) {
-                Image(systemName: "flame.fill")
-            }
-            .gaugeStyle(.accessoryCircularCapacity)
-            .tint(.primary)
-        }
-    }
-}
-
-// MARK: - Macro Row
-struct MacroRow: View {
+// MARK: - Macro Bar Row
+struct MacroBarRow: View {
     let name: String
     let current: Int
     let goal: Int
-    let unit: String
     let color: Color
 
     var body: some View {
-        HStack {
-            Label(name, systemImage: "circle.fill")
-                .foregroundStyle(color)
-
-            Spacer()
-
-            Text("\(current)/\(goal)\(unit)")
+        HStack(spacing: 8) {
+            Text(name)
+                .font(.subheadline)
+                .frame(width: 56, alignment: .leading)
+            ProgressView(value: Double(current), total: Double(goal))
+                .tint(color)
+            Text("\(current)/\(goal)g")
+                .font(.caption)
                 .foregroundStyle(.secondary)
-
-            Gauge(value: Double(current), in: 0...Double(goal)) {
-                EmptyView()
-            }
-            .gaugeStyle(.accessoryLinearCapacity)
-            .tint(color)
-            .frame(width: 60)
+                .frame(width: 60, alignment: .trailing)
         }
     }
 }
