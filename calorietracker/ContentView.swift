@@ -50,6 +50,7 @@ struct HomeView: View {
     @State private var showPhotoPicker = false
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var selectedDate: Date = .now
 
     enum ActiveSheet: String, Identifiable {
         case analyzing, foodResult
@@ -61,75 +62,94 @@ struct HomeView: View {
     @State private var currentImage: UIImage?
 
     private var calorieGoal: Int { 2500 }
-    private var caloriesRemaining: Int { max(calorieGoal - foodStore.todayCalories, 0) }
+    private var selectedCalories: Int { foodStore.calories(for: selectedDate) }
+    private var caloriesRemaining: Int { max(calorieGoal - selectedCalories, 0) }
+    private var isToday: Bool { Calendar.current.isDateInToday(selectedDate) }
+
+    private var navigationTitle: String {
+        if isToday { return "Today" }
+        return selectedDate.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())
+    }
 
     var body: some View {
         NavigationStack {
             List {
-                // Date header
+                // Week energy strip
                 Section {
-                    Text(Date.now, format: .dateTime.weekday(.wide).month(.wide).day())
-                        .foregroundStyle(.secondary)
+                    WeekEnergyStrip(
+                        selectedDate: $selectedDate,
+                        caloriesForDate: { foodStore.calories(for: $0) },
+                        calorieGoal: calorieGoal
+                    )
                 }
 
-                // Calories + Macros
+                // Calorie hero
                 Section {
-                    VStack(spacing: 16) {
-                        // Large calorie ring
-                        Gauge(value: Double(foodStore.todayCalories), in: 0...Double(calorieGoal)) {
-                            EmptyView()
-                        } currentValueLabel: {
-                            VStack(spacing: 2) {
-                                Text("\(foodStore.todayCalories)")
-                                    .font(.system(.title, design: .rounded, weight: .bold))
-                                Text("cal")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .gaugeStyle(.accessoryCircularCapacity)
-                        .tint(.primary)
-                        .scaleEffect(2.5)
-                        .frame(height: 120)
-                        .padding(.top, 12)
+                    VStack(spacing: 12) {
+                        Text("\(selectedCalories)")
+                            .font(.system(size: 56, weight: .bold, design: .rounded))
+                            .contentTransition(.numericText())
+                            .animation(.snappy, value: selectedCalories)
 
-                        // Eaten / Remaining
-                        HStack(spacing: 24) {
-                            VStack(spacing: 2) {
-                                Text("\(foodStore.todayCalories)")
-                                    .font(.headline)
-                                Text("eaten")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            VStack(spacing: 2) {
-                                Text("\(caloriesRemaining)")
-                                    .font(.headline)
-                                Text("remaining")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .padding(.bottom, 4)
+                        Text("of \(calorieGoal) cal")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
 
-                        // Macro bars
-                        VStack(spacing: 10) {
-                            MacroBarRow(name: "Protein", current: foodStore.todayProtein, goal: 150, color: .green)
-                            MacroBarRow(name: "Carbs", current: foodStore.todayCarbs, goal: 275, color: .orange)
-                            MacroBarRow(name: "Fat", current: foodStore.todayFat, goal: 70, color: .blue)
+                        // Gradient progress bar
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                Capsule()
+                                    .fill(.quaternary)
+                                    .frame(height: 10)
+
+                                Capsule()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.green, .blue],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .frame(
+                                        width: geo.size.width * min(Double(selectedCalories) / Double(calorieGoal), 1.0),
+                                        height: 10
+                                    )
+                                    .animation(.snappy, value: selectedCalories)
+                            }
                         }
+                        .frame(height: 10)
+
+                        Text("\(caloriesRemaining) remaining")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                }
+
+                // Macro trio rings
+                Section {
+                    HStack {
+                        Spacer()
+                        MacroRing(label: "Protein", current: foodStore.protein(for: selectedDate), goal: 150, color: .green)
+                        Spacer()
+                        MacroRing(label: "Carbs", current: foodStore.carbs(for: selectedDate), goal: 275, color: .orange)
+                        Spacer()
+                        MacroRing(label: "Fat", current: foodStore.fat(for: selectedDate), goal: 70, color: .blue)
+                        Spacer()
                     }
                     .padding(.vertical, 4)
                 }
 
-                // Meal-grouped food list
-                if foodStore.todayEntriesByMeal.isEmpty {
-                    Section("Today's Food") {
-                        Text("No foods logged today")
+                // Food list
+                let mealGroups = foodStore.entriesByMeal(for: selectedDate)
+                if mealGroups.isEmpty {
+                    Section(isToday ? "Today's Food" : "Food Log") {
+                        Text("No foods logged")
                             .foregroundStyle(.secondary)
                     }
                 } else {
-                    ForEach(foodStore.todayEntriesByMeal, id: \.meal) { group in
+                    ForEach(mealGroups, id: \.meal) { group in
                         Section {
                             ForEach(group.entries) { entry in
                                 FoodRow(entry: entry)
@@ -145,7 +165,8 @@ struct HomeView: View {
                     }
                 }
             }
-            .navigationTitle("Today")
+            .animation(.snappy, value: selectedDate)
+            .navigationTitle(navigationTitle)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
@@ -298,28 +319,6 @@ struct CameraView: UIViewControllerRepresentable {
 
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
             parent.dismiss()
-        }
-    }
-}
-
-// MARK: - Macro Bar Row
-struct MacroBarRow: View {
-    let name: String
-    let current: Int
-    let goal: Int
-    let color: Color
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Text(name)
-                .font(.subheadline)
-                .frame(width: 56, alignment: .leading)
-            ProgressView(value: Double(current), total: Double(goal))
-                .tint(color)
-            Text("\(current)/\(goal)g")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(width: 60, alignment: .trailing)
         }
     }
 }
