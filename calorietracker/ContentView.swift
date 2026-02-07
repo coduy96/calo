@@ -60,7 +60,11 @@ struct HomeView: View {
     @State private var currentFoodResult: GeminiService.FoodAnalysis?
     @State private var currentImage: UIImage?
 
-    private var calorieGoal: Int { 2500 }
+    private var userProfile: UserProfile { UserProfile.load() ?? .default }
+    private var calorieGoal: Int { userProfile.dailyCalories }
+    private var proteinGoal: Int { userProfile.proteinGoal }
+    private var carbsGoal: Int { userProfile.carbsGoal }
+    private var fatGoal: Int { userProfile.fatGoal }
     private var selectedCalories: Int { foodStore.calories(for: selectedDate) }
     private var caloriesRemaining: Int { max(calorieGoal - selectedCalories, 0) }
     private var isToday: Bool { Calendar.current.isDateInToday(selectedDate) }
@@ -130,9 +134,9 @@ struct HomeView: View {
                 // Macro trio
                 Section {
                     HStack(spacing: 20) {
-                        MacroCard(label: "Protein", current: foodStore.protein(for: selectedDate), goal: 150, gradientColors: AppColors.proteinGradient)
-                        MacroCard(label: "Carbs", current: foodStore.carbs(for: selectedDate), goal: 275, gradientColors: AppColors.carbsGradient)
-                        MacroCard(label: "Fat", current: foodStore.fat(for: selectedDate), goal: 70, gradientColors: AppColors.fatGradient)
+                        MacroCard(label: "Protein", current: foodStore.protein(for: selectedDate), goal: proteinGoal, gradientColors: AppColors.proteinGradient)
+                        MacroCard(label: "Carbs", current: foodStore.carbs(for: selectedDate), goal: carbsGoal, gradientColors: AppColors.carbsGradient)
+                        MacroCard(label: "Fat", current: foodStore.fat(for: selectedDate), goal: fatGoal, gradientColors: AppColors.fatGradient)
                     }
                     .padding(.vertical, 8)
                     .listRowBackground(Color.clear)

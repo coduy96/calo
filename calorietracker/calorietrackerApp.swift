@@ -10,11 +10,16 @@ import SwiftUI
 @main
 struct calorietrackerApp: App {
     @State private var foodStore = FoodStore()
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(foodStore)
+            if hasCompletedOnboarding {
+                ContentView()
+                    .environment(foodStore)
+            } else {
+                OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
+            }
         }
     }
 }
