@@ -85,49 +85,52 @@ struct HomeView: View {
                     .listRowSeparator(.hidden)
                 }
 
-                // Calorie hero ring
+                // Calorie hero
                 Section {
-                    VStack(spacing: 8) {
-                        ZStack {
-                            ActivityRingView(
-                                progress: calorieGoal > 0 ? min(Double(selectedCalories) / Double(calorieGoal), 1.0) : 0,
-                                ringWidth: 22,
-                                gradientColors: AppColors.calorieGradient
+                    VStack(spacing: 16) {
+                        Text("\(selectedCalories)")
+                            .font(.system(size: 64, weight: .bold, design: .rounded))
+                            .foregroundStyle(
+                                LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
                             )
-                            .frame(width: 180, height: 180)
+                            .contentTransition(.numericText())
+                            .animation(.snappy, value: selectedCalories)
 
-                            VStack(spacing: 2) {
-                                Text("\(selectedCalories)")
-                                    .font(.system(size: 48, weight: .bold, design: .rounded))
-                                    .contentTransition(.numericText())
-                                    .animation(.snappy, value: selectedCalories)
+                        Text("of \(calorieGoal) cal")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
 
-                                Text("of \(calorieGoal) cal")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                Capsule()
+                                    .fill(AppColors.calorie.opacity(0.15))
+                                    .frame(height: 6)
+
+                                Capsule()
+                                    .fill(LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing))
+                                    .frame(width: max(6, geo.size.width * min(Double(selectedCalories) / Double(calorieGoal), 1.0)), height: 6)
+                                    .animation(.spring(response: 0.6, dampingFraction: 0.85), value: selectedCalories)
                             }
                         }
+                        .frame(height: 6)
+                        .padding(.horizontal, 32)
 
                         Text("\(caloriesRemaining) remaining")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 16)
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                 }
 
-                // Macro trio rings
+                // Macro trio
                 Section {
-                    HStack {
-                        Spacer()
-                        MacroRing(label: "Protein", current: foodStore.protein(for: selectedDate), goal: 150, gradientColors: AppColors.proteinGradient)
-                        Spacer()
-                        MacroRing(label: "Carbs", current: foodStore.carbs(for: selectedDate), goal: 275, gradientColors: AppColors.carbsGradient)
-                        Spacer()
-                        MacroRing(label: "Fat", current: foodStore.fat(for: selectedDate), goal: 70, gradientColors: AppColors.fatGradient)
-                        Spacer()
+                    HStack(spacing: 16) {
+                        MacroCard(label: "Protein", current: foodStore.protein(for: selectedDate), goal: 150, gradientColors: AppColors.proteinGradient)
+                        MacroCard(label: "Carbs", current: foodStore.carbs(for: selectedDate), goal: 275, gradientColors: AppColors.carbsGradient)
+                        MacroCard(label: "Fat", current: foodStore.fat(for: selectedDate), goal: 70, gradientColors: AppColors.fatGradient)
                     }
                     .padding(.vertical, 4)
                     .listRowBackground(Color.clear)

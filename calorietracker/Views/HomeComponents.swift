@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - Week Energy Strip
+// MARK: - Week Day Selector
 
 struct WeekEnergyStrip: View {
     @Binding var selectedDate: Date
@@ -16,20 +16,17 @@ struct WeekEnergyStrip: View {
     }
 
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 4) {
             ForEach(0..<7, id: \.self) { index in
-                let date = weekDates[index]
-                dayColumn(for: date)
+                dayTile(for: weekDates[index])
             }
         }
         .padding(.vertical, 4)
     }
 
-    private func dayColumn(for date: Date) -> some View {
+    private func dayTile(for date: Date) -> some View {
         let isSelected = Calendar.current.isDate(date, inSameDayAs: selectedDate)
         let isToday = Calendar.current.isDateInToday(date)
-        let cals = caloriesForDate(date)
-        let progress = calorieGoal > 0 ? min(Double(cals) / Double(calorieGoal), 1.0) : 0
 
         return Button {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -37,46 +34,31 @@ struct WeekEnergyStrip: View {
                 selectedDate = date
             }
         } label: {
-            VStack(spacing: 4) {
+            VStack(spacing: 2) {
                 Text(date.formatted(.dateTime.weekday(.narrow)))
                     .font(.caption2)
-                    .fontWeight(isSelected ? .bold : .regular)
-                    .foregroundStyle(isSelected ? .primary : .secondary)
-
-                ZStack(alignment: .bottom) {
-                    Capsule()
-                        .fill(.quaternary)
-                        .frame(width: 8, height: 40)
-
-                    Capsule()
-                        .fill(
-                            LinearGradient(
-                                colors: isSelected ? AppColors.calorieGradient : [Color.gray.opacity(0.4)],
-                                startPoint: .bottom,
-                                endPoint: .top
-                            )
-                        )
-                        .frame(width: 8, height: max(4, 40 * progress))
-                }
+                    .fontWeight(.medium)
 
                 Text(date.formatted(.dateTime.day()))
-                    .font(.caption2)
-                    .fontWeight(isSelected ? .bold : .regular)
-                    .foregroundStyle(isSelected ? .primary : .secondary)
-
-                Circle()
-                    .fill(Color.primary.opacity(isToday ? 1 : 0))
-                    .frame(width: 4, height: 4)
+                    .font(.system(.callout, design: .rounded, weight: .semibold))
+            }
+            .foregroundStyle(isSelected ? .white : (isToday ? AppColors.calorie : .secondary))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing))
+                }
             }
         }
         .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
     }
 }
 
-// MARK: - Macro Ring
+// MARK: - Macro Card
 
-struct MacroRing: View {
+struct MacroCard: View {
     let label: String
     let current: Int
     let goal: Int
@@ -87,21 +69,28 @@ struct MacroRing: View {
     }
 
     var body: some View {
-        VStack(spacing: 4) {
-            ZStack {
-                ActivityRingView(progress: progress, ringWidth: 10, gradientColors: gradientColors)
-                    .frame(width: 64, height: 64)
+        VStack(spacing: 6) {
+            Text("\(current)")
+                .font(.system(.title2, design: .rounded, weight: .bold))
+                .foregroundStyle(gradientColors.first ?? .primary)
 
-                Text("\(current)")
-                    .font(.system(.caption, design: .rounded, weight: .bold))
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(gradientColors.first?.opacity(0.18) ?? Color.gray.opacity(0.18))
+
+                    Capsule()
+                        .fill(LinearGradient(colors: gradientColors, startPoint: .leading, endPoint: .trailing))
+                        .frame(width: max(4, geo.size.width * progress))
+                        .animation(.spring(response: 0.6, dampingFraction: 0.85), value: current)
+                }
             }
+            .frame(height: 5)
 
-            Text("\(current)g")
-                .font(.caption2)
-                .fontWeight(.semibold)
             Text(label)
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(.secondary)
         }
+        .frame(maxWidth: .infinity)
     }
 }
