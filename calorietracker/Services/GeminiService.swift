@@ -78,6 +78,9 @@ struct GeminiService {
         Read this nutrition label image. Extract the nutritional values per 100g (or per 100ml).
         If the label shows per-serving values, convert them to per-100g using the serving size.
 
+        For the name, identify the product or brand name visible on the packaging or label.
+        If no name is visible, describe the food type (e.g. "Protein Bar", "Yogurt", "Cereal").
+
         Respond ONLY with a JSON object in this exact format, no other text:
         {
           "name": "Product Name",

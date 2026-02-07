@@ -206,11 +206,7 @@ struct HomeView: View {
                     )
                 }
             }
-            .sheet(isPresented: $showServingSize, onDismiss: {
-                if currentFoodResult != nil {
-                    showFoodResult = true
-                }
-            }) {
+            .sheet(isPresented: $showServingSize) {
                 if let image = currentImage, let labelResult = currentLabelResult {
                     ServingSizeInputView(
                         image: image,
@@ -218,6 +214,9 @@ struct HomeView: View {
                         onContinue: { scaled in
                             currentFoodResult = scaled
                             showServingSize = false
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                showFoodResult = true
+                            }
                         }
                     )
                 }
@@ -267,6 +266,7 @@ struct HomeView: View {
                 case .nutritionLabel:
                     let result = try await GeminiService.analyzeNutritionLabel(image: image)
                     currentLabelResult = result
+                    currentFoodResult = nil
                     pendingSheet = .servingSize
                     showAnalyzing = false
                 }
