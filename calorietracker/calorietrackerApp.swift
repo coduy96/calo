@@ -15,7 +15,6 @@ struct calorietrackerApp: App {
         WindowGroup {
             ContentView()
                 .environment(foodStore)
-                .preferredColorScheme(.light)
         }
     }
 }

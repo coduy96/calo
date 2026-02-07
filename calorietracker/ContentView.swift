@@ -81,43 +81,32 @@ struct HomeView: View {
                         caloriesForDate: { foodStore.calories(for: $0) },
                         calorieGoal: calorieGoal
                     )
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
 
-                // Calorie hero
+                // Calorie hero ring
                 Section {
-                    VStack(spacing: 12) {
-                        Text("\(selectedCalories)")
-                            .font(.system(size: 56, weight: .bold, design: .rounded))
-                            .contentTransition(.numericText())
-                            .animation(.snappy, value: selectedCalories)
+                    VStack(spacing: 8) {
+                        ZStack {
+                            ActivityRingView(
+                                progress: calorieGoal > 0 ? min(Double(selectedCalories) / Double(calorieGoal), 1.0) : 0,
+                                ringWidth: 22,
+                                gradientColors: AppColors.calorieGradient
+                            )
+                            .frame(width: 180, height: 180)
 
-                        Text("of \(calorieGoal) cal")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-
-                        // Gradient progress bar
-                        GeometryReader { geo in
-                            ZStack(alignment: .leading) {
-                                Capsule()
-                                    .fill(.quaternary)
-                                    .frame(height: 10)
-
-                                Capsule()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [.green, .blue],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
-                                    .frame(
-                                        width: geo.size.width * min(Double(selectedCalories) / Double(calorieGoal), 1.0),
-                                        height: 10
-                                    )
+                            VStack(spacing: 2) {
+                                Text("\(selectedCalories)")
+                                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                                    .contentTransition(.numericText())
                                     .animation(.snappy, value: selectedCalories)
+
+                                Text("of \(calorieGoal) cal")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
                             }
                         }
-                        .frame(height: 10)
 
                         Text("\(caloriesRemaining) remaining")
                             .font(.caption)
@@ -125,20 +114,24 @@ struct HomeView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
 
                 // Macro trio rings
                 Section {
                     HStack {
                         Spacer()
-                        MacroRing(label: "Protein", current: foodStore.protein(for: selectedDate), goal: 150, color: .green)
+                        MacroRing(label: "Protein", current: foodStore.protein(for: selectedDate), goal: 150, gradientColors: AppColors.proteinGradient)
                         Spacer()
-                        MacroRing(label: "Carbs", current: foodStore.carbs(for: selectedDate), goal: 275, color: .orange)
+                        MacroRing(label: "Carbs", current: foodStore.carbs(for: selectedDate), goal: 275, gradientColors: AppColors.carbsGradient)
                         Spacer()
-                        MacroRing(label: "Fat", current: foodStore.fat(for: selectedDate), goal: 70, color: .blue)
+                        MacroRing(label: "Fat", current: foodStore.fat(for: selectedDate), goal: 70, gradientColors: AppColors.fatGradient)
                         Spacer()
                     }
                     .padding(.vertical, 4)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
 
                 // Food list
@@ -165,6 +158,8 @@ struct HomeView: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Color(.systemGroupedBackground))
             .animation(.snappy, value: selectedDate)
             .navigationTitle(navigationTitle)
             .toolbar {
@@ -358,9 +353,9 @@ struct FoodRow: View {
                     .foregroundStyle(.secondary)
 
                 HStack(spacing: 6) {
-                    MacroPill(label: "P", value: entry.protein, color: .orange)
-                    MacroPill(label: "C", value: entry.carbs, color: .yellow)
-                    MacroPill(label: "F", value: entry.fat, color: .blue)
+                    MacroPill(label: "P", value: entry.protein, color: AppColors.protein)
+                    MacroPill(label: "C", value: entry.carbs, color: AppColors.carbs)
+                    MacroPill(label: "F", value: entry.fat, color: AppColors.fat)
                 }
             }
         }

@@ -32,6 +32,7 @@ struct WeekEnergyStrip: View {
         let progress = calorieGoal > 0 ? min(Double(cals) / Double(calorieGoal), 1.0) : 0
 
         return Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
             withAnimation(.snappy(duration: 0.3)) {
                 selectedDate = date
             }
@@ -48,7 +49,13 @@ struct WeekEnergyStrip: View {
                         .frame(width: 8, height: 40)
 
                     Capsule()
-                        .fill(isSelected ? Color.accentColor : .gray.opacity(0.5))
+                        .fill(
+                            LinearGradient(
+                                colors: isSelected ? AppColors.calorieGradient : [Color.gray.opacity(0.4)],
+                                startPoint: .bottom,
+                                endPoint: .top
+                            )
+                        )
                         .frame(width: 8, height: max(4, 40 * progress))
                 }
 
@@ -73,20 +80,21 @@ struct MacroRing: View {
     let label: String
     let current: Int
     let goal: Int
-    let color: Color
+    let gradientColors: [Color]
+
+    private var progress: Double {
+        goal > 0 ? min(Double(current) / Double(goal), 1.0) : 0
+    }
 
     var body: some View {
         VStack(spacing: 4) {
-            Gauge(value: Double(current), in: 0...Double(max(goal, 1))) {
-                EmptyView()
-            } currentValueLabel: {
+            ZStack {
+                ActivityRingView(progress: progress, ringWidth: 10, gradientColors: gradientColors)
+                    .frame(width: 64, height: 64)
+
                 Text("\(current)")
                     .font(.system(.caption, design: .rounded, weight: .bold))
             }
-            .gaugeStyle(.accessoryCircularCapacity)
-            .tint(color)
-            .scaleEffect(1.4)
-            .frame(width: 56, height: 56)
 
             Text("\(current)g")
                 .font(.caption2)
