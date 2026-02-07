@@ -19,9 +19,12 @@ struct OnboardingView: View {
     @State private var triedOtherApps: Bool?
     @State private var targetWeightLbs = 154
     @State private var targetWeightKg = 70
-    @State private var goalSpeed = 1 // 0=slow, 1=recommended, 2=fast
+    @State private var goalSpeed = 1
+    @State private var selectedObstacle: String?
+    @State private var selectedDiet: String?
+    @State private var selectedAccomplishment: String?
 
-    private let totalSteps = 14 // 0-13
+    private let totalSteps = 23 // 0-22
 
     private var profile: UserProfile {
         let cm: Double
@@ -49,8 +52,7 @@ struct OnboardingView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Top bar: back + progress
-                if step > 0 && step < 13 {
+                if step > 0 && step < 22 {
                     HStack(spacing: 16) {
                         Button {
                             withAnimation(.snappy) { step -= 1 }
@@ -64,7 +66,6 @@ struct OnboardingView: View {
                             ZStack(alignment: .leading) {
                                 Capsule()
                                     .fill(Color.primary.opacity(0.08))
-
                                 Capsule()
                                     .fill(Color.primary)
                                     .frame(width: geo.size.width * CGFloat(step) / CGFloat(totalSteps - 1))
@@ -78,7 +79,6 @@ struct OnboardingView: View {
                     .padding(.bottom, 8)
                 }
 
-                // Step content
                 ZStack {
                     switch step {
                     case 0: welcomeStep
@@ -90,11 +90,20 @@ struct OnboardingView: View {
                     case 6: desiredWeightStep
                     case 7: motivationStep
                     case 8: goalSpeedStep
-                    case 9: triedOtherAppsStep
-                    case 10: referralStep
-                    case 11: buildingPlanStep
-                    case 12: planReadyStep
-                    case 13: paywallStep
+                    case 9: obstaclesStep
+                    case 10: dietStep
+                    case 11: accomplishStep
+                    case 12: triedOtherAppsStep
+                    case 13: referralStep
+                    case 14: weightTransitionStep
+                    case 15: trustStep
+                    case 16: ratingStep
+                    case 17: notificationsStep
+                    case 18: appleHealthStep
+                    case 19: allDoneStep
+                    case 20: buildingPlanStep
+                    case 21: planReadyStep
+                    case 22: paywallStep
                     default: EmptyView()
                     }
                 }
@@ -126,12 +135,11 @@ struct OnboardingView: View {
         .padding(.bottom, 36)
     }
 
-    // MARK: - Step 0: Welcome
+    // MARK: - 0: Welcome
 
     private var welcomeStep: some View {
         VStack(spacing: 0) {
             Spacer()
-
             VStack(spacing: 20) {
                 Image("onboardingLogo")
                     .resizable()
@@ -141,78 +149,61 @@ struct OnboardingView: View {
                 VStack(spacing: 8) {
                     Text("Calorie Tracking")
                         .font(.system(size: 32, weight: .bold, design: .rounded))
-
                     Text("Made Easy")
                         .font(.system(size: 32, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing)
                         )
                 }
-
                 Text("Snap a photo, get the nutrition.\nNo searching. No guessing.")
                     .font(.system(.callout, design: .rounded))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
-
             Spacer()
-
             continueButton("Get Started")
         }
     }
 
-    // MARK: - Step 1: Gender
+    // MARK: - 1: Gender
 
     private var genderStep: some View {
         VStack(alignment: .leading, spacing: 0) {
             stepHeader(title: "What's your gender?", subtitle: "This helps us calculate your metabolism")
-
             Spacer()
-
             VStack(spacing: 12) {
                 ForEach(Gender.allCases, id: \.self) { g in
-                    selectionCard(
-                        icon: g.icon,
-                        title: g.displayName,
-                        isSelected: gender == g
-                    ) {
+                    selectionCard(icon: g.icon, title: g.displayName, isSelected: gender == g) {
                         withAnimation(.spring(response: 0.3)) { gender = g }
                     }
                 }
             }
             .padding(.horizontal, 24)
-
             Spacer()
-
             continueButton()
         }
     }
 
-    // MARK: - Step 2: Birthday
+    // MARK: - 2: Birthday
 
     private var birthdayStep: some View {
         VStack(alignment: .leading, spacing: 0) {
             stepHeader(title: "When's your birthday?", subtitle: "Used to calculate your daily needs")
-
             Spacer()
-
             DatePicker("Birthday", selection: $birthday, in: ...Date(), displayedComponents: .date)
                 .datePickerStyle(.wheel)
                 .labelsHidden()
                 .padding(.horizontal, 24)
-
             Spacer()
-
             continueButton()
         }
     }
 
-    // MARK: - Step 3: Height & Weight
+    // MARK: - 3: Height & Weight
 
     private var heightWeightStep: some View {
         VStack(alignment: .leading, spacing: 0) {
             stepHeader(title: "Height & Weight", subtitle: "We'll keep this private")
-
             Picker("Unit", selection: $isMetric) {
                 Text("Imperial").tag(false)
                 Text("Metric").tag(true)
@@ -220,136 +211,84 @@ struct OnboardingView: View {
             .pickerStyle(.segmented)
             .padding(.horizontal, 24)
             .padding(.top, 16)
-
             Spacer()
-
             if isMetric {
                 HStack(spacing: 0) {
                     VStack(spacing: 4) {
-                        Text("Height")
-                            .font(.system(.caption, design: .rounded, weight: .medium))
-                            .foregroundStyle(.secondary)
+                        Text("Height").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
                         Picker("cm", selection: $heightCm) {
-                            ForEach(100...250, id: \.self) { cm in
-                                Text("\(cm) cm").tag(cm)
-                            }
-                        }
-                        .pickerStyle(.wheel)
+                            ForEach(100...250, id: \.self) { cm in Text("\(cm) cm").tag(cm) }
+                        }.pickerStyle(.wheel)
                     }
-
                     VStack(spacing: 4) {
-                        Text("Weight")
-                            .font(.system(.caption, design: .rounded, weight: .medium))
-                            .foregroundStyle(.secondary)
+                        Text("Weight").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
                         Picker("kg", selection: $weightKg) {
-                            ForEach(30...250, id: \.self) { kg in
-                                Text("\(kg) kg").tag(kg)
-                            }
-                        }
-                        .pickerStyle(.wheel)
+                            ForEach(30...250, id: \.self) { kg in Text("\(kg) kg").tag(kg) }
+                        }.pickerStyle(.wheel)
                     }
-                }
-                .padding(.horizontal, 24)
+                }.padding(.horizontal, 24)
             } else {
                 HStack(spacing: 0) {
                     VStack(spacing: 4) {
-                        Text("Feet")
-                            .font(.system(.caption, design: .rounded, weight: .medium))
-                            .foregroundStyle(.secondary)
+                        Text("Feet").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
                         Picker("ft", selection: $heightFeet) {
-                            ForEach(3...8, id: \.self) { ft in
-                                Text("\(ft) ft").tag(ft)
-                            }
-                        }
-                        .pickerStyle(.wheel)
+                            ForEach(3...8, id: \.self) { ft in Text("\(ft) ft").tag(ft) }
+                        }.pickerStyle(.wheel)
                     }
-
                     VStack(spacing: 4) {
-                        Text("Inches")
-                            .font(.system(.caption, design: .rounded, weight: .medium))
-                            .foregroundStyle(.secondary)
+                        Text("Inches").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
                         Picker("in", selection: $heightInches) {
-                            ForEach(0...11, id: \.self) { inch in
-                                Text("\(inch) in").tag(inch)
-                            }
-                        }
-                        .pickerStyle(.wheel)
+                            ForEach(0...11, id: \.self) { inch in Text("\(inch) in").tag(inch) }
+                        }.pickerStyle(.wheel)
                     }
-
                     VStack(spacing: 4) {
-                        Text("Weight")
-                            .font(.system(.caption, design: .rounded, weight: .medium))
-                            .foregroundStyle(.secondary)
+                        Text("Weight").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
                         Picker("lbs", selection: $weightLbs) {
-                            ForEach(60...500, id: \.self) { lb in
-                                Text("\(lb) lbs").tag(lb)
-                            }
-                        }
-                        .pickerStyle(.wheel)
+                            ForEach(60...500, id: \.self) { lb in Text("\(lb) lbs").tag(lb) }
+                        }.pickerStyle(.wheel)
                     }
-                }
-                .padding(.horizontal, 24)
+                }.padding(.horizontal, 24)
             }
-
             Spacer()
-
             continueButton()
         }
     }
 
-    // MARK: - Step 4: Activity Level
+    // MARK: - 4: Activity Level
 
     private var activityStep: some View {
         VStack(alignment: .leading, spacing: 0) {
             stepHeader(title: "How active are you?", subtitle: "Your typical week")
-
             Spacer()
-
             VStack(spacing: 12) {
                 ForEach(ActivityLevel.allCases, id: \.self) { level in
-                    selectionCard(
-                        icon: level.icon,
-                        title: level.displayName,
-                        subtitle: level.subtitle,
-                        isSelected: activityLevel == level
-                    ) {
+                    selectionCard(icon: level.icon, title: level.displayName, subtitle: level.subtitle, isSelected: activityLevel == level) {
                         withAnimation(.spring(response: 0.3)) { activityLevel = level }
                     }
                 }
             }
             .padding(.horizontal, 24)
-
             Spacer()
-
             continueButton()
         }
     }
 
-    // MARK: - Step 5: Goal
+    // MARK: - 5: Goal
 
     private var goalStep: some View {
         VStack(alignment: .leading, spacing: 0) {
             stepHeader(title: "What's your goal?", subtitle: "You can change this anytime")
-
             Spacer()
-
             VStack(spacing: 12) {
                 ForEach(WeightGoal.allCases, id: \.self) { g in
-                    selectionCard(
-                        icon: g.icon,
-                        title: g.displayName,
-                        isSelected: goal == g
-                    ) {
+                    selectionCard(icon: g.icon, title: g.displayName, isSelected: goal == g) {
                         withAnimation(.spring(response: 0.3)) { goal = g }
                     }
                 }
             }
             .padding(.horizontal, 24)
-
             Spacer()
-
             continueButton {
-                // Set initial target weight based on goal
                 if goal == .lose {
                     targetWeightLbs = max(90, weightLbs - 10)
                     targetWeightKg = max(40, weightKg - 5)
@@ -364,15 +303,9 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Step 6: Desired Weight
+    // MARK: - 6: Desired Weight
 
-    private var currentWeightDisplay: Double {
-        isMetric ? Double(weightKg) : Double(weightLbs)
-    }
-
-    private var targetWeightDisplay: Double {
-        isMetric ? Double(targetWeightKg) : Double(targetWeightLbs)
-    }
+    private var weightUnit: String { isMetric ? "kg" : "lbs" }
 
     private var weightDiffKg: Double {
         let currentKg = isMetric ? Double(weightKg) : Double(weightLbs) * 0.453592
@@ -380,14 +313,10 @@ struct OnboardingView: View {
         return abs(targetKg - currentKg)
     }
 
-    private var weightUnit: String { isMetric ? "kg" : "lbs" }
-
     private var desiredWeightStep: some View {
         VStack(alignment: .leading, spacing: 0) {
             stepHeader(title: "What's your\ndesired weight?", subtitle: goal.displayName)
-
             Spacer()
-
             VStack(spacing: 8) {
                 if isMetric {
                     Text("\(targetWeightKg) kg")
@@ -401,45 +330,30 @@ struct OnboardingView: View {
                         .animation(.snappy, value: targetWeightLbs)
                 }
             }
-
             if isMetric {
                 Picker("kg", selection: $targetWeightKg) {
-                    ForEach(30...250, id: \.self) { kg in
-                        Text("\(kg)").tag(kg)
-                    }
-                }
-                .pickerStyle(.wheel)
-                .frame(height: 150)
-                .padding(.horizontal, 24)
+                    ForEach(30...250, id: \.self) { kg in Text("\(kg)").tag(kg) }
+                }.pickerStyle(.wheel).frame(height: 150).padding(.horizontal, 24)
             } else {
                 Picker("lbs", selection: $targetWeightLbs) {
-                    ForEach(60...500, id: \.self) { lb in
-                        Text("\(lb)").tag(lb)
-                    }
-                }
-                .pickerStyle(.wheel)
-                .frame(height: 150)
-                .padding(.horizontal, 24)
+                    ForEach(60...500, id: \.self) { lb in Text("\(lb)").tag(lb) }
+                }.pickerStyle(.wheel).frame(height: 150).padding(.horizontal, 24)
             }
-
             Spacer()
-
             continueButton()
         }
     }
 
-    // MARK: - Step 7: Motivation
+    // MARK: - 7: Motivation
 
     private var motivationStep: some View {
         VStack(spacing: 0) {
             Spacer()
-
             VStack(spacing: 20) {
                 if goal == .maintain {
                     Text("Maintaining your weight\nis a great goal!")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .multilineTextAlignment(.center)
-
                     Text("Consistency is key. We'll help you\nstay on track every day.")
                         .font(.system(.callout, design: .rounded))
                         .foregroundStyle(.secondary)
@@ -449,7 +363,6 @@ struct OnboardingView: View {
                         ? "\(abs(targetWeightKg - weightKg)) kg"
                         : "\(abs(targetWeightLbs - weightLbs)) lbs"
                     let verb = goal == .lose ? "Losing" : "Gaining"
-
                     (Text("\(verb) ")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                     + Text(diffText)
@@ -458,7 +371,6 @@ struct OnboardingView: View {
                     + Text(" is a\nrealistic target.\nYou've got this!")
                         .font(.system(size: 28, weight: .bold, design: .rounded)))
                     .multilineTextAlignment(.center)
-
                     Text("Most users see real progress within\nthe first few weeks of tracking.")
                         .font(.system(.callout, design: .rounded))
                         .foregroundStyle(.secondary)
@@ -466,41 +378,20 @@ struct OnboardingView: View {
                 }
             }
             .padding(.horizontal, 24)
-
             Spacer()
-
             continueButton()
         }
     }
 
-    // MARK: - Step 8: Goal Speed
-
-    private var speedLabel: String {
-        switch goalSpeed {
-        case 0: "Slow"
-        case 2: "Fast"
-        default: "Recommended"
-        }
-    }
+    // MARK: - 8: Goal Speed
 
     private var weeklyChangeKg: Double {
-        switch goalSpeed {
-        case 0: 0.25
-        case 2: 1.0
-        default: 0.5
-        }
+        switch goalSpeed { case 0: 0.25; case 2: 1.0; default: 0.5 }
     }
 
     private var estimatedDays: Int {
         guard weightDiffKg > 0 else { return 0 }
-        let weeks = weightDiffKg / weeklyChangeKg
-        return Int(weeks * 7)
-    }
-
-    private var speedCalorieAdjustment: Int {
-        // rough: 7700 kcal per kg, spread over 7 days
-        let dailyDeficit = Int(weeklyChangeKg * 7700 / 7)
-        return goal == .lose ? -dailyDeficit : (goal == .gain ? dailyDeficit : 0)
+        return Int(weightDiffKg / weeklyChangeKg * 7)
     }
 
     private var goalSpeedStep: some View {
@@ -509,85 +400,50 @@ struct OnboardingView: View {
                 title: goal == .maintain ? "Your pace" : "How fast do you want\nto reach your goal?",
                 subtitle: goal == .maintain ? "We'll set a balanced plan" : "\(goal == .lose ? "Weight loss" : "Weight gain") speed per week"
             )
-
             if goal == .maintain {
                 Spacer()
-
                 VStack(spacing: 12) {
                     Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 48))
-                        .foregroundStyle(AppColors.protein)
-
+                        .font(.system(size: 48)).foregroundStyle(AppColors.protein)
                     Text("Balanced pace set")
                         .font(.system(.title3, design: .rounded, weight: .semibold))
-
                     Text("We'll keep your calories steady\nto maintain your current weight.")
-                        .font(.system(.callout, design: .rounded))
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                .frame(maxWidth: .infinity)
-
+                        .font(.system(.callout, design: .rounded)).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                }.frame(maxWidth: .infinity)
                 Spacer()
             } else {
                 Spacer()
-
                 VStack(spacing: 24) {
-                    // Weekly change display
                     VStack(spacing: 4) {
                         Text(String(format: "%.1f %@", weeklyChangeKg * (isMetric ? 1 : 2.205), weightUnit))
                             .font(.system(size: 40, weight: .bold, design: .rounded))
-                            .contentTransition(.numericText())
-                            .animation(.snappy, value: goalSpeed)
-
-                        Text("per week")
-                            .font(.system(.callout, design: .rounded))
-                            .foregroundStyle(.secondary)
+                            .contentTransition(.numericText()).animation(.snappy, value: goalSpeed)
+                        Text("per week").font(.system(.callout, design: .rounded)).foregroundStyle(.secondary)
                     }
-
-                    // Speed icons
                     HStack(spacing: 0) {
                         VStack(spacing: 6) {
-                            Image(systemName: "tortoise.fill")
-                                .font(.system(size: 24))
+                            Image(systemName: "tortoise.fill").font(.system(size: 24))
                                 .foregroundStyle(goalSpeed == 0 ? Color.primary : Color.secondary.opacity(0.4))
-                            Text("Slow")
-                                .font(.system(.caption, design: .rounded, weight: .medium))
+                            Text("Slow").font(.system(.caption, design: .rounded, weight: .medium))
                                 .foregroundStyle(goalSpeed == 0 ? .primary : .secondary)
-                        }
-                        .frame(maxWidth: .infinity)
-
+                        }.frame(maxWidth: .infinity)
                         VStack(spacing: 6) {
-                            Image(systemName: "hare.fill")
-                                .font(.system(size: 24))
+                            Image(systemName: "hare.fill").font(.system(size: 24))
                                 .foregroundStyle(goalSpeed == 1 ? AppColors.calorie : Color.secondary.opacity(0.4))
-                            Text("Recommended")
-                                .font(.system(.caption, design: .rounded, weight: .medium))
+                            Text("Recommended").font(.system(.caption, design: .rounded, weight: .medium))
                                 .foregroundStyle(goalSpeed == 1 ? AppColors.calorie : .secondary)
-                        }
-                        .frame(maxWidth: .infinity)
-
+                        }.frame(maxWidth: .infinity)
                         VStack(spacing: 6) {
-                            Image(systemName: "bolt.fill")
-                                .font(.system(size: 24))
+                            Image(systemName: "bolt.fill").font(.system(size: 24))
                                 .foregroundStyle(goalSpeed == 2 ? Color.primary : Color.secondary.opacity(0.4))
-                            Text("Fast")
-                                .font(.system(.caption, design: .rounded, weight: .medium))
+                            Text("Fast").font(.system(.caption, design: .rounded, weight: .medium))
                                 .foregroundStyle(goalSpeed == 2 ? .primary : .secondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    .padding(.horizontal, 24)
-
-                    // Slider
+                        }.frame(maxWidth: .infinity)
+                    }.padding(.horizontal, 24)
                     Slider(value: Binding(
                         get: { Double(goalSpeed) },
                         set: { goalSpeed = Int($0.rounded()) }
-                    ), in: 0...2, step: 1)
-                    .tint(.primary)
-                    .padding(.horizontal, 40)
-
-                    // Info card
+                    ), in: 0...2, step: 1).tint(.primary).padding(.horizontal, 40)
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 0) {
                             Text("You'll reach your goal in ")
@@ -596,64 +452,121 @@ struct OnboardingView: View {
                                 .font(.system(.subheadline, design: .rounded, weight: .bold))
                                 .foregroundStyle(AppColors.calorie)
                         }
-
-                        Text(goalSpeed == 1
-                             ? "The most balanced pace, motivating and sustainable."
-                             : goalSpeed == 0
-                             ? "Gentle and sustainable. Great for long-term habits."
+                        Text(goalSpeed == 1 ? "The most balanced pace, motivating and sustainable."
+                             : goalSpeed == 0 ? "Gentle and sustainable. Great for long-term habits."
                              : "Aggressive but doable. Requires strong discipline.")
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(.secondary)
+                            .font(.system(.caption, design: .rounded)).foregroundStyle(.secondary)
                     }
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16).frame(maxWidth: .infinity, alignment: .leading)
                     .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 14))
                     .padding(.horizontal, 24)
                 }
-
                 Spacer()
             }
-
-            continueButton {
-                profile.save()
-            }
+            continueButton { profile.save() }
         }
     }
 
-    // MARK: - Step 9: Tried Other Apps
+    // MARK: - 9: Obstacles
 
-    private var triedOtherAppsStep: some View {
+    private let obstacleOptions: [(icon: String, label: String)] = [
+        ("chart.bar.fill", "Lack of consistency"),
+        ("fork.knife", "Unhealthy eating habits"),
+        ("hand.raised.fill", "Lack of support"),
+        ("calendar.badge.clock", "Busy schedule"),
+        ("lightbulb.fill", "Lack of meal inspiration")
+    ]
+
+    private var obstaclesStep: some View {
         VStack(alignment: .leading, spacing: 0) {
-            stepHeader(title: "Have you tried other\ncalorie tracking apps?", subtitle: "Just curious")
-
+            stepHeader(title: "What's stopping you\nfrom reaching\nyour goals?", subtitle: "We'll help you overcome it")
             Spacer()
-
-            VStack(spacing: 12) {
-                selectionCard(
-                    icon: "hand.thumbsup.fill",
-                    title: "Yes",
-                    isSelected: triedOtherApps == true
-                ) {
-                    withAnimation(.spring(response: 0.3)) { triedOtherApps = true }
-                }
-
-                selectionCard(
-                    icon: "hand.thumbsdown.fill",
-                    title: "No",
-                    isSelected: triedOtherApps == false
-                ) {
-                    withAnimation(.spring(response: 0.3)) { triedOtherApps = false }
+            VStack(spacing: 10) {
+                ForEach(obstacleOptions, id: \.label) { option in
+                    simpleListCard(icon: option.icon, title: option.label, isSelected: selectedObstacle == option.label) {
+                        withAnimation(.spring(response: 0.3)) { selectedObstacle = option.label }
+                    }
                 }
             }
             .padding(.horizontal, 24)
-
             Spacer()
-
             continueButton()
         }
     }
 
-    // MARK: - Step 7: Referral Source
+    // MARK: - 10: Diet
+
+    private let dietOptions: [(icon: String, label: String)] = [
+        ("flame.fill", "Classic"),
+        ("fish.fill", "Pescatarian"),
+        ("leaf.fill", "Vegetarian"),
+        ("carrot.fill", "Vegan")
+    ]
+
+    private var dietStep: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            stepHeader(title: "Do you follow a\nspecific diet?", subtitle: "Helps personalize your experience")
+            Spacer()
+            VStack(spacing: 10) {
+                ForEach(dietOptions, id: \.label) { option in
+                    simpleListCard(icon: option.icon, title: option.label, isSelected: selectedDiet == option.label) {
+                        withAnimation(.spring(response: 0.3)) { selectedDiet = option.label }
+                    }
+                }
+            }
+            .padding(.horizontal, 24)
+            Spacer()
+            continueButton()
+        }
+    }
+
+    // MARK: - 11: Accomplish
+
+    private let accomplishOptions: [(icon: String, label: String)] = [
+        ("apple.logo", "Eat and live healthier"),
+        ("sun.max.fill", "Boost my energy and mood"),
+        ("flame.fill", "Stay motivated and consistent"),
+        ("figure.mind.and.body", "Feel better about my body")
+    ]
+
+    private var accomplishStep: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            stepHeader(title: "What would you\nlike to accomplish?", subtitle: "Pick what resonates most")
+            Spacer()
+            VStack(spacing: 10) {
+                ForEach(accomplishOptions, id: \.label) { option in
+                    simpleListCard(icon: option.icon, title: option.label, isSelected: selectedAccomplishment == option.label) {
+                        withAnimation(.spring(response: 0.3)) { selectedAccomplishment = option.label }
+                    }
+                }
+            }
+            .padding(.horizontal, 24)
+            Spacer()
+            continueButton()
+        }
+    }
+
+    // MARK: - 12: Tried Other Apps
+
+    private var triedOtherAppsStep: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            stepHeader(title: "Have you tried other\ncalorie tracking apps?", subtitle: "Just curious")
+            Spacer()
+            VStack(spacing: 12) {
+                selectionCard(icon: "hand.thumbsup.fill", title: "Yes", isSelected: triedOtherApps == true) {
+                    withAnimation(.spring(response: 0.3)) { triedOtherApps = true }
+                }
+                selectionCard(icon: "hand.thumbsdown.fill", title: "No", isSelected: triedOtherApps == false) {
+                    withAnimation(.spring(response: 0.3)) { triedOtherApps = false }
+                }
+            }
+            .padding(.horizontal, 24)
+            Spacer()
+            continueButton()
+        }
+    }
+
+    // MARK: - 13: Referral
 
     private let referralOptions: [(icon: String, label: String)] = [
         ("bubble.left.and.bubble.right.fill", "Social Media"),
@@ -667,75 +580,412 @@ struct OnboardingView: View {
     private var referralStep: some View {
         VStack(alignment: .leading, spacing: 0) {
             stepHeader(title: "How did you\nfind us?", subtitle: "This helps us grow")
-
             Spacer()
-
             VStack(spacing: 10) {
                 ForEach(referralOptions, id: \.label) { option in
-                    Button {
+                    simpleListCard(icon: option.icon, title: option.label, isSelected: referralSource == option.label) {
                         withAnimation(.spring(response: 0.3)) { referralSource = option.label }
-                    } label: {
-                        HStack(spacing: 14) {
-                            Image(systemName: option.icon)
-                                .font(.system(size: 18))
-                                .foregroundStyle(referralSource == option.label ? Color.primary : .secondary)
-                                .frame(width: 36)
-
-                            Text(option.label)
-                                .font(.system(.body, design: .rounded, weight: .medium))
-                                .foregroundStyle(.primary)
-
-                            Spacer()
-                        }
-                        .padding(14)
-                        .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 14))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14)
-                                .strokeBorder(referralSource == option.label ? Color.primary : Color.clear, lineWidth: 2)
-                        )
                     }
-                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, 24)
-
             Spacer()
-
             continueButton()
         }
     }
 
-    // MARK: - Step 7: Building Plan
+    // MARK: - 14: Weight Transition
+
+    private var weightTransitionStep: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            stepHeader(title: "You have great\npotential to crush\nyour goal", subtitle: "")
+
+            Spacer()
+
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Your weight transition")
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+
+                // Simple progress curve
+                GeometryReader { geo in
+                    let w = geo.size.width
+                    let h = geo.size.height
+                    ZStack(alignment: .bottomLeading) {
+                        // Grid lines
+                        Path { path in
+                            for i in 0...2 {
+                                let x = w * CGFloat(i) / 2
+                                path.move(to: CGPoint(x: x, y: 0))
+                                path.addLine(to: CGPoint(x: x, y: h))
+                            }
+                        }
+                        .stroke(Color.secondary.opacity(0.15), style: StrokeStyle(lineWidth: 1, dash: [4]))
+
+                        // Curve
+                        Path { path in
+                            let points: [(CGFloat, CGFloat)] = goal == .lose
+                                ? [(0, 0.2), (0.2, 0.25), (0.5, 0.5), (1.0, 0.9)]
+                                : [(0, 0.8), (0.2, 0.75), (0.5, 0.5), (1.0, 0.1)]
+                            path.move(to: CGPoint(x: points[0].0 * w, y: points[0].1 * h))
+                            for i in 1..<points.count {
+                                let prev = points[i-1]
+                                let curr = points[i]
+                                let cp1 = CGPoint(x: (prev.0 + curr.0) / 2 * w, y: prev.1 * h)
+                                let cp2 = CGPoint(x: (prev.0 + curr.0) / 2 * w, y: curr.1 * h)
+                                path.addCurve(
+                                    to: CGPoint(x: curr.0 * w, y: curr.1 * h),
+                                    control1: cp1, control2: cp2
+                                )
+                            }
+                        }
+                        .stroke(AppColors.calorie, lineWidth: 2.5)
+
+                        // Dots
+                        let dotPositions: [(CGFloat, CGFloat)] = goal == .lose
+                            ? [(0, 0.2), (0.2, 0.25), (0.5, 0.5), (1.0, 0.9)]
+                            : [(0, 0.8), (0.2, 0.75), (0.5, 0.5), (1.0, 0.1)]
+                        ForEach(0..<dotPositions.count, id: \.self) { i in
+                            Circle()
+                                .fill(i == dotPositions.count - 1 ? AppColors.calorie : Color.primary.opacity(0.6))
+                                .frame(width: i == dotPositions.count - 1 ? 14 : 8, height: i == dotPositions.count - 1 ? 14 : 8)
+                                .overlay {
+                                    if i == dotPositions.count - 1 {
+                                        Image(systemName: "trophy.fill")
+                                            .font(.system(size: 7))
+                                            .foregroundStyle(.white)
+                                    }
+                                }
+                                .position(x: dotPositions[i].0 * w, y: dotPositions[i].1 * h)
+                        }
+                    }
+                }
+                .frame(height: 120)
+
+                HStack {
+                    Text("3 Days").font(.system(.caption, design: .rounded)).foregroundStyle(.secondary)
+                    Spacer()
+                    Text("7 Days").font(.system(.caption, design: .rounded)).foregroundStyle(.secondary)
+                    Spacer()
+                    Text("30 Days").font(.system(.caption, design: .rounded)).foregroundStyle(.secondary)
+                }
+
+                Text("Based on our data, progress is usually gradual at first, but after 7 days you'll see real results!")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 4)
+            }
+            .padding(20)
+            .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
+            .padding(.horizontal, 24)
+
+            Spacer()
+            continueButton()
+        }
+    }
+
+    // MARK: - 15: Trust / Privacy
+
+    private var trustStep: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            VStack(spacing: 24) {
+                ZStack {
+                    Circle()
+                        .fill(Color.secondary.opacity(0.06))
+                        .frame(width: 160, height: 160)
+                    Image(systemName: "lock.shield.fill")
+                        .font(.system(size: 56))
+                        .foregroundStyle(.primary)
+                }
+
+                VStack(spacing: 8) {
+                    Text("Thank you for\ntrusting us")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .multilineTextAlignment(.center)
+                    Text("Now let's personalize your plan...")
+                        .font(.system(.callout, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+
+                VStack(spacing: 8) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.secondary)
+                    Text("Your privacy and security matter to us.")
+                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                    Text("We promise to always keep your\npersonal information private and secure.")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(20)
+                .frame(maxWidth: .infinity)
+                .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
+                .padding(.horizontal, 24)
+            }
+
+            Spacer()
+            continueButton()
+        }
+    }
+
+    // MARK: - 16: Rating (Placeholder)
+
+    private var ratingStep: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                // Rating badge
+                VStack(spacing: 8) {
+                    HStack(spacing: 8) {
+                        Text("4.8")
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                        HStack(spacing: 2) {
+                            ForEach(0..<5, id: \.self) { _ in
+                                Image(systemName: "star.fill")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(.orange)
+                            }
+                        }
+                    }
+                    Text("200K+ App Ratings")
+                        .font(.system(.caption, design: .rounded, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(20)
+                .frame(maxWidth: .infinity)
+                .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
+
+                // Social proof
+                VStack(spacing: 12) {
+                    Text("Built for people like you")
+                        .font(.system(.title3, design: .rounded, weight: .bold))
+
+                    HStack(spacing: -12) {
+                        ForEach(0..<3, id: \.self) { i in
+                            Circle()
+                                .fill(
+                                    [Color.blue.opacity(0.3), Color.pink.opacity(0.3), Color.green.opacity(0.3)][i]
+                                )
+                                .frame(width: 52, height: 52)
+                                .overlay(
+                                    Image(systemName: ["person.fill", "person.fill", "person.fill"][i])
+                                        .foregroundStyle(.secondary)
+                                )
+                                .overlay(Circle().stroke(AppColors.appBackground, lineWidth: 3))
+                        }
+                    }
+                    Text("Thousands of happy users")
+                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                }
+
+                // Review card
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Circle()
+                            .fill(Color.blue.opacity(0.2))
+                            .frame(width: 40, height: 40)
+                            .overlay(Image(systemName: "person.fill").foregroundStyle(.secondary))
+                        Text("Sarah M.")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        Spacer()
+                        HStack(spacing: 2) {
+                            ForEach(0..<5, id: \.self) { _ in
+                                Image(systemName: "star.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(.orange)
+                            }
+                        }
+                    }
+                    Text("I lost 15 lbs in 2 months! Just snapping photos of my food made tracking so easy. Highly recommend!")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(16)
+                .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 16)
+            .padding(.bottom, 120)
+        }
+        .overlay(alignment: .bottom) {
+            continueButton()
+                .background(
+                    LinearGradient(colors: [AppColors.appBackground, AppColors.appBackground, AppColors.appBackground.opacity(0)], startPoint: .bottom, endPoint: .top)
+                        .frame(height: 100)
+                        .allowsHitTesting(false),
+                    alignment: .bottom
+                )
+        }
+    }
+
+    // MARK: - 17: Notifications (Placeholder)
+
+    private var notificationsStep: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            VStack(spacing: 24) {
+                Image(systemName: "bell.badge.fill")
+                    .font(.system(size: 56))
+                    .foregroundStyle(AppColors.calorie)
+
+                Text("Be reminded to\nlog meals")
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .multilineTextAlignment(.center)
+
+                Text("Get gentle reminders at meal times\nso you never forget to track.")
+                    .font(.system(.callout, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+
+                // Fake notification card
+                VStack(spacing: 12) {
+                    Text("Calorie Tracker would like to send you Notifications")
+                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                        .multilineTextAlignment(.center)
+                    Divider()
+                    HStack {
+                        Button { } label: {
+                            Text("Don't Allow")
+                                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity)
+                        }
+                        Divider().frame(height: 30)
+                        Button { } label: {
+                            Text("Allow")
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                .foregroundStyle(.primary)
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                }
+                .padding(16)
+                .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
+                .padding(.horizontal, 24)
+            }
+
+            Spacer()
+            continueButton()
+        }
+    }
+
+    // MARK: - 18: Apple Health (Placeholder)
+
+    private var appleHealthStep: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            VStack(spacing: 20) {
+                ZStack {
+                    Circle()
+                        .fill(Color.secondary.opacity(0.06))
+                        .frame(width: 120, height: 120)
+
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(
+                            LinearGradient(colors: [.pink, .red], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
+                }
+
+                VStack(spacing: 8) {
+                    Text("Connect to\nApple Health")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .multilineTextAlignment(.center)
+
+                    Text("Sync your daily activity to get\nthe most accurate recommendations.")
+                        .font(.system(.callout, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+
+                // Feature list
+                VStack(alignment: .leading, spacing: 12) {
+                    healthFeatureRow(icon: "figure.walk", label: "Walking & Running")
+                    healthFeatureRow(icon: "flame.fill", label: "Active Calories")
+                    healthFeatureRow(icon: "bed.double.fill", label: "Sleep Data")
+                    healthFeatureRow(icon: "heart.fill", label: "Heart Rate")
+                }
+                .padding(.horizontal, 40)
+            }
+
+            Spacer()
+
+            VStack(spacing: 12) {
+                continueButton("Connect")
+
+                Button {
+                    withAnimation(.snappy) { step += 1 }
+                } label: {
+                    Text("Skip")
+                        .font(.system(.body, design: .rounded, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.bottom, 20)
+            }
+        }
+    }
+
+    // MARK: - 19: All Done
+
+    private var allDoneStep: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            VStack(spacing: 24) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(colors: [Color.pink.opacity(0.1), Color.blue.opacity(0.1)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
+                        .frame(width: 160, height: 160)
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 64))
+                        .foregroundStyle(AppColors.calorie)
+                }
+
+                VStack(spacing: 8) {
+                    Text("All done!")
+                        .font(.system(.callout, design: .rounded, weight: .medium))
+                        .foregroundStyle(.secondary)
+                    Text("Time to generate\nyour custom plan!")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .multilineTextAlignment(.center)
+                }
+            }
+
+            Spacer()
+            continueButton()
+        }
+    }
+
+    // MARK: - 20: Building Plan
 
     private var buildingPlanStep: some View {
-        BuildingPlanStepView {
+        BuildingPlanStepView(profile: profile) {
             withAnimation(.snappy) { step += 1 }
         }
     }
 
-    // MARK: - Step 7: Plan Ready
+    // MARK: - 21: Plan Ready
 
     private var planReadyStep: some View {
         VStack(spacing: 0) {
             stepHeader(title: "Your Plan", subtitle: "Based on your profile")
-
             Spacer()
-
             VStack(spacing: 24) {
-                // Big calorie number
                 VStack(spacing: 4) {
                     Text("\(profile.dailyCalories)")
                         .font(.system(size: 64, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
-
                     Text("daily calories")
                         .font(.system(.callout, design: .rounded, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
-
-                // Macro bars (matching home page style)
                 HStack(spacing: 20) {
                     MacroCard(label: "Protein", current: profile.proteinGoal, goal: profile.proteinGoal, gradientColors: AppColors.proteinGradient)
                     MacroCard(label: "Carbs", current: profile.carbsGoal, goal: profile.carbsGoal, gradientColors: AppColors.carbsGradient)
@@ -743,23 +993,18 @@ struct OnboardingView: View {
                 }
                 .padding(.horizontal, 24)
             }
-
             Spacer()
-
             continueButton("Let's get started!")
         }
     }
 
-    // MARK: - Step 8: Paywall
+    // MARK: - 22: Paywall
 
     private var paywallStep: some View {
         VStack(spacing: 0) {
-            // X dismiss button
             HStack {
                 Spacer()
-                Button {
-                    hasCompletedOnboarding = true
-                } label: {
+                Button { hasCompletedOnboarding = true } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.secondary)
@@ -767,78 +1012,34 @@ struct OnboardingView: View {
                         .background(Color.primary.opacity(0.06), in: Circle())
                 }
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 8)
-
+            .padding(.horizontal, 24).padding(.top, 8)
             Spacer()
-
             VStack(spacing: 8) {
-                Image(systemName: "star.fill")
-                    .font(.system(size: 44))
-                    .foregroundStyle(
-                        LinearGradient(colors: [.yellow, .orange], startPoint: .topLeading, endPoint: .bottomTrailing)
-                    )
-
-                Text("Unlock Premium")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-
+                Image(systemName: "star.fill").font(.system(size: 44))
+                    .foregroundStyle(LinearGradient(colors: [.yellow, .orange], startPoint: .topLeading, endPoint: .bottomTrailing))
+                Text("Unlock Premium").font(.system(size: 28, weight: .bold, design: .rounded))
                 Text("Unlimited scans, detailed insights,\nand personalized plans")
-                    .font(.system(.callout, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                    .font(.system(.callout, design: .rounded)).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
-
             Spacer()
-
-            // Plan cards
             VStack(spacing: 12) {
-                paywallPlanCard(
-                    plan: .yearly,
-                    title: "Yearly",
-                    price: formatPrice(39.99),
-                    detail: "\(formatPrice(3.33))/mo",
-                    badge: "Best Value"
-                )
-
-                paywallPlanCard(
-                    plan: .weekly,
-                    title: "Weekly",
-                    price: formatPrice(4.99),
-                    detail: "per week",
-                    badge: nil
-                )
-            }
-            .padding(.horizontal, 24)
-
+                paywallPlanCard(plan: .yearly, title: "Yearly", price: formatPrice(39.99), detail: "\(formatPrice(3.33))/mo", badge: "Best Value")
+                paywallPlanCard(plan: .weekly, title: "Weekly", price: formatPrice(4.99), detail: "per week", badge: nil)
+            }.padding(.horizontal, 24)
             Spacer()
-
-            // CTA
-            Button {
-                hasCompletedOnboarding = true
-            } label: {
+            Button { hasCompletedOnboarding = true } label: {
                 Text("Start Free Trial")
                     .font(.system(.body, design: .rounded, weight: .semibold))
                     .foregroundStyle(AppColors.appBackground)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 54)
+                    .frame(maxWidth: .infinity).frame(height: 54)
                     .background(Color.primary, in: Capsule())
-            }
-            .padding(.horizontal, 24)
-
-            // Restore + footer
+            }.padding(.horizontal, 24)
             VStack(spacing: 8) {
-                Button("Restore Purchases") {
-                    hasCompletedOnboarding = true
-                }
-                .font(.system(.footnote, design: .rounded, weight: .medium))
-                .foregroundStyle(.secondary)
-
+                Button("Restore Purchases") { hasCompletedOnboarding = true }
+                    .font(.system(.footnote, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
                 Text("No Commitment \u{2022} Cancel Anytime")
-                    .font(.system(.caption2, design: .rounded))
-                    .foregroundStyle(.tertiary)
-            }
-            .padding(.top, 12)
-            .padding(.bottom, 36)
+                    .font(.system(.caption2, design: .rounded)).foregroundStyle(.tertiary)
+            }.padding(.top, 12).padding(.bottom, 36)
         }
     }
 
@@ -846,52 +1047,55 @@ struct OnboardingView: View {
 
     private func stepHeader(title: String, subtitle: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.system(size: 28, weight: .bold, design: .rounded))
-
-            Text(subtitle)
-                .font(.system(.callout, design: .rounded))
-                .foregroundStyle(.secondary)
+            Text(title).font(.system(size: 28, weight: .bold, design: .rounded))
+            if !subtitle.isEmpty {
+                Text(subtitle).font(.system(.callout, design: .rounded)).foregroundStyle(.secondary)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 24)
-        .padding(.top, 24)
+        .padding(.horizontal, 24).padding(.top, 24)
     }
 
     private func selectionCard(icon: String, title: String, subtitle: String? = nil, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 16) {
-                Image(systemName: icon)
-                    .font(.system(size: 22))
-                    .foregroundStyle(isSelected ? Color.primary : .secondary)
-                    .frame(width: 40)
-
+                Image(systemName: icon).font(.system(size: 22))
+                    .foregroundStyle(isSelected ? Color.primary : .secondary).frame(width: 40)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.system(.body, design: .rounded, weight: .semibold))
-                        .foregroundStyle(.primary)
-
+                    Text(title).font(.system(.body, design: .rounded, weight: .semibold)).foregroundStyle(.primary)
                     if let subtitle {
-                        Text(subtitle)
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(.secondary)
+                        Text(subtitle).font(.system(.caption, design: .rounded)).foregroundStyle(.secondary)
                     }
                 }
-
                 Spacer()
-
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 22))
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle").font(.system(size: 22))
                     .foregroundStyle(isSelected ? Color.primary : Color.secondary.opacity(0.3))
             }
             .padding(16)
             .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(isSelected ? Color.primary : Color.clear, lineWidth: 2)
-            )
+            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(isSelected ? Color.primary : Color.clear, lineWidth: 2))
+        }.buttonStyle(.plain)
+    }
+
+    private func simpleListCard(icon: String, title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: icon).font(.system(size: 18))
+                    .foregroundStyle(isSelected ? Color.primary : .secondary).frame(width: 36)
+                Text(title).font(.system(.body, design: .rounded, weight: .medium)).foregroundStyle(.primary)
+                Spacer()
+            }
+            .padding(14)
+            .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(isSelected ? Color.primary : Color.clear, lineWidth: 2))
+        }.buttonStyle(.plain)
+    }
+
+    private func healthFeatureRow(icon: String, label: String) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon).font(.system(size: 18)).foregroundStyle(.secondary).frame(width: 28)
+            Text(label).font(.system(.body, design: .rounded)).foregroundStyle(.primary)
         }
-        .buttonStyle(.plain)
     }
 
     private func formatPrice(_ amount: Double) -> String {
@@ -908,47 +1112,24 @@ struct OnboardingView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     if let badge {
-                        Text(badge)
-                            .font(.system(.caption2, design: .rounded, weight: .bold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(
-                                LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing),
-                                in: Capsule()
-                            )
+                        Text(badge).font(.system(.caption2, design: .rounded, weight: .bold)).foregroundStyle(.white)
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .background(LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing), in: Capsule())
                     }
-
-                    Text(title)
-                        .font(.system(.body, design: .rounded, weight: .semibold))
-                        .foregroundStyle(.primary)
+                    Text(title).font(.system(.body, design: .rounded, weight: .semibold)).foregroundStyle(.primary)
                 }
-
                 Spacer()
-
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(price)
-                        .font(.system(.body, design: .rounded, weight: .bold))
-                        .foregroundStyle(.primary)
-
-                    Text(detail)
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(.secondary)
+                    Text(price).font(.system(.body, design: .rounded, weight: .bold)).foregroundStyle(.primary)
+                    Text(detail).font(.system(.caption, design: .rounded)).foregroundStyle(.secondary)
                 }
-
-                Image(systemName: selectedPlan == plan ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 22))
-                    .foregroundStyle(selectedPlan == plan ? Color.primary : Color.secondary.opacity(0.3))
-                    .padding(.leading, 8)
+                Image(systemName: selectedPlan == plan ? "checkmark.circle.fill" : "circle").font(.system(size: 22))
+                    .foregroundStyle(selectedPlan == plan ? Color.primary : Color.secondary.opacity(0.3)).padding(.leading, 8)
             }
             .padding(16)
             .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(selectedPlan == plan ? Color.primary : Color.clear, lineWidth: 2)
-            )
-        }
-        .buttonStyle(.plain)
+            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(selectedPlan == plan ? Color.primary : Color.clear, lineWidth: 2))
+        }.buttonStyle(.plain)
     }
 }
 
@@ -958,85 +1139,97 @@ enum PaywallPlan {
     case yearly, weekly
 }
 
-// MARK: - Building Plan Step (separate view for timer)
+// MARK: - Building Plan Step (enhanced with percentage + checklist)
 
 struct BuildingPlanStepView: View {
+    let profile: UserProfile
     let onComplete: () -> Void
 
     @State private var progress: Double = 0
+    @State private var percent = 0
     @State private var checkItem = 0
 
     private let items = [
-        "Calculating BMR...",
-        "Setting macro targets...",
-        "Personalizing plan..."
+        ("Calories", "flame.fill"),
+        ("Carbs", "leaf.fill"),
+        ("Protein", "fish.fill"),
+        ("Fats", "drop.fill"),
+        ("Health Score", "heart.fill")
     ]
 
     var body: some View {
-        VStack(spacing: 40) {
+        VStack(spacing: 32) {
             Spacer()
 
-            VStack(spacing: 24) {
-                Text("Building Your Plan")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+            VStack(spacing: 8) {
+                Text("\(percent)%")
+                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .contentTransition(.numericText())
+                    .animation(.easeInOut(duration: 0.3), value: percent)
 
-                // Progress bar
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(Color.primary.opacity(0.08))
-
-                        Capsule()
-                            .fill(
-                                LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing)
-                            )
-                            .frame(width: geo.size.width * progress)
-                            .animation(.easeInOut(duration: 0.5), value: progress)
-                    }
-                }
-                .frame(height: 8)
-                .padding(.horizontal, 48)
+                Text("We're setting everything\nup for you")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .multilineTextAlignment(.center)
             }
+
+            // Progress bar
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.primary.opacity(0.08))
+                    Capsule()
+                        .fill(
+                            LinearGradient(colors: AppColors.calorieGradient + [Color.blue.opacity(0.6)], startPoint: .leading, endPoint: .trailing)
+                        )
+                        .frame(width: geo.size.width * progress)
+                        .animation(.easeInOut(duration: 0.4), value: progress)
+                }
+            }
+            .frame(height: 10)
+            .padding(.horizontal, 40)
+
+            Text("Finalizing results...")
+                .font(.system(.subheadline, design: .rounded))
+                .foregroundStyle(.secondary)
 
             // Checklist
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Daily recommendation for")
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
                 ForEach(0..<items.count, id: \.self) { index in
-                    HStack(spacing: 12) {
-                        Image(systemName: index < checkItem ? "checkmark.circle.fill" : "circle")
-                            .font(.system(size: 20))
-                            .foregroundStyle(index < checkItem ? Color.primary : .secondary.opacity(0.3))
-
-                        Text(items[index])
+                    HStack(spacing: 10) {
+                        Text("\u{2022}")
+                            .foregroundStyle(.secondary)
+                        Text(items[index].0)
                             .font(.system(.body, design: .rounded))
-                            .foregroundStyle(index <= checkItem ? .primary : .secondary)
+                        Spacer()
+                        if index < checkItem {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 20))
+                                .foregroundStyle(.primary)
+                                .transition(.scale.combined(with: .opacity))
+                        }
                     }
-                    .opacity(index <= checkItem ? 1 : 0.3)
-                    .animation(.easeInOut(duration: 0.4), value: checkItem)
+                    .animation(.spring(response: 0.4), value: checkItem)
                 }
             }
-            .padding(.horizontal, 48)
+            .padding(.horizontal, 40)
 
-            Spacer()
             Spacer()
         }
-        .onAppear {
-            // Animate progress and checklist over ~3 seconds
-            withAnimation(.easeInOut(duration: 0.8)) { progress = 0.33 }
+        .onAppear { startAnimation() }
+    }
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                checkItem = 1
-                withAnimation(.easeInOut(duration: 0.8)) { progress = 0.66 }
+    private func startAnimation() {
+        // 5 items over ~4 seconds
+        for i in 0..<5 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.7) {
+                withAnimation { checkItem = i + 1 }
+                percent = [20, 40, 60, 80, 100][i]
+                progress = Double(i + 1) / 5.0
             }
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
-                checkItem = 2
-                withAnimation(.easeInOut(duration: 0.8)) { progress = 1.0 }
-            }
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.8) {
-                checkItem = 3
-                onComplete()
-            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+            onComplete()
         }
     }
 }
