@@ -123,11 +123,12 @@ struct OnboardingView: View {
             Spacer()
 
             VStack(spacing: 20) {
-                Image(systemName: "leaf.fill")
-                    .font(.system(size: 72))
-                    .foregroundStyle(
-                        LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
-                    )
+                Image("onboardingLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 120, height: 120)
+                    .clipShape(RoundedRectangle(cornerRadius: 28))
+                    .shadow(color: AppColors.calorie.opacity(0.3), radius: 20, y: 10)
 
                 VStack(spacing: 8) {
                     Text("Calorie Tracking")
