@@ -16,8 +16,9 @@ struct OnboardingView: View {
     @State private var goal: WeightGoal = .maintain
     @State private var selectedPlan: PaywallPlan = .yearly
     @State private var referralSource: String?
+    @State private var triedOtherApps: Bool?
 
-    private let totalSteps = 10 // 0-9
+    private let totalSteps = 11 // 0-10
 
     private var profile: UserProfile {
         let cm: Double
@@ -46,7 +47,7 @@ struct OnboardingView: View {
 
             VStack(spacing: 0) {
                 // Top bar: back + progress
-                if step > 0 && step < 9 {
+                if step > 0 && step < 10 {
                     HStack(spacing: 16) {
                         Button {
                             withAnimation(.snappy) { step -= 1 }
@@ -83,10 +84,11 @@ struct OnboardingView: View {
                     case 3: heightWeightStep
                     case 4: activityStep
                     case 5: goalStep
-                    case 6: referralStep
-                    case 7: buildingPlanStep
-                    case 8: planReadyStep
-                    case 9: paywallStep
+                    case 6: triedOtherAppsStep
+                    case 7: referralStep
+                    case 8: buildingPlanStep
+                    case 9: planReadyStep
+                    case 10: paywallStep
                     default: EmptyView()
                     }
                 }
@@ -346,7 +348,40 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Step 6: Referral Source
+    // MARK: - Step 6: Tried Other Apps
+
+    private var triedOtherAppsStep: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            stepHeader(title: "Have you tried other\ncalorie tracking apps?", subtitle: "Just curious")
+
+            Spacer()
+
+            VStack(spacing: 12) {
+                selectionCard(
+                    icon: "hand.thumbsup.fill",
+                    title: "Yes",
+                    isSelected: triedOtherApps == true
+                ) {
+                    withAnimation(.spring(response: 0.3)) { triedOtherApps = true }
+                }
+
+                selectionCard(
+                    icon: "hand.thumbsdown.fill",
+                    title: "No",
+                    isSelected: triedOtherApps == false
+                ) {
+                    withAnimation(.spring(response: 0.3)) { triedOtherApps = false }
+                }
+            }
+            .padding(.horizontal, 24)
+
+            Spacer()
+
+            continueButton()
+        }
+    }
+
+    // MARK: - Step 7: Referral Source
 
     private let referralOptions: [(icon: String, label: String)] = [
         ("bubble.left.and.bubble.right.fill", "Social Media"),
