@@ -16,12 +16,11 @@ struct WeekEnergyStrip: View {
     }
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 0) {
             ForEach(0..<7, id: \.self) { index in
                 dayTile(for: weekDates[index])
             }
         }
-        .padding(.vertical, 4)
     }
 
     private func dayTile(for date: Date) -> some View {
@@ -34,25 +33,29 @@ struct WeekEnergyStrip: View {
                 selectedDate = date
             }
         } label: {
-            VStack(spacing: 2) {
+            VStack(spacing: 6) {
                 Text(date.formatted(.dateTime.weekday(.narrow)))
-                    .font(.caption2)
-                    .fontWeight(.medium)
+                    .font(.system(.caption2, design: .rounded, weight: .medium))
+                    .foregroundStyle(isSelected ? AppColors.calorie : Color.secondary.opacity(0.6))
 
                 Text(date.formatted(.dateTime.day()))
-                    .font(.system(.callout, design: .rounded, weight: .semibold))
-            }
-            .foregroundStyle(isSelected ? .white : (isToday ? AppColors.calorie : .secondary))
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .background {
-                if isSelected {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing))
-                }
+                    .font(.system(.body, design: .rounded, weight: .semibold))
+                    .foregroundStyle(isSelected ? .white : (isToday ? AppColors.calorie : .primary))
+                    .frame(width: 36, height: 36)
+                    .background {
+                        if isSelected {
+                            Circle()
+                                .fill(LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing))
+                                .shadow(color: AppColors.calorie.opacity(0.35), radius: 6, y: 3)
+                        } else if isToday {
+                            Circle()
+                                .strokeBorder(AppColors.calorie.opacity(0.35), lineWidth: 1.5)
+                        }
+                    }
             }
         }
         .buttonStyle(.plain)
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -69,26 +72,27 @@ struct MacroCard: View {
     }
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 8) {
             Text("\(current)")
-                .font(.system(.title2, design: .rounded, weight: .bold))
+                .font(.system(.title, design: .rounded, weight: .bold))
                 .foregroundStyle(gradientColors.first ?? .primary)
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(gradientColors.first?.opacity(0.18) ?? Color.gray.opacity(0.18))
+                        .fill(gradientColors.first?.opacity(0.12) ?? Color.gray.opacity(0.12))
 
                     Capsule()
                         .fill(LinearGradient(colors: gradientColors, startPoint: .leading, endPoint: .trailing))
-                        .frame(width: max(4, geo.size.width * progress))
-                        .animation(.spring(response: 0.6, dampingFraction: 0.85), value: current)
+                        .frame(width: max(6, geo.size.width * progress))
+                        .shadow(color: (gradientColors.first ?? .clear).opacity(0.3), radius: 4, y: 2)
+                        .animation(.spring(response: 0.8, dampingFraction: 0.75), value: current)
                 }
             }
-            .frame(height: 5)
+            .frame(height: 6)
 
             Text(label)
-                .font(.caption)
+                .font(.system(.caption, design: .rounded, weight: .medium))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
