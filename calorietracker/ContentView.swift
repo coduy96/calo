@@ -48,16 +48,14 @@ struct HomeView: View {
     @State private var showPhotoModeChoice = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var showPhotoPicker = false
-    @State private var showAnalyzing = false
-    @State private var showFoodResult = false
-    @State private var showServingSize = false
     @State private var showError = false
     @State private var errorMessage = ""
 
-    private enum PendingSheet {
-        case foodResult, servingSize, error
+    enum ActiveSheet: String, Identifiable {
+        case analyzing, foodResult, servingSize
+        var id: String { rawValue }
     }
-    @State private var pendingSheet: PendingSheet?
+    @State private var activeSheet: ActiveSheet?
 
     @State private var currentFoodResult: GeminiService.FoodAnalysis?
     @State private var currentLabelResult: GeminiService.NutritionLabelAnalysis?
@@ -176,51 +174,41 @@ struct HomeView: View {
                 currentImage = image
                 startAnalysis(image: image, mode: cameraMode)
             }
-            .sheet(isPresented: $showAnalyzing, onDismiss: {
-                switch pendingSheet {
-                case .foodResult: showFoodResult = true
-                case .servingSize: showServingSize = true
-                case .error: showError = true
-                case nil: break
-                }
-                pendingSheet = nil
-            }) {
-                if let image = currentImage {
-                    AnalyzingView(image: image)
-                        .interactiveDismissDisabled()
-                }
-            }
-            .sheet(isPresented: $showFoodResult) {
-                if let image = currentImage, let result = currentFoodResult {
-                    FoodResultView(
-                        image: image,
-                        source: cameraMode == .snapFood ? .snapFood : .nutritionLabel,
-                        name: result.name,
-                        calories: result.calories,
-                        protein: result.protein,
-                        carbs: result.carbs,
-                        fat: result.fat,
-                        onLog: { entry in
-                            foodStore.addEntry(entry)
-                        }
-                    )
-                }
-            }
-            .sheet(isPresented: $showServingSize) {
-                if let image = currentImage, let labelResult = currentLabelResult {
-                    ServingSizeInputView(
-                        image: image,
-                        labelAnalysis: labelResult,
-                        onContinue: { scaled in
-                            currentFoodResult = scaled
-                            showServingSize = false
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                showFoodResult = true
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .analyzing:
+                    if let image = currentImage {
+                        AnalyzingView(image: image)
+                    }
+                case .foodResult:
+                    if let image = currentImage, let result = currentFoodResult {
+                        FoodResultView(
+                            image: image,
+                            source: cameraMode == .snapFood ? .snapFood : .nutritionLabel,
+                            name: result.name,
+                            calories: result.calories,
+                            protein: result.protein,
+                            carbs: result.carbs,
+                            fat: result.fat,
+                            onLog: { entry in
+                                foodStore.addEntry(entry)
                             }
-                        }
-                    )
+                        )
+                    }
+                case .servingSize:
+                    if let image = currentImage, let labelResult = currentLabelResult {
+                        ServingSizeInputView(
+                            image: image,
+                            labelAnalysis: labelResult,
+                            onContinue: { scaled in
+                                currentFoodResult = scaled
+                                activeSheet = .foodResult
+                            }
+                        )
+                    }
                 }
             }
+            .interactiveDismissDisabled(activeSheet == .analyzing)
             .confirmationDialog("What are you uploading?", isPresented: $showPhotoModeChoice) {
                 Button("Food Photo") {
                     cameraMode = .snapFood
@@ -252,7 +240,7 @@ struct HomeView: View {
     }
 
     private func startAnalysis(image: UIImage, mode: CameraMode) {
-        showAnalyzing = true
+        activeSheet = .analyzing
 
         Task {
             do {
@@ -260,20 +248,18 @@ struct HomeView: View {
                 case .snapFood:
                     let result = try await GeminiService.analyzeFood(image: image)
                     currentFoodResult = result
-                    pendingSheet = .foodResult
-                    showAnalyzing = false
+                    activeSheet = .foodResult
 
                 case .nutritionLabel:
                     let result = try await GeminiService.analyzeNutritionLabel(image: image)
                     currentLabelResult = result
                     currentFoodResult = nil
-                    pendingSheet = .servingSize
-                    showAnalyzing = false
+                    activeSheet = .servingSize
                 }
             } catch {
+                activeSheet = nil
                 errorMessage = error.localizedDescription
-                pendingSheet = .error
-                showAnalyzing = false
+                showError = true
             }
         }
     }
