@@ -615,6 +615,7 @@ struct ProfileView: View {
     @State private var showDeleteConfirmation = false
     @State private var editingName: String = ""
     @State private var isSyncing = false
+    @State private var isSigningOut = false
     @State private var signInError: String?
 
     // Height formatting
@@ -863,14 +864,14 @@ struct ProfileView: View {
                                         .foregroundStyle(AppColors.calorie)
                                 }
                                 Spacer()
-                                if isSyncing {
+                                if isSyncing || isSigningOut {
                                     ProgressView()
                                         .tint(AppColors.calorie)
                                 }
                             }
                         }
                         .buttonStyle(.plain)
-                        .disabled(isSyncing)
+                        .disabled(isSyncing || isSigningOut)
 
                         // Apple Health
                         HStack {
@@ -890,14 +891,14 @@ struct ProfileView: View {
 
                         // Sign Out
                         Button {
-                            isSyncing = true
+                            isSigningOut = true
                             Task {
                                 await CloudKitService.pushAllData(
                                     foodEntries: foodStore.entries,
                                     weightEntries: weightStore.entries,
                                     profile: UserProfile.load()
                                 )
-                                isSyncing = false
+                                isSigningOut = false
                                 authManager.signOut()
                                 hasCompletedOnboarding = false
                             }
@@ -910,14 +911,14 @@ struct ProfileView: View {
                                         .foregroundStyle(AppColors.calorie)
                                 }
                                 Spacer()
-                                if isSyncing {
+                                if isSigningOut {
                                     ProgressView()
                                         .tint(AppColors.calorie)
                                 }
                             }
                         }
                         .buttonStyle(.plain)
-                        .disabled(isSyncing)
+                        .disabled(isSyncing || isSigningOut)
                     } else {
                         // Apple Health
                         HStack {
