@@ -66,7 +66,9 @@ User captures photo → `GeminiService.autoAnalyze(image:)` → JSON response pa
 - **BMR**: Katch-McArdle when `bodyFatPercentage` is set, otherwise Mifflin-St Jeor
 - **TDEE**: BMR × activity level multiplier (6 levels, 1.2–2.0)
 - **Daily calories**: `max(1200, TDEE + calorieAdjustment)` where adjustment = `weeklyChangeKg × 7700 / 7`
-- **Macros**: 30% protein, 45% carbs, 25% fat
+- **Protein**: `activityLevel.proteinPerKg × weightKg` (1.0–2.2 g/kg based on activity)
+- **Fat**: `0.6 × weightKg`
+- **Carbs**: remaining calories after protein and fat → `(dailyCalories − protein×4 − fat×9) / 4`
 
 ## Gotchas
 
