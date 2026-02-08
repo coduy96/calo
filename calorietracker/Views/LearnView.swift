@@ -239,52 +239,29 @@ struct ArticleDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Hero header with image
-                VStack(spacing: 0) {
-                    Color.clear
-                        .frame(height: 220)
-                        .overlay {
-                            AsyncImage(url: URL(string: article.imageURL)) { phase in
-                                switch phase {
-                                case .success(let image):
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                case .failure:
-                                    detailImagePlaceholder
-                                case .empty:
-                                    detailImagePlaceholder
-                                        .overlay(ProgressView().tint(.white))
-                                @unknown default:
-                                    detailImagePlaceholder
-                                }
-                            }
-                        }
-                        .clipped()
+                // Hero header
+                VStack(spacing: 8) {
+                    Text(article.title)
+                        .font(.system(.title2, design: .rounded, weight: .bold))
+                        .multilineTextAlignment(.center)
 
-                    VStack(spacing: 8) {
-                        Text(article.title)
-                            .font(.system(.title2, design: .rounded, weight: .bold))
-                            .multilineTextAlignment(.center)
+                    HStack(spacing: 12) {
+                        Label("\(article.readingTimeMinutes) min read", systemImage: "clock")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
 
-                        HStack(spacing: 12) {
-                            Label("\(article.readingTimeMinutes) min read", systemImage: "clock")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-
-                            Text(article.category.rawValue)
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(article.category.color.opacity(0.15))
-                                .foregroundStyle(article.category.color)
-                                .clipShape(Capsule())
-                        }
+                        Text(article.category.rawValue)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(article.category.color.opacity(0.15))
+                            .foregroundStyle(article.category.color)
+                            .clipShape(Capsule())
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding()
                 }
+                .frame(maxWidth: .infinity)
+                .padding()
                 .background(AppColors.appCard)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
 
@@ -312,16 +289,4 @@ struct ArticleDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private var detailImagePlaceholder: some View {
-        ZStack {
-            LinearGradient(
-                colors: article.category.gradient,
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            Image(systemName: article.icon)
-                .font(.system(size: 48))
-                .foregroundStyle(.white.opacity(0.7))
-        }
-    }
 }
