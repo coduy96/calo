@@ -238,32 +238,10 @@ struct ArticleDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                // Hero header
-                VStack(spacing: 8) {
-                    Text(article.title)
-                        .font(.system(.title2, design: .rounded, weight: .bold))
-                        .multilineTextAlignment(.center)
-
-                    HStack(spacing: 12) {
-                        Label("\(article.readingTimeMinutes) min read", systemImage: "clock")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-
-                        Text(article.category.rawValue)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(article.category.color.opacity(0.15))
-                            .foregroundStyle(article.category.color)
-                            .clipShape(Capsule())
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(AppColors.appCard)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+            VStack(alignment: .leading, spacing: 16) {
+                Text(article.title)
+                    .font(.system(.title2, design: .rounded, weight: .bold))
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                 // Content paragraphs
                 ForEach(Array(article.contentParagraphs.enumerated()), id: \.offset) { _, paragraph in
@@ -271,15 +249,11 @@ struct ArticleDetailView: View {
                     if trimmed.hasPrefix("## ") {
                         Text(String(trimmed.dropFirst(3)))
                             .font(.system(.headline, design: .rounded, weight: .bold))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal)
                             .padding(.top, 4)
                     } else {
                         Text(trimmed)
                             .font(.system(.body, design: .rounded))
                             .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal)
                     }
                 }
             }
