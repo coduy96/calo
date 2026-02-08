@@ -598,6 +598,7 @@ struct ProfileView: View {
     @Environment(WeightStore.self) private var weightStore
     @Environment(FoodStore.self) private var foodStore
     @Environment(AuthManager.self) private var authManager
+    @Environment(NotificationManager.self) private var notificationManager
     @State private var profile: UserProfile = UserProfile.load() ?? .default
     @AppStorage("appearanceMode") private var appearanceMode = "system"
     @AppStorage("useMetric") private var useMetric = false
@@ -1064,7 +1065,14 @@ struct ProfileView: View {
             .alert("Delete All Data", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete Everything", role: .destructive) {
+                    // Clear in-memory stores
+                    foodStore.replaceAllEntries([])
+                    weightStore.replaceAllEntries([])
+                    // Cancel all notifications
+                    notificationManager.cancelAllNotifications()
+                    // Sign out (clears auth credentials)
                     authManager.signOut()
+                    // Wipe all persisted data
                     let domain = Bundle.main.bundleIdentifier ?? ""
                     UserDefaults.standard.removePersistentDomain(forName: domain)
                     hasCompletedOnboarding = false
