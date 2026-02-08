@@ -375,6 +375,8 @@ struct NutritionDetailView: View {
                     NutritionDetailRow(label: "Potassium", value: formatMicro(foodStore.potassium(for: date)), unit: "mg")
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(AppColors.appBackground)
             .navigationTitle("Nutrition Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -54,6 +54,8 @@ struct TextFoodInputView: View {
                     .listRowBackground(Color.clear)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(AppColors.appBackground)
             .navigationTitle("Text Input")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -146,6 +146,8 @@ struct FoodResultView: View {
                     .listRowBackground(Color.clear)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(AppColors.appBackground)
             .navigationTitle("Review Food")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
