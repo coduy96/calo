@@ -15,6 +15,10 @@ xcodebuild -scheme calorietracker -destination 'id=00008140-000C02942169801C' bu
 xcrun devicectl device install app --device 00008140-000C02942169801C \
   /Users/ApoorvDarshan/Library/Developer/Xcode/DerivedData/calorietracker-gpxszidbuonxcogxztdsjuodfjkp/Build/Products/Debug-iphoneos/calorietracker.app \
   && xcrun devicectl device process launch --device 00008140-000C02942169801C com.apoorvdarshan.calorietracker
+
+# Reset onboarding (delete + reinstall — UserDefaults lives on device)
+xcrun devicectl device uninstall app --device 00008140-000C02942169801C com.apoorvdarshan.calorietracker
+# then reinstall with the install command above
 ```
 
 Available simulators: iPhone 17 Pro, iPhone 17, iPhone Air (no iPhone 16 Pro).
@@ -43,17 +47,19 @@ User captures photo → `GeminiService.autoAnalyze(image:)` → JSON response pa
 
 | Directory | Purpose |
 |-----------|---------|
-| `Models/` | `UserProfile` (BMR/TDEE/macros), `FoodEntry` (logged food item) |
-| `Views/` | `OnboardingView` (24-step flow), `HomeComponents`, `FoodResultView`, `Theme` (AppColors) |
+| `Models/` | `UserProfile` (BMR/TDEE/macros), `FoodEntry` (logged food item), `Article` (learn content), `WeightEntry` |
+| `Views/` | `OnboardingView` (24-step flow), `HomeComponents`, `FoodResultView`, `LearnView`, `ProgressComponents`, `Theme` (AppColors) |
 | `Services/` | `GeminiService` (Gemini API), `APIKeyManager` |
-| `Stores/` | `FoodStore` (@Observable, manages food entries array) |
+| `Stores/` | `FoodStore` (@Observable, food entries), `WeightStore` (@Observable, weight tracking) |
 
 ### Main Views
 
 - **`calorietrackerApp`** — routes to `OnboardingView` or `ContentView` based on `@AppStorage("hasCompletedOnboarding")`
-- **`ContentView`** — 4-tab layout (Home, Progress, Groups, Profile). Home is fully built; others are placeholders.
+- **`ContentView`** — 4-tab layout: Home, Progress, Learn, Profile. Also contains `HomeView`, `ProfileView`, `CameraView`, `FoodRow`, `MacroPill` inline.
 - **`OnboardingView`** — 24 steps (0-23) with step index switch. Steps shift when inserting new ones.
 - **`HomeView`** (inside ContentView) — daily tracker with week strip, calorie hero, macro cards, meal-grouped food list, camera toolbar.
+- **`LearnView`** — educational articles with search, category filter chips, and sort options. Articles defined in `Article.swift` with Unsplash image thumbnails.
+- **`ProgressTabView`** (inside ProgressComponents) — weight tracking, calorie/macro charts, streak stats.
 
 ### Nutrition Math (UserProfile)
 
@@ -69,3 +75,4 @@ User captures photo → `GeminiService.autoAnalyze(image:)` → JSON response pa
 - **Multiple `.sheet()` modifiers**: Cause white/black screens. Use single `.sheet(item:)` with an enum instead.
 - **`FoodEntry` backward compat**: Has custom `init(from:)` that defaults `mealType` to `.other` for old entries missing the field.
 - **`UserProfile` optional fields**: `bodyFatPercentage` and `weeklyChangeKg` are optional so old saved JSON decodes without them (Swift Codable defaults missing optionals to nil).
+- **AsyncImage `.fill` overflow**: When using `.aspectRatio(contentMode: .fill)` with `AsyncImage`, wrap in `Color.clear.frame(height:).overlay { ... }.clipped()` — otherwise the image layout expands beyond the frame and clips surrounding text.
