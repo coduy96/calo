@@ -164,15 +164,15 @@ struct OnboardingView: View {
                     .frame(width: 120, height: 120)
 
                 VStack(spacing: 8) {
-                    Text("Calorie Tracking")
+                    Text("Eat Smart,")
                         .font(.system(size: 32, weight: .bold, design: .rounded))
-                    Text("Made Easy")
+                    Text("Live Better")
                         .font(.system(size: 32, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing)
                         )
                 }
-                Text("Snap a photo, get the nutrition.\nNo searching. No guessing.")
+                Text("Just snap, track, and thrive.\nYour nutrition, simplified.")
                     .font(.system(.callout, design: .rounded))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
