@@ -32,6 +32,7 @@ struct Article: Identifiable {
     let summary: String
     let readingTimeMinutes: Int
     let category: ArticleCategory
+    let imageURL: String
     let content: String
 
     var contentParagraphs: [String] {
@@ -45,6 +46,7 @@ struct Article: Identifiable {
             summary: "Understand how your body burns energy and why BMR matters for your goals.",
             readingTimeMinutes: 4,
             category: .science,
+            imageURL: "https://images.unsplash.com/photo-1509833903111-9cb142f644e4?w=800&h=400&fit=crop",
             content: """
             ## What Are Calories?
 
@@ -74,6 +76,7 @@ struct Article: Identifiable {
             summary: "Learn about protein, carbs, and fat — the three building blocks of every meal.",
             readingTimeMinutes: 5,
             category: .nutrition,
+            imageURL: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&h=400&fit=crop",
             content: """
             ## The Big Three
 
@@ -107,6 +110,7 @@ struct Article: Identifiable {
             summary: "Vitamins and minerals are tiny but mighty — here's why they matter.",
             readingTimeMinutes: 4,
             category: .nutrition,
+            imageURL: "https://images.unsplash.com/photo-1557844352-761f2565b576?w=800&h=400&fit=crop",
             content: """
             ## Beyond Macros
 
@@ -136,6 +140,7 @@ struct Article: Identifiable {
             summary: "Why sustainable weight loss is a marathon, not a sprint.",
             readingTimeMinutes: 5,
             category: .science,
+            imageURL: "https://images.unsplash.com/photo-1611077544695-c7942e060c4d?w=800&h=400&fit=crop",
             content: """
             ## Energy Balance
 
@@ -169,6 +174,7 @@ struct Article: Identifiable {
             summary: "Point, snap, log — how this app uses AI to identify your food.",
             readingTimeMinutes: 3,
             category: .technology,
+            imageURL: "https://images.unsplash.com/photo-1578157300519-5b1ca459b218?w=800&h=400&fit=crop",
             content: """
             ## Snap and Track
 
@@ -198,6 +204,7 @@ struct Article: Identifiable {
             summary: "What happens when you drastically cut carbs from your diet.",
             readingTimeMinutes: 4,
             category: .nutrition,
+            imageURL: "https://images.unsplash.com/photo-1501199951034-d79a3f2d3039?w=800&h=400&fit=crop",
             content: """
             ## What Is Keto?
 
@@ -227,6 +234,7 @@ struct Article: Identifiable {
             summary: "Carbohydrates aren't the enemy — they're your body's premium fuel.",
             readingTimeMinutes: 4,
             category: .nutrition,
+            imageURL: "https://images.unsplash.com/photo-1521471109507-43d61bb345dd?w=800&h=400&fit=crop",
             content: """
             ## Your Body's Preferred Fuel
 
@@ -256,6 +264,7 @@ struct Article: Identifiable {
             summary: "The complete guide to daily protein intake for every goal.",
             readingTimeMinutes: 4,
             category: .nutrition,
+            imageURL: "https://images.unsplash.com/photo-1600555379765-f82335a7b1b0?w=800&h=400&fit=crop",
             content: """
             ## The Protein Debate
 
@@ -289,6 +298,7 @@ struct Article: Identifiable {
             summary: "Slow down, savor your food, and transform your relationship with eating.",
             readingTimeMinutes: 4,
             category: .lifestyle,
+            imageURL: "https://images.unsplash.com/photo-1520630086303-ccaa3cb0acef?w=800&h=400&fit=crop",
             content: """
             ## What Is Mindful Eating?
 
@@ -318,6 +328,7 @@ struct Article: Identifiable {
             summary: "Why quality sleep is the most underrated factor in weight management.",
             readingTimeMinutes: 4,
             category: .lifestyle,
+            imageURL: "https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=800&h=400&fit=crop",
             content: """
             ## The Sleep-Weight Connection
 
@@ -347,6 +358,7 @@ struct Article: Identifiable {
             summary: "How staying hydrated affects everything from energy to appetite.",
             readingTimeMinutes: 3,
             category: .lifestyle,
+            imageURL: "https://images.unsplash.com/photo-1563733586325-5fb533331826?w=800&h=400&fit=crop",
             content: """
             ## Why Hydration Matters
 

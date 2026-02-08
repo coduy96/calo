@@ -47,22 +47,28 @@ struct ArticleCardView: View {
     let article: Article
 
     var body: some View {
-        HStack(spacing: 14) {
-            // Gradient icon
-            Image(systemName: article.icon)
-                .font(.title2)
-                .foregroundStyle(.white)
-                .frame(width: 52, height: 52)
-                .background(
-                    LinearGradient(
-                        colors: article.category.gradient,
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+        VStack(spacing: 0) {
+            // Image thumbnail
+            AsyncImage(url: URL(string: article.imageURL)) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                case .failure:
+                    imagePlaceholder
+                case .empty:
+                    imagePlaceholder
+                        .overlay(ProgressView().tint(.white))
+                @unknown default:
+                    imagePlaceholder
+                }
+            }
+            .frame(height: 180)
+            .clipped()
 
-            VStack(alignment: .leading, spacing: 4) {
+            // Article info
+            VStack(alignment: .leading, spacing: 6) {
                 Text(article.title)
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .lineLimit(2)
@@ -75,7 +81,7 @@ struct ArticleCardView: View {
                     .multilineTextAlignment(.leading)
 
                 HStack(spacing: 8) {
-                    Text("\(article.readingTimeMinutes) min read")
+                    Label("\(article.readingTimeMinutes) min read", systemImage: "clock")
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
 
@@ -89,16 +95,24 @@ struct ArticleCardView: View {
                         .clipShape(Capsule())
                 }
             }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding()
         .background(AppColors.appCard)
         .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var imagePlaceholder: some View {
+        ZStack {
+            LinearGradient(
+                colors: article.category.gradient,
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            Image(systemName: article.icon)
+                .font(.system(size: 40))
+                .foregroundStyle(.white.opacity(0.7))
+        }
     }
 }
 
@@ -109,39 +123,49 @@ struct ArticleDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Hero header
-                VStack(spacing: 12) {
-                    Image(systemName: article.icon)
-                        .font(.system(size: 44))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: article.category.gradient,
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-
-                    Text(article.title)
-                        .font(.system(.title2, design: .rounded, weight: .bold))
-                        .multilineTextAlignment(.center)
-
-                    HStack(spacing: 12) {
-                        Label("\(article.readingTimeMinutes) min read", systemImage: "clock")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-
-                        Text(article.category.rawValue)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(article.category.color.opacity(0.15))
-                            .foregroundStyle(article.category.color)
-                            .clipShape(Capsule())
+                // Hero header with image
+                VStack(spacing: 0) {
+                    AsyncImage(url: URL(string: article.imageURL)) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        case .failure:
+                            detailImagePlaceholder
+                        case .empty:
+                            detailImagePlaceholder
+                                .overlay(ProgressView().tint(.white))
+                        @unknown default:
+                            detailImagePlaceholder
+                        }
                     }
+                    .frame(height: 220)
+                    .clipped()
+
+                    VStack(spacing: 8) {
+                        Text(article.title)
+                            .font(.system(.title2, design: .rounded, weight: .bold))
+                            .multilineTextAlignment(.center)
+
+                        HStack(spacing: 12) {
+                            Label("\(article.readingTimeMinutes) min read", systemImage: "clock")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+
+                            Text(article.category.rawValue)
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(article.category.color.opacity(0.15))
+                                .foregroundStyle(article.category.color)
+                                .clipShape(Capsule())
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
                 .background(AppColors.appCard)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
 
@@ -167,5 +191,18 @@ struct ArticleDetailView: View {
         }
         .background(AppColors.appBackground)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var detailImagePlaceholder: some View {
+        ZStack {
+            LinearGradient(
+                colors: article.category.gradient,
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            Image(systemName: article.icon)
+                .font(.system(size: 48))
+                .foregroundStyle(.white.opacity(0.7))
+        }
     }
 }
