@@ -47,11 +47,7 @@ struct OnboardingView: View {
     }
 
     var body: some View {
-        ZStack {
-            AppColors.appBackground
-                .ignoresSafeArea()
-
-            VStack(spacing: 0) {
+        VStack(spacing: 0) {
                 if step > 0 && step < 22 {
                     HStack(spacing: 16) {
                         Button {
@@ -114,7 +110,6 @@ struct OnboardingView: View {
                 ))
                 .animation(.snappy, value: step)
             }
-        }
     }
 
     // MARK: - Continue Button
@@ -126,7 +121,7 @@ struct OnboardingView: View {
         } label: {
             Text(title)
                 .font(.system(.body, design: .rounded, weight: .semibold))
-                .foregroundStyle(AppColors.appBackground)
+                .foregroundStyle(Color(.systemBackground))
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
                 .background(Color.primary, in: Capsule())
@@ -759,7 +754,7 @@ struct OnboardingView: View {
                                     Image(systemName: ["person.fill", "person.fill", "person.fill"][i])
                                         .foregroundStyle(.secondary)
                                 )
-                                .overlay(Circle().stroke(AppColors.appBackground, lineWidth: 3))
+                                .overlay(Circle().stroke(Color(.systemBackground), lineWidth: 3))
                         }
                     }
                     Text("Thousands of happy users")
@@ -798,7 +793,7 @@ struct OnboardingView: View {
         .overlay(alignment: .bottom) {
             continueButton()
                 .background(
-                    LinearGradient(colors: [AppColors.appBackground, AppColors.appBackground, AppColors.appBackground.opacity(0)], startPoint: .bottom, endPoint: .top)
+                    LinearGradient(colors: [Color(.systemBackground), Color(.systemBackground), Color(.systemBackground).opacity(0)], startPoint: .bottom, endPoint: .top)
                         .frame(height: 100)
                         .allowsHitTesting(false),
                     alignment: .bottom
@@ -1017,7 +1012,7 @@ struct OnboardingView: View {
             Button { hasCompletedOnboarding = true } label: {
                 Text("Start Free Trial")
                     .font(.system(.body, design: .rounded, weight: .semibold))
-                    .foregroundStyle(AppColors.appBackground)
+                    .foregroundStyle(Color(.systemBackground))
                     .frame(maxWidth: .infinity).frame(height: 54)
                     .background(Color.primary, in: Capsule())
             }.padding(.horizontal, 24)
