@@ -1,23 +1,156 @@
 import SwiftUI
 
+// MARK: - Sort Option
+enum ArticleSortOption: String, CaseIterable {
+    case defaultOrder = "Default"
+    case shortest = "Shortest First"
+    case longest = "Longest First"
+    case titleAZ = "Title A–Z"
+}
+
 // MARK: - Learn View
 struct LearnView: View {
+    @State private var searchText = ""
+    @State private var selectedCategory: ArticleCategory? = nil
+    @State private var sortOption: ArticleSortOption = .defaultOrder
+
+    private var filteredArticles: [Article] {
+        var articles = Article.allArticles
+
+        // Filter by category
+        if let category = selectedCategory {
+            articles = articles.filter { $0.category == category }
+        }
+
+        // Filter by search
+        if !searchText.isEmpty {
+            let query = searchText.lowercased()
+            articles = articles.filter {
+                $0.title.lowercased().contains(query) ||
+                $0.summary.lowercased().contains(query)
+            }
+        }
+
+        // Sort
+        switch sortOption {
+        case .defaultOrder:
+            break
+        case .shortest:
+            articles.sort { $0.readingTimeMinutes < $1.readingTimeMinutes }
+        case .longest:
+            articles.sort { $0.readingTimeMinutes > $1.readingTimeMinutes }
+        case .titleAZ:
+            articles.sort { $0.title < $1.title }
+        }
+
+        return articles
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
-                    ForEach(Article.allArticles) { article in
-                        NavigationLink(destination: ArticleDetailView(article: article)) {
-                            ArticleCardView(article: article)
+                VStack(spacing: 12) {
+                    // Category filter chips
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            CategoryChip(label: "All", isSelected: selectedCategory == nil) {
+                                selectedCategory = nil
+                            }
+                            ForEach(ArticleCategory.allCases, id: \.self) { category in
+                                CategoryChip(
+                                    label: category.rawValue,
+                                    color: category.color,
+                                    isSelected: selectedCategory == category
+                                ) {
+                                    selectedCategory = selectedCategory == category ? nil : category
+                                }
+                            }
                         }
-                        .buttonStyle(.plain)
                         .padding(.horizontal)
+                    }
+
+                    // Sort menu
+                    HStack {
+                        Text("\(filteredArticles.count) article\(filteredArticles.count == 1 ? "" : "s")")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+
+                        Spacer()
+
+                        Menu {
+                            ForEach(ArticleSortOption.allCases, id: \.self) { option in
+                                Button {
+                                    sortOption = option
+                                } label: {
+                                    if sortOption == option {
+                                        Label(option.rawValue, systemImage: "checkmark")
+                                    } else {
+                                        Text(option.rawValue)
+                                    }
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.up.arrow.down")
+                                Text(sortOption.rawValue)
+                            }
+                            .font(.system(.caption, design: .rounded, weight: .medium))
+                            .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.horizontal)
+
+                    // Article cards
+                    if filteredArticles.isEmpty {
+                        VStack(spacing: 8) {
+                            Image(systemName: "doc.text.magnifyingglass")
+                                .font(.system(size: 36))
+                                .foregroundStyle(.tertiary)
+                            Text("No articles found")
+                                .font(.system(.subheadline, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 40)
+                    } else {
+                        ForEach(filteredArticles) { article in
+                            NavigationLink(destination: ArticleDetailView(article: article)) {
+                                ArticleCardView(article: article)
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.horizontal)
+                        }
                     }
                 }
                 .padding(.vertical)
             }
             .background(AppColors.appBackground)
             .navigationTitle("Learn")
+            .searchable(text: $searchText, prompt: "Search articles")
+        }
+    }
+}
+
+// MARK: - Category Chip
+struct CategoryChip: View {
+    let label: String
+    var color: Color = .primary
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(label)
+                .font(.system(.caption, design: .rounded, weight: .medium))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(isSelected ? color.opacity(0.2) : AppColors.appCard)
+                .foregroundStyle(isSelected ? color : .secondary)
+                .clipShape(Capsule())
+                .overlay(
+                    Capsule()
+                        .strokeBorder(isSelected ? color.opacity(0.4) : Color.clear, lineWidth: 1)
+                )
         }
     }
 }
