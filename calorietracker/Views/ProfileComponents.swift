@@ -50,7 +50,6 @@ struct ProfileInfoRow: View {
         } label: {
             HStack {
                 Label(label, systemImage: icon)
-                    .foregroundStyle(.primary)
                 Spacer()
                 Text(value)
                     .foregroundStyle(.secondary)
@@ -61,6 +60,7 @@ struct ProfileInfoRow: View {
                 }
             }
         }
+        .buttonStyle(.plain)
         .disabled(action == nil)
     }
 }
