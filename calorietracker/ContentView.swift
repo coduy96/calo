@@ -630,6 +630,7 @@ struct ProfileView: View {
                         Label("Gender", systemImage: profile.gender.icon)
                     }
                     .pickerStyle(.menu)
+                    .tint(AppColors.calorie)
                     .onChange(of: profile.gender) { _, _ in resetNutritionAndSave() }
 
                     ProfileInfoRow(icon: "birthday.cake", label: "Birthday", value: birthdayDisplay) {
@@ -664,6 +665,7 @@ struct ProfileView: View {
                         Label("Weight Goal", systemImage: profile.goal.icon)
                     }
                     .pickerStyle(.menu)
+                    .tint(AppColors.calorie)
                     .onChange(of: profile.goal) { _, newValue in
                         if newValue == .maintain {
                             profile.weeklyChangeKg = nil
@@ -681,6 +683,7 @@ struct ProfileView: View {
                         Label("Activity Level", systemImage: profile.activityLevel.icon)
                     }
                     .pickerStyle(.menu)
+                    .tint(AppColors.calorie)
                     .onChange(of: profile.activityLevel) { _, _ in resetNutritionAndSave() }
 
                     if profile.goal != .maintain {
@@ -695,6 +698,7 @@ struct ProfileView: View {
                             Label("Weekly Change", systemImage: "gauge.with.dots.needle.33percent")
                         }
                         .pickerStyle(.menu)
+                        .tint(AppColors.calorie)
                     }
 
                     ProfileInfoRow(icon: "flame", label: "Calories", value: "\(profile.effectiveCalories) kcal") {
@@ -725,10 +729,12 @@ struct ProfileView: View {
                         Label("Appearance", systemImage: "circle.lefthalf.filled")
                     }
                     .pickerStyle(.menu)
+                    .tint(AppColors.calorie)
 
                     Toggle(isOn: $useMetric) {
                         Label("Metric Units", systemImage: "ruler")
                     }
+                    .tint(AppColors.calorie)
 
                     ComingSoonRow(icon: "bell", label: "Notifications") {
                         comingSoonFeature = "Notifications"

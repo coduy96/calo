@@ -49,7 +49,12 @@ struct ProfileInfoRow: View {
             action?()
         } label: {
             HStack {
-                Label(label, systemImage: icon)
+                Label {
+                    Text(label)
+                } icon: {
+                    Image(systemName: icon)
+                        .foregroundStyle(AppColors.calorie)
+                }
                 Spacer()
                 Text(value)
                     .foregroundStyle(.secondary)
