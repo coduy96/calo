@@ -172,7 +172,8 @@ struct HomeView: View {
             .scrollContentBackground(.hidden)
             .background(AppColors.appBackground)
             .animation(.snappy, value: selectedDate)
-            .navigationBarHidden(true)
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
