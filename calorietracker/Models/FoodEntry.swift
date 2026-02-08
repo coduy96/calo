@@ -43,6 +43,7 @@ struct FoodEntry: Identifiable, Codable {
     var fat: Int
     let timestamp: Date
     var imageData: Data?
+    var emoji: String?
     var source: FoodSource
     var mealType: MealType
 
@@ -55,6 +56,7 @@ struct FoodEntry: Identifiable, Codable {
         fat: Int,
         timestamp: Date = Date(),
         imageData: Data? = nil,
+        emoji: String? = nil,
         source: FoodSource,
         mealType: MealType = .other
     ) {
@@ -66,6 +68,7 @@ struct FoodEntry: Identifiable, Codable {
         self.fat = fat
         self.timestamp = timestamp
         self.imageData = imageData
+        self.emoji = emoji
         self.source = source
         self.mealType = mealType
     }
@@ -80,6 +83,7 @@ struct FoodEntry: Identifiable, Codable {
         fat = try container.decode(Int.self, forKey: .fat)
         timestamp = try container.decode(Date.self, forKey: .timestamp)
         imageData = try container.decodeIfPresent(Data.self, forKey: .imageData)
+        emoji = try container.decodeIfPresent(String.self, forKey: .emoji)
         source = try container.decode(FoodSource.self, forKey: .source)
         mealType = try container.decodeIfPresent(MealType.self, forKey: .mealType) ?? .other
     }

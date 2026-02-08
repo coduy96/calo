@@ -2,6 +2,7 @@ import SwiftUI
 
 struct FoodResultView: View {
     let image: UIImage?
+    let emoji: String?
     let source: FoodSource
 
     @State var name: String
@@ -16,6 +17,7 @@ struct FoodResultView: View {
 
     init(
         image: UIImage?,
+        emoji: String? = nil,
         source: FoodSource,
         name: String,
         calories: Int,
@@ -25,6 +27,7 @@ struct FoodResultView: View {
         onLog: @escaping (FoodEntry) -> Void
     ) {
         self.image = image
+        self.emoji = emoji
         self.source = source
         self._name = State(initialValue: name)
         self._calories = State(initialValue: calories)
@@ -46,6 +49,16 @@ struct FoodResultView: View {
                                 .scaledToFit()
                                 .frame(maxHeight: 200)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
+                            Spacer()
+                        }
+                        .listRowBackground(Color.clear)
+                    }
+                } else if let emoji {
+                    Section {
+                        HStack {
+                            Spacer()
+                            Text(emoji)
+                                .font(.system(size: 80))
                             Spacer()
                         }
                         .listRowBackground(Color.clear)
@@ -108,6 +121,7 @@ struct FoodResultView: View {
             carbs: carbs,
             fat: fat,
             imageData: image?.jpegData(compressionQuality: 0.5),
+            emoji: emoji,
             source: source,
             mealType: mealType
         )

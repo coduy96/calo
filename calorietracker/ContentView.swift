@@ -59,6 +59,7 @@ struct HomeView: View {
 
     @State private var currentFoodResult: GeminiService.FoodAnalysis?
     @State private var currentImage: UIImage?
+    @State private var currentEmoji: String?
 
     private var userProfile: UserProfile { UserProfile.load() ?? .default }
     private var calorieGoal: Int { userProfile.effectiveCalories }
@@ -209,6 +210,7 @@ struct HomeView: View {
                 guard let image = newValue else { return }
                 capturedImage = nil
                 currentImage = image
+                currentEmoji = nil
                 startAnalysis(image: image, mode: cameraMode)
             }
             .sheet(item: $activeSheet) { sheet in
@@ -221,6 +223,7 @@ struct HomeView: View {
                     if let result = currentFoodResult {
                         FoodResultView(
                             image: currentImage,
+                            emoji: currentEmoji,
                             source: currentImage == nil ? .textInput : (cameraMode == .snapFood ? .snapFood : .nutritionLabel),
                             name: result.name,
                             calories: result.calories,
@@ -235,11 +238,13 @@ struct HomeView: View {
                 case .textInput:
                     TextFoodInputView { brand, name, quantity, unit in
                         currentImage = nil
+                        currentEmoji = nil
                         activeSheet = .analyzingText
                         Task {
                             do {
                                 let result = try await GeminiService.analyzeTextInput(brand: brand, name: name, quantity: quantity, unit: unit)
                                 currentFoodResult = result
+                                currentEmoji = result.emoji
                                 activeSheet = .foodResult
                             } catch {
                                 activeSheet = nil
@@ -259,6 +264,7 @@ struct HomeView: View {
                     if let data = try? await item.loadTransferable(type: Data.self),
                        let image = UIImage(data: data) {
                         currentImage = image
+                        currentEmoji = nil
                         activeSheet = .analyzing
                         do {
                             let result = try await GeminiService.autoAnalyze(image: image)
@@ -359,6 +365,12 @@ struct FoodRow: View {
                     .resizable()
                     .scaledToFill()
                     .frame(width: 64, height: 64)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+            } else if let emoji = entry.emoji {
+                Text(emoji)
+                    .font(.system(size: 36))
+                    .frame(width: 64, height: 64)
+                    .background(.quaternary)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
             } else {
                 Image(systemName: "photo")

@@ -8,6 +8,7 @@ struct GeminiService {
         var protein: Int
         var carbs: Int
         var fat: Int
+        var emoji: String?
     }
 
     struct NutritionLabelAnalysis {
@@ -59,8 +60,8 @@ struct GeminiService {
         Food: \(foodDescription)
         Quantity: \(quantity) \(unit)
         If a brand is mentioned, use that brand's known nutritional data.
-        Respond ONLY with JSON: {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0}
-        All integers. Calories in kcal, macros in grams.
+        Respond ONLY with JSON: {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"emoji":"🍽️"}
+        All integers. Calories in kcal, macros in grams. Include a single food emoji that best represents the food.
         """
 
         let text = try await callGeminiText(prompt: prompt)
@@ -272,7 +273,8 @@ struct GeminiService {
         else {
             throw AnalysisError.invalidResponse
         }
-        return FoodAnalysis(name: name, calories: calories, protein: protein, carbs: carbs, fat: fat)
+        let emoji = json["emoji"] as? String
+        return FoodAnalysis(name: name, calories: calories, protein: protein, carbs: carbs, fat: fat, emoji: emoji)
     }
 
     private static func parseNutritionLabel(from text: String) throws -> NutritionLabelAnalysis {
