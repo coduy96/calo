@@ -690,18 +690,17 @@ struct ProfileView: View {
                     .onChange(of: profile.activityLevel) { _, _ in saveProfile() }
 
                     if profile.goal != .maintain {
-                        NavigationLink {
-                            GoalSpeedSelectionView(selected: $profile.weeklyChangeKg, goal: profile.goal) {
-                                saveProfile()
-                            }
+                        Picker(selection: Binding(
+                            get: { profile.weeklyChangeKg ?? 0.5 },
+                            set: { profile.weeklyChangeKg = $0; saveProfile() }
+                        )) {
+                            Text("Slow (0.25 kg/wk)").tag(0.25)
+                            Text("Moderate (0.5 kg/wk)").tag(0.5)
+                            Text("Fast (1.0 kg/wk)").tag(1.0)
                         } label: {
-                            HStack {
-                                Label("Weekly Change", systemImage: "gauge.with.dots.needle.33percent")
-                                Spacer()
-                                Text(weeklyChangeDisplay)
-                                    .foregroundStyle(.secondary)
-                            }
+                            Label("Weekly Change", systemImage: "gauge.with.dots.needle.33percent")
                         }
+                        .pickerStyle(.menu)
                     }
 
                     NutritionSummaryRow(profile: profile)
