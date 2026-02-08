@@ -6,9 +6,6 @@ struct LearnView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    LearnHeaderView()
-                        .padding(.horizontal)
-
                     ForEach(Article.allArticles) { article in
                         NavigationLink(destination: ArticleDetailView(article: article)) {
                             ArticleCardView(article: article)
@@ -22,23 +19,6 @@ struct LearnView: View {
             .background(AppColors.appBackground)
             .navigationTitle("Learn")
         }
-    }
-}
-
-// MARK: - Header
-struct LearnHeaderView: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Nutrition & Wellness")
-                .font(.system(.title2, design: .rounded, weight: .bold))
-            Text("Evidence-based articles to help you understand your body and make better choices.")
-                .font(.system(.subheadline, design: .rounded))
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(AppColors.appCard)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }
 
@@ -140,6 +120,7 @@ struct ArticleDetailView: View {
                             detailImagePlaceholder
                         }
                     }
+                    .frame(maxWidth: .infinity)
                     .frame(height: 220)
                     .clipped()
 
