@@ -94,6 +94,10 @@ struct MacroCard: View {
             Text(label)
                 .font(.system(.caption, design: .rounded, weight: .medium))
                 .foregroundStyle(.secondary)
+
+            Text("\(max(goal - current, 0))g left")
+                .font(.system(.caption2, design: .rounded))
+                .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity)
     }
