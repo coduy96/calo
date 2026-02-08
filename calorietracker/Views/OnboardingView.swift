@@ -206,14 +206,6 @@ struct OnboardingView: View {
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 24)
                     }
-
-                    Button {
-                        withAnimation(.snappy) { step += 1 }
-                    } label: {
-                        Text("Skip for now")
-                            .font(.system(.body, design: .rounded, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
                 }
                 .padding(.bottom, 36)
             }
