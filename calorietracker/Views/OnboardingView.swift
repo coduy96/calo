@@ -486,7 +486,7 @@ struct OnboardingView: View {
                     Slider(value: Binding(
                         get: { Double(goalSpeed) },
                         set: { goalSpeed = Int($0.rounded()) }
-                    ), in: 0...2, step: 1).tint(.primary).padding(.horizontal, 40)
+                    ), in: 0...2, step: 1).tint(AppColors.calorie).padding(.horizontal, 40)
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 0) {
                             Text("You'll reach your goal in ")
