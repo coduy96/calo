@@ -67,10 +67,10 @@ enum ActivityLevel: String, Codable, CaseIterable {
         switch self {
         case .sedentary: 1.2
         case .light: 1.375
-        case .moderate: 1.55
-        case .active: 1.725
-        case .veryActive: 1.9
-        case .extraActive: 2.0
+        case .moderate: 1.465
+        case .active: 1.55
+        case .veryActive: 1.725
+        case .extraActive: 1.9
         }
     }
 }
@@ -134,10 +134,10 @@ struct UserProfile: Codable {
             return 0
         case .lose:
             let rate = weeklyChangeKg ?? 0.5
-            return -Int(rate * 7700 / 7)
+            return -Int(rate * 7000 / 7)
         case .gain:
             let rate = weeklyChangeKg ?? 0.5
-            return Int(rate * 7700 / 7)
+            return Int(rate * 7000 / 7)
         }
     }
 
