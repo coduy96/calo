@@ -74,6 +74,7 @@ struct FoodResultView: View {
                         }
                     }
                     .pickerStyle(.menu)
+                    .tint(AppColors.calorie)
                 }
 
                 Section {
@@ -83,6 +84,7 @@ struct FoodResultView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
+                    .tint(AppColors.calorie)
                     .listRowBackground(Color.clear)
                 }
             }
