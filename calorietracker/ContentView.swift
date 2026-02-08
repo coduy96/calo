@@ -389,26 +389,172 @@ struct MacroPill: View {
     }
 }
 
-// MARK: - Placeholder Views for Other Tabs
+// MARK: - Progress Tab
 struct ProgressTabView: View {
+    @Environment(FoodStore.self) private var foodStore
+    @Environment(WeightStore.self) private var weightStore
+    @State private var timeRange: TimeRange = .week
+    @State private var showLogWeight = false
+
+    private var userProfile: UserProfile { UserProfile.load() ?? .default }
+
+    private var dateRange: ClosedRange<Date> { timeRange.dateRange() }
+
+    private var filteredWeightEntries: [WeightEntry] {
+        weightStore.entries(in: dateRange)
+    }
+
+    private var dailyCalories: [(date: Date, calories: Int)] {
+        let calendar = Calendar.current
+        let days = timeRange.days ?? {
+            guard let earliest = foodStore.entries.map({ $0.timestamp }).min() else { return 7 }
+            return max(calendar.dateComponents([.day], from: earliest, to: .now).day ?? 7, 1)
+        }()
+        let today = calendar.startOfDay(for: .now)
+        return (0..<days).compactMap { offset in
+            guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { return nil }
+            let cals = foodStore.calories(for: date)
+            if cals == 0 { return nil }
+            return (date: date, calories: cals)
+        }.reversed()
+    }
+
+    private var macroAverages: (protein: Int, carbs: Int, fat: Int) {
+        let calendar = Calendar.current
+        let days = timeRange.days ?? {
+            guard let earliest = foodStore.entries.map({ $0.timestamp }).min() else { return 7 }
+            return max(calendar.dateComponents([.day], from: earliest, to: .now).day ?? 7, 1)
+        }()
+        let today = calendar.startOfDay(for: .now)
+        var totalP = 0, totalC = 0, totalF = 0, count = 0
+        for offset in 0..<days {
+            guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { continue }
+            let dayEntries = foodStore.entries(for: date)
+            if dayEntries.isEmpty { continue }
+            totalP += dayEntries.reduce(0) { $0 + $1.protein }
+            totalC += dayEntries.reduce(0) { $0 + $1.carbs }
+            totalF += dayEntries.reduce(0) { $0 + $1.fat }
+            count += 1
+        }
+        guard count > 0 else { return (0, 0, 0) }
+        return (totalP / count, totalC / count, totalF / count)
+    }
+
+    private var streak: Int {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        var count = 0
+        var day = today
+        while true {
+            let dayEntries = foodStore.entries(for: day)
+            if dayEntries.isEmpty { break }
+            count += 1
+            guard let prev = calendar.date(byAdding: .day, value: -1, to: day) else { break }
+            day = prev
+        }
+        return count
+    }
+
+    private var bestStreak: Int {
+        let calendar = Calendar.current
+        guard let earliest = foodStore.entries.map({ $0.timestamp }).min() else { return 0 }
+        let start = calendar.startOfDay(for: earliest)
+        let today = calendar.startOfDay(for: .now)
+        let totalDays = max(calendar.dateComponents([.day], from: start, to: today).day ?? 0, 0) + 1
+
+        var best = 0, current = 0
+        for offset in 0..<totalDays {
+            guard let date = calendar.date(byAdding: .day, value: offset, to: start) else { continue }
+            if !foodStore.entries(for: date).isEmpty {
+                current += 1
+                best = max(best, current)
+            } else {
+                current = 0
+            }
+        }
+        return best
+    }
+
+    private var daysOnTarget: Int {
+        let calendar = Calendar.current
+        let goal = Double(userProfile.effectiveCalories)
+        let days = timeRange.days ?? {
+            guard let earliest = foodStore.entries.map({ $0.timestamp }).min() else { return 7 }
+            return max(calendar.dateComponents([.day], from: earliest, to: .now).day ?? 7, 1)
+        }()
+        let today = calendar.startOfDay(for: .now)
+        var count = 0
+        for offset in 0..<days {
+            guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { continue }
+            let cals = Double(foodStore.calories(for: date))
+            if cals > 0 && goal > 0 && abs(cals - goal) / goal <= 0.10 {
+                count += 1
+            }
+        }
+        return count
+    }
+
     var body: some View {
         NavigationStack {
-            List {
-                Section("Weight") {
-                    LabeledContent("Current", value: "132.1 lbs")
-                    LabeledContent("Goal", value: "140 lbs")
-                }
-                .listRowBackground(AppColors.appCard)
+            ScrollView {
+                VStack(spacing: 16) {
+                    // Segmented Picker
+                    Picker("Time Range", selection: $timeRange) {
+                        ForEach(TimeRange.allCases, id: \.self) { range in
+                            Text(range.rawValue).tag(range)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal)
 
-                Section("Statistics") {
-                    LabeledContent("Daily Average", value: "2861 cal")
-                    LabeledContent("Weekly Average", value: "2750 cal")
+                    // Weight Trend
+                    WeightChartSection(
+                        weightEntries: filteredWeightEntries,
+                        goalWeightLbs: nil,
+                        currentWeightLbs: weightStore.latestEntry?.weightLbs,
+                        onLogWeight: { showLogWeight = true }
+                    )
+                    .padding(.horizontal)
+
+                    // Calorie Trend
+                    CalorieChartSection(
+                        dailyCalories: dailyCalories,
+                        calorieGoal: userProfile.effectiveCalories
+                    )
+                    .padding(.horizontal)
+
+                    // Macro Averages
+                    MacroAveragesSection(
+                        avgProtein: macroAverages.protein,
+                        avgCarbs: macroAverages.carbs,
+                        avgFat: macroAverages.fat,
+                        proteinGoal: userProfile.effectiveProtein,
+                        carbsGoal: userProfile.effectiveCarbs,
+                        fatGoal: userProfile.effectiveFat
+                    )
+                    .padding(.horizontal)
+
+                    // Streaks & Stats
+                    StatsSection(
+                        streak: streak,
+                        daysOnTarget: daysOnTarget,
+                        totalEntries: foodStore.entries.count,
+                        bestStreak: bestStreak
+                    )
+                    .padding(.horizontal)
                 }
-                .listRowBackground(AppColors.appCard)
+                .padding(.vertical)
             }
-            .scrollContentBackground(.hidden)
             .background(AppColors.appBackground)
             .navigationTitle("Progress")
+            .sheet(isPresented: $showLogWeight) {
+                LogWeightSheet(
+                    currentWeightLbs: weightStore.latestEntry?.weightLbs ?? userProfile.weightKg * 2.20462
+                ) { weightKg in
+                    let entry = WeightEntry(weightKg: weightKg)
+                    weightStore.addEntry(entry)
+                }
+            }
         }
     }
 }
@@ -480,4 +626,5 @@ struct ProfileView: View {
 #Preview {
     ContentView()
         .environment(FoodStore())
+        .environment(WeightStore())
 }

@@ -10,6 +10,7 @@ import SwiftUI
 @main
 struct calorietrackerApp: App {
     @State private var foodStore = FoodStore()
+    @State private var weightStore = WeightStore()
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("appearanceMode") private var appearanceMode = "system"
 
@@ -33,6 +34,7 @@ struct calorietrackerApp: App {
             if hasCompletedOnboarding {
                 ContentView()
                     .environment(foodStore)
+                    .environment(weightStore)
                     .preferredColorScheme(colorScheme)
             } else {
                 OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
