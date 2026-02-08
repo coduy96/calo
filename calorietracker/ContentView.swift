@@ -628,18 +628,15 @@ struct ProfileView: View {
                         activeSheet = .editName
                     }
 
-                    NavigationLink {
-                        GenderSelectionView(selected: $profile.gender) {
-                            saveProfile()
+                    Picker(selection: $profile.gender) {
+                        ForEach(Gender.allCases, id: \.self) { gender in
+                            Text(gender.displayName).tag(gender)
                         }
                     } label: {
-                        HStack {
-                            Label("Gender", systemImage: profile.gender.icon)
-                            Spacer()
-                            Text(profile.gender.displayName)
-                                .foregroundStyle(.secondary)
-                        }
+                        Label("Gender", systemImage: profile.gender.icon)
                     }
+                    .pickerStyle(.menu)
+                    .onChange(of: profile.gender) { _, _ in saveProfile() }
 
                     ProfileInfoRow(icon: "birthday.cake", label: "Birthday", value: birthdayDisplay) {
                         activeSheet = .editBirthday
