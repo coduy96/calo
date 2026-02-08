@@ -889,36 +889,6 @@ struct ProfileView: View {
                         }
                         .buttonStyle(.plain)
                     } else {
-                        // Sign In with Apple
-                        SignInWithAppleButton(.signIn) { request in
-                            request.requestedScopes = [.fullName, .email]
-                        } onCompletion: { result in
-                            do {
-                                try authManager.handleSignInResult(result)
-                                signInError = nil
-                                // Push local data to CloudKit
-                                Task {
-                                    await CloudKitService.pushAllData(
-                                        foodEntries: foodStore.entries,
-                                        weightEntries: weightStore.entries,
-                                        profile: UserProfile.load()
-                                    )
-                                }
-                            } catch let error as ASAuthorizationError where error.code == .canceled {
-                                // User cancelled
-                            } catch {
-                                signInError = error.localizedDescription
-                            }
-                        }
-                        .signInWithAppleButtonStyle(.whiteOutline)
-                        .frame(height: 44)
-
-                        if let signInError {
-                            Text(signInError)
-                                .font(.system(.caption, design: .rounded))
-                                .foregroundStyle(.red)
-                        }
-
                         // Apple Health (Coming Soon)
                         ComingSoonRow(icon: "heart.fill", label: "Apple Health") {
                             comingSoonFeature = "Apple Health"
