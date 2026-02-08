@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct FoodResultView: View {
-    let image: UIImage
+    let image: UIImage?
     let source: FoodSource
 
     @State var name: String
@@ -15,7 +15,7 @@ struct FoodResultView: View {
     @Environment(\.dismiss) private var dismiss
 
     init(
-        image: UIImage,
+        image: UIImage?,
         source: FoodSource,
         name: String,
         calories: Int,
@@ -37,17 +37,19 @@ struct FoodResultView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section {
-                    HStack {
-                        Spacer()
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxHeight: 200)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                        Spacer()
+                if let image {
+                    Section {
+                        HStack {
+                            Spacer()
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxHeight: 200)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                            Spacer()
+                        }
+                        .listRowBackground(Color.clear)
                     }
-                    .listRowBackground(Color.clear)
                 }
 
                 Section("Food Details") {
@@ -105,7 +107,7 @@ struct FoodResultView: View {
             protein: protein,
             carbs: carbs,
             fat: fat,
-            imageData: image.jpegData(compressionQuality: 0.5),
+            imageData: image?.jpegData(compressionQuality: 0.5),
             source: source,
             mealType: mealType
         )

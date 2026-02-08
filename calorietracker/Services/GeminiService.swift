@@ -52,6 +52,21 @@ struct GeminiService {
         }
     }
 
+    static func analyzeTextInput(brand: String, name: String, quantity: String, unit: String) async throws -> FoodAnalysis {
+        let foodDescription = brand.isEmpty ? name : "\(brand) \(name)"
+        let prompt = """
+        Estimate the nutritional content for:
+        Food: \(foodDescription)
+        Quantity: \(quantity) \(unit)
+        If a brand is mentioned, use that brand's known nutritional data.
+        Respond ONLY with JSON: {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0}
+        All integers. Calories in kcal, macros in grams.
+        """
+
+        let text = try await callGeminiText(prompt: prompt)
+        return try parseFoodAnalysis(from: text)
+    }
+
     static func autoAnalyze(image: UIImage) async throws -> FoodAnalysis {
         let prompt = """
         Analyze this image. It could be either a photo of food OR a nutrition facts label.
@@ -143,6 +158,58 @@ struct GeminiService {
                         [
                             "text": prompt
                         ]
+                    ]
+                ]
+            ]
+        ]
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch {
+            throw AnalysisError.networkError(error)
+        }
+
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+            if let errorJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let error = errorJson["error"] as? [String: Any],
+               let message = error["message"] as? String {
+                throw AnalysisError.apiError(message)
+            }
+            throw AnalysisError.apiError("HTTP \(httpResponse.statusCode)")
+        }
+
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let candidates = json["candidates"] as? [[String: Any]],
+              let firstCandidate = candidates.first,
+              let content = firstCandidate["content"] as? [String: Any],
+              let parts = content["parts"] as? [[String: Any]],
+              let text = parts.first?["text"] as? String
+        else {
+            throw AnalysisError.invalidResponse
+        }
+
+        return text
+    }
+
+    private static func callGeminiText(prompt: String) async throws -> String {
+        guard let apiKey = APIKeyManager.geminiAPIKey() else {
+            throw AnalysisError.noAPIKey
+        }
+
+        let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=\(apiKey)")!
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Any] = [
+            "contents": [
+                [
+                    "parts": [
+                        ["text": prompt]
                     ]
                 ]
             ]

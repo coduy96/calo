@@ -52,7 +52,7 @@ struct HomeView: View {
     @State private var selectedDate: Date = .now
 
     enum ActiveSheet: String, Identifiable {
-        case analyzing, foodResult
+        case analyzing, foodResult, textInput, analyzingText
         var id: String { rawValue }
     }
     @State private var activeSheet: ActiveSheet?
@@ -193,6 +193,9 @@ struct HomeView: View {
                         Button(action: { showPhotoPicker = true }) {
                             Label("From Photos", systemImage: "photo.on.rectangle")
                         }
+                        Button(action: { activeSheet = .textInput }) {
+                            Label("Text Input", systemImage: "character.cursor.ibeam")
+                        }
                     } label: {
                         Image(systemName: "plus")
                     }
@@ -211,14 +214,14 @@ struct HomeView: View {
             .sheet(item: $activeSheet) { sheet in
                 switch sheet {
                 case .analyzing:
-                    if let image = currentImage {
-                        AnalyzingView(image: image)
-                    }
+                    AnalyzingView(image: currentImage)
+                case .analyzingText:
+                    AnalyzingView(image: nil, message: "Looking up nutrition...")
                 case .foodResult:
-                    if let image = currentImage, let result = currentFoodResult {
+                    if let result = currentFoodResult {
                         FoodResultView(
-                            image: image,
-                            source: cameraMode == .snapFood ? .snapFood : .nutritionLabel,
+                            image: currentImage,
+                            source: currentImage == nil ? .textInput : (cameraMode == .snapFood ? .snapFood : .nutritionLabel),
                             name: result.name,
                             calories: result.calories,
                             protein: result.protein,
@@ -229,9 +232,25 @@ struct HomeView: View {
                             }
                         )
                     }
+                case .textInput:
+                    TextFoodInputView { brand, name, quantity, unit in
+                        currentImage = nil
+                        activeSheet = .analyzingText
+                        Task {
+                            do {
+                                let result = try await GeminiService.analyzeTextInput(brand: brand, name: name, quantity: quantity, unit: unit)
+                                currentFoodResult = result
+                                activeSheet = .foodResult
+                            } catch {
+                                activeSheet = nil
+                                errorMessage = error.localizedDescription
+                                showError = true
+                            }
+                        }
+                    }
                 }
             }
-            .interactiveDismissDisabled(activeSheet == .analyzing)
+            .interactiveDismissDisabled(activeSheet == .analyzing || activeSheet == .analyzingText)
             .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .images)
             .onChange(of: selectedPhotoItem) { oldValue, newValue in
                 guard let item = newValue else { return }
