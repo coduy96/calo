@@ -222,12 +222,16 @@ struct OnboardingView: View {
                     let cloudData = try await CloudKitService.pullAllData()
                     if let cloudProfile = cloudData.profile {
                         // Returning user — restore from iCloud
-                        cloudProfile.save()
+                        var restored = cloudProfile
+                        setAppleNameIfNeeded(&restored)
+                        restored.save()
                         foodStore.replaceAllEntries(cloudData.foodEntries)
                         weightStore.replaceAllEntries(cloudData.weightEntries)
                         hasCompletedOnboarding = true
-                    } else if UserProfile.load() != nil {
+                    } else if var local = UserProfile.load() {
                         // Local profile exists (sign-out → sign-in) — skip onboarding
+                        setAppleNameIfNeeded(&local)
+                        local.save()
                         hasCompletedOnboarding = true
                     } else {
                         // New user — continue onboarding
@@ -235,7 +239,9 @@ struct OnboardingView: View {
                     }
                 } catch {
                     // Cloud fetch failed — check local data
-                    if UserProfile.load() != nil {
+                    if var local = UserProfile.load() {
+                        setAppleNameIfNeeded(&local)
+                        local.save()
                         hasCompletedOnboarding = true
                     } else {
                         withAnimation(.snappy) { step += 1 }
@@ -247,6 +253,13 @@ struct OnboardingView: View {
             // User cancelled — do nothing
         } catch {
             signInError = error.localizedDescription
+        }
+    }
+
+    private func setAppleNameIfNeeded(_ profile: inout UserProfile) {
+        if (profile.name == nil || profile.name?.isEmpty == true),
+           let appleName = authManager.userDisplayName, !appleName.isEmpty {
+            profile.name = appleName
         }
     }
 
