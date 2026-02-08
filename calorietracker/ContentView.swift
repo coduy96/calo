@@ -799,9 +799,15 @@ struct ProfileView: View {
                     }
                     .tint(AppColors.calorie)
 
-                    ComingSoonRow(icon: "bell", label: "Notifications") {
-                        comingSoonFeature = "Notifications"
-                        showComingSoonAlert = true
+                    NavigationLink {
+                        NotificationSettingsView()
+                    } label: {
+                        Label {
+                            Text("Notifications")
+                        } icon: {
+                            Image(systemName: "bell")
+                                .foregroundStyle(AppColors.calorie)
+                        }
                     }
                 }
                 .listRowBackground(AppColors.appCard)

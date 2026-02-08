@@ -4,6 +4,7 @@ import SwiftUI
 @Observable
 class FoodStore {
     private(set) var entries: [FoodEntry] = []
+    var onEntriesChanged: (() -> Void)?
 
     private let storageKey = "foodEntries"
 
@@ -82,11 +83,13 @@ class FoodStore {
     func addEntry(_ entry: FoodEntry) {
         entries.append(entry)
         saveEntries()
+        onEntriesChanged?()
     }
 
     func deleteEntry(_ entry: FoodEntry) {
         entries.removeAll { $0.id == entry.id }
         saveEntries()
+        onEntriesChanged?()
     }
 
     private func saveEntries() {

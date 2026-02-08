@@ -680,6 +680,204 @@ struct NutritionPickerSheet: View {
     }
 }
 
+// MARK: - Notification Settings View
+
+struct NotificationSettingsView: View {
+    @Environment(NotificationManager.self) private var notificationManager
+    @AppStorage("notificationsEnabled") private var notificationsEnabled = false
+
+    @AppStorage("breakfastReminderEnabled") private var breakfastEnabled = true
+    @AppStorage("breakfastReminderHour") private var breakfastHour = 8
+    @AppStorage("breakfastReminderMinute") private var breakfastMinute = 0
+
+    @AppStorage("lunchReminderEnabled") private var lunchEnabled = true
+    @AppStorage("lunchReminderHour") private var lunchHour = 12
+    @AppStorage("lunchReminderMinute") private var lunchMinute = 0
+
+    @AppStorage("dinnerReminderEnabled") private var dinnerEnabled = true
+    @AppStorage("dinnerReminderHour") private var dinnerHour = 19
+    @AppStorage("dinnerReminderMinute") private var dinnerMinute = 0
+
+    @AppStorage("streakReminderEnabled") private var streakEnabled = true
+    @AppStorage("streakReminderHour") private var streakHour = 21
+    @AppStorage("streakReminderMinute") private var streakMinute = 0
+
+    @AppStorage("dailySummaryEnabled") private var summaryEnabled = true
+    @AppStorage("dailySummaryHour") private var summaryHour = 20
+    @AppStorage("dailySummaryMinute") private var summaryMinute = 0
+
+    var body: some View {
+        List {
+            // Master toggle
+            Section {
+                Toggle(isOn: $notificationsEnabled) {
+                    Label {
+                        Text("Notifications")
+                    } icon: {
+                        Image(systemName: "bell.fill")
+                            .foregroundStyle(AppColors.calorie)
+                    }
+                }
+                .tint(AppColors.calorie)
+                .onChange(of: notificationsEnabled) { _, enabled in
+                    if enabled {
+                        Task {
+                            let granted = await notificationManager.requestAuthorization()
+                            if !granted {
+                                notificationsEnabled = false
+                            } else {
+                                applyMealReminders()
+                            }
+                        }
+                    } else {
+                        notificationManager.cancelAllNotifications()
+                    }
+                }
+            } footer: {
+                if notificationManager.authorizationStatus == .denied {
+                    Button {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(url)
+                        }
+                    } label: {
+                        Text("Notifications are disabled in system settings. Tap to open Settings.")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(AppColors.calorie)
+                    }
+                }
+            }
+            .listRowBackground(AppColors.appCard)
+
+            if notificationsEnabled {
+                // Meal Reminders
+                Section("Meal Reminders") {
+                    NotificationTimeRow(
+                        label: "Breakfast",
+                        icon: "sunrise.fill",
+                        isEnabled: $breakfastEnabled,
+                        hour: $breakfastHour,
+                        minute: $breakfastMinute
+                    )
+                    .onChange(of: breakfastEnabled) { _, _ in applyMealReminders() }
+                    .onChange(of: breakfastHour) { _, _ in applyMealReminders() }
+                    .onChange(of: breakfastMinute) { _, _ in applyMealReminders() }
+
+                    NotificationTimeRow(
+                        label: "Lunch",
+                        icon: "sun.max.fill",
+                        isEnabled: $lunchEnabled,
+                        hour: $lunchHour,
+                        minute: $lunchMinute
+                    )
+                    .onChange(of: lunchEnabled) { _, _ in applyMealReminders() }
+                    .onChange(of: lunchHour) { _, _ in applyMealReminders() }
+                    .onChange(of: lunchMinute) { _, _ in applyMealReminders() }
+
+                    NotificationTimeRow(
+                        label: "Dinner",
+                        icon: "moon.fill",
+                        isEnabled: $dinnerEnabled,
+                        hour: $dinnerHour,
+                        minute: $dinnerMinute
+                    )
+                    .onChange(of: dinnerEnabled) { _, _ in applyMealReminders() }
+                    .onChange(of: dinnerHour) { _, _ in applyMealReminders() }
+                    .onChange(of: dinnerMinute) { _, _ in applyMealReminders() }
+                }
+                .listRowBackground(AppColors.appCard)
+
+                // Smart Notifications
+                Section {
+                    NotificationTimeRow(
+                        label: "Streak Reminder",
+                        icon: "flame.fill",
+                        isEnabled: $streakEnabled,
+                        hour: $streakHour,
+                        minute: $streakMinute
+                    )
+
+                    NotificationTimeRow(
+                        label: "Daily Summary",
+                        icon: "chart.bar.fill",
+                        isEnabled: $summaryEnabled,
+                        hour: $summaryHour,
+                        minute: $summaryMinute
+                    )
+                } header: {
+                    Text("Smart Notifications")
+                } footer: {
+                    Text("Streak and summary notifications update automatically based on your logged food.")
+                        .font(.system(.caption, design: .rounded))
+                }
+                .listRowBackground(AppColors.appCard)
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .background(AppColors.appBackground)
+        .navigationTitle("Notifications")
+        .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await notificationManager.refreshAuthorizationStatus()
+        }
+    }
+
+    private func applyMealReminders() {
+        notificationManager.scheduleMealReminders(
+            breakfastEnabled: breakfastEnabled, breakfastHour: breakfastHour, breakfastMinute: breakfastMinute,
+            lunchEnabled: lunchEnabled, lunchHour: lunchHour, lunchMinute: lunchMinute,
+            dinnerEnabled: dinnerEnabled, dinnerHour: dinnerHour, dinnerMinute: dinnerMinute
+        )
+    }
+}
+
+// MARK: - Notification Time Row
+
+struct NotificationTimeRow: View {
+    let label: String
+    let icon: String
+    @Binding var isEnabled: Bool
+    @Binding var hour: Int
+    @Binding var minute: Int
+
+    private var timeDate: Binding<Date> {
+        Binding(
+            get: {
+                Calendar.current.date(bySettingHour: hour, minute: minute, second: 0, of: Date()) ?? Date()
+            },
+            set: { newDate in
+                let components = Calendar.current.dateComponents([.hour, .minute], from: newDate)
+                hour = components.hour ?? hour
+                minute = components.minute ?? minute
+            }
+        )
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Toggle(isOn: $isEnabled) {
+                Label {
+                    Text(label)
+                } icon: {
+                    Image(systemName: icon)
+                        .foregroundStyle(AppColors.calorie)
+                }
+            }
+            .tint(AppColors.calorie)
+
+            if isEnabled {
+                DatePicker(
+                    "Time",
+                    selection: timeDate,
+                    displayedComponents: .hourAndMinute
+                )
+                .datePickerStyle(.compact)
+                .labelsHidden()
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+        }
+    }
+}
+
 // MARK: - Coming Soon Row
 
 struct ComingSoonRow: View {

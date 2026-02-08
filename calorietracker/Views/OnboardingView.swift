@@ -2,6 +2,7 @@ import SwiftUI
 
 struct OnboardingView: View {
     @Binding var hasCompletedOnboarding: Bool
+    @Environment(NotificationManager.self) private var notificationManager
 
     @State private var step = 0
     @State private var gender: Gender = .male
@@ -864,6 +865,8 @@ struct OnboardingView: View {
 
     // MARK: - 18: Notifications
 
+    @AppStorage("notificationsEnabled") private var notificationsEnabled = false
+
     private var notificationsStep: some View {
         VStack(spacing: 0) {
             Spacer()
@@ -882,21 +885,36 @@ struct OnboardingView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
 
-                // Fake notification card
                 VStack(spacing: 12) {
                     Text("Calorie Tracker would like to send you Notifications")
                         .font(.system(.subheadline, design: .rounded, weight: .medium))
                         .multilineTextAlignment(.center)
                     Divider()
                     HStack {
-                        Button { } label: {
+                        Button {
+                            notificationsEnabled = false
+                            withAnimation(.snappy) { step += 1 }
+                        } label: {
                             Text("Don't Allow")
                                 .font(.system(.subheadline, design: .rounded, weight: .medium))
                                 .foregroundStyle(.secondary)
                                 .frame(maxWidth: .infinity)
                         }
                         Divider().frame(height: 30)
-                        Button { } label: {
+                        Button {
+                            Task {
+                                let granted = await notificationManager.requestAuthorization()
+                                notificationsEnabled = granted
+                                if granted {
+                                    notificationManager.scheduleMealReminders(
+                                        breakfastEnabled: true, breakfastHour: 8, breakfastMinute: 0,
+                                        lunchEnabled: true, lunchHour: 12, lunchMinute: 0,
+                                        dinnerEnabled: true, dinnerHour: 19, dinnerMinute: 0
+                                    )
+                                }
+                                withAnimation(.snappy) { step += 1 }
+                            }
+                        } label: {
                             Text("Allow")
                                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                 .foregroundStyle(.primary)
@@ -910,7 +928,16 @@ struct OnboardingView: View {
             }
 
             Spacer()
-            continueButton()
+
+            Button {
+                notificationsEnabled = false
+                withAnimation(.snappy) { step += 1 }
+            } label: {
+                Text("Skip")
+                    .font(.system(.body, design: .rounded, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.bottom, 36)
         }
     }
 
