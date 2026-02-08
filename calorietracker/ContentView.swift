@@ -916,6 +916,12 @@ struct ProfileView: View {
             .navigationBarHidden(true)
             .onAppear {
                 profile = UserProfile.load() ?? .default
+                // Auto-populate name from Apple Sign-In if not yet set
+                if (profile.name == nil || profile.name?.isEmpty == true),
+                   let appleName = authManager.userDisplayName, !appleName.isEmpty {
+                    profile.name = appleName
+                    saveProfile()
+                }
             }
             .sheet(item: $activeSheet) { sheet in
                 switch sheet {
