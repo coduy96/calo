@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import HealthKit
 
 @main
 struct calorietrackerApp: App {
@@ -13,6 +14,7 @@ struct calorietrackerApp: App {
     @State private var weightStore = WeightStore()
     @State private var notificationManager = NotificationManager()
     @State private var authManager = AuthManager()
+    @State private var healthKitManager = HealthKitManager()
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("appearanceMode") private var appearanceMode = "system"
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
@@ -41,6 +43,7 @@ struct calorietrackerApp: App {
                     .environment(weightStore)
                     .environment(notificationManager)
                     .environment(authManager)
+                    .environment(healthKitManager)
                     .preferredColorScheme(colorScheme)
             } else {
                 OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
@@ -48,6 +51,7 @@ struct calorietrackerApp: App {
                     .environment(authManager)
                     .environment(foodStore)
                     .environment(weightStore)
+                    .environment(healthKitManager)
                     .preferredColorScheme(colorScheme)
             }
         }
@@ -62,12 +66,81 @@ struct calorietrackerApp: App {
                         foodStore: foodStore, profile: profile
                     )
                 }
+                if hasCompletedOnboarding {
+                    wireUpHealthKit()
+                }
             }
         }
         .onChange(of: hasCompletedOnboarding) { _, completed in
             if completed {
                 wireUpFoodStoreCallback()
+                wireUpHealthKit()
             }
+        }
+    }
+
+    private func wireUpHealthKit() {
+        guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
+
+        healthKitManager.onBodyMeasurementsChanged = { [weightStore] weightKg, heightCm, bodyFat, dob, sex in
+            guard var profile = UserProfile.load() else { return }
+            var changed = false
+
+            if let kg = weightKg {
+                let calendar = Calendar.current
+                let alreadyLogged = weightStore.entries.contains {
+                    calendar.isDateInToday($0.date) && abs($0.weightKg - kg) < 0.01
+                }
+                if !alreadyLogged {
+                    let entry = WeightEntry(date: .now, weightKg: kg)
+                    weightStore.addEntry(entry)
+                }
+                if abs(profile.weightKg - kg) > 0.01 {
+                    profile.weightKg = kg
+                    changed = true
+                }
+            }
+            if let cm = heightCm, abs(profile.heightCm - cm) > 0.1 {
+                profile.heightCm = cm
+                changed = true
+            }
+            if let bf = bodyFat {
+                if profile.bodyFatPercentage == nil || abs((profile.bodyFatPercentage ?? 0) - bf) > 0.001 {
+                    profile.bodyFatPercentage = bf
+                    changed = true
+                }
+            }
+            if let d = dob {
+                let calendar = Calendar.current
+                if !calendar.isDate(profile.birthday, inSameDayAs: d) {
+                    profile.birthday = d
+                    changed = true
+                }
+            }
+            if let s = sex {
+                let mapped: Gender = s == .male ? .male : s == .female ? .female : .other
+                if profile.gender != mapped {
+                    profile.gender = mapped
+                    changed = true
+                }
+            }
+            if changed { profile.save() }
+        }
+
+        healthKitManager.startBodyMeasurementObserver()
+
+        foodStore.onEntryAdded = { [healthKitManager] entry in
+            healthKitManager.writeNutrition(
+                calories: entry.calories,
+                protein: entry.protein,
+                carbs: entry.carbs,
+                fat: entry.fat,
+                date: entry.timestamp
+            )
+        }
+
+        weightStore.onEntryAdded = { [healthKitManager] entry in
+            healthKitManager.writeWeight(kg: entry.weightKg, date: entry.date)
         }
     }
 

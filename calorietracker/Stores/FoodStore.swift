@@ -5,6 +5,7 @@ import SwiftUI
 class FoodStore {
     private(set) var entries: [FoodEntry] = []
     var onEntriesChanged: (() -> Void)?
+    var onEntryAdded: ((FoodEntry) -> Void)?
 
     private let storageKey = "foodEntries"
 
@@ -84,6 +85,7 @@ class FoodStore {
         entries.append(entry)
         saveEntries()
         onEntriesChanged?()
+        onEntryAdded?(entry)
         if UserDefaults.standard.string(forKey: "appleUserID") != nil {
             Task { await CloudKitService.saveFoodEntry(entry) }
         }

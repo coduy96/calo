@@ -1,5 +1,6 @@
 import SwiftUI
 import AuthenticationServices
+import HealthKit
 
 struct OnboardingView: View {
     @Binding var hasCompletedOnboarding: Bool
@@ -7,6 +8,7 @@ struct OnboardingView: View {
     @Environment(AuthManager.self) private var authManager
     @Environment(FoodStore.self) private var foodStore
     @Environment(WeightStore.self) private var weightStore
+    @Environment(HealthKitManager.self) private var healthKitManager
 
     @State private var step = 0
     @State private var isRestoringFromCloud = false
@@ -1052,7 +1054,7 @@ struct OnboardingView: View {
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .multilineTextAlignment(.center)
 
-                    Text("Sync your daily activity to get\nthe most accurate recommendations.")
+                    Text("Keep your nutrition and body\nmeasurements in sync automatically.")
                         .font(.system(.callout, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -1060,10 +1062,9 @@ struct OnboardingView: View {
 
                 // Feature list
                 VStack(alignment: .leading, spacing: 12) {
-                    healthFeatureRow(icon: "figure.walk", label: "Walking & Running")
-                    healthFeatureRow(icon: "flame.fill", label: "Active Calories")
-                    healthFeatureRow(icon: "bed.double.fill", label: "Sleep Data")
-                    healthFeatureRow(icon: "heart.fill", label: "Heart Rate")
+                    healthFeatureRow(icon: "fork.knife", label: "Nutrition Data")
+                    healthFeatureRow(icon: "scalemass.fill", label: "Weight Sync")
+                    healthFeatureRow(icon: "figure.stand", label: "Body Measurements")
                 }
                 .padding(.horizontal, 40)
             }
@@ -1071,7 +1072,44 @@ struct OnboardingView: View {
             Spacer()
 
             VStack(spacing: 12) {
-                continueButton("Connect")
+                Button {
+                    Task {
+                        let authorized = await healthKitManager.requestAuthorization()
+                        if authorized {
+                            UserDefaults.standard.set(true, forKey: "healthKitEnabled")
+
+                            // Write current profile data to Health
+                            let p = profile
+                            healthKitManager.writeWeight(kg: p.weightKg, date: .now)
+                            healthKitManager.writeHeight(cm: p.heightCm)
+                            if let bf = p.bodyFatPercentage {
+                                healthKitManager.writeBodyFat(fraction: bf)
+                            }
+
+                            // Read Health data back into profile
+                            let measurements = await healthKitManager.fetchLatestBodyMeasurements()
+                            if let dob = measurements.dob {
+                                birthday = dob
+                            }
+                            if let sex = measurements.sex {
+                                switch sex {
+                                case .male: gender = .male
+                                case .female: gender = .female
+                                default: break
+                                }
+                            }
+                        }
+                        withAnimation(.snappy) { step += 1 }
+                    }
+                } label: {
+                    Text("Connect")
+                        .font(.system(.body, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 54)
+                        .background(AppColors.calorie, in: RoundedRectangle(cornerRadius: 16))
+                }
+                .padding(.horizontal, 24)
 
                 Button {
                     withAnimation(.snappy) { step += 1 }

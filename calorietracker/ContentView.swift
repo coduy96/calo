@@ -2,6 +2,7 @@ import SwiftUI
 import PhotosUI
 import UIKit
 import AuthenticationServices
+import HealthKit
 
 // MARK: - Camera Mode
 enum CameraMode {
@@ -599,18 +600,18 @@ struct ProfileView: View {
     @Environment(FoodStore.self) private var foodStore
     @Environment(AuthManager.self) private var authManager
     @Environment(NotificationManager.self) private var notificationManager
+    @Environment(HealthKitManager.self) private var healthKitManager
     @State private var profile: UserProfile = UserProfile.load() ?? .default
     @AppStorage("appearanceMode") private var appearanceMode = "system"
     @AppStorage("useMetric") private var useMetric = false
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
+    @AppStorage("healthKitEnabled") private var healthKitEnabled = false
 
     enum ActiveSheet: String, Identifiable {
         case editName, editBirthday, editHeight, editWeight, editBodyFat, editCalories, editProtein, editCarbs, editFat
         var id: String { rawValue }
     }
     @State private var activeSheet: ActiveSheet?
-    @State private var showComingSoonAlert = false
-    @State private var comingSoonFeature = ""
     @State private var showDeleteConfirmation = false
     @State private var editingName: String = ""
     @State private var isSyncing = false
@@ -871,10 +872,20 @@ struct ProfileView: View {
                         .buttonStyle(.plain)
                         .disabled(isSyncing)
 
-                        // Apple Health (Coming Soon)
-                        ComingSoonRow(icon: "heart.fill", label: "Apple Health") {
-                            comingSoonFeature = "Apple Health"
-                            showComingSoonAlert = true
+                        // Apple Health
+                        HStack {
+                            Label {
+                                Text("Apple Health")
+                            } icon: {
+                                Image(systemName: "heart.fill")
+                                    .foregroundStyle(.pink)
+                            }
+                            Spacer()
+                            Toggle("", isOn: $healthKitEnabled)
+                                .labelsHidden()
+                                .onChange(of: healthKitEnabled) { _, enabled in
+                                    handleHealthKitToggle(enabled)
+                                }
                         }
 
                         // Sign Out
@@ -908,10 +919,20 @@ struct ProfileView: View {
                         .buttonStyle(.plain)
                         .disabled(isSyncing)
                     } else {
-                        // Apple Health (Coming Soon)
-                        ComingSoonRow(icon: "heart.fill", label: "Apple Health") {
-                            comingSoonFeature = "Apple Health"
-                            showComingSoonAlert = true
+                        // Apple Health
+                        HStack {
+                            Label {
+                                Text("Apple Health")
+                            } icon: {
+                                Image(systemName: "heart.fill")
+                                    .foregroundStyle(.pink)
+                            }
+                            Spacer()
+                            Toggle("", isOn: $healthKitEnabled)
+                                .labelsHidden()
+                                .onChange(of: healthKitEnabled) { _, enabled in
+                                    handleHealthKitToggle(enabled)
+                                }
                         }
                     }
 
@@ -1074,11 +1095,6 @@ struct ProfileView: View {
                     }
                 }
             }
-            .alert("Coming Soon", isPresented: $showComingSoonAlert) {
-                Button("OK") { }
-            } message: {
-                Text("\(comingSoonFeature) will be available in a future update.")
-            }
             .alert("Delete All Data", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete Everything", role: .destructive) {
@@ -1104,6 +1120,47 @@ struct ProfileView: View {
 
     private func saveProfile() {
         profile.save()
+    }
+
+    private func handleHealthKitToggle(_ enabled: Bool) {
+        if enabled {
+            Task {
+                let authorized = await healthKitManager.requestAuthorization()
+                if authorized {
+                    healthKitManager.writeWeight(kg: profile.weightKg, date: .now)
+                    healthKitManager.writeHeight(cm: profile.heightCm)
+                    if let bf = profile.bodyFatPercentage {
+                        healthKitManager.writeBodyFat(fraction: bf)
+                    }
+                    let measurements = await healthKitManager.fetchLatestBodyMeasurements()
+                    if let kg = measurements.weight, abs(profile.weightKg - kg) > 0.01 {
+                        profile.weightKg = kg
+                    }
+                    if let cm = measurements.height, abs(profile.heightCm - cm) > 0.1 {
+                        profile.heightCm = cm
+                    }
+                    if let bf = measurements.bodyFat {
+                        profile.bodyFatPercentage = bf
+                    }
+                    if let dob = measurements.dob {
+                        profile.birthday = dob
+                    }
+                    if let sex = measurements.sex {
+                        switch sex {
+                        case .male: profile.gender = .male
+                        case .female: profile.gender = .female
+                        default: break
+                        }
+                    }
+                    saveProfile()
+                    healthKitManager.startBodyMeasurementObserver()
+                } else {
+                    healthKitEnabled = false
+                }
+            }
+        } else {
+            healthKitManager.stopObserver()
+        }
     }
 
     /// Clear custom nutrition overrides so computed values recalculate from formulas

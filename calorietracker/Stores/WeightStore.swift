@@ -4,6 +4,7 @@ import SwiftUI
 @Observable
 class WeightStore {
     private(set) var entries: [WeightEntry] = []
+    var onEntryAdded: ((WeightEntry) -> Void)?
 
     private let storageKey = "weightEntries"
 
@@ -30,6 +31,7 @@ class WeightStore {
     func addEntry(_ entry: WeightEntry) {
         entries.append(entry)
         saveEntries()
+        onEntryAdded?(entry)
 
         // Sync weight to UserProfile so BMR/TDEE/macros recalculate
         if var profile = UserProfile.load() {
