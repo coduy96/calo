@@ -690,8 +690,13 @@ struct ComingSoonRow: View {
     var body: some View {
         Button(action: action) {
             HStack {
-                Label(label, systemImage: icon)
-                    .foregroundStyle(.primary)
+                Label {
+                    Text(label)
+                } icon: {
+                    Image(systemName: icon)
+                        .foregroundStyle(AppColors.calorie)
+                }
+                .foregroundStyle(.primary)
                 Spacer()
                 Text("Coming Soon")
                     .font(.system(.caption, design: .rounded, weight: .medium))

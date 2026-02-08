@@ -627,10 +627,15 @@ struct ProfileView: View {
                             Text(gender.displayName).tag(gender)
                         }
                     } label: {
-                        Label("Gender", systemImage: profile.gender.icon)
+                        Label {
+                            Text("Gender")
+                        } icon: {
+                            Image(systemName: profile.gender.icon)
+                                .foregroundStyle(AppColors.calorie)
+                        }
                     }
                     .pickerStyle(.menu)
-                    .tint(AppColors.calorie)
+                    .tint(.secondary)
                     .onChange(of: profile.gender) { _, _ in resetNutritionAndSave() }
 
                     ProfileInfoRow(icon: "birthday.cake", label: "Birthday", value: birthdayDisplay) {
@@ -662,10 +667,15 @@ struct ProfileView: View {
                             Text(goal.displayName).tag(goal)
                         }
                     } label: {
-                        Label("Weight Goal", systemImage: profile.goal.icon)
+                        Label {
+                            Text("Weight Goal")
+                        } icon: {
+                            Image(systemName: profile.goal.icon)
+                                .foregroundStyle(AppColors.calorie)
+                        }
                     }
                     .pickerStyle(.menu)
-                    .tint(AppColors.calorie)
+                    .tint(.secondary)
                     .onChange(of: profile.goal) { _, newValue in
                         if newValue == .maintain {
                             profile.weeklyChangeKg = nil
@@ -680,10 +690,15 @@ struct ProfileView: View {
                             Text(level.displayName).tag(level)
                         }
                     } label: {
-                        Label("Activity Level", systemImage: profile.activityLevel.icon)
+                        Label {
+                            Text("Activity Level")
+                        } icon: {
+                            Image(systemName: profile.activityLevel.icon)
+                                .foregroundStyle(AppColors.calorie)
+                        }
                     }
                     .pickerStyle(.menu)
-                    .tint(AppColors.calorie)
+                    .tint(.secondary)
                     .onChange(of: profile.activityLevel) { _, _ in resetNutritionAndSave() }
 
                     if profile.goal != .maintain {
@@ -695,10 +710,15 @@ struct ProfileView: View {
                             Text("Moderate (0.5 kg/wk)").tag(0.5)
                             Text("Fast (1.0 kg/wk)").tag(1.0)
                         } label: {
-                            Label("Weekly Change", systemImage: "gauge.with.dots.needle.33percent")
+                            Label {
+                                Text("Weekly Change")
+                            } icon: {
+                                Image(systemName: "gauge.with.dots.needle.33percent")
+                                    .foregroundStyle(AppColors.calorie)
+                            }
                         }
                         .pickerStyle(.menu)
-                        .tint(AppColors.calorie)
+                        .tint(.secondary)
                     }
 
                     ProfileInfoRow(icon: "flame", label: "Calories", value: "\(profile.effectiveCalories) kcal") {
@@ -726,13 +746,23 @@ struct ProfileView: View {
                         Text("Light").tag("light")
                         Text("Dark").tag("dark")
                     } label: {
-                        Label("Appearance", systemImage: "circle.lefthalf.filled")
+                        Label {
+                            Text("Appearance")
+                        } icon: {
+                            Image(systemName: "circle.lefthalf.filled")
+                                .foregroundStyle(AppColors.calorie)
+                        }
                     }
                     .pickerStyle(.menu)
-                    .tint(AppColors.calorie)
+                    .tint(.secondary)
 
                     Toggle(isOn: $useMetric) {
-                        Label("Metric Units", systemImage: "ruler")
+                        Label {
+                            Text("Metric Units")
+                        } icon: {
+                            Image(systemName: "ruler")
+                                .foregroundStyle(AppColors.calorie)
+                        }
                     }
                     .tint(AppColors.calorie)
 
@@ -764,15 +794,24 @@ struct ProfileView: View {
                         comingSoonFeature = "Sign Out"
                         showComingSoonAlert = true
                     } label: {
-                        Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
-                            .foregroundStyle(.primary)
+                        Label {
+                            Text("Sign Out")
+                        } icon: {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                        .foregroundStyle(.primary)
                     }
 
                     Button(role: .destructive) {
                         showDeleteConfirmation = true
                     } label: {
-                        Label("Delete All Data", systemImage: "trash")
-                            .foregroundStyle(.red)
+                        Label {
+                            Text("Delete All Data")
+                        } icon: {
+                            Image(systemName: "trash")
+                        }
+                        .foregroundStyle(.red)
                     }
                 }
                 .listRowBackground(AppColors.appCard)
