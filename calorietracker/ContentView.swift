@@ -703,8 +703,6 @@ struct ProfileView: View {
                         .pickerStyle(.menu)
                     }
 
-                    NutritionSummaryRow(profile: profile)
-
                     NutritionOverrideRow(
                         label: "Calories",
                         icon: "flame",
