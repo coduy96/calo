@@ -879,6 +879,7 @@ struct ProfileView: View {
                         // Sign Out
                         Button {
                             authManager.signOut()
+                            hasCompletedOnboarding = false
                         } label: {
                             Label {
                                 Text("Sign Out")

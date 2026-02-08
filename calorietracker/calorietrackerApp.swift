@@ -35,7 +35,7 @@ struct calorietrackerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if hasCompletedOnboarding {
+            if hasCompletedOnboarding && authManager.isSignedIn {
                 ContentView()
                     .environment(foodStore)
                     .environment(weightStore)
