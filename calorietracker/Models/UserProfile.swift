@@ -109,6 +109,7 @@ enum WeightGoal: String, Codable, CaseIterable {
 // MARK: - User Profile
 
 struct UserProfile: Codable {
+    var name: String?
     var gender: Gender
     var birthday: Date
     var heightCm: Double
@@ -121,6 +122,19 @@ struct UserProfile: Codable {
     var customProtein: Int?
     var customFat: Int?
     var customCarbs: Int?
+
+    var displayName: String {
+        if let name, !name.isEmpty { return name }
+        return "User"
+    }
+
+    var initials: String {
+        let parts = displayName.split(separator: " ")
+        if parts.count >= 2 {
+            return String(parts[0].prefix(1) + parts[1].prefix(1)).uppercased()
+        }
+        return String(displayName.prefix(1)).uppercased()
+    }
 
     var age: Int {
         Calendar.current.dateComponents([.year], from: birthday, to: Date()).year ?? 25
@@ -178,6 +192,7 @@ struct UserProfile: Codable {
     var effectiveCarbs: Int { customCarbs ?? carbsGoal }
 
     static let `default` = UserProfile(
+        name: nil,
         gender: .male,
         birthday: Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date(),
         heightCm: 175,

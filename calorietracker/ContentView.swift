@@ -561,30 +561,198 @@ struct ProgressTabView: View {
 
 
 struct ProfileView: View {
+    @State private var profile: UserProfile = UserProfile.load() ?? .default
     @AppStorage("appearanceMode") private var appearanceMode = "system"
+    @AppStorage("useMetric") private var useMetric = false
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
+
+    enum ActiveSheet: String, Identifiable {
+        case editName, editBirthday, editHeight, editWeight, editBodyFat
+        var id: String { rawValue }
+    }
+    @State private var activeSheet: ActiveSheet?
+    @State private var showComingSoonAlert = false
+    @State private var comingSoonFeature = ""
+    @State private var showDeleteConfirmation = false
+    @State private var editingName: String = ""
+
+    // Height formatting
+    private var heightDisplay: String {
+        if useMetric {
+            return "\(Int(profile.heightCm)) cm"
+        }
+        let totalInches = profile.heightCm / 2.54
+        let feet = Int(totalInches) / 12
+        let inches = Int(totalInches) % 12
+        return "\(feet)'\(inches)\""
+    }
+
+    // Weight formatting
+    private var weightDisplay: String {
+        if useMetric {
+            return String(format: "%.1f kg", profile.weightKg)
+        }
+        return String(format: "%.1f lbs", profile.weightKg * 2.20462)
+    }
+
+    // Birthday formatting
+    private var birthdayDisplay: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return "\(formatter.string(from: profile.birthday)) (age \(profile.age))"
+    }
+
+    // Weekly change display
+    private var weeklyChangeDisplay: String {
+        let rate = profile.weeklyChangeKg ?? 0.5
+        if useMetric {
+            return String(format: "%.2f kg/week", rate)
+        }
+        return String(format: "%.1f lbs/week", rate * 2.20462)
+    }
 
     var body: some View {
         NavigationStack {
             List {
+                // Section 0: Header
                 Section {
-                    HStack {
-                        Image(systemName: "person.circle.fill")
-                            .font(.system(size: 60))
-                            .foregroundStyle(.secondary)
-                        VStack(alignment: .leading) {
-                            Text("User")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                            Text("user@email.com")
+                    ProfileHeaderSection(profile: profile)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                }
+
+                // Section 1: Personal Info
+                Section("Personal Info") {
+                    ProfileInfoRow(icon: "person", label: "Name", value: profile.displayName) {
+                        editingName = profile.name ?? ""
+                        activeSheet = .editName
+                    }
+
+                    NavigationLink {
+                        GenderSelectionView(selected: $profile.gender) {
+                            saveProfile()
+                        }
+                    } label: {
+                        HStack {
+                            Label("Gender", systemImage: profile.gender.icon)
+                            Spacer()
+                            Text(profile.gender.displayName)
                                 .foregroundStyle(.secondary)
                         }
+                    }
+
+                    ProfileInfoRow(icon: "birthday.cake", label: "Birthday", value: birthdayDisplay) {
+                        activeSheet = .editBirthday
+                    }
+
+                    ProfileInfoRow(icon: "ruler", label: "Height", value: heightDisplay) {
+                        activeSheet = .editHeight
+                    }
+
+                    ProfileInfoRow(icon: "scalemass", label: "Weight", value: weightDisplay) {
+                        activeSheet = .editWeight
+                    }
+
+                    ProfileInfoRow(
+                        icon: "percent",
+                        label: "Body Fat",
+                        value: profile.bodyFatPercentage != nil ? "\(Int(profile.bodyFatPercentage! * 100))%" : "Not set"
+                    ) {
+                        activeSheet = .editBodyFat
                     }
                 }
                 .listRowBackground(AppColors.appCard)
 
-                Section("Settings") {
-                    Label("Notifications", systemImage: "bell")
-                    Label("Goals", systemImage: "target")
+                // Section 2: Goals & Nutrition
+                Section("Goals & Nutrition") {
+                    NavigationLink {
+                        WeightGoalSelectionView(selected: $profile.goal) {
+                            if profile.goal == .maintain {
+                                profile.weeklyChangeKg = nil
+                            } else if profile.weeklyChangeKg == nil {
+                                profile.weeklyChangeKg = 0.5
+                            }
+                            saveProfile()
+                        }
+                    } label: {
+                        HStack {
+                            Label("Weight Goal", systemImage: profile.goal.icon)
+                            Spacer()
+                            Text(profile.goal.displayName)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    NavigationLink {
+                        ActivityLevelSelectionView(selected: $profile.activityLevel) {
+                            saveProfile()
+                        }
+                    } label: {
+                        HStack {
+                            Label("Activity Level", systemImage: profile.activityLevel.icon)
+                            Spacer()
+                            Text(profile.activityLevel.displayName)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    if profile.goal != .maintain {
+                        NavigationLink {
+                            GoalSpeedSelectionView(selected: $profile.weeklyChangeKg, goal: profile.goal) {
+                                saveProfile()
+                            }
+                        } label: {
+                            HStack {
+                                Label("Weekly Change", systemImage: "gauge.with.dots.needle.33percent")
+                                Spacer()
+                                Text(weeklyChangeDisplay)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+
+                    NutritionSummaryRow(profile: profile)
+
+                    NutritionOverrideRow(
+                        label: "Calories",
+                        icon: "flame",
+                        color: AppColors.calorie,
+                        computedValue: profile.dailyCalories,
+                        customValue: $profile.customCalories
+                    )
+                    .onChange(of: profile.customCalories) { _, _ in saveProfile() }
+
+                    NutritionOverrideRow(
+                        label: "Protein",
+                        icon: "p.circle",
+                        color: AppColors.protein,
+                        computedValue: profile.proteinGoal,
+                        customValue: $profile.customProtein
+                    )
+                    .onChange(of: profile.customProtein) { _, _ in saveProfile() }
+
+                    NutritionOverrideRow(
+                        label: "Carbs",
+                        icon: "c.circle",
+                        color: AppColors.carbs,
+                        computedValue: profile.carbsGoal,
+                        customValue: $profile.customCarbs
+                    )
+                    .onChange(of: profile.customCarbs) { _, _ in saveProfile() }
+
+                    NutritionOverrideRow(
+                        label: "Fat",
+                        icon: "f.circle",
+                        color: AppColors.fat,
+                        computedValue: profile.fatGoal,
+                        customValue: $profile.customFat
+                    )
+                    .onChange(of: profile.customFat) { _, _ in saveProfile() }
+                }
+                .listRowBackground(AppColors.appCard)
+
+                // Section 3: App Settings
+                Section("App Settings") {
                     Picker(selection: $appearanceMode) {
                         Text("System").tag("system")
                         Text("Light").tag("light")
@@ -593,19 +761,173 @@ struct ProfileView: View {
                         Label("Appearance", systemImage: "circle.lefthalf.filled")
                     }
                     .pickerStyle(.menu)
+
+                    Toggle(isOn: $useMetric) {
+                        Label("Metric Units", systemImage: "ruler")
+                    }
+
+                    ComingSoonRow(icon: "bell", label: "Notifications") {
+                        comingSoonFeature = "Notifications"
+                        showComingSoonAlert = true
+                    }
                 }
                 .listRowBackground(AppColors.appCard)
 
-                Section {
-                    Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
-                        .foregroundStyle(.red)
+                // Section 4: Account
+                Section("Account") {
+                    ComingSoonRow(icon: "g.circle.fill", label: "Sign in with Google") {
+                        comingSoonFeature = "Google Sign-In"
+                        showComingSoonAlert = true
+                    }
+
+                    ComingSoonRow(icon: "apple.logo", label: "Sign in with Apple") {
+                        comingSoonFeature = "Apple Sign-In"
+                        showComingSoonAlert = true
+                    }
+
+                    ComingSoonRow(icon: "heart.fill", label: "Apple Health") {
+                        comingSoonFeature = "Apple Health"
+                        showComingSoonAlert = true
+                    }
+
+                    Button {
+                        comingSoonFeature = "Sign Out"
+                        showComingSoonAlert = true
+                    } label: {
+                        Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                            .foregroundStyle(.primary)
+                    }
+
+                    Button(role: .destructive) {
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("Delete All Data", systemImage: "trash")
+                            .foregroundStyle(.red)
+                    }
                 }
                 .listRowBackground(AppColors.appCard)
             }
             .scrollContentBackground(.hidden)
             .background(AppColors.appBackground)
             .navigationTitle("Profile")
+            .onAppear {
+                profile = UserProfile.load() ?? .default
+            }
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .editName:
+                    NavigationStack {
+                        Form {
+                            TextField("Your name", text: $editingName)
+                                .textContentType(.name)
+                                .autocorrectionDisabled()
+                        }
+                        .navigationTitle("Edit Name")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Cancel") { activeSheet = nil }
+                            }
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Save") {
+                                    profile.name = editingName.isEmpty ? nil : editingName
+                                    saveProfile()
+                                    activeSheet = nil
+                                }
+                            }
+                        }
+                    }
+                    .presentationDetents([.medium])
+
+                case .editBirthday:
+                    NavigationStack {
+                        VStack(spacing: 20) {
+                            Text("Birthday")
+                                .font(.system(.title2, design: .rounded, weight: .bold))
+
+                            DatePicker(
+                                "Birthday",
+                                selection: $profile.birthday,
+                                in: ...Date.now,
+                                displayedComponents: .date
+                            )
+                            .datePickerStyle(.wheel)
+                            .labelsHidden()
+
+                            Button {
+                                saveProfile()
+                                activeSheet = nil
+                            } label: {
+                                Text("Save")
+                                    .font(.system(.headline, design: .rounded, weight: .semibold))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(
+                                        LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing)
+                                    )
+                                    .foregroundStyle(.white)
+                                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                            }
+                            .padding(.horizontal, 24)
+
+                            Spacer()
+                        }
+                        .padding(.top, 24)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Cancel") { activeSheet = nil }
+                            }
+                        }
+                    }
+                    .presentationDetents([.medium])
+
+                case .editHeight:
+                    HeightPickerSheet(
+                        useMetric: useMetric,
+                        currentHeightCm: profile.heightCm
+                    ) { newHeight in
+                        profile.heightCm = newHeight
+                        saveProfile()
+                    }
+
+                case .editWeight:
+                    WeightPickerSheet(
+                        useMetric: useMetric,
+                        currentWeightKg: profile.weightKg
+                    ) { newWeight in
+                        profile.weightKg = newWeight
+                        saveProfile()
+                    }
+
+                case .editBodyFat:
+                    BodyFatPickerSheet(
+                        currentPercentage: profile.bodyFatPercentage
+                    ) { newValue in
+                        profile.bodyFatPercentage = newValue
+                        saveProfile()
+                    }
+                }
+            }
+            .alert("Coming Soon", isPresented: $showComingSoonAlert) {
+                Button("OK") { }
+            } message: {
+                Text("\(comingSoonFeature) will be available in a future update.")
+            }
+            .alert("Delete All Data", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete Everything", role: .destructive) {
+                    let domain = Bundle.main.bundleIdentifier ?? ""
+                    UserDefaults.standard.removePersistentDomain(forName: domain)
+                    hasCompletedOnboarding = false
+                }
+            } message: {
+                Text("This will permanently delete all your data including food logs, weight entries, and profile. This action cannot be undone.")
+            }
         }
+    }
+
+    private func saveProfile() {
+        profile.save()
     }
 }
 
