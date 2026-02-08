@@ -975,7 +975,7 @@ struct OnboardingView: View {
                     .multilineTextAlignment(.center)
 
                 VStack(spacing: 12) {
-                    Text("Calorie Tracker would like to send you Notifications")
+                    Text("Fud AI would like to send you Notifications")
                         .font(.system(.subheadline, design: .rounded, weight: .medium))
                         .multilineTextAlignment(.center)
                     Divider()
