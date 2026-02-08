@@ -142,7 +142,7 @@ struct UserProfile: Codable {
     }
 
     var dailyCalories: Int {
-        max(1200, Int(tdee) + calorieAdjustment)
+        Int(tdee) + calorieAdjustment
     }
 
     var proteinGoal: Int {
