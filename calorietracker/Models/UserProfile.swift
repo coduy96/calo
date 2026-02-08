@@ -220,5 +220,9 @@ struct UserProfile: Codable {
         if let data = try? JSONEncoder().encode(self) {
             UserDefaults.standard.set(data, forKey: "userProfile")
         }
+        if UserDefaults.standard.string(forKey: "appleUserID") != nil {
+            let profile = self
+            Task { await CloudKitService.saveProfile(profile) }
+        }
     }
 }

@@ -84,10 +84,33 @@ class FoodStore {
         entries.append(entry)
         saveEntries()
         onEntriesChanged?()
+        if UserDefaults.standard.string(forKey: "appleUserID") != nil {
+            Task { await CloudKitService.saveFoodEntry(entry) }
+        }
     }
 
     func deleteEntry(_ entry: FoodEntry) {
-        entries.removeAll { $0.id == entry.id }
+        let id = entry.id
+        entries.removeAll { $0.id == id }
+        saveEntries()
+        onEntriesChanged?()
+        if UserDefaults.standard.string(forKey: "appleUserID") != nil {
+            Task { await CloudKitService.deleteFoodEntry(id: id) }
+        }
+    }
+
+    func replaceAllEntries(_ newEntries: [FoodEntry]) {
+        entries = newEntries
+        saveEntries()
+        onEntriesChanged?()
+    }
+
+    func mergeWithCloudEntries(_ cloudEntries: [FoodEntry]) {
+        var merged = Dictionary(uniqueKeysWithValues: entries.map { ($0.id, $0) })
+        for cloudEntry in cloudEntries {
+            merged[cloudEntry.id] = cloudEntry
+        }
+        entries = Array(merged.values)
         saveEntries()
         onEntriesChanged?()
     }

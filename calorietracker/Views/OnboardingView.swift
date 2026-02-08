@@ -1,10 +1,16 @@
 import SwiftUI
+import AuthenticationServices
 
 struct OnboardingView: View {
     @Binding var hasCompletedOnboarding: Bool
     @Environment(NotificationManager.self) private var notificationManager
+    @Environment(AuthManager.self) private var authManager
+    @Environment(FoodStore.self) private var foodStore
+    @Environment(WeightStore.self) private var weightStore
 
     @State private var step = 0
+    @State private var isRestoringFromCloud = false
+    @State private var signInError: String?
     @State private var gender: Gender = .male
     @State private var birthday: Date = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     @State private var isMetric = false
@@ -172,7 +178,76 @@ struct OnboardingView: View {
                     .multilineTextAlignment(.center)
             }
             Spacer()
-            continueButton("Get Started")
+
+            if isRestoringFromCloud {
+                VStack(spacing: 12) {
+                    ProgressView()
+                        .tint(AppColors.calorie)
+                    Text("Restoring your data...")
+                        .font(.system(.callout, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.bottom, 36)
+            } else {
+                VStack(spacing: 16) {
+                    SignInWithAppleButton(.signIn) { request in
+                        request.requestedScopes = [.fullName, .email]
+                    } onCompletion: { result in
+                        handleAppleSignIn(result)
+                    }
+                    .signInWithAppleButtonStyle(.whiteOutline)
+                    .frame(height: 54)
+                    .padding(.horizontal, 24)
+
+                    if let signInError {
+                        Text(signInError)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.red)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 24)
+                    }
+
+                    Button {
+                        withAnimation(.snappy) { step += 1 }
+                    } label: {
+                        Text("Skip for now")
+                            .font(.system(.body, design: .rounded, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.bottom, 36)
+            }
+        }
+    }
+
+    private func handleAppleSignIn(_ result: Result<ASAuthorization, Error>) {
+        do {
+            try authManager.handleSignInResult(result)
+            isRestoringFromCloud = true
+            signInError = nil
+            Task {
+                do {
+                    let cloudData = try await CloudKitService.pullAllData()
+                    if let cloudProfile = cloudData.profile {
+                        // Returning user — restore everything
+                        cloudProfile.save()
+                        foodStore.replaceAllEntries(cloudData.foodEntries)
+                        weightStore.replaceAllEntries(cloudData.weightEntries)
+                        hasCompletedOnboarding = true
+                    } else {
+                        // New user — continue onboarding
+                        withAnimation(.snappy) { step += 1 }
+                    }
+                } catch {
+                    // Cloud fetch failed — continue as new user
+                    withAnimation(.snappy) { step += 1 }
+                }
+                isRestoringFromCloud = false
+            }
+        } catch let error as ASAuthorizationError where error.code == .canceled {
+            // User cancelled — do nothing
+        } catch {
+            signInError = error.localizedDescription
         }
     }
 

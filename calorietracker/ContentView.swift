@@ -1,6 +1,7 @@
 import SwiftUI
 import PhotosUI
 import UIKit
+import AuthenticationServices
 
 // MARK: - Camera Mode
 enum CameraMode {
@@ -595,6 +596,8 @@ struct ProgressTabView: View {
 
 struct ProfileView: View {
     @Environment(WeightStore.self) private var weightStore
+    @Environment(FoodStore.self) private var foodStore
+    @Environment(AuthManager.self) private var authManager
     @State private var profile: UserProfile = UserProfile.load() ?? .default
     @AppStorage("appearanceMode") private var appearanceMode = "system"
     @AppStorage("useMetric") private var useMetric = false
@@ -609,6 +612,8 @@ struct ProfileView: View {
     @State private var comingSoonFeature = ""
     @State private var showDeleteConfirmation = false
     @State private var editingName: String = ""
+    @State private var isSyncing = false
+    @State private var signInError: String?
 
     // Height formatting
     private var heightDisplay: String {
@@ -814,34 +819,114 @@ struct ProfileView: View {
 
                 // Section 4: Account
                 Section("Account") {
-                    ComingSoonRow(icon: "g.circle.fill", label: "Sign in with Google") {
-                        comingSoonFeature = "Google Sign-In"
-                        showComingSoonAlert = true
-                    }
-
-                    ComingSoonRow(icon: "apple.logo", label: "Sign in with Apple") {
-                        comingSoonFeature = "Apple Sign-In"
-                        showComingSoonAlert = true
-                    }
-
-                    ComingSoonRow(icon: "heart.fill", label: "Apple Health") {
-                        comingSoonFeature = "Apple Health"
-                        showComingSoonAlert = true
-                    }
-
-                    Button {
-                        comingSoonFeature = "Sign Out"
-                        showComingSoonAlert = true
-                    } label: {
-                        Label {
-                            Text("Sign Out")
-                        } icon: {
-                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                    if authManager.isSignedIn {
+                        // Apple ID info
+                        HStack(spacing: 12) {
+                            Image(systemName: "apple.logo")
+                                .font(.system(size: 20))
                                 .foregroundStyle(AppColors.calorie)
+                                .frame(width: 28)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(authManager.userDisplayName ?? "Apple ID")
+                                    .font(.system(.body, design: .rounded, weight: .medium))
+                                if let email = authManager.userEmail {
+                                    Text(email)
+                                        .font(.system(.caption, design: .rounded))
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                            Spacer()
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                                .font(.system(size: 20))
+                        }
+
+                        // Sync to iCloud
+                        Button {
+                            isSyncing = true
+                            Task {
+                                await CloudKitService.pushAllData(
+                                    foodEntries: foodStore.entries,
+                                    weightEntries: weightStore.entries,
+                                    profile: UserProfile.load()
+                                )
+                                isSyncing = false
+                            }
+                        } label: {
+                            HStack {
+                                Label {
+                                    Text("Sync to iCloud")
+                                } icon: {
+                                    Image(systemName: "icloud.and.arrow.up")
+                                        .foregroundStyle(AppColors.calorie)
+                                }
+                                Spacer()
+                                if isSyncing {
+                                    ProgressView()
+                                        .tint(AppColors.calorie)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(isSyncing)
+
+                        // Apple Health (Coming Soon)
+                        ComingSoonRow(icon: "heart.fill", label: "Apple Health") {
+                            comingSoonFeature = "Apple Health"
+                            showComingSoonAlert = true
+                        }
+
+                        // Sign Out
+                        Button {
+                            authManager.signOut()
+                        } label: {
+                            Label {
+                                Text("Sign Out")
+                            } icon: {
+                                Image(systemName: "rectangle.portrait.and.arrow.right")
+                                    .foregroundStyle(AppColors.calorie)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        // Sign In with Apple
+                        SignInWithAppleButton(.signIn) { request in
+                            request.requestedScopes = [.fullName, .email]
+                        } onCompletion: { result in
+                            do {
+                                try authManager.handleSignInResult(result)
+                                signInError = nil
+                                // Push local data to CloudKit
+                                Task {
+                                    await CloudKitService.pushAllData(
+                                        foodEntries: foodStore.entries,
+                                        weightEntries: weightStore.entries,
+                                        profile: UserProfile.load()
+                                    )
+                                }
+                            } catch let error as ASAuthorizationError where error.code == .canceled {
+                                // User cancelled
+                            } catch {
+                                signInError = error.localizedDescription
+                            }
+                        }
+                        .signInWithAppleButtonStyle(.whiteOutline)
+                        .frame(height: 44)
+
+                        if let signInError {
+                            Text(signInError)
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.red)
+                        }
+
+                        // Apple Health (Coming Soon)
+                        ComingSoonRow(icon: "heart.fill", label: "Apple Health") {
+                            comingSoonFeature = "Apple Health"
+                            showComingSoonAlert = true
                         }
                     }
-                    .buttonStyle(.plain)
 
+                    // Delete All Data — always visible
                     Button(role: .destructive) {
                         showDeleteConfirmation = true
                     } label: {
@@ -1002,6 +1087,7 @@ struct ProfileView: View {
             .alert("Delete All Data", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete Everything", role: .destructive) {
+                    authManager.signOut()
                     let domain = Bundle.main.bundleIdentifier ?? ""
                     UserDefaults.standard.removePersistentDomain(forName: domain)
                     hasCompletedOnboarding = false
@@ -1030,4 +1116,5 @@ struct ProfileView: View {
     ContentView()
         .environment(FoodStore())
         .environment(WeightStore())
+        .environment(AuthManager())
 }
