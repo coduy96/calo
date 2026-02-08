@@ -158,7 +158,7 @@ struct HomeView: View {
                                 .font(.caption2)
                             Spacer()
                         }
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColors.calorie.opacity(0.6))
                     }
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
