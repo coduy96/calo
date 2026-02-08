@@ -1070,6 +1070,8 @@ struct ProfileView: View {
                     weightStore.replaceAllEntries([])
                     // Cancel all notifications
                     notificationManager.cancelAllNotifications()
+                    // Delete from iCloud
+                    Task { await CloudKitService.deleteAllData() }
                     // Sign out (clears auth credentials)
                     authManager.signOut()
                     // Wipe all persisted data

@@ -214,6 +214,25 @@ struct CloudKitService {
         }
     }
 
+    // MARK: - Delete All Data
+
+    static func deleteAllData() async {
+        do {
+            let foods = try await fetchAllRecords(ofType: foodType)
+            let weights = try await fetchAllRecords(ofType: weightType)
+            let profiles = try await fetchAllRecords(ofType: profileType)
+
+            let allIDs = (foods + weights + profiles).map { $0.recordID }
+
+            let batchSize = 400
+            for batchStart in stride(from: 0, to: allIDs.count, by: batchSize) {
+                let end = min(batchStart + batchSize, allIDs.count)
+                let batch = Array(allIDs[batchStart..<end])
+                let _ = try await database.modifyRecords(saving: [], deleting: batch)
+            }
+        } catch {}
+    }
+
     // MARK: - Pull All Data
 
     static func pullAllData() async throws -> CloudData {
