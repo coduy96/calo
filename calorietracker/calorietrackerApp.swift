@@ -136,7 +136,15 @@ struct calorietrackerApp: App {
                 protein: entry.protein,
                 carbs: entry.carbs,
                 fat: entry.fat,
-                date: entry.timestamp
+                date: entry.timestamp,
+                sugar: entry.sugar,
+                fiber: entry.fiber,
+                saturatedFat: entry.saturatedFat,
+                monounsaturatedFat: entry.monounsaturatedFat,
+                polyunsaturatedFat: entry.polyunsaturatedFat,
+                cholesterol: entry.cholesterol,
+                sodium: entry.sodium,
+                potassium: entry.potassium
             )
         }
 

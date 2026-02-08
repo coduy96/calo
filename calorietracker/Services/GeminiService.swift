@@ -9,6 +9,15 @@ struct GeminiService {
         var carbs: Int
         var fat: Int
         var emoji: String?
+        var sugar: Double?
+        var addedSugar: Double?
+        var fiber: Double?
+        var saturatedFat: Double?
+        var monounsaturatedFat: Double?
+        var polyunsaturatedFat: Double?
+        var cholesterol: Double?
+        var sodium: Double?
+        var potassium: Double?
     }
 
     struct NutritionLabelAnalysis {
@@ -18,14 +27,33 @@ struct GeminiService {
         var carbsPer100g: Double
         var fatPer100g: Double
         var servingSizeGrams: Double?
+        var sugarPer100g: Double?
+        var addedSugarPer100g: Double?
+        var fiberPer100g: Double?
+        var saturatedFatPer100g: Double?
+        var monounsaturatedFatPer100g: Double?
+        var polyunsaturatedFatPer100g: Double?
+        var cholesterolPer100g: Double?
+        var sodiumPer100g: Double?
+        var potassiumPer100g: Double?
 
         func scaled(to grams: Double) -> FoodAnalysis {
-            FoodAnalysis(
+            let scale = grams / 100
+            return FoodAnalysis(
                 name: name,
-                calories: Int(round(caloriesPer100g * grams / 100)),
-                protein: Int(round(proteinPer100g * grams / 100)),
-                carbs: Int(round(carbsPer100g * grams / 100)),
-                fat: Int(round(fatPer100g * grams / 100))
+                calories: Int(round(caloriesPer100g * scale)),
+                protein: Int(round(proteinPer100g * scale)),
+                carbs: Int(round(carbsPer100g * scale)),
+                fat: Int(round(fatPer100g * scale)),
+                sugar: sugarPer100g.map { round($0 * scale * 10) / 10 },
+                addedSugar: addedSugarPer100g.map { round($0 * scale * 10) / 10 },
+                fiber: fiberPer100g.map { round($0 * scale * 10) / 10 },
+                saturatedFat: saturatedFatPer100g.map { round($0 * scale * 10) / 10 },
+                monounsaturatedFat: monounsaturatedFatPer100g.map { round($0 * scale * 10) / 10 },
+                polyunsaturatedFat: polyunsaturatedFatPer100g.map { round($0 * scale * 10) / 10 },
+                cholesterol: cholesterolPer100g.map { round($0 * scale * 10) / 10 },
+                sodium: sodiumPer100g.map { round($0 * scale * 10) / 10 },
+                potassium: potassiumPer100g.map { round($0 * scale * 10) / 10 }
             )
         }
     }
@@ -60,8 +88,10 @@ struct GeminiService {
         Food: \(foodDescription)
         Quantity: \(quantity) \(unit)
         If a brand is mentioned, use that brand's known nutritional data.
-        Respond ONLY with JSON: {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"emoji":"🍽️"}
-        All integers. Calories in kcal, macros in grams. Include a single food emoji that best represents the food.
+        Respond ONLY with JSON:
+        {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"emoji":"🍽️","sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0}
+        Calories/protein/carbs/fat are integers. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
+        Include a single food emoji that best represents the food. Use null for any nutrient you cannot estimate.
         """
 
         let text = try await callGeminiText(prompt: prompt)
@@ -75,8 +105,10 @@ struct GeminiService {
         If it's a food photo: identify the food and estimate nutritional content for the serving shown.
         If it's a nutrition label: read the values and calculate for one serving size as listed on the label.
 
-        Respond ONLY with JSON: {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0}
-        All integers. Calories in kcal, macros in grams.
+        Respond ONLY with JSON:
+        {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0}
+        Calories/protein/carbs/fat are integers. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
+        Use null for any nutrient you cannot estimate.
         """
 
         let text = try await callGemini(image: image, prompt: prompt)
@@ -93,11 +125,20 @@ struct GeminiService {
           "calories": 000,
           "protein": 00,
           "carbs": 00,
-          "fat": 00
+          "fat": 00,
+          "sugar": 0.0,
+          "added_sugar": 0.0,
+          "fiber": 0.0,
+          "saturated_fat": 0.0,
+          "monounsaturated_fat": 0.0,
+          "polyunsaturated_fat": 0.0,
+          "cholesterol": 0.0,
+          "sodium": 0.0,
+          "potassium": 0.0
         }
 
-        All values should be integers. Calories in kcal, protein/carbs/fat in grams.
-        Give your best estimate for a typical serving size shown in the image.
+        Calories/protein/carbs/fat are integers. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
+        Give your best estimate for a typical serving size shown in the image. Use null for any nutrient you cannot estimate.
         """
 
         let text = try await callGemini(image: image, prompt: prompt)
@@ -119,10 +160,19 @@ struct GeminiService {
           "protein_per_100g": 00.0,
           "carbs_per_100g": 00.0,
           "fat_per_100g": 00.0,
-          "serving_size_grams": 00.0
+          "serving_size_grams": 00.0,
+          "sugar_per_100g": 0.0,
+          "added_sugar_per_100g": 0.0,
+          "fiber_per_100g": 0.0,
+          "saturated_fat_per_100g": 0.0,
+          "monounsaturated_fat_per_100g": 0.0,
+          "polyunsaturated_fat_per_100g": 0.0,
+          "cholesterol_per_100g": 0.0,
+          "sodium_per_100g": 0.0,
+          "potassium_per_100g": 0.0
         }
 
-        All values should be numbers. If serving size is not available, use null.
+        All values should be numbers. If serving size or any nutrient is not available, use null.
         """
 
         let text = try await callGemini(image: image, prompt: prompt)
@@ -274,7 +324,18 @@ struct GeminiService {
             throw AnalysisError.invalidResponse
         }
         let emoji = json["emoji"] as? String
-        return FoodAnalysis(name: name, calories: calories, protein: protein, carbs: carbs, fat: fat, emoji: emoji)
+        return FoodAnalysis(
+            name: name, calories: calories, protein: protein, carbs: carbs, fat: fat, emoji: emoji,
+            sugar: (json["sugar"] as? NSNumber)?.doubleValue,
+            addedSugar: (json["added_sugar"] as? NSNumber)?.doubleValue,
+            fiber: (json["fiber"] as? NSNumber)?.doubleValue,
+            saturatedFat: (json["saturated_fat"] as? NSNumber)?.doubleValue,
+            monounsaturatedFat: (json["monounsaturated_fat"] as? NSNumber)?.doubleValue,
+            polyunsaturatedFat: (json["polyunsaturated_fat"] as? NSNumber)?.doubleValue,
+            cholesterol: (json["cholesterol"] as? NSNumber)?.doubleValue,
+            sodium: (json["sodium"] as? NSNumber)?.doubleValue,
+            potassium: (json["potassium"] as? NSNumber)?.doubleValue
+        )
     }
 
     private static func parseNutritionLabel(from text: String) throws -> NutritionLabelAnalysis {
@@ -296,7 +357,16 @@ struct GeminiService {
             proteinPer100g: proteinPer100g,
             carbsPer100g: carbsPer100g,
             fatPer100g: fatPer100g,
-            servingSizeGrams: servingSize
+            servingSizeGrams: servingSize,
+            sugarPer100g: (json["sugar_per_100g"] as? NSNumber)?.doubleValue,
+            addedSugarPer100g: (json["added_sugar_per_100g"] as? NSNumber)?.doubleValue,
+            fiberPer100g: (json["fiber_per_100g"] as? NSNumber)?.doubleValue,
+            saturatedFatPer100g: (json["saturated_fat_per_100g"] as? NSNumber)?.doubleValue,
+            monounsaturatedFatPer100g: (json["monounsaturated_fat_per_100g"] as? NSNumber)?.doubleValue,
+            polyunsaturatedFatPer100g: (json["polyunsaturated_fat_per_100g"] as? NSNumber)?.doubleValue,
+            cholesterolPer100g: (json["cholesterol_per_100g"] as? NSNumber)?.doubleValue,
+            sodiumPer100g: (json["sodium_per_100g"] as? NSNumber)?.doubleValue,
+            potassiumPer100g: (json["potassium_per_100g"] as? NSNumber)?.doubleValue
         )
     }
 }

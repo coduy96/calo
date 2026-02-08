@@ -82,6 +82,44 @@ class FoodStore {
         entries(for: date).reduce(0) { $0 + $1.fat }
     }
 
+    // MARK: - Micronutrient aggregation
+
+    func sugar(for date: Date) -> Double {
+        entries(for: date).reduce(0) { $0 + ($1.sugar ?? 0) }
+    }
+
+    func addedSugar(for date: Date) -> Double {
+        entries(for: date).reduce(0) { $0 + ($1.addedSugar ?? 0) }
+    }
+
+    func fiber(for date: Date) -> Double {
+        entries(for: date).reduce(0) { $0 + ($1.fiber ?? 0) }
+    }
+
+    func saturatedFat(for date: Date) -> Double {
+        entries(for: date).reduce(0) { $0 + ($1.saturatedFat ?? 0) }
+    }
+
+    func monounsaturatedFat(for date: Date) -> Double {
+        entries(for: date).reduce(0) { $0 + ($1.monounsaturatedFat ?? 0) }
+    }
+
+    func polyunsaturatedFat(for date: Date) -> Double {
+        entries(for: date).reduce(0) { $0 + ($1.polyunsaturatedFat ?? 0) }
+    }
+
+    func cholesterol(for date: Date) -> Double {
+        entries(for: date).reduce(0) { $0 + ($1.cholesterol ?? 0) }
+    }
+
+    func sodium(for date: Date) -> Double {
+        entries(for: date).reduce(0) { $0 + ($1.sodium ?? 0) }
+    }
+
+    func potassium(for date: Date) -> Double {
+        entries(for: date).reduce(0) { $0 + ($1.potassium ?? 0) }
+    }
+
     func addEntry(_ entry: FoodEntry) {
         entries.append(entry)
         saveEntries()

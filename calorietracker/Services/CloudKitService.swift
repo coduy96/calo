@@ -44,6 +44,15 @@ struct CloudKitService {
         record["source"] = entry.source.rawValue
         record["mealType"] = entry.mealType.rawValue
         // imageData intentionally NOT synced (too large for CKRecord)
+        if let v = entry.sugar { record["sugar"] = v }
+        if let v = entry.addedSugar { record["addedSugar"] = v }
+        if let v = entry.fiber { record["fiber"] = v }
+        if let v = entry.saturatedFat { record["saturatedFat"] = v }
+        if let v = entry.monounsaturatedFat { record["monounsaturatedFat"] = v }
+        if let v = entry.polyunsaturatedFat { record["polyunsaturatedFat"] = v }
+        if let v = entry.cholesterol { record["cholesterol"] = v }
+        if let v = entry.sodium { record["sodium"] = v }
+        if let v = entry.potassium { record["potassium"] = v }
         return record
     }
 
@@ -75,7 +84,16 @@ struct CloudKitService {
             imageData: nil,
             emoji: emoji,
             source: source,
-            mealType: mealType
+            mealType: mealType,
+            sugar: record["sugar"] as? Double,
+            addedSugar: record["addedSugar"] as? Double,
+            fiber: record["fiber"] as? Double,
+            saturatedFat: record["saturatedFat"] as? Double,
+            monounsaturatedFat: record["monounsaturatedFat"] as? Double,
+            polyunsaturatedFat: record["polyunsaturatedFat"] as? Double,
+            cholesterol: record["cholesterol"] as? Double,
+            sodium: record["sodium"] as? Double,
+            potassium: record["potassium"] as? Double
         )
     }
 

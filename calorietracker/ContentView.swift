@@ -62,6 +62,7 @@ struct HomeView: View {
     @State private var currentFoodResult: GeminiService.FoodAnalysis?
     @State private var currentImage: UIImage?
     @State private var currentEmoji: String?
+    @State private var showNutritionDetail = false
 
     private var userProfile: UserProfile { UserProfile.load() ?? .default }
     private var calorieGoal: Int { userProfile.effectiveCalories }
@@ -143,6 +144,22 @@ struct HomeView: View {
                         MacroCard(label: "Fat", current: foodStore.fat(for: selectedDate), goal: fatGoal, gradientColors: AppColors.fatGradient)
                     }
                     .padding(.vertical, 8)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+
+                    Button {
+                        showNutritionDetail = true
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text("View More")
+                                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                            Image(systemName: "chevron.right")
+                                .font(.caption2)
+                            Spacer()
+                        }
+                        .foregroundStyle(.secondary)
+                    }
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                 }
@@ -232,6 +249,15 @@ struct HomeView: View {
                             protein: result.protein,
                             carbs: result.carbs,
                             fat: result.fat,
+                            sugar: result.sugar,
+                            addedSugar: result.addedSugar,
+                            fiber: result.fiber,
+                            saturatedFat: result.saturatedFat,
+                            monounsaturatedFat: result.monounsaturatedFat,
+                            polyunsaturatedFat: result.polyunsaturatedFat,
+                            cholesterol: result.cholesterol,
+                            sodium: result.sodium,
+                            potassium: result.potassium,
                             onLog: { entry in
                                 foodStore.addEntry(entry)
                             }
@@ -285,6 +311,9 @@ struct HomeView: View {
             } message: {
                 Text(errorMessage)
             }
+            .sheet(isPresented: $showNutritionDetail) {
+                NutritionDetailView(date: selectedDate)
+            }
         }
     }
 
@@ -315,6 +344,75 @@ struct HomeView: View {
 
 }
 
+
+// MARK: - Nutrition Detail View
+struct NutritionDetailView: View {
+    let date: Date
+    @Environment(FoodStore.self) private var foodStore
+    @Environment(\.dismiss) private var dismiss
+
+    private var userProfile: UserProfile { UserProfile.load() ?? .default }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Macros") {
+                    NutritionDetailRow(label: "Calories", value: "\(foodStore.calories(for: date))", unit: "kcal", goal: "\(userProfile.effectiveCalories)")
+                    NutritionDetailRow(label: "Protein", value: "\(foodStore.protein(for: date))", unit: "g", goal: "\(userProfile.effectiveProtein)")
+                    NutritionDetailRow(label: "Carbs", value: "\(foodStore.carbs(for: date))", unit: "g", goal: "\(userProfile.effectiveCarbs)")
+                    NutritionDetailRow(label: "Fat", value: "\(foodStore.fat(for: date))", unit: "g", goal: "\(userProfile.effectiveFat)")
+                }
+
+                Section("Detailed Nutrition") {
+                    NutritionDetailRow(label: "Sugar", value: formatMicro(foodStore.sugar(for: date)), unit: "g")
+                    NutritionDetailRow(label: "Added Sugar", value: formatMicro(foodStore.addedSugar(for: date)), unit: "g")
+                    NutritionDetailRow(label: "Fiber", value: formatMicro(foodStore.fiber(for: date)), unit: "g")
+                    NutritionDetailRow(label: "Saturated Fat", value: formatMicro(foodStore.saturatedFat(for: date)), unit: "g")
+                    NutritionDetailRow(label: "Mono Unsat. Fat", value: formatMicro(foodStore.monounsaturatedFat(for: date)), unit: "g")
+                    NutritionDetailRow(label: "Poly Unsat. Fat", value: formatMicro(foodStore.polyunsaturatedFat(for: date)), unit: "g")
+                    NutritionDetailRow(label: "Cholesterol", value: formatMicro(foodStore.cholesterol(for: date)), unit: "mg")
+                    NutritionDetailRow(label: "Sodium", value: formatMicro(foodStore.sodium(for: date)), unit: "mg")
+                    NutritionDetailRow(label: "Potassium", value: formatMicro(foodStore.potassium(for: date)), unit: "mg")
+                }
+            }
+            .navigationTitle("Nutrition Details")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func formatMicro(_ value: Double) -> String {
+        value == 0 ? "—" : String(format: "%.1f", value)
+    }
+}
+
+struct NutritionDetailRow: View {
+    let label: String
+    let value: String
+    let unit: String
+    var goal: String? = nil
+
+    var body: some View {
+        HStack {
+            Text(label)
+            Spacer()
+            Text(value)
+                .fontWeight(.medium)
+            Text(unit)
+                .foregroundStyle(.secondary)
+                .frame(width: 36, alignment: .leading)
+            if let goal {
+                Text("/ \(goal)")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+    }
+}
 
 // MARK: - Camera View (UIKit wrapper)
 struct CameraView: UIViewControllerRepresentable {

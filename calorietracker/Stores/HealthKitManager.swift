@@ -19,6 +19,14 @@ class HealthKitManager {
             HKQuantityType(.dietaryProtein),
             HKQuantityType(.dietaryCarbohydrates),
             HKQuantityType(.dietaryFatTotal),
+            HKQuantityType(.dietarySugar),
+            HKQuantityType(.dietaryFiber),
+            HKQuantityType(.dietaryFatSaturated),
+            HKQuantityType(.dietaryFatMonounsaturated),
+            HKQuantityType(.dietaryFatPolyunsaturated),
+            HKQuantityType(.dietaryCholesterol),
+            HKQuantityType(.dietarySodium),
+            HKQuantityType(.dietaryPotassium),
             HKQuantityType(.bodyMass),
             HKQuantityType(.height),
             HKQuantityType(.bodyFatPercentage),
@@ -50,15 +58,35 @@ class HealthKitManager {
 
     // MARK: - Write Nutrition
 
-    func writeNutrition(entryId: UUID, calories: Int, protein: Int, carbs: Int, fat: Int, date: Date) {
+    func writeNutrition(
+        entryId: UUID, calories: Int, protein: Int, carbs: Int, fat: Int, date: Date,
+        sugar: Double? = nil, fiber: Double? = nil,
+        saturatedFat: Double? = nil, monounsaturatedFat: Double? = nil, polyunsaturatedFat: Double? = nil,
+        cholesterol: Double? = nil, sodium: Double? = nil, potassium: Double? = nil
+    ) {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
 
-        let samples: [(HKQuantityTypeIdentifier, Double, HKUnit)] = [
+        var samples: [(HKQuantityTypeIdentifier, Double, HKUnit)] = [
             (.dietaryEnergyConsumed, Double(calories), .kilocalorie()),
             (.dietaryProtein, Double(protein), .gram()),
             (.dietaryCarbohydrates, Double(carbs), .gram()),
             (.dietaryFatTotal, Double(fat), .gram()),
         ]
+
+        let milligram = HKUnit.gramUnit(with: .milli)
+        let optionalSamples: [(HKQuantityTypeIdentifier, Double?, HKUnit)] = [
+            (.dietarySugar, sugar, .gram()),
+            (.dietaryFiber, fiber, .gram()),
+            (.dietaryFatSaturated, saturatedFat, .gram()),
+            (.dietaryFatMonounsaturated, monounsaturatedFat, .gram()),
+            (.dietaryFatPolyunsaturated, polyunsaturatedFat, .gram()),
+            (.dietaryCholesterol, cholesterol, milligram),
+            (.dietarySodium, sodium, milligram),
+            (.dietaryPotassium, potassium, milligram),
+        ]
+        for (identifier, value, unit) in optionalSamples {
+            if let value { samples.append((identifier, value, unit)) }
+        }
 
         var sampleUUIDs: [String] = []
         for (identifier, value, unit) in samples {
@@ -81,7 +109,10 @@ class HealthKitManager {
         let predicate = HKQuery.predicateForObjects(with: Set(uuids))
 
         let types: [HKQuantityTypeIdentifier] = [
-            .dietaryEnergyConsumed, .dietaryProtein, .dietaryCarbohydrates, .dietaryFatTotal
+            .dietaryEnergyConsumed, .dietaryProtein, .dietaryCarbohydrates, .dietaryFatTotal,
+            .dietarySugar, .dietaryFiber, .dietaryFatSaturated,
+            .dietaryFatMonounsaturated, .dietaryFatPolyunsaturated,
+            .dietaryCholesterol, .dietarySodium, .dietaryPotassium,
         ]
         for identifier in types {
             let type = HKQuantityType(identifier)

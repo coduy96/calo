@@ -47,6 +47,17 @@ struct FoodEntry: Identifiable, Codable {
     var source: FoodSource
     var mealType: MealType
 
+    // Micronutrients (all optional, nil when unavailable)
+    var sugar: Double?          // grams
+    var addedSugar: Double?     // grams
+    var fiber: Double?          // grams
+    var saturatedFat: Double?   // grams
+    var monounsaturatedFat: Double? // grams
+    var polyunsaturatedFat: Double? // grams
+    var cholesterol: Double?    // milligrams
+    var sodium: Double?         // milligrams
+    var potassium: Double?      // milligrams
+
     init(
         id: UUID = UUID(),
         name: String,
@@ -58,7 +69,16 @@ struct FoodEntry: Identifiable, Codable {
         imageData: Data? = nil,
         emoji: String? = nil,
         source: FoodSource,
-        mealType: MealType = .other
+        mealType: MealType = .other,
+        sugar: Double? = nil,
+        addedSugar: Double? = nil,
+        fiber: Double? = nil,
+        saturatedFat: Double? = nil,
+        monounsaturatedFat: Double? = nil,
+        polyunsaturatedFat: Double? = nil,
+        cholesterol: Double? = nil,
+        sodium: Double? = nil,
+        potassium: Double? = nil
     ) {
         self.id = id
         self.name = name
@@ -71,6 +91,15 @@ struct FoodEntry: Identifiable, Codable {
         self.emoji = emoji
         self.source = source
         self.mealType = mealType
+        self.sugar = sugar
+        self.addedSugar = addedSugar
+        self.fiber = fiber
+        self.saturatedFat = saturatedFat
+        self.monounsaturatedFat = monounsaturatedFat
+        self.polyunsaturatedFat = polyunsaturatedFat
+        self.cholesterol = cholesterol
+        self.sodium = sodium
+        self.potassium = potassium
     }
 
     init(from decoder: Decoder) throws {
@@ -86,6 +115,15 @@ struct FoodEntry: Identifiable, Codable {
         emoji = try container.decodeIfPresent(String.self, forKey: .emoji)
         source = try container.decode(FoodSource.self, forKey: .source)
         mealType = try container.decodeIfPresent(MealType.self, forKey: .mealType) ?? .other
+        sugar = try container.decodeIfPresent(Double.self, forKey: .sugar)
+        addedSugar = try container.decodeIfPresent(Double.self, forKey: .addedSugar)
+        fiber = try container.decodeIfPresent(Double.self, forKey: .fiber)
+        saturatedFat = try container.decodeIfPresent(Double.self, forKey: .saturatedFat)
+        monounsaturatedFat = try container.decodeIfPresent(Double.self, forKey: .monounsaturatedFat)
+        polyunsaturatedFat = try container.decodeIfPresent(Double.self, forKey: .polyunsaturatedFat)
+        cholesterol = try container.decodeIfPresent(Double.self, forKey: .cholesterol)
+        sodium = try container.decodeIfPresent(Double.self, forKey: .sodium)
+        potassium = try container.decodeIfPresent(Double.self, forKey: .potassium)
     }
 
     var timeString: String {
