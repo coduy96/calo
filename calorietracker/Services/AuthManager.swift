@@ -65,6 +65,13 @@ class AuthManager {
     }
 
     func signOut() {
+        // Preserve display name and email — Apple only provides them on first sign-in
+        isSignedIn = false
+        userID = nil
+        UserDefaults.standard.removeObject(forKey: userIDKey)
+    }
+
+    func deleteAllCredentials() {
         clearStoredCredentials()
     }
 

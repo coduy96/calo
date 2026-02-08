@@ -1089,8 +1089,8 @@ struct ProfileView: View {
                     notificationManager.cancelAllNotifications()
                     // Delete from iCloud
                     Task { await CloudKitService.deleteAllData() }
-                    // Sign out (clears auth credentials)
-                    authManager.signOut()
+                    // Wipe all auth credentials
+                    authManager.deleteAllCredentials()
                     // Wipe all persisted data
                     let domain = Bundle.main.bundleIdentifier ?? ""
                     UserDefaults.standard.removePersistentDomain(forName: domain)
