@@ -98,7 +98,7 @@ struct LearnView: View {
                                 Text(sortOption.rawValue)
                             }
                             .font(.system(.subheadline, design: .rounded, weight: .medium))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColors.calorie)
                         }
                     }
                     .padding(.horizontal)
