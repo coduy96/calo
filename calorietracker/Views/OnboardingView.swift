@@ -1,6 +1,7 @@
 import SwiftUI
 import AuthenticationServices
 import HealthKit
+import StoreKit
 
 struct OnboardingView: View {
     @Binding var hasCompletedOnboarding: Bool
@@ -9,8 +10,12 @@ struct OnboardingView: View {
     @Environment(FoodStore.self) private var foodStore
     @Environment(WeightStore.self) private var weightStore
     @Environment(HealthKitManager.self) private var healthKitManager
+    @Environment(StoreManager.self) private var storeManager
 
     @State private var step = 0
+    @State private var showSpinWheel = false
+    @State private var showDiscountPaywall = false
+    @State private var hasShownSpinWheel = false
     @State private var isRestoringFromCloud = false
     @State private var signInError: String?
     @State private var gender: Gender = .male
@@ -1364,6 +1369,104 @@ struct OnboardingView: View {
     // MARK: - 23: Paywall
 
     private var paywallStep: some View {
+        Group {
+            if showSpinWheel && !showDiscountPaywall {
+                SpinWheelView { _ in
+                    withAnimation(.snappy) {
+                        showSpinWheel = false
+                        showDiscountPaywall = true
+                        hasShownSpinWheel = true
+                    }
+                }
+            } else if showDiscountPaywall {
+                discountPaywallContent
+            } else {
+                initialPaywallContent
+            }
+        }
+    }
+
+    private var initialPaywallContent: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Spacer()
+                Button {
+                    if hasShownSpinWheel {
+                        hasCompletedOnboarding = true
+                    } else {
+                        withAnimation(.snappy) { showSpinWheel = true }
+                    }
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 32, height: 32)
+                        .background(Color.primary.opacity(0.06), in: Circle())
+                }
+            }
+            .padding(.horizontal, 24).padding(.top, 8)
+
+            Spacer()
+            VStack(spacing: 8) {
+                Image(systemName: "star.fill").font(.system(size: 44))
+                    .foregroundStyle(LinearGradient(colors: [.yellow, .orange], startPoint: .topLeading, endPoint: .bottomTrailing))
+                Text("Unlock Premium").font(.system(size: 28, weight: .bold, design: .rounded))
+                Text("Unlimited scans, detailed insights,\nand personalized plans")
+                    .font(.system(.callout, design: .rounded)).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            }
+            Spacer()
+
+            VStack(spacing: 12) {
+                if let yearly = storeManager.yearlyProduct {
+                    paywallPlanCard(plan: .yearly, title: "Yearly", price: yearly.displayPrice, detail: yearlyPerMonthText(yearly), badge: "Best Value")
+                }
+                if let monthly = storeManager.monthlyProduct {
+                    paywallPlanCard(plan: .monthly, title: "Monthly", price: monthly.displayPrice, detail: "per month", badge: nil)
+                }
+            }.padding(.horizontal, 24)
+
+            Spacer()
+
+            Button {
+                Task { await purchaseSelectedPlan() }
+            } label: {
+                Group {
+                    if storeManager.isPurchasing {
+                        ProgressView().tint(Color(.systemBackground))
+                    } else {
+                        Text("Subscribe")
+                            .font(.system(.body, design: .rounded, weight: .semibold))
+                    }
+                }
+                .foregroundStyle(Color(.systemBackground))
+                .frame(maxWidth: .infinity).frame(height: 54)
+                .background(Color.primary, in: Capsule())
+            }
+            .padding(.horizontal, 24)
+            .disabled(storeManager.isPurchasing)
+
+            if let error = storeManager.purchaseError {
+                Text(error)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.red)
+                    .padding(.top, 8).padding(.horizontal, 24)
+            }
+
+            VStack(spacing: 8) {
+                Button("Restore Purchases") {
+                    Task {
+                        await storeManager.restorePurchases()
+                        if storeManager.isSubscribed { hasCompletedOnboarding = true }
+                    }
+                }
+                .font(.system(.footnote, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
+                Text("No Commitment \u{2022} Cancel Anytime")
+                    .font(.system(.caption2, design: .rounded)).foregroundStyle(.tertiary)
+            }.padding(.top, 12).padding(.bottom, 36)
+        }
+    }
+
+    private var discountPaywallContent: some View {
         VStack(spacing: 0) {
             HStack {
                 Spacer()
@@ -1376,34 +1479,96 @@ struct OnboardingView: View {
                 }
             }
             .padding(.horizontal, 24).padding(.top, 8)
+
             Spacer()
             VStack(spacing: 8) {
                 Image(systemName: "star.fill").font(.system(size: 44))
                     .foregroundStyle(LinearGradient(colors: [.yellow, .orange], startPoint: .topLeading, endPoint: .bottomTrailing))
-                Text("Unlock Premium").font(.system(size: 28, weight: .bold, design: .rounded))
-                Text("Unlimited scans, detailed insights,\nand personalized plans")
+                Text("Special Offer!").font(.system(size: 28, weight: .bold, design: .rounded))
+                Text("27% off your yearly plan")
                     .font(.system(.callout, design: .rounded)).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
             Spacer()
+
             VStack(spacing: 12) {
-                paywallPlanCard(plan: .yearly, title: "Yearly", price: formatPrice(39.99), detail: "\(formatPrice(3.33))/mo", badge: "Best Value")
-                paywallPlanCard(plan: .weekly, title: "Weekly", price: formatPrice(4.99), detail: "per week", badge: nil)
+                // Discounted yearly card with strikethrough
+                if let discountYearly = storeManager.yearlyDiscountProduct {
+                    let originalPrice = storeManager.yearlyProduct?.displayPrice
+                    paywallPlanCardWithDiscount(
+                        plan: .yearly,
+                        title: "Yearly",
+                        price: discountYearly.displayPrice,
+                        originalPrice: originalPrice,
+                        detail: yearlyPerMonthText(discountYearly),
+                        badge: "27% Off"
+                    )
+                }
+                if let monthly = storeManager.monthlyProduct {
+                    paywallPlanCard(plan: .monthly, title: "Monthly", price: monthly.displayPrice, detail: "per month", badge: nil)
+                }
             }.padding(.horizontal, 24)
+
             Spacer()
-            Button { hasCompletedOnboarding = true } label: {
-                Text("Start Free Trial")
-                    .font(.system(.body, design: .rounded, weight: .semibold))
-                    .foregroundStyle(Color(.systemBackground))
-                    .frame(maxWidth: .infinity).frame(height: 54)
-                    .background(Color.primary, in: Capsule())
-            }.padding(.horizontal, 24)
+
+            Button {
+                Task { await purchaseSelectedPlan(discount: true) }
+            } label: {
+                Group {
+                    if storeManager.isPurchasing {
+                        ProgressView().tint(Color(.systemBackground))
+                    } else {
+                        Text("Subscribe")
+                            .font(.system(.body, design: .rounded, weight: .semibold))
+                    }
+                }
+                .foregroundStyle(Color(.systemBackground))
+                .frame(maxWidth: .infinity).frame(height: 54)
+                .background(Color.primary, in: Capsule())
+            }
+            .padding(.horizontal, 24)
+            .disabled(storeManager.isPurchasing)
+
+            if let error = storeManager.purchaseError {
+                Text(error)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.red)
+                    .padding(.top, 8).padding(.horizontal, 24)
+            }
+
             VStack(spacing: 8) {
-                Button("Restore Purchases") { hasCompletedOnboarding = true }
-                    .font(.system(.footnote, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
+                Button("Restore Purchases") {
+                    Task {
+                        await storeManager.restorePurchases()
+                        if storeManager.isSubscribed { hasCompletedOnboarding = true }
+                    }
+                }
+                .font(.system(.footnote, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
                 Text("No Commitment \u{2022} Cancel Anytime")
                     .font(.system(.caption2, design: .rounded)).foregroundStyle(.tertiary)
             }.padding(.top, 12).padding(.bottom, 36)
         }
+    }
+
+    private func purchaseSelectedPlan(discount: Bool = false) async {
+        let product: Product?
+        if selectedPlan == .yearly {
+            product = discount ? storeManager.yearlyDiscountProduct : storeManager.yearlyProduct
+        } else {
+            product = storeManager.monthlyProduct
+        }
+        guard let product else { return }
+        await storeManager.purchase(product)
+        if storeManager.isSubscribed {
+            hasCompletedOnboarding = true
+        }
+    }
+
+    private func yearlyPerMonthText(_ product: Product) -> String {
+        let monthlyEquivalent = product.price / 12
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = product.priceFormatStyle.locale
+        return "\(formatter.string(from: monthlyEquivalent as NSDecimalNumber) ?? "")/mo"
     }
 
     // MARK: - Helpers
@@ -1494,12 +1659,47 @@ struct OnboardingView: View {
             .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(selectedPlan == plan ? Color.primary : Color.clear, lineWidth: 2))
         }.buttonStyle(.plain)
     }
+
+    private func paywallPlanCardWithDiscount(plan: PaywallPlan, title: String, price: String, originalPrice: String?, detail: String, badge: String?) -> some View {
+        Button {
+            withAnimation(.spring(response: 0.3)) { selectedPlan = plan }
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    if let badge {
+                        Text(badge).font(.system(.caption2, design: .rounded, weight: .bold)).foregroundStyle(.white)
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .background(LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing), in: Capsule())
+                    }
+                    Text(title).font(.system(.body, design: .rounded, weight: .semibold)).foregroundStyle(.primary)
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 2) {
+                    HStack(spacing: 6) {
+                        if let originalPrice {
+                            Text(originalPrice)
+                                .font(.system(.caption, design: .rounded, weight: .medium))
+                                .strikethrough()
+                                .foregroundStyle(.secondary)
+                        }
+                        Text(price).font(.system(.body, design: .rounded, weight: .bold)).foregroundStyle(.primary)
+                    }
+                    Text(detail).font(.system(.caption, design: .rounded)).foregroundStyle(.secondary)
+                }
+                Image(systemName: selectedPlan == plan ? "checkmark.circle.fill" : "circle").font(.system(size: 22))
+                    .foregroundStyle(selectedPlan == plan ? Color.primary : Color.secondary.opacity(0.3)).padding(.leading, 8)
+            }
+            .padding(16)
+            .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(selectedPlan == plan ? Color.primary : Color.clear, lineWidth: 2))
+        }.buttonStyle(.plain)
+    }
 }
 
 // MARK: - Paywall Plan Enum
 
 enum PaywallPlan {
-    case yearly, weekly
+    case yearly, monthly
 }
 
 // MARK: - Building Plan Step (enhanced with percentage + checklist)
