@@ -86,7 +86,7 @@ struct HomeView: View {
                     )
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                    .listRowInsets(EdgeInsets(top: -12, leading: 16, bottom: 0, trailing: 16))
                 }
 
                 // Calorie hero
