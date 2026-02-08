@@ -121,7 +121,7 @@ struct HomeView: View {
                         .frame(height: 10)
                         .padding(.horizontal, 24)
 
-                        Text("\(caloriesRemaining) remaining")
+                        Text("\(caloriesRemaining) left")
                             .font(.system(.footnote, design: .rounded, weight: .medium))
                             .foregroundStyle(.secondary)
                     }
