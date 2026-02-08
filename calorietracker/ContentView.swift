@@ -561,6 +561,7 @@ struct ProgressTabView: View {
 
 
 struct ProfileView: View {
+    @Environment(WeightStore.self) private var weightStore
     @State private var profile: UserProfile = UserProfile.load() ?? .default
     @AppStorage("appearanceMode") private var appearanceMode = "system"
     @AppStorage("useMetric") private var useMetric = false
@@ -860,6 +861,7 @@ struct ProfileView: View {
                     ) { newWeight in
                         profile.weightKg = newWeight
                         saveProfile()
+                        weightStore.addEntry(WeightEntry(weightKg: newWeight))
                     }
 
                 case .editBodyFat:
@@ -872,25 +874,37 @@ struct ProfileView: View {
 
                 case .editCalories:
                     NutritionPickerSheet(label: "Calories", unit: "kcal", currentValue: profile.effectiveCalories, range: 800...6000, step: 50) { value in
-                        profile.customCalories = value == profile.dailyCalories ? nil : value
+                        profile.customCalories = value
+                        // Auto-adjust carbs: carbs = (cal - protein*4 - fat*9) / 4
+                        let newCarbs = max(0, (value - profile.effectiveProtein * 4 - profile.effectiveFat * 9) / 4)
+                        profile.customCarbs = newCarbs
                         saveProfile()
                     }
 
                 case .editProtein:
                     NutritionPickerSheet(label: "Protein", unit: "g", currentValue: profile.effectiveProtein, range: 10...500, step: 5) { value in
-                        profile.customProtein = value == profile.proteinGoal ? nil : value
+                        profile.customProtein = value
+                        // Auto-adjust carbs
+                        let newCarbs = max(0, (profile.effectiveCalories - value * 4 - profile.effectiveFat * 9) / 4)
+                        profile.customCarbs = newCarbs
                         saveProfile()
                     }
 
                 case .editCarbs:
                     NutritionPickerSheet(label: "Carbs", unit: "g", currentValue: profile.effectiveCarbs, range: 0...800, step: 5) { value in
-                        profile.customCarbs = value == profile.carbsGoal ? nil : value
+                        profile.customCarbs = value
+                        // Auto-adjust calories: cal = protein*4 + carbs*4 + fat*9
+                        let newCal = profile.effectiveProtein * 4 + value * 4 + profile.effectiveFat * 9
+                        profile.customCalories = newCal
                         saveProfile()
                     }
 
                 case .editFat:
                     NutritionPickerSheet(label: "Fat", unit: "g", currentValue: profile.effectiveFat, range: 10...300, step: 5) { value in
-                        profile.customFat = value == profile.fatGoal ? nil : value
+                        profile.customFat = value
+                        // Auto-adjust carbs
+                        let newCarbs = max(0, (profile.effectiveCalories - profile.effectiveProtein * 4 - value * 9) / 4)
+                        profile.customCarbs = newCarbs
                         saveProfile()
                     }
                 }
