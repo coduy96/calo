@@ -630,7 +630,7 @@ struct ProfileView: View {
                         Label("Gender", systemImage: profile.gender.icon)
                     }
                     .pickerStyle(.menu)
-                    .onChange(of: profile.gender) { _, _ in saveProfile() }
+                    .onChange(of: profile.gender) { _, _ in resetNutritionAndSave() }
 
                     ProfileInfoRow(icon: "birthday.cake", label: "Birthday", value: birthdayDisplay) {
                         activeSheet = .editBirthday
@@ -670,7 +670,7 @@ struct ProfileView: View {
                         } else if profile.weeklyChangeKg == nil {
                             profile.weeklyChangeKg = 0.5
                         }
-                        saveProfile()
+                        resetNutritionAndSave()
                     }
 
                     Picker(selection: $profile.activityLevel) {
@@ -681,12 +681,12 @@ struct ProfileView: View {
                         Label("Activity Level", systemImage: profile.activityLevel.icon)
                     }
                     .pickerStyle(.menu)
-                    .onChange(of: profile.activityLevel) { _, _ in saveProfile() }
+                    .onChange(of: profile.activityLevel) { _, _ in resetNutritionAndSave() }
 
                     if profile.goal != .maintain {
                         Picker(selection: Binding(
                             get: { profile.weeklyChangeKg ?? 0.5 },
-                            set: { profile.weeklyChangeKg = $0; saveProfile() }
+                            set: { profile.weeklyChangeKg = $0; resetNutritionAndSave() }
                         )) {
                             Text("Slow (0.25 kg/wk)").tag(0.25)
                             Text("Moderate (0.5 kg/wk)").tag(0.5)
@@ -819,7 +819,7 @@ struct ProfileView: View {
                             .labelsHidden()
 
                             Button {
-                                saveProfile()
+                                resetNutritionAndSave()
                                 activeSheet = nil
                             } label: {
                                 Text("Save")
@@ -851,7 +851,7 @@ struct ProfileView: View {
                         currentHeightCm: profile.heightCm
                     ) { newHeight in
                         profile.heightCm = newHeight
-                        saveProfile()
+                        resetNutritionAndSave()
                     }
 
                 case .editWeight:
@@ -860,7 +860,7 @@ struct ProfileView: View {
                         currentWeightKg: profile.weightKg
                     ) { newWeight in
                         profile.weightKg = newWeight
-                        saveProfile()
+                        resetNutritionAndSave()
                         weightStore.addEntry(WeightEntry(weightKg: newWeight))
                     }
 
@@ -869,7 +869,7 @@ struct ProfileView: View {
                         currentPercentage: profile.bodyFatPercentage
                     ) { newValue in
                         profile.bodyFatPercentage = newValue
-                        saveProfile()
+                        resetNutritionAndSave()
                     }
 
                 case .editCalories:
@@ -928,6 +928,15 @@ struct ProfileView: View {
     }
 
     private func saveProfile() {
+        profile.save()
+    }
+
+    /// Clear custom nutrition overrides so computed values recalculate from formulas
+    private func resetNutritionAndSave() {
+        profile.customCalories = nil
+        profile.customProtein = nil
+        profile.customCarbs = nil
+        profile.customFat = nil
         profile.save()
     }
 }
