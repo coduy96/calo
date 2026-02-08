@@ -317,26 +317,13 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 0) {
             stepHeader(title: "What's your\ndesired weight?", subtitle: goal.displayName)
             Spacer()
-            VStack(spacing: 8) {
-                if isMetric {
-                    Text("\(targetWeightKg) kg")
-                        .font(.system(size: 48, weight: .bold, design: .rounded))
-                        .contentTransition(.numericText())
-                        .animation(.snappy, value: targetWeightKg)
-                } else {
-                    Text("\(targetWeightLbs) lbs")
-                        .font(.system(size: 48, weight: .bold, design: .rounded))
-                        .contentTransition(.numericText())
-                        .animation(.snappy, value: targetWeightLbs)
-                }
-            }
             if isMetric {
                 Picker("kg", selection: $targetWeightKg) {
-                    ForEach(30...250, id: \.self) { kg in Text("\(kg)").tag(kg) }
+                    ForEach(30...250, id: \.self) { kg in Text("\(kg) kg").tag(kg) }
                 }.pickerStyle(.wheel).frame(height: 150).padding(.horizontal, 24)
             } else {
                 Picker("lbs", selection: $targetWeightLbs) {
-                    ForEach(60...500, id: \.self) { lb in Text("\(lb)").tag(lb) }
+                    ForEach(60...500, id: \.self) { lb in Text("\(lb) lbs").tag(lb) }
                 }.pickerStyle(.wheel).frame(height: 150).padding(.horizontal, 24)
             }
             Spacer()
