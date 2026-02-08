@@ -29,23 +29,26 @@ struct ArticleCardView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Image thumbnail
-            AsyncImage(url: URL(string: article.imageURL)) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                case .failure:
-                    imagePlaceholder
-                case .empty:
-                    imagePlaceholder
-                        .overlay(ProgressView().tint(.white))
-                @unknown default:
-                    imagePlaceholder
+            Color.clear
+                .frame(height: 180)
+                .overlay {
+                    AsyncImage(url: URL(string: article.imageURL)) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        case .failure:
+                            imagePlaceholder
+                        case .empty:
+                            imagePlaceholder
+                                .overlay(ProgressView().tint(.white))
+                        @unknown default:
+                            imagePlaceholder
+                        }
+                    }
                 }
-            }
-            .frame(height: 180)
-            .clipped()
+                .clipped()
 
             // Article info
             VStack(alignment: .leading, spacing: 6) {
@@ -105,24 +108,26 @@ struct ArticleDetailView: View {
             VStack(spacing: 20) {
                 // Hero header with image
                 VStack(spacing: 0) {
-                    AsyncImage(url: URL(string: article.imageURL)) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        case .failure:
-                            detailImagePlaceholder
-                        case .empty:
-                            detailImagePlaceholder
-                                .overlay(ProgressView().tint(.white))
-                        @unknown default:
-                            detailImagePlaceholder
+                    Color.clear
+                        .frame(height: 220)
+                        .overlay {
+                            AsyncImage(url: URL(string: article.imageURL)) { phase in
+                                switch phase {
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                case .failure:
+                                    detailImagePlaceholder
+                                case .empty:
+                                    detailImagePlaceholder
+                                        .overlay(ProgressView().tint(.white))
+                                @unknown default:
+                                    detailImagePlaceholder
+                                }
+                            }
                         }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 220)
-                    .clipped()
+                        .clipped()
 
                     VStack(spacing: 8) {
                         Text(article.title)
