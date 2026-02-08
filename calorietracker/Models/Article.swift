@@ -33,10 +33,17 @@ struct Article: Identifiable {
     let readingTimeMinutes: Int
     let category: ArticleCategory
     let imageURL: String
+    let dateAdded: Date
     let content: String
 
     var contentParagraphs: [String] {
         content.components(separatedBy: "\n\n")
+    }
+
+    var formattedDate: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, yyyy"
+        return formatter.string(from: dateAdded)
     }
 
     static let allArticles: [Article] = [
@@ -47,6 +54,7 @@ struct Article: Identifiable {
             readingTimeMinutes: 4,
             category: .science,
             imageURL: "https://images.unsplash.com/photo-1509833903111-9cb142f644e4?w=800&h=400&fit=crop",
+            dateAdded: DateComponents(calendar: .current, year: 2026, month: 2, day: 8).date!,
             content: """
             ## What Are Calories?
 
@@ -77,6 +85,7 @@ struct Article: Identifiable {
             readingTimeMinutes: 5,
             category: .nutrition,
             imageURL: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&h=400&fit=crop",
+            dateAdded: DateComponents(calendar: .current, year: 2026, month: 2, day: 8).date!,
             content: """
             ## The Big Three
 
@@ -111,6 +120,7 @@ struct Article: Identifiable {
             readingTimeMinutes: 4,
             category: .nutrition,
             imageURL: "https://images.unsplash.com/photo-1557844352-761f2565b576?w=800&h=400&fit=crop",
+            dateAdded: DateComponents(calendar: .current, year: 2026, month: 2, day: 8).date!,
             content: """
             ## Beyond Macros
 
@@ -141,6 +151,7 @@ struct Article: Identifiable {
             readingTimeMinutes: 5,
             category: .science,
             imageURL: "https://images.unsplash.com/photo-1611077544695-c7942e060c4d?w=800&h=400&fit=crop",
+            dateAdded: DateComponents(calendar: .current, year: 2026, month: 2, day: 8).date!,
             content: """
             ## Energy Balance
 
@@ -175,6 +186,7 @@ struct Article: Identifiable {
             readingTimeMinutes: 3,
             category: .technology,
             imageURL: "https://images.unsplash.com/photo-1578157300519-5b1ca459b218?w=800&h=400&fit=crop",
+            dateAdded: DateComponents(calendar: .current, year: 2026, month: 2, day: 8).date!,
             content: """
             ## Snap and Track
 
@@ -205,6 +217,7 @@ struct Article: Identifiable {
             readingTimeMinutes: 4,
             category: .nutrition,
             imageURL: "https://images.unsplash.com/photo-1501199951034-d79a3f2d3039?w=800&h=400&fit=crop",
+            dateAdded: DateComponents(calendar: .current, year: 2026, month: 2, day: 8).date!,
             content: """
             ## What Is Keto?
 
@@ -235,6 +248,7 @@ struct Article: Identifiable {
             readingTimeMinutes: 4,
             category: .nutrition,
             imageURL: "https://images.unsplash.com/photo-1521471109507-43d61bb345dd?w=800&h=400&fit=crop",
+            dateAdded: DateComponents(calendar: .current, year: 2026, month: 2, day: 8).date!,
             content: """
             ## Your Body's Preferred Fuel
 
@@ -265,6 +279,7 @@ struct Article: Identifiable {
             readingTimeMinutes: 4,
             category: .nutrition,
             imageURL: "https://images.unsplash.com/photo-1600555379765-f82335a7b1b0?w=800&h=400&fit=crop",
+            dateAdded: DateComponents(calendar: .current, year: 2026, month: 2, day: 8).date!,
             content: """
             ## The Protein Debate
 
@@ -299,6 +314,7 @@ struct Article: Identifiable {
             readingTimeMinutes: 4,
             category: .lifestyle,
             imageURL: "https://images.unsplash.com/photo-1520630086303-ccaa3cb0acef?w=800&h=400&fit=crop",
+            dateAdded: DateComponents(calendar: .current, year: 2026, month: 2, day: 8).date!,
             content: """
             ## What Is Mindful Eating?
 
@@ -329,6 +345,7 @@ struct Article: Identifiable {
             readingTimeMinutes: 4,
             category: .lifestyle,
             imageURL: "https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=800&h=400&fit=crop",
+            dateAdded: DateComponents(calendar: .current, year: 2026, month: 2, day: 8).date!,
             content: """
             ## The Sleep-Weight Connection
 
@@ -359,6 +376,7 @@ struct Article: Identifiable {
             readingTimeMinutes: 3,
             category: .lifestyle,
             imageURL: "https://images.unsplash.com/photo-1563733586325-5fb533331826?w=800&h=400&fit=crop",
+            dateAdded: DateComponents(calendar: .current, year: 2026, month: 2, day: 8).date!,
             content: """
             ## Why Hydration Matters
 

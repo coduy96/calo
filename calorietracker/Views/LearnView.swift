@@ -3,6 +3,7 @@ import SwiftUI
 // MARK: - Sort Option
 enum ArticleSortOption: String, CaseIterable {
     case defaultOrder = "Default"
+    case newestFirst = "Newest First"
     case shortest = "Shortest First"
     case longest = "Longest First"
     case titleAZ = "Title A–Z"
@@ -35,6 +36,8 @@ struct LearnView: View {
         switch sortOption {
         case .defaultOrder:
             break
+        case .newestFirst:
+            articles.sort { $0.dateAdded > $1.dateAdded }
         case .shortest:
             articles.sort { $0.readingTimeMinutes < $1.readingTimeMinutes }
         case .longest:
@@ -198,6 +201,13 @@ struct ArticleCardView: View {
 
                 HStack(spacing: 8) {
                     Label("\(article.readingTimeMinutes) min read", systemImage: "clock")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.tertiary)
+
+                    Text("·")
+                        .foregroundStyle(.tertiary)
+
+                    Text(article.formattedDate)
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(.tertiary)
 
