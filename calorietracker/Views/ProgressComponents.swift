@@ -323,33 +323,56 @@ struct StatBadge: View {
 
 struct LogWeightSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var weightText = ""
+    @State private var wholeNumber: Int = 130
+    @State private var decimal: Int = 0
     let currentWeightLbs: Double
     let onSave: (Double) -> Void
 
+    private var selectedLbs: Double {
+        Double(wholeNumber) + Double(decimal) / 10.0
+    }
+
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
+            VStack(spacing: 20) {
                 Text("Log Weight")
                     .font(.system(.title2, design: .rounded, weight: .bold))
 
-                VStack(spacing: 8) {
-                    TextField("Weight", text: $weightText)
-                        .font(.system(size: 48, weight: .bold, design: .rounded))
-                        .multilineTextAlignment(.center)
-                        .keyboardType(.decimalPad)
+                // Scroll wheel pickers
+                HStack(spacing: 0) {
+                    Picker("Whole", selection: $wholeNumber) {
+                        ForEach(50...500, id: \.self) { num in
+                            Text("\(num)").tag(num)
+                                .font(.system(.title2, design: .rounded, weight: .medium))
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                    .frame(width: 100)
+                    .clipped()
+
+                    Text(".")
+                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .offset(y: -1)
+
+                    Picker("Decimal", selection: $decimal) {
+                        ForEach(0...9, id: \.self) { num in
+                            Text("\(num)").tag(num)
+                                .font(.system(.title2, design: .rounded, weight: .medium))
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                    .frame(width: 70)
+                    .clipped()
 
                     Text("lbs")
                         .font(.system(.title3, design: .rounded))
                         .foregroundStyle(.secondary)
+                        .padding(.leading, 4)
                 }
-                .padding(.vertical, 20)
 
                 Button {
-                    if let lbs = Double(weightText), lbs > 0 {
-                        onSave(lbs / 2.20462)
-                        dismiss()
-                    }
+                    onSave(selectedLbs / 2.20462)
+                    dismiss()
                 } label: {
                     Text("Save")
                         .font(.system(.headline, design: .rounded, weight: .semibold))
@@ -361,12 +384,11 @@ struct LogWeightSheet: View {
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
-                .disabled(Double(weightText) == nil || (Double(weightText) ?? 0) <= 0)
-                .opacity(Double(weightText) != nil && (Double(weightText) ?? 0) > 0 ? 1.0 : 0.5)
+                .padding(.horizontal, 24)
 
                 Spacer()
             }
-            .padding(24)
+            .padding(.top, 24)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -374,7 +396,9 @@ struct LogWeightSheet: View {
             }
         }
         .onAppear {
-            weightText = String(format: "%.1f", currentWeightLbs)
+            wholeNumber = Int(currentWeightLbs)
+            decimal = Int((currentWeightLbs - Double(Int(currentWeightLbs))) * 10 + 0.5)
+            if decimal >= 10 { decimal = 9 }
         }
         .presentationDetents([.medium])
     }
