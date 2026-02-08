@@ -23,39 +23,54 @@ enum Gender: String, Codable, CaseIterable {
 }
 
 enum ActivityLevel: String, Codable, CaseIterable {
-    case sedentary    // 0-2 workouts/week
-    case moderate     // 3-5 workouts/week
-    case active       // 6+ workouts/week
+    case sedentary
+    case light
+    case moderate
+    case active
+    case veryActive
+    case extraActive
 
     var displayName: String {
         switch self {
-        case .sedentary: "Light"
+        case .sedentary: "Sedentary"
+        case .light: "Light"
         case .moderate: "Moderate"
         case .active: "Active"
+        case .veryActive: "Very Active"
+        case .extraActive: "Extra Active"
         }
     }
 
     var subtitle: String {
         switch self {
-        case .sedentary: "0–2 workouts / week"
-        case .moderate: "3–5 workouts / week"
-        case .active: "6+ workouts / week"
+        case .sedentary: "Little or no exercise"
+        case .light: "Exercise 1–3 times / week"
+        case .moderate: "Exercise 4–5 times / week"
+        case .active: "Daily exercise or intense 3–4x / week"
+        case .veryActive: "Intense exercise 6–7 times / week"
+        case .extraActive: "Very intense daily, or physical job"
         }
     }
 
     var icon: String {
         switch self {
-        case .sedentary: "figure.walk"
+        case .sedentary: "figure.stand"
+        case .light: "figure.walk"
         case .moderate: "figure.run"
         case .active: "figure.highintensity.intervaltraining"
+        case .veryActive: "figure.strengthtraining.traditional"
+        case .extraActive: "figure.martial.arts"
         }
     }
 
     var multiplier: Double {
         switch self {
         case .sedentary: 1.2
+        case .light: 1.375
         case .moderate: 1.55
         case .active: 1.725
+        case .veryActive: 1.9
+        case .extraActive: 2.0
         }
     }
 }
@@ -78,14 +93,6 @@ enum WeightGoal: String, Codable, CaseIterable {
         case .gain: "arrow.up.right"
         }
     }
-
-    var adjustment: Int {
-        switch self {
-        case .lose: -500
-        case .maintain: 0
-        case .gain: 500
-        }
-    }
 }
 
 // MARK: - User Profile
@@ -97,12 +104,19 @@ struct UserProfile: Codable {
     var weightKg: Double
     var activityLevel: ActivityLevel
     var goal: WeightGoal
+    var bodyFatPercentage: Double?
+    var weeklyChangeKg: Double?
 
     var age: Int {
         Calendar.current.dateComponents([.year], from: birthday, to: Date()).year ?? 25
     }
 
     var bmr: Double {
+        if let bf = bodyFatPercentage {
+            // Katch-McArdle
+            return 370 + 21.6 * (1 - bf) * weightKg
+        }
+        // Mifflin-St Jeor
         let base = 10 * weightKg + 6.25 * heightCm - 5 * Double(age) - 161
         switch gender {
         case .male: return base + 166
@@ -114,8 +128,21 @@ struct UserProfile: Codable {
         bmr * activityLevel.multiplier
     }
 
+    var calorieAdjustment: Int {
+        switch goal {
+        case .maintain:
+            return 0
+        case .lose:
+            let rate = weeklyChangeKg ?? 0.5
+            return -Int(rate * 7700 / 7)
+        case .gain:
+            let rate = weeklyChangeKg ?? 0.5
+            return Int(rate * 7700 / 7)
+        }
+    }
+
     var dailyCalories: Int {
-        max(1200, Int(tdee) + goal.adjustment)
+        max(1200, Int(tdee) + calorieAdjustment)
     }
 
     var proteinGoal: Int {
@@ -136,7 +163,9 @@ struct UserProfile: Codable {
         heightCm: 175,
         weightKg: 70,
         activityLevel: .moderate,
-        goal: .maintain
+        goal: .maintain,
+        bodyFatPercentage: nil,
+        weeklyChangeKg: nil
     )
 
     // MARK: - Persistence

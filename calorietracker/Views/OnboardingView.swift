@@ -23,8 +23,10 @@ struct OnboardingView: View {
     @State private var selectedObstacle: String?
     @State private var selectedDiet: String?
     @State private var selectedAccomplishment: String?
+    @State private var knowsBodyFat = false
+    @State private var bodyFatPercentage = 20
 
-    private let totalSteps = 23 // 0-22
+    private let totalSteps = 24 // 0-23
 
     private var profile: UserProfile {
         let cm: Double
@@ -42,13 +44,15 @@ struct OnboardingView: View {
             heightCm: cm,
             weightKg: kg,
             activityLevel: activityLevel,
-            goal: goal
+            goal: goal,
+            bodyFatPercentage: knowsBodyFat ? Double(bodyFatPercentage) / 100.0 : nil,
+            weeklyChangeKg: goal == .maintain ? nil : weeklyChangeKg
         )
     }
 
     var body: some View {
         VStack(spacing: 0) {
-                if step > 0 && step < 22 {
+                if step > 0 && step < 23 {
                     HStack(spacing: 16) {
                         Button {
                             withAnimation(.snappy) { step -= 1 }
@@ -81,25 +85,26 @@ struct OnboardingView: View {
                     case 1: genderStep
                     case 2: birthdayStep
                     case 3: heightWeightStep
-                    case 4: activityStep
-                    case 5: goalStep
-                    case 6: desiredWeightStep
-                    case 7: motivationStep
-                    case 8: goalSpeedStep
-                    case 9: obstaclesStep
-                    case 10: dietStep
-                    case 11: accomplishStep
-                    case 12: triedOtherAppsStep
-                    case 13: referralStep
-                    case 14: weightTransitionStep
-                    case 15: trustStep
-                    case 16: ratingStep
-                    case 17: notificationsStep
-                    case 18: appleHealthStep
-                    case 19: allDoneStep
-                    case 20: buildingPlanStep
-                    case 21: planReadyStep
-                    case 22: paywallStep
+                    case 4: bodyFatStep
+                    case 5: activityStep
+                    case 6: goalStep
+                    case 7: desiredWeightStep
+                    case 8: motivationStep
+                    case 9: goalSpeedStep
+                    case 10: obstaclesStep
+                    case 11: dietStep
+                    case 12: accomplishStep
+                    case 13: triedOtherAppsStep
+                    case 14: referralStep
+                    case 15: weightTransitionStep
+                    case 16: trustStep
+                    case 17: ratingStep
+                    case 18: notificationsStep
+                    case 19: appleHealthStep
+                    case 20: allDoneStep
+                    case 21: buildingPlanStep
+                    case 22: planReadyStep
+                    case 23: paywallStep
                     default: EmptyView()
                     }
                 }
@@ -249,26 +254,72 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 4: Activity Level
+    // MARK: - 4: Body Fat
 
-    private var activityStep: some View {
+    private var bodyFatStep: some View {
         VStack(alignment: .leading, spacing: 0) {
-            stepHeader(title: "How active are you?", subtitle: "Your typical week")
+            stepHeader(title: "Do you know your\nbody fat %?", subtitle: "Helps us calculate your metabolism more accurately")
             Spacer()
             VStack(spacing: 12) {
-                ForEach(ActivityLevel.allCases, id: \.self) { level in
-                    selectionCard(icon: level.icon, title: level.displayName, subtitle: level.subtitle, isSelected: activityLevel == level) {
-                        withAnimation(.spring(response: 0.3)) { activityLevel = level }
-                    }
+                selectionCard(icon: "checkmark.circle", title: "Yes", isSelected: knowsBodyFat) {
+                    withAnimation(.spring(response: 0.3)) { knowsBodyFat = true }
+                }
+                selectionCard(icon: "xmark.circle", title: "No", isSelected: !knowsBodyFat) {
+                    withAnimation(.spring(response: 0.3)) { knowsBodyFat = false }
                 }
             }
             .padding(.horizontal, 24)
+            if knowsBodyFat {
+                Picker("Body Fat %", selection: $bodyFatPercentage) {
+                    ForEach(3...60, id: \.self) { pct in Text("\(pct)%").tag(pct) }
+                }
+                .pickerStyle(.wheel)
+                .frame(height: 150)
+                .padding(.horizontal, 24)
+                Text("Common ranges: Men 10–25%, Women 18–35%")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 4)
+            } else {
+                VStack(spacing: 8) {
+                    Image(systemName: "function")
+                        .font(.system(size: 28))
+                        .foregroundStyle(.secondary)
+                    Text("No worries! We'll use a standard formula\nbased on your height, weight, and age.")
+                        .font(.system(.callout, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.top, 24)
+                .frame(maxWidth: .infinity)
+            }
             Spacer()
             continueButton()
         }
     }
 
-    // MARK: - 5: Goal
+    // MARK: - 5: Activity Level
+
+    private var activityStep: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            stepHeader(title: "How active are you?", subtitle: "Your typical week")
+            ScrollView {
+                VStack(spacing: 12) {
+                    ForEach(ActivityLevel.allCases, id: \.self) { level in
+                        selectionCard(icon: level.icon, title: level.displayName, subtitle: level.subtitle, isSelected: activityLevel == level) {
+                            withAnimation(.spring(response: 0.3)) { activityLevel = level }
+                        }
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 16)
+            }
+            continueButton()
+        }
+    }
+
+    // MARK: - 6: Goal
 
     private var goalStep: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -298,7 +349,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 6: Desired Weight
+    // MARK: - 7: Desired Weight
 
     private var weightUnit: String { isMetric ? "kg" : "lbs" }
 
@@ -326,7 +377,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 7: Motivation
+    // MARK: - 8: Motivation
 
     private var motivationStep: some View {
         VStack(spacing: 0) {
@@ -365,7 +416,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 8: Goal Speed
+    // MARK: - 9: Goal Speed
 
     private var weeklyChangeKg: Double {
         switch goalSpeed { case 0: 0.25; case 2: 1.0; default: 0.5 }
@@ -449,7 +500,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 9: Obstacles
+    // MARK: - 10: Obstacles
 
     private let obstacleOptions: [(icon: String, label: String)] = [
         ("chart.bar.fill", "Lack of consistency"),
@@ -476,7 +527,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 10: Diet
+    // MARK: - 11: Diet
 
     private let dietOptions: [(icon: String, label: String)] = [
         ("flame.fill", "Classic"),
@@ -502,7 +553,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 11: Accomplish
+    // MARK: - 12: Accomplish
 
     private let accomplishOptions: [(icon: String, label: String)] = [
         ("apple.logo", "Eat and live healthier"),
@@ -528,7 +579,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 12: Tried Other Apps
+    // MARK: - 13: Tried Other Apps
 
     private var triedOtherAppsStep: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -548,7 +599,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 13: Referral
+    // MARK: - 14: Referral
 
     private let referralOptions: [(icon: String, label: String)] = [
         ("bubble.left.and.bubble.right.fill", "Social Media"),
@@ -576,7 +627,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 14: Weight Transition
+    // MARK: - 15: Weight Transition
 
     private var weightTransitionStep: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -665,7 +716,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 15: Trust / Privacy
+    // MARK: - 16: Trust / Privacy
 
     private var trustStep: some View {
         VStack(spacing: 0) {
@@ -712,7 +763,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 16: Rating (Placeholder)
+    // MARK: - 17: Rating
 
     private var ratingStep: some View {
         ScrollView {
@@ -801,7 +852,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 17: Notifications (Placeholder)
+    // MARK: - 18: Notifications
 
     private var notificationsStep: some View {
         VStack(spacing: 0) {
@@ -853,7 +904,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 18: Apple Health (Placeholder)
+    // MARK: - 19: Apple Health
 
     private var appleHealthStep: some View {
         VStack(spacing: 0) {
@@ -910,7 +961,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 19: All Done
+    // MARK: - 20: All Done
 
     private var allDoneStep: some View {
         VStack(spacing: 0) {
@@ -943,7 +994,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 20: Building Plan
+    // MARK: - 21: Building Plan
 
     private var buildingPlanStep: some View {
         BuildingPlanStepView(profile: profile) {
@@ -951,7 +1002,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 21: Plan Ready
+    // MARK: - 22: Plan Ready
 
     private var planReadyStep: some View {
         VStack(spacing: 0) {
@@ -980,7 +1031,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 22: Paywall
+    // MARK: - 23: Paywall
 
     private var paywallStep: some View {
         VStack(spacing: 0) {
