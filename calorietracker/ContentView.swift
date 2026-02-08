@@ -879,17 +879,34 @@ struct ProfileView: View {
 
                         // Sign Out
                         Button {
-                            authManager.signOut()
-                            hasCompletedOnboarding = false
+                            isSyncing = true
+                            Task {
+                                await CloudKitService.pushAllData(
+                                    foodEntries: foodStore.entries,
+                                    weightEntries: weightStore.entries,
+                                    profile: UserProfile.load()
+                                )
+                                isSyncing = false
+                                authManager.signOut()
+                                hasCompletedOnboarding = false
+                            }
                         } label: {
-                            Label {
-                                Text("Sign Out")
-                            } icon: {
-                                Image(systemName: "rectangle.portrait.and.arrow.right")
-                                    .foregroundStyle(AppColors.calorie)
+                            HStack {
+                                Label {
+                                    Text("Sign Out")
+                                } icon: {
+                                    Image(systemName: "rectangle.portrait.and.arrow.right")
+                                        .foregroundStyle(AppColors.calorie)
+                                }
+                                Spacer()
+                                if isSyncing {
+                                    ProgressView()
+                                        .tint(AppColors.calorie)
+                                }
                             }
                         }
                         .buttonStyle(.plain)
+                        .disabled(isSyncing)
                     } else {
                         // Apple Health (Coming Soon)
                         ComingSoonRow(icon: "heart.fill", label: "Apple Health") {
