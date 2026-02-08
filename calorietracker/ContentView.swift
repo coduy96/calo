@@ -567,7 +567,7 @@ struct ProfileView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
 
     enum ActiveSheet: String, Identifiable {
-        case editName, editBirthday, editHeight, editWeight, editBodyFat
+        case editName, editBirthday, editHeight, editWeight, editBodyFat, editCalories, editProtein, editCarbs, editFat
         var id: String { rawValue }
     }
     @State private var activeSheet: ActiveSheet?
@@ -703,41 +703,21 @@ struct ProfileView: View {
                         .pickerStyle(.menu)
                     }
 
-                    NutritionOverrideRow(
-                        label: "Calories",
-                        icon: "flame",
-                        color: AppColors.calorie,
-                        computedValue: profile.dailyCalories,
-                        customValue: $profile.customCalories
-                    )
-                    .onChange(of: profile.customCalories) { _, _ in saveProfile() }
+                    ProfileInfoRow(icon: "flame", label: "Calories", value: "\(profile.effectiveCalories) kcal") {
+                        activeSheet = .editCalories
+                    }
 
-                    NutritionOverrideRow(
-                        label: "Protein",
-                        icon: "p.circle",
-                        color: AppColors.protein,
-                        computedValue: profile.proteinGoal,
-                        customValue: $profile.customProtein
-                    )
-                    .onChange(of: profile.customProtein) { _, _ in saveProfile() }
+                    ProfileInfoRow(icon: "p.circle", label: "Protein", value: "\(profile.effectiveProtein)g") {
+                        activeSheet = .editProtein
+                    }
 
-                    NutritionOverrideRow(
-                        label: "Carbs",
-                        icon: "c.circle",
-                        color: AppColors.carbs,
-                        computedValue: profile.carbsGoal,
-                        customValue: $profile.customCarbs
-                    )
-                    .onChange(of: profile.customCarbs) { _, _ in saveProfile() }
+                    ProfileInfoRow(icon: "c.circle", label: "Carbs", value: "\(profile.effectiveCarbs)g") {
+                        activeSheet = .editCarbs
+                    }
 
-                    NutritionOverrideRow(
-                        label: "Fat",
-                        icon: "f.circle",
-                        color: AppColors.fat,
-                        computedValue: profile.fatGoal,
-                        customValue: $profile.customFat
-                    )
-                    .onChange(of: profile.customFat) { _, _ in saveProfile() }
+                    ProfileInfoRow(icon: "f.circle", label: "Fat", value: "\(profile.effectiveFat)g") {
+                        activeSheet = .editFat
+                    }
                 }
                 .listRowBackground(AppColors.appCard)
 
@@ -894,6 +874,30 @@ struct ProfileView: View {
                         currentPercentage: profile.bodyFatPercentage
                     ) { newValue in
                         profile.bodyFatPercentage = newValue
+                        saveProfile()
+                    }
+
+                case .editCalories:
+                    NutritionPickerSheet(label: "Calories", unit: "kcal", currentValue: profile.effectiveCalories, range: 800...6000, step: 50) { value in
+                        profile.customCalories = value == profile.dailyCalories ? nil : value
+                        saveProfile()
+                    }
+
+                case .editProtein:
+                    NutritionPickerSheet(label: "Protein", unit: "g", currentValue: profile.effectiveProtein, range: 10...500, step: 5) { value in
+                        profile.customProtein = value == profile.proteinGoal ? nil : value
+                        saveProfile()
+                    }
+
+                case .editCarbs:
+                    NutritionPickerSheet(label: "Carbs", unit: "g", currentValue: profile.effectiveCarbs, range: 0...800, step: 5) { value in
+                        profile.customCarbs = value == profile.carbsGoal ? nil : value
+                        saveProfile()
+                    }
+
+                case .editFat:
+                    NutritionPickerSheet(label: "Fat", unit: "g", currentValue: profile.effectiveFat, range: 10...300, step: 5) { value in
+                        profile.customFat = value == profile.fatGoal ? nil : value
                         saveProfile()
                     }
                 }

@@ -605,6 +605,76 @@ struct NutritionSummaryRow: View {
     }
 }
 
+// MARK: - Nutrition Picker Sheet
+
+struct NutritionPickerSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let label: String
+    let unit: String
+    let currentValue: Int
+    let range: ClosedRange<Int>
+    let step: Int
+    let onSave: (Int) -> Void
+
+    @State private var selectedValue: Int = 0
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                Text(label)
+                    .font(.system(.title2, design: .rounded, weight: .bold))
+
+                HStack(spacing: 0) {
+                    Picker(label, selection: $selectedValue) {
+                        ForEach(Array(stride(from: range.lowerBound, through: range.upperBound, by: step)), id: \.self) { value in
+                            Text("\(value)").tag(value)
+                                .font(.system(.title2, design: .rounded, weight: .medium))
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                    .frame(width: 120)
+                    .clipped()
+
+                    Text(unit)
+                        .font(.system(.title3, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .padding(.leading, 4)
+                }
+
+                Button {
+                    onSave(selectedValue)
+                    dismiss()
+                } label: {
+                    Text("Save")
+                        .font(.system(.headline, design: .rounded, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing)
+                        )
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                }
+                .padding(.horizontal, 24)
+
+                Spacer()
+            }
+            .padding(.top, 24)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
+        .onAppear {
+            // Snap to nearest step value
+            let snapped = (currentValue / step) * step
+            selectedValue = min(max(snapped, range.lowerBound), range.upperBound)
+        }
+        .presentationDetents([.medium])
+    }
+}
+
 // MARK: - Coming Soon Row
 
 struct ComingSoonRow: View {
