@@ -24,10 +24,10 @@ struct ContentView: View {
                     Text("Progress")
                 }
 
-            GroupsView()
+            LearnView()
                 .tabItem {
-                    Image(systemName: "person.3.fill")
-                    Text("Groups")
+                    Image(systemName: "book.fill")
+                    Text("Learn")
                 }
 
             ProfileView()
@@ -559,20 +559,6 @@ struct ProgressTabView: View {
     }
 }
 
-struct GroupsView: View {
-    var body: some View {
-        NavigationStack {
-            List {
-                Text("No groups yet")
-                    .foregroundStyle(.secondary)
-                    .listRowBackground(AppColors.appCard)
-            }
-            .scrollContentBackground(.hidden)
-            .background(AppColors.appBackground)
-            .navigationTitle("Groups")
-        }
-    }
-}
 
 struct ProfileView: View {
     @AppStorage("appearanceMode") private var appearanceMode = "system"
