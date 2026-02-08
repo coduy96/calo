@@ -1025,6 +1025,23 @@ struct OnboardingView: View {
                     MacroCard(label: "Fat", current: profile.fatGoal, goal: profile.fatGoal, gradientColors: AppColors.fatGradient)
                 }
                 .padding(.horizontal, 24)
+                if profile.dailyCalories < 1200 {
+                    HStack(spacing: 10) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Please consult with a doctor")
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            Text("The minimum recommendation is 1,200 calories per day.")
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+                    .padding(.horizontal, 24)
+                }
             }
             Spacer()
             continueButton("Let's get started!")
