@@ -32,9 +32,16 @@ enum TimeRange: String, CaseIterable {
 
 struct WeightChartSection: View {
     let weightEntries: [WeightEntry]
-    let goalWeightLbs: Double?
-    let currentWeightLbs: Double?
+    let goalWeightKg: Double?
+    let currentWeightKg: Double?
     let onLogWeight: () -> Void
+    @AppStorage("useMetric") private var useMetric = false
+
+    private func displayWeight(_ kg: Double) -> Double {
+        useMetric ? kg : kg * 2.20462
+    }
+
+    private var unit: String { useMetric ? "kg" : "lbs" }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -54,11 +61,11 @@ struct WeightChartSection: View {
             } else {
                 // Current / Goal row
                 HStack(spacing: 16) {
-                    if let current = currentWeightLbs {
-                        StatBadge(label: "Current", value: String(format: "%.1f lbs", current))
+                    if let current = currentWeightKg {
+                        StatBadge(label: "Current", value: String(format: "%.1f %@", displayWeight(current), unit))
                     }
-                    if let goal = goalWeightLbs {
-                        StatBadge(label: "Goal", value: String(format: "%.1f lbs", goal))
+                    if let goal = goalWeightKg {
+                        StatBadge(label: "Goal", value: String(format: "%.1f %@", displayWeight(goal), unit))
                     }
                 }
 
@@ -66,14 +73,14 @@ struct WeightChartSection: View {
                     ForEach(weightEntries) { entry in
                         LineMark(
                             x: .value("Date", entry.date, unit: .day),
-                            y: .value("Weight", entry.weightLbs)
+                            y: .value("Weight", displayWeight(entry.weightKg))
                         )
                         .foregroundStyle(AppColors.calorie)
                         .interpolationMethod(.catmullRom)
 
                         AreaMark(
                             x: .value("Date", entry.date, unit: .day),
-                            y: .value("Weight", entry.weightLbs)
+                            y: .value("Weight", displayWeight(entry.weightKg))
                         )
                         .foregroundStyle(
                             LinearGradient(
@@ -86,7 +93,7 @@ struct WeightChartSection: View {
 
                         PointMark(
                             x: .value("Date", entry.date, unit: .day),
-                            y: .value("Weight", entry.weightLbs)
+                            y: .value("Weight", displayWeight(entry.weightKg))
                         )
                         .foregroundStyle(AppColors.calorie)
                         .symbolSize(30)
@@ -115,7 +122,7 @@ struct WeightChartSection: View {
     }
 
     private var weightYDomain: ClosedRange<Double> {
-        let weights = weightEntries.map { $0.weightLbs }
+        let weights = weightEntries.map { displayWeight($0.weightKg) }
         guard let minW = weights.min(), let maxW = weights.max() else { return 0...200 }
         let padding = max((maxW - minW) * 0.15, 2)
         return (minW - padding)...(maxW + padding)
@@ -323,14 +330,22 @@ struct StatBadge: View {
 
 struct LogWeightSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("useMetric") private var useMetric = false
     @State private var wholeNumber: Int = 130
     @State private var decimal: Int = 0
-    let currentWeightLbs: Double
+    let currentWeightKg: Double
     let onSave: (Double) -> Void
 
-    private var selectedLbs: Double {
+    private var selectedValue: Double {
         Double(wholeNumber) + Double(decimal) / 10.0
     }
+
+    private var selectedKg: Double {
+        useMetric ? selectedValue : selectedValue / 2.20462
+    }
+
+    private var unit: String { useMetric ? "kg" : "lbs" }
+    private var wholeRange: ClosedRange<Int> { useMetric ? 20...250 : 50...500 }
 
     var body: some View {
         NavigationStack {
@@ -341,7 +356,7 @@ struct LogWeightSheet: View {
                 // Scroll wheel pickers
                 HStack(spacing: 0) {
                     Picker("Whole", selection: $wholeNumber) {
-                        ForEach(50...500, id: \.self) { num in
+                        ForEach(wholeRange, id: \.self) { num in
                             Text("\(num)").tag(num)
                                 .font(.system(.title2, design: .rounded, weight: .medium))
                         }
@@ -364,14 +379,14 @@ struct LogWeightSheet: View {
                     .frame(width: 70)
                     .clipped()
 
-                    Text("lbs")
+                    Text(unit)
                         .font(.system(.title3, design: .rounded))
                         .foregroundStyle(.secondary)
                         .padding(.leading, 4)
                 }
 
                 Button {
-                    onSave(selectedLbs / 2.20462)
+                    onSave(selectedKg)
                     dismiss()
                 } label: {
                     Text("Save")
@@ -396,8 +411,9 @@ struct LogWeightSheet: View {
             }
         }
         .onAppear {
-            wholeNumber = Int(currentWeightLbs)
-            decimal = Int((currentWeightLbs - Double(Int(currentWeightLbs))) * 10 + 0.5)
+            let displayValue = useMetric ? currentWeightKg : currentWeightKg * 2.20462
+            wholeNumber = Int(displayValue)
+            decimal = Int((displayValue - Double(Int(displayValue))) * 10 + 0.5)
             if decimal >= 10 { decimal = 9 }
         }
         .presentationDetents([.medium])

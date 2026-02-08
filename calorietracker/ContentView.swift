@@ -512,8 +512,8 @@ struct ProgressTabView: View {
                     // Weight Trend
                     WeightChartSection(
                         weightEntries: filteredWeightEntries,
-                        goalWeightLbs: nil,
-                        currentWeightLbs: weightStore.latestEntry?.weightLbs,
+                        goalWeightKg: nil,
+                        currentWeightKg: weightStore.latestEntry?.weightKg,
                         onLogWeight: { showLogWeight = true }
                     )
                     .padding(.horizontal)
@@ -551,7 +551,7 @@ struct ProgressTabView: View {
             .navigationBarHidden(true)
             .sheet(isPresented: $showLogWeight) {
                 LogWeightSheet(
-                    currentWeightLbs: weightStore.latestEntry?.weightLbs ?? userProfile.weightKg * 2.20462
+                    currentWeightKg: weightStore.latestEntry?.weightKg ?? userProfile.weightKg
                 ) { weightKg in
                     let entry = WeightEntry(weightKg: weightKg)
                     weightStore.addEntry(entry)
