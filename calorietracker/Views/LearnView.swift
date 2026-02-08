@@ -72,7 +72,7 @@ struct LearnView: View {
                     // Sort menu
                     HStack {
                         Text("\(filteredArticles.count) article\(filteredArticles.count == 1 ? "" : "s")")
-                            .font(.system(.caption, design: .rounded))
+                            .font(.system(.subheadline, design: .rounded))
                             .foregroundStyle(.secondary)
 
                         Spacer()
@@ -94,7 +94,7 @@ struct LearnView: View {
                                 Image(systemName: "arrow.up.arrow.down")
                                 Text(sortOption.rawValue)
                             }
-                            .font(.system(.caption, design: .rounded, weight: .medium))
+                            .font(.system(.subheadline, design: .rounded, weight: .medium))
                             .foregroundStyle(.secondary)
                         }
                     }
@@ -141,9 +141,9 @@ struct CategoryChip: View {
     var body: some View {
         Button(action: action) {
             Text(label)
-                .font(.system(.caption, design: .rounded, weight: .medium))
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
+                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
                 .background(isSelected ? color.opacity(0.2) : AppColors.appCard)
                 .foregroundStyle(isSelected ? color : .secondary)
                 .clipShape(Capsule())
@@ -186,26 +186,25 @@ struct ArticleCardView: View {
             // Article info
             VStack(alignment: .leading, spacing: 6) {
                 Text(article.title)
-                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .font(.system(.headline, design: .rounded, weight: .semibold))
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
 
                 Text(article.summary)
-                    .font(.caption)
+                    .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
 
                 HStack(spacing: 8) {
                     Label("\(article.readingTimeMinutes) min read", systemImage: "clock")
-                        .font(.caption2)
+                        .font(.system(.caption, design: .rounded))
                         .foregroundStyle(.tertiary)
 
                     Text(article.category.rawValue)
-                        .font(.caption2)
-                        .fontWeight(.medium)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
+                        .font(.system(.caption, design: .rounded, weight: .medium))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
                         .background(article.category.color.opacity(0.15))
                         .foregroundStyle(article.category.color)
                         .clipShape(Capsule())
