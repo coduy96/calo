@@ -1392,6 +1392,30 @@ body:hover .cursor-glow { opacity: 1; }
   transition: color var(--transition);
 }
 .footer-contact a:hover { color: var(--accent); }
+.footer-socials {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+.footer-socials a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  transition: all var(--transition);
+}
+.footer-socials a:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(255,77,106,0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(255,77,106,0.1);
+}
 .footer-bottom {
   text-align: center;
   padding-top: 24px;
