@@ -14,7 +14,7 @@ struct PaywallView: View {
                 Image(systemName: "star.fill")
                     .font(.system(size: 44))
                     .foregroundStyle(
-                        LinearGradient(colors: [.yellow, .orange], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        LinearGradient(colors: [Color(hex: 0xFF375F), Color(hex: 0x8B2942)], startPoint: .topLeading, endPoint: .bottomTrailing)
                     )
 
                 Text("Unlock Premium")

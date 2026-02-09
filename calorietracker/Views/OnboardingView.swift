@@ -1319,7 +1319,7 @@ struct OnboardingView: View {
             Spacer()
             VStack(spacing: 8) {
                 Image(systemName: "star.fill").font(.system(size: 44))
-                    .foregroundStyle(LinearGradient(colors: [.yellow, .orange], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .foregroundStyle(LinearGradient(colors: [Color(hex: 0xFF375F), Color(hex: 0x8B2942)], startPoint: .topLeading, endPoint: .bottomTrailing))
                 Text("Unlock Premium").font(.system(size: 28, weight: .bold, design: .rounded))
                 Text("Unlimited scans, detailed insights,\nand personalized plans")
                     .font(.system(.callout, design: .rounded)).foregroundStyle(.secondary).multilineTextAlignment(.center)
@@ -1402,7 +1402,7 @@ struct OnboardingView: View {
             Spacer()
             VStack(spacing: 8) {
                 Image(systemName: "star.fill").font(.system(size: 44))
-                    .foregroundStyle(LinearGradient(colors: [.yellow, .orange], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .foregroundStyle(LinearGradient(colors: [Color(hex: 0xFF375F), Color(hex: 0x8B2942)], startPoint: .topLeading, endPoint: .bottomTrailing))
                 Text("Special Offer!").font(.system(size: 28, weight: .bold, design: .rounded))
                 Text("27% off your yearly plan")
                     .font(.system(.callout, design: .rounded)).foregroundStyle(.secondary).multilineTextAlignment(.center)
