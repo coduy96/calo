@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Fud AI</title>
+<meta name="description" content="Privacy Policy for Fud AI, the AI-powered calorie and nutrition tracker for iOS.">
+<link rel="icon" href="fud ai/calorie logo transparent.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="nav scrolled" id="nav">
+  <div class="container">
+    <a href="/" class="nav-brand">
+      <img src="fud ai/calorie logo transparent.png" alt="Fud AI Logo">
+      <span>Fud AI</span>
+    </a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true">
+    <label for="nav-toggle" class="hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </label>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/#features">Features</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="privacy.html" class="active">Privacy</a>
+      <a href="terms.html">Terms</a>
+    </div>
+  </div>
+</nav>
+
+<section class="legal-section" style="padding-top: 140px;">
+  <div class="container">
+    <div class="legal-content">
+      <h2>Privacy Policy</h2>
+      <span class="legal-date">Last updated: February 9, 2026</span>
+
+      <p>Fud AI ("we", "our", "the app") is developed by Apoorv Darshan. This privacy policy explains how your information is collected, used, and protected when you use Fud AI.</p>
+
+      <h3>Information We Collect</h3>
+      <p><strong>Information you provide directly:</strong></p>
+      <ul>
+        <li>Name, gender, date of birth, height, weight, and body fat percentage (entered during onboarding)</li>
+        <li>Food photos taken within the app</li>
+        <li>Food entries and nutrition data you log</li>
+        <li>Weight log entries</li>
+        <li>Dietary preferences and fitness goals</li>
+        <li>Apple ID credentials (via Sign in with Apple)</li>
+      </ul>
+      <p><strong>Information collected automatically:</strong></p>
+      <ul>
+        <li>Daily scan usage counts (for subscription limit enforcement)</li>
+        <li>App preference settings (appearance, units, notification times)</li>
+      </ul>
+
+      <h3>How We Use Your Information</h3>
+      <ul>
+        <li><strong>AI Food Analysis:</strong> Food photos and text descriptions are sent to the Google Gemini API for nutritional analysis. Photos are processed in real time and are not stored on Google's servers beyond the API request.</li>
+        <li><strong>Local Storage:</strong> All food entries, weight entries, user profile data, and food photos are stored locally on your device using UserDefaults.</li>
+        <li><strong>iCloud Sync:</strong> If you sign in with Apple, your food entries (excluding photos), weight entries, and user profile are synced to your private iCloud database via CloudKit. This data is only accessible to you through your Apple ID.</li>
+        <li><strong>Apple Health:</strong> If you enable Apple Health integration, the app writes nutrition data (12 types) and body measurements to HealthKit, and reads body measurements, date of birth, and biological sex from HealthKit.</li>
+        <li><strong>Subscription Management:</strong> Subscription status is managed entirely by Apple through StoreKit. We do not process or store payment information.</li>
+      </ul>
+
+      <h3>Information We Do NOT Collect</h3>
+      <ul>
+        <li>We do <strong>not</strong> use any third-party analytics services (no Firebase Analytics, Mixpanel, Amplitude, or similar)</li>
+        <li>We do <strong>not</strong> use any crash reporting services</li>
+        <li>We do <strong>not</strong> include any advertising SDKs or ad tracking</li>
+        <li>We do <strong>not</strong> track your behavior, location, or browsing activity</li>
+        <li>We do <strong>not</strong> sell, share, or transfer your personal data to any third parties</li>
+        <li>We do <strong>not</strong> operate any servers — all data is stored on your device or in your private iCloud account</li>
+      </ul>
+
+      <h3>Data Storage & Security</h3>
+      <table class="legal-table">
+        <thead>
+          <tr><th>Data</th><th>Storage Location</th><th>Accessible By</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Food entries & photos</td><td>Device (UserDefaults)</td><td>You only</td></tr>
+          <tr><td>Food entries (no photos)</td><td>Your private iCloud database</td><td>You only (via Apple ID)</td></tr>
+          <tr><td>Weight entries</td><td>Device + your private iCloud</td><td>You only</td></tr>
+          <tr><td>User profile</td><td>Device + your private iCloud</td><td>You only</td></tr>
+          <tr><td>Food photos (for AI)</td><td>Sent to Google Gemini API</td><td>Processed in transit, not stored</td></tr>
+          <tr><td>Subscription status</td><td>Apple App Store</td><td>You + Apple</td></tr>
+          <tr><td>Health data</td><td>Apple HealthKit</td><td>You + apps you authorize</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Data Retention</h3>
+      <ul>
+        <li>All local data remains on your device until you delete it or uninstall the app</li>
+        <li>iCloud data remains in your private CloudKit database until you delete it through the app or through iCloud settings</li>
+        <li>You can delete all data (local and cloud) at any time using the "Delete All Data" option in Profile settings</li>
+      </ul>
+
+      <h3>Children's Privacy</h3>
+      <p>Fud AI is not directed at children under the age of 13. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has provided us with personal data, please contact us so we can delete it.</p>
+
+      <h3>Changes to This Policy</h3>
+      <p>We may update this privacy policy from time to time. Changes will be reflected in the "Last updated" date above. Continued use of the app after changes constitutes acceptance of the updated policy.</p>
+
+      <h3>Contact</h3>
+      <p>For privacy questions or data deletion requests, contact: <strong><a href="mailto:info.fudai@gmail.com">info.fudai@gmail.com</a></strong></p>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <img src="fud ai/calorie logo transparent.png" alt="Fud AI">
+        <span>Fud AI</span>
+      </div>
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/#features">Features</a>
+        <a href="/#pricing">Pricing</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+      </div>
+      <div class="footer-contact">
+        <a href="mailto:info.fudai@gmail.com">info.fudai@gmail.com</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; 2026 Apoorv Darshan. All Rights Reserved.
+    </div>
+  </div>
+</footer>
+
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>

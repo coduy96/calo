@@ -29,8 +29,8 @@
       <a href="#how-it-works">How It Works</a>
       <a href="#pricing">Pricing</a>
       <a href="#screenshots">Screenshots</a>
-      <a href="#privacy">Privacy</a>
-      <a href="#terms">Terms</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
     </div>
   </div>
 </nav>
@@ -341,154 +341,6 @@
   </div>
 </section>
 
-<!-- ========== PRIVACY POLICY ========== -->
-<section id="privacy" class="legal-section">
-  <div class="container">
-    <div class="legal-content reveal">
-      <h2>Privacy Policy</h2>
-      <span class="legal-date">Last updated: February 9, 2026</span>
-
-      <p>Fud AI ("we", "our", "the app") is developed by Apoorv Darshan. This privacy policy explains how your information is collected, used, and protected when you use Fud AI.</p>
-
-      <h3>Information We Collect</h3>
-      <p><strong>Information you provide directly:</strong></p>
-      <ul>
-        <li>Name, gender, date of birth, height, weight, and body fat percentage (entered during onboarding)</li>
-        <li>Food photos taken within the app</li>
-        <li>Food entries and nutrition data you log</li>
-        <li>Weight log entries</li>
-        <li>Dietary preferences and fitness goals</li>
-        <li>Apple ID credentials (via Sign in with Apple)</li>
-      </ul>
-      <p><strong>Information collected automatically:</strong></p>
-      <ul>
-        <li>Daily scan usage counts (for subscription limit enforcement)</li>
-        <li>App preference settings (appearance, units, notification times)</li>
-      </ul>
-
-      <h3>How We Use Your Information</h3>
-      <ul>
-        <li><strong>AI Food Analysis:</strong> Food photos and text descriptions are sent to the Google Gemini API for nutritional analysis. Photos are processed in real time and are not stored on Google's servers beyond the API request.</li>
-        <li><strong>Local Storage:</strong> All food entries, weight entries, user profile data, and food photos are stored locally on your device using UserDefaults.</li>
-        <li><strong>iCloud Sync:</strong> If you sign in with Apple, your food entries (excluding photos), weight entries, and user profile are synced to your private iCloud database via CloudKit. This data is only accessible to you through your Apple ID.</li>
-        <li><strong>Apple Health:</strong> If you enable Apple Health integration, the app writes nutrition data (12 types) and body measurements to HealthKit, and reads body measurements, date of birth, and biological sex from HealthKit.</li>
-        <li><strong>Subscription Management:</strong> Subscription status is managed entirely by Apple through StoreKit. We do not process or store payment information.</li>
-      </ul>
-
-      <h3>Information We Do NOT Collect</h3>
-      <ul>
-        <li>We do <strong>not</strong> use any third-party analytics services (no Firebase Analytics, Mixpanel, Amplitude, or similar)</li>
-        <li>We do <strong>not</strong> use any crash reporting services</li>
-        <li>We do <strong>not</strong> include any advertising SDKs or ad tracking</li>
-        <li>We do <strong>not</strong> track your behavior, location, or browsing activity</li>
-        <li>We do <strong>not</strong> sell, share, or transfer your personal data to any third parties</li>
-        <li>We do <strong>not</strong> operate any servers — all data is stored on your device or in your private iCloud account</li>
-      </ul>
-
-      <h3>Data Storage & Security</h3>
-      <table class="legal-table">
-        <thead>
-          <tr><th>Data</th><th>Storage Location</th><th>Accessible By</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Food entries & photos</td><td>Device (UserDefaults)</td><td>You only</td></tr>
-          <tr><td>Food entries (no photos)</td><td>Your private iCloud database</td><td>You only (via Apple ID)</td></tr>
-          <tr><td>Weight entries</td><td>Device + your private iCloud</td><td>You only</td></tr>
-          <tr><td>User profile</td><td>Device + your private iCloud</td><td>You only</td></tr>
-          <tr><td>Food photos (for AI)</td><td>Sent to Google Gemini API</td><td>Processed in transit, not stored</td></tr>
-          <tr><td>Subscription status</td><td>Apple App Store</td><td>You + Apple</td></tr>
-          <tr><td>Health data</td><td>Apple HealthKit</td><td>You + apps you authorize</td></tr>
-        </tbody>
-      </table>
-
-      <h3>Data Retention</h3>
-      <ul>
-        <li>All local data remains on your device until you delete it or uninstall the app</li>
-        <li>iCloud data remains in your private CloudKit database until you delete it through the app or through iCloud settings</li>
-        <li>You can delete all data (local and cloud) at any time using the "Delete All Data" option in Profile settings</li>
-      </ul>
-
-      <h3>Children's Privacy</h3>
-      <p>Fud AI is not directed at children under the age of 13. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has provided us with personal data, please contact us so we can delete it.</p>
-
-      <h3>Changes to This Policy</h3>
-      <p>We may update this privacy policy from time to time. Changes will be reflected in the "Last updated" date above. Continued use of the app after changes constitutes acceptance of the updated policy.</p>
-
-      <h3>Contact</h3>
-      <p>For privacy questions or data deletion requests, contact: <strong><a href="mailto:info.fudai@gmail.com">info.fudai@gmail.com</a></strong></p>
-    </div>
-  </div>
-</section>
-
-<!-- ========== TERMS OF SERVICE ========== -->
-<section id="terms" class="legal-section">
-  <div class="container">
-    <div class="legal-content reveal">
-      <h2>Terms of Service</h2>
-      <span class="legal-date">Last updated: February 9, 2026</span>
-
-      <p>By downloading, installing, or using Fud AI ("the app"), you agree to these Terms of Service. If you do not agree, do not use the app.</p>
-
-      <h3>1. Description of Service</h3>
-      <p>Fud AI is a nutrition tracking application that uses artificial intelligence to estimate the nutritional content of food from photos and text descriptions. The app provides tools for logging meals, tracking weight, monitoring nutritional intake, and viewing educational content about nutrition and health.</p>
-
-      <h3>2. AI-Powered Estimates</h3>
-      <p>Nutritional information provided by Fud AI is generated by AI (Google Gemini 2.5 Flash) and is <strong>estimated, not exact</strong>. These estimates should be used as general guidance only. Fud AI is not a medical device and does not provide medical advice. Always consult a healthcare professional or registered dietitian for dietary decisions, especially if you have medical conditions, allergies, or specific dietary requirements.</p>
-
-      <h3>3. Account & Authentication</h3>
-      <ul>
-        <li>You may sign in using Sign in with Apple to enable cloud sync and subscription features</li>
-        <li>You are responsible for maintaining the security of your Apple ID</li>
-        <li>You may delete your account and all associated data at any time through the app's Profile settings</li>
-      </ul>
-
-      <h3>4. Subscriptions & Payments</h3>
-      <ul>
-        <li>Fud AI offers a free tier (3 AI scans) and premium subscription plans (Monthly and Yearly)</li>
-        <li>Subscriptions are auto-renewable and managed through the Apple App Store</li>
-        <li>Payment is charged to your Apple ID account at confirmation of purchase</li>
-        <li>Subscriptions automatically renew unless canceled at least 24 hours before the end of the current billing period</li>
-        <li>You can manage and cancel subscriptions in your iOS Settings > Apple ID > Subscriptions</li>
-        <li>No refunds are provided for partial subscription periods; refund requests must be directed to Apple</li>
-      </ul>
-
-      <h3>5. Acceptable Use</h3>
-      <p>You agree not to:</p>
-      <ul>
-        <li>Use the app for any unlawful purpose</li>
-        <li>Attempt to reverse-engineer, decompile, or disassemble the app</li>
-        <li>Interfere with or disrupt the app's functionality</li>
-        <li>Use the app to collect data about other users</li>
-        <li>Redistribute, sublicense, or resell the app or its content</li>
-      </ul>
-
-      <h3>6. Intellectual Property</h3>
-      <p>All content, design, code, AI integrations, educational articles, and branding in Fud AI are the intellectual property of Apoorv Darshan and are protected by copyright law. You may not reproduce, distribute, or create derivative works from any part of the app without written permission.</p>
-
-      <h3>7. Health Disclaimer</h3>
-      <p>Fud AI is a <strong>nutrition tracking tool, not a medical application</strong>. The app does not diagnose, treat, cure, or prevent any disease or medical condition. Nutritional estimates are AI-generated approximations and may not be accurate for all foods. Users with medical conditions, eating disorders, allergies, or specific dietary needs should consult qualified healthcare professionals before relying on the app's data. The minimum calorie floor of 1,200 kcal/day is a general safety guideline, not medical advice.</p>
-
-      <h3>8. Apple Health Integration</h3>
-      <p>By enabling Apple Health integration, you authorize the app to read and write health data as described in our Privacy Policy. You can revoke this access at any time through iOS Settings > Health > Data Access.</p>
-
-      <h3>9. Limitation of Liability</h3>
-      <p>To the maximum extent permitted by law, Fud AI and its developer shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of data, profits, or goodwill, arising from your use of the app. The app is provided "as is" without warranties of any kind.</p>
-
-      <h3>10. Availability</h3>
-      <p>We strive to keep Fud AI available at all times, but we do not guarantee uninterrupted access. The app requires an internet connection for AI food analysis and iCloud sync. Offline functionality is limited to viewing previously logged data.</p>
-
-      <h3>11. Modifications</h3>
-      <p>We reserve the right to modify these terms at any time. Continued use of the app after changes constitutes acceptance of the updated terms. Material changes will be communicated through an app update.</p>
-
-      <h3>12. Governing Law</h3>
-      <p>These terms are governed by and construed in accordance with the laws of the United States. Any disputes shall be resolved in the courts of competent jurisdiction.</p>
-
-      <h3>13. Contact</h3>
-      <p>For questions about these terms, contact: <strong><a href="mailto:info.fudai@gmail.com">info.fudai@gmail.com</a></strong></p>
-    </div>
-  </div>
-</section>
-
 <!-- ========== FOOTER ========== -->
 <footer class="footer">
   <div class="container">
@@ -500,8 +352,8 @@
       <div class="footer-links">
         <a href="#features">Features</a>
         <a href="#pricing">Pricing</a>
-        <a href="#privacy">Privacy Policy</a>
-        <a href="#terms">Terms of Service</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
       </div>
       <div class="footer-contact">
         <a href="mailto:info.fudai@gmail.com">info.fudai@gmail.com</a>
