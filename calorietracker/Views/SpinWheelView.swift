@@ -10,14 +10,14 @@ struct SpinWheelView: View {
 
     // 8 segments: [10%, 15%, 20%, 10%, 15%, 20%, 25%, 27%]
     private let segments: [(Int, Color)] = [
-        (10, Color(hex: 0xFF6B8A)),
-        (15, Color(hex: 0x30D158)),
-        (20, Color(hex: 0xFF9F0A)),
-        (10, Color(hex: 0x0A84FF)),
-        (15, Color(hex: 0xFF375F)),
-        (20, Color(hex: 0x5AC8FA)),
-        (25, Color(hex: 0x6EE7B7)),
-        (27, Color(hex: 0xFFD700))
+        (10, Color(hex: 0x1A1A1A)),        // near-black
+        (15, Color(hex: 0x8B2942)),         // dark rose
+        (20, Color(hex: 0x2A2A2A)),         // dark charcoal
+        (10, Color(hex: 0xA33350)),         // muted red
+        (15, Color(hex: 0x1A1A1A)),         // near-black
+        (20, Color(hex: 0x7A2038)),         // dark burgundy
+        (25, Color(hex: 0x2A2A2A)),         // dark charcoal
+        (27, Color(hex: 0xFF375F))          // app primary red (highlighted)
     ]
 
     private let segmentAngle: Double = 360.0 / 8.0 // 45 degrees each
@@ -49,7 +49,7 @@ struct SpinWheelView: View {
             // Pointer
             Image(systemName: "arrowtriangle.down.fill")
                 .font(.system(size: 24))
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(AppColors.calorie)
                 .padding(.bottom, 4)
 
             // Wheel
@@ -67,7 +67,7 @@ struct SpinWheelView: View {
                 Circle()
                     .fill(Color(.systemBackground))
                     .frame(width: 50, height: 50)
-                    .shadow(color: .black.opacity(0.1), radius: 4)
+                    .shadow(color: .black.opacity(0.2), radius: 6)
 
                 Image(systemName: "gift.fill")
                     .font(.system(size: 20))
@@ -117,22 +117,14 @@ struct SpinWheelView: View {
         guard !hasSpun else { return }
         hasSpun = true
 
-        // The 27% segment is index 7 (last segment)
-        // It spans from 315 degrees to 360 degrees
-        // The pointer is at the top (0/360 degrees)
-        // We need the wheel to rotate so that segment 7's center aligns with the top
-        // Segment 7 center = 337.5 degrees from start
-        // We rotate clockwise, so we need: 360 - 337.5 = 22.5 degrees offset
-        // Plus multiple full rotations for effect
         let fullRotations = 5.0 * 360.0
-        let targetOffset = 360.0 - (7.0 * segmentAngle + segmentAngle / 2.0) // Land on center of segment 7
+        let targetOffset = 360.0 - (7.0 * segmentAngle + segmentAngle / 2.0)
         let totalRotation = fullRotations + targetOffset
 
         withAnimation(.interpolatingSpring(stiffness: 15, damping: 12).speed(0.3)) {
             rotation = totalRotation
         }
 
-        // Show result after animation
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
             resultDiscount = 27
             withAnimation(.spring(response: 0.5)) {
@@ -166,7 +158,7 @@ struct WheelSegment: View {
                     )
                     path.closeSubpath()
                 }
-                .fill(color.opacity(isHighlighted ? 1.0 : 0.8))
+                .fill(color)
 
                 Path { path in
                     path.move(to: center)
@@ -179,18 +171,17 @@ struct WheelSegment: View {
                     )
                     path.closeSubpath()
                 }
-                .stroke(Color.white, lineWidth: 2)
+                .stroke(Color.black.opacity(0.3), lineWidth: 1.5)
 
-                // Text label
+                // Text label — positioned radially, reading outward
                 let midAngle = (startAngle + endAngle) / 2.0 - 90
                 let textRadius = radius * 0.65
                 let x = center.x + textRadius * cos(midAngle * .pi / 180)
                 let y = center.y + textRadius * sin(midAngle * .pi / 180)
 
                 Text(text)
-                    .font(.system(size: isHighlighted ? 14 : 12, weight: .bold, design: .rounded))
+                    .font(.system(size: isHighlighted ? 15 : 13, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
-                    .shadow(color: .black.opacity(0.3), radius: 1)
                     .position(x: x, y: y)
                     .rotationEffect(.degrees(midAngle + 90))
             }

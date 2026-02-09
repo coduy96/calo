@@ -200,12 +200,7 @@ struct HomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 8) {
-                        Text("\(storeManager.remainingScans) left")
-                            .font(.system(.caption2, design: .rounded, weight: .medium))
-                            .foregroundStyle(.secondary)
-
-                        Menu {
+                    Menu {
                             Button(action: {
                                 guard checkScanAvailable() else { return }
                                 cameraMode = .snapFood
@@ -235,7 +230,6 @@ struct HomeView: View {
                         } label: {
                             Image(systemName: "plus")
                         }
-                    }
                 }
             }
             .fullScreenCover(isPresented: $showCamera) {
@@ -963,7 +957,7 @@ struct ProfileView: View {
                                 Text(storeManager.currentPlanName)
                             } icon: {
                                 Image(systemName: "star.fill")
-                                    .foregroundStyle(.orange)
+                                    .foregroundStyle(AppColors.calorie)
                             }
                             Spacer()
                             Text("Active")
@@ -1020,7 +1014,7 @@ struct ProfileView: View {
                                 Text("Upgrade to Premium")
                             } icon: {
                                 Image(systemName: "star.fill")
-                                    .foregroundStyle(.orange)
+                                    .foregroundStyle(AppColors.calorie)
                             }
                         }
                     }

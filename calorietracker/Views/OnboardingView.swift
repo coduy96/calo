@@ -50,7 +50,7 @@ struct OnboardingView: View {
         var id: String { rawValue }
     }
 
-    private let totalSteps = 24 // 0-23
+    private let totalSteps = 23 // 0-22
 
     private var profile: UserProfile {
         let cm: Double
@@ -76,7 +76,7 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-                if step > 0 && step < 23 {
+                if step > 0 && step < 22 {
                     HStack(spacing: 16) {
                         Button {
                             withAnimation(.snappy) { step -= 1 }
@@ -122,13 +122,12 @@ struct OnboardingView: View {
                     case 14: referralStep
                     case 15: weightTransitionStep
                     case 16: trustStep
-                    case 17: ratingStep
-                    case 18: notificationsStep
-                    case 19: appleHealthStep
-                    case 20: allDoneStep
-                    case 21: buildingPlanStep
-                    case 22: planReadyStep
-                    case 23: paywallStep
+                    case 17: notificationsStep
+                    case 18: appleHealthStep
+                    case 19: allDoneStep
+                    case 20: buildingPlanStep
+                    case 21: planReadyStep
+                    case 22: paywallStep
                     default: EmptyView()
                     }
                 }
@@ -868,96 +867,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 17: Rating
-
-    private var ratingStep: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Rating badge
-                VStack(spacing: 8) {
-                    HStack(spacing: 8) {
-                        Text("4.8")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                        HStack(spacing: 2) {
-                            ForEach(0..<5, id: \.self) { _ in
-                                Image(systemName: "star.fill")
-                                    .font(.system(size: 16))
-                                    .foregroundStyle(.orange)
-                            }
-                        }
-                    }
-                    Text("200K+ App Ratings")
-                        .font(.system(.caption, design: .rounded, weight: .medium))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(20)
-                .frame(maxWidth: .infinity)
-                .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
-
-                // Social proof
-                VStack(spacing: 12) {
-                    Text("Built for people like you")
-                        .font(.system(.title3, design: .rounded, weight: .bold))
-
-                    HStack(spacing: -12) {
-                        ForEach(0..<3, id: \.self) { i in
-                            Circle()
-                                .fill(
-                                    [Color.blue.opacity(0.3), Color.pink.opacity(0.3), Color.green.opacity(0.3)][i]
-                                )
-                                .frame(width: 52, height: 52)
-                                .overlay(
-                                    Image(systemName: ["person.fill", "person.fill", "person.fill"][i])
-                                        .foregroundStyle(.secondary)
-                                )
-                                .overlay(Circle().stroke(Color(.systemBackground), lineWidth: 3))
-                        }
-                    }
-                    Text("Thousands of happy users")
-                        .font(.system(.subheadline, design: .rounded, weight: .medium))
-                }
-
-                // Review card
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Circle()
-                            .fill(Color.blue.opacity(0.2))
-                            .frame(width: 40, height: 40)
-                            .overlay(Image(systemName: "person.fill").foregroundStyle(.secondary))
-                        Text("Sarah M.")
-                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                        Spacer()
-                        HStack(spacing: 2) {
-                            ForEach(0..<5, id: \.self) { _ in
-                                Image(systemName: "star.fill")
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(.orange)
-                            }
-                        }
-                    }
-                    Text("I lost 15 lbs in 2 months! Just snapping photos of my food made tracking so easy. Highly recommend!")
-                        .font(.system(.subheadline, design: .rounded))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(16)
-                .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
-            }
-            .padding(.horizontal, 24)
-            .padding(.top, 16)
-            .padding(.bottom, 120)
-        }
-        .overlay(alignment: .bottom) {
-            continueButton()
-                .background(
-                    LinearGradient(colors: [Color(.systemBackground), Color(.systemBackground), Color(.systemBackground).opacity(0)], startPoint: .bottom, endPoint: .top)
-                        .frame(height: 100)
-                        .allowsHitTesting(false),
-                    alignment: .bottom
-                )
-        }
-    }
-
-    // MARK: - 18: Notifications
+    // MARK: - 17: Notifications
 
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
 
@@ -1035,7 +945,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 19: Apple Health
+    // MARK: - 18: Apple Health
 
     private var appleHealthStep: some View {
         VStack(spacing: 0) {
@@ -1128,7 +1038,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 20: All Done
+    // MARK: - 19: All Done
 
     private var allDoneStep: some View {
         VStack(spacing: 0) {
@@ -1161,7 +1071,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 21: Building Plan
+    // MARK: - 20: Building Plan
 
     private var buildingPlanStep: some View {
         BuildingPlanStepView(profile: profile) {
@@ -1169,7 +1079,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 22: Plan Ready
+    // MARK: - 21: Plan Ready
 
     private var planCalories: Int { editedCalories ?? profile.dailyCalories }
     private var planProtein: Int { editedProtein ?? profile.proteinGoal }
@@ -1366,7 +1276,7 @@ struct OnboardingView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - 23: Paywall
+    // MARK: - 22: Paywall
 
     private var paywallStep: some View {
         Group {
@@ -1419,16 +1329,25 @@ struct OnboardingView: View {
             VStack(spacing: 12) {
                 if let yearly = storeManager.yearlyProduct {
                     paywallPlanCard(plan: .yearly, title: "Yearly", price: yearly.displayPrice, detail: yearlyPerMonthText(yearly), badge: "Best Value")
+                } else {
+                    paywallPlanCard(plan: .yearly, title: "Yearly", price: "$29.99", detail: "$2.50/mo", badge: "Best Value")
                 }
                 if let monthly = storeManager.monthlyProduct {
                     paywallPlanCard(plan: .monthly, title: "Monthly", price: monthly.displayPrice, detail: "per month", badge: nil)
+                } else {
+                    paywallPlanCard(plan: .monthly, title: "Monthly", price: "$7.99", detail: "per month", badge: nil)
                 }
             }.padding(.horizontal, 24)
 
             Spacer()
 
             Button {
-                Task { await purchaseSelectedPlan() }
+                Task {
+                    if storeManager.products.isEmpty {
+                        await storeManager.loadProducts()
+                    }
+                    await purchaseSelectedPlan()
+                }
             } label: {
                 Group {
                     if storeManager.isPurchasing {
@@ -1502,16 +1421,32 @@ struct OnboardingView: View {
                         detail: yearlyPerMonthText(discountYearly),
                         badge: "27% Off"
                     )
+                } else {
+                    paywallPlanCardWithDiscount(
+                        plan: .yearly,
+                        title: "Yearly",
+                        price: "$21.99",
+                        originalPrice: "$29.99",
+                        detail: "$1.83/mo",
+                        badge: "27% Off"
+                    )
                 }
                 if let monthly = storeManager.monthlyProduct {
                     paywallPlanCard(plan: .monthly, title: "Monthly", price: monthly.displayPrice, detail: "per month", badge: nil)
+                } else {
+                    paywallPlanCard(plan: .monthly, title: "Monthly", price: "$7.99", detail: "per month", badge: nil)
                 }
             }.padding(.horizontal, 24)
 
             Spacer()
 
             Button {
-                Task { await purchaseSelectedPlan(discount: true) }
+                Task {
+                    if storeManager.products.isEmpty {
+                        await storeManager.loadProducts()
+                    }
+                    await purchaseSelectedPlan(discount: true)
+                }
             } label: {
                 Group {
                     if storeManager.isPurchasing {
