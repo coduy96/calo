@@ -393,7 +393,7 @@ We may update this privacy policy from time to time. Changes will be reflected i
 
 ### Contact
 
-For privacy questions or data deletion requests, contact: **apoorvdarshan@gmail.com**
+For privacy questions or data deletion requests, contact: **info.fudai@gmail.com**
 
 ---
 
@@ -465,7 +465,7 @@ These terms are governed by and construed in accordance with the laws of the Uni
 
 ### 13. Contact
 
-For questions about these terms, contact: **apoorvdarshan@gmail.com**
+For questions about these terms, contact: **info.fudai@gmail.com**
 
 ---
 
@@ -480,5 +480,6 @@ See [LICENSE](LICENSE) for details.
 ## Contact
 
 - **Developer:** Apoorv Darshan
-- **Email:** apoorvdarshan@gmail.com
-- **Support:** [GitHub Issues](../../issues)
+- **Developer Email:** ad13dtu@gmail.com
+- **App Support:** info.fudai@gmail.com
+- **Issues:** [GitHub Issues](../../issues)
