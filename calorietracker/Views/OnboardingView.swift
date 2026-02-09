@@ -1294,11 +1294,6 @@ struct OnboardingView: View {
                 initialPaywallContent
             }
         }
-        .task {
-            if storeManager.products.isEmpty {
-                await storeManager.loadProducts()
-            }
-        }
     }
 
     private var initialPaywallContent: some View {
@@ -1490,21 +1485,13 @@ struct OnboardingView: View {
     }
 
     private func purchaseSelectedPlan(discount: Bool = false) async {
-        // Retry loading products if they haven't loaded yet
-        if storeManager.products.isEmpty {
-            await storeManager.loadProducts()
-        }
-
         let product: Product?
         if selectedPlan == .yearly {
             product = discount ? storeManager.yearlyDiscountProduct : storeManager.yearlyProduct
         } else {
             product = storeManager.monthlyProduct
         }
-        guard let product else {
-            storeManager.purchaseError = "Unable to load subscription products. Please try again later."
-            return
-        }
+        guard let product else { return }
         await storeManager.purchase(product)
         if storeManager.isSubscribed {
             hasCompletedOnboarding = true
