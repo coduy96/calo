@@ -141,3 +141,77 @@ if (scrollContainer && dots.length) {
     });
   });
 }
+
+// Animated number counters
+const statNumbers = document.querySelectorAll('.stat-number[data-target]');
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      const target = parseInt(el.dataset.target);
+      const suffix = el.dataset.suffix || '';
+      const duration = 1500;
+      const startTime = performance.now();
+
+      function updateCounter(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // Ease out cubic
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(eased * target);
+        el.textContent = current + suffix;
+        if (progress < 1) {
+          requestAnimationFrame(updateCounter);
+        }
+      }
+      requestAnimationFrame(updateCounter);
+      counterObserver.unobserve(el);
+    }
+  });
+}, { threshold: 0.5 });
+statNumbers.forEach(el => counterObserver.observe(el));
+
+// Magnetic effect on app-store buttons (desktop only)
+if (window.innerWidth > 768) {
+  document.querySelectorAll('.app-store-btn').forEach(btn => {
+    btn.addEventListener('mousemove', (e) => {
+      const rect = btn.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      btn.style.transform = `translate(${x * 0.15}px, ${y * 0.3}px) scale(1.02)`;
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = '';
+    });
+  });
+}
+
+// Pricing card hover tilt (subtle)
+document.querySelectorAll('.pricing-card').forEach(card => {
+  card.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const centerX = rect.width / 2;
+    const rotateY = (x - centerX) / centerX * 3;
+    card.style.transform = `translateY(-8px) perspective(600px) rotateY(${rotateY}deg)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+  });
+});
+
+// Smooth section glow reveal
+const glowLines = document.querySelectorAll('.section-glow');
+const glowObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.querySelector('::before')
+    }
+  });
+}, { threshold: 0.5 });
+glowLines.forEach(el => {
+  el.style.opacity = '0';
+  el.style.transition = 'opacity 1s ease';
+  glowObserver.observe(el);
+});
