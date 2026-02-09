@@ -1102,6 +1102,23 @@ struct ProfileView: View {
                                 }
                         }
 
+                        // Contact
+                        Link(destination: URL(string: "mailto:info.fudai@gmail.com")!) {
+                            HStack {
+                                Label {
+                                    Text("Contact Us")
+                                } icon: {
+                                    Image(systemName: "envelope.fill")
+                                        .foregroundStyle(AppColors.carbs)
+                                }
+                                Spacer()
+                                Text("info.fudai@gmail.com")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+
                         // Sign Out
                         Button {
                             isSigningOut = true
