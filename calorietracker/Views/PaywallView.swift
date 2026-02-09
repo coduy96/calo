@@ -37,6 +37,8 @@ struct PaywallView: View {
                         badge: "Best Value",
                         detail: yearlyDetailText(yearly)
                     )
+                } else {
+                    fallbackPlanCard(title: "Yearly", price: "$29.99", detail: "$2.50/mo", badge: "Best Value", isSelected: true)
                 }
 
                 if let monthly = storeManager.monthlyProduct {
@@ -46,6 +48,8 @@ struct PaywallView: View {
                         badge: nil,
                         detail: "per month"
                     )
+                } else {
+                    fallbackPlanCard(title: "Monthly", price: "$7.99", detail: "per month", badge: nil, isSelected: false)
                 }
             }
             .padding(.horizontal, 24)
@@ -54,8 +58,16 @@ struct PaywallView: View {
 
             // Subscribe button
             Button {
-                guard let product = selectedProduct else { return }
-                Task { await storeManager.purchase(product) }
+                Task {
+                    if storeManager.products.isEmpty {
+                        await storeManager.loadProducts()
+                    }
+                    guard let product = selectedProduct ?? storeManager.yearlyDiscountProduct ?? storeManager.yearlyProduct ?? storeManager.monthlyProduct else {
+                        storeManager.purchaseError = "Unable to load subscription products. Please try again later."
+                        return
+                    }
+                    await storeManager.purchase(product)
+                }
             } label: {
                 Group {
                     if storeManager.isPurchasing {
@@ -99,8 +111,10 @@ struct PaywallView: View {
             .padding(.bottom, 36)
         }
         .background(AppColors.appBackground)
-        .onAppear {
-            // Default to yearly discount if available
+        .task {
+            if storeManager.products.isEmpty {
+                await storeManager.loadProducts()
+            }
             selectedProduct = storeManager.yearlyDiscountProduct ?? storeManager.yearlyProduct ?? storeManager.monthlyProduct
         }
     }
@@ -159,5 +173,45 @@ struct PaywallView: View {
             )
         }
         .buttonStyle(.plain)
+    }
+
+    private func fallbackPlanCard(title: String, price: String, detail: String, badge: String?, isSelected: Bool) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                if let badge {
+                    Text(badge)
+                        .font(.system(.caption2, design: .rounded, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing),
+                            in: Capsule()
+                        )
+                }
+                Text(title)
+                    .font(.system(.body, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.primary)
+            }
+            Spacer()
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(price)
+                    .font(.system(.body, design: .rounded, weight: .bold))
+                    .foregroundStyle(.primary)
+                Text(detail)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 22))
+                .foregroundStyle(isSelected ? Color.primary : Color.secondary.opacity(0.3))
+                .padding(.leading, 8)
+        }
+        .padding(16)
+        .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(isSelected ? Color.primary : Color.clear, lineWidth: 2)
+        )
     }
 }
