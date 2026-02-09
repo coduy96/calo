@@ -3,41 +3,32 @@ import SwiftUI
 struct SpinWheelView: View {
     let onComplete: (Int) -> Void
 
-    @State private var rotation: Double = 0
-    @State private var hasSpun = false
-    @State private var showResult = false
-    @State private var resultDiscount = 0
+    @State private var scratchPoints: [CGPoint] = []
+    @State private var scratchedFraction: Double = 0
+    @State private var revealed = false
+    @State private var showButton = false
 
-    // 8 segments: [10%, 15%, 20%, 10%, 15%, 20%, 25%, 27%]
-    private let segments: [(Int, Color)] = [
-        (10, Color(hex: 0x1A1A1A)),        // near-black
-        (15, Color(hex: 0x8B2942)),         // dark rose
-        (20, Color(hex: 0x2A2A2A)),         // dark charcoal
-        (10, Color(hex: 0xA33350)),         // muted red
-        (15, Color(hex: 0x1A1A1A)),         // near-black
-        (20, Color(hex: 0x7A2038)),         // dark burgundy
-        (25, Color(hex: 0x2A2A2A)),         // dark charcoal
-        (27, Color(hex: 0xFF375F))          // app primary red (highlighted)
-    ]
-
-    private let segmentAngle: Double = 360.0 / 8.0 // 45 degrees each
+    private let cardWidth: CGFloat = 300
+    private let cardHeight: CGFloat = 200
+    private let scratchRadius: CGFloat = 30
+    private let revealThreshold: Double = 0.35
 
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
 
             VStack(spacing: 16) {
-                Text(showResult ? "Congratulations!" : "Spin for a\nspecial discount!")
+                Text(revealed ? "Congratulations!" : "Scratch to reveal your\nspecial discount!")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .multilineTextAlignment(.center)
 
-                if showResult {
-                    Text("You got **\(resultDiscount)% off** your yearly plan!")
+                if revealed {
+                    Text("You got **27% off** your yearly plan!")
                         .font(.system(.callout, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 } else {
-                    Text("Try your luck and save on Premium")
+                    Text("Drag your finger across the card")
                         .font(.system(.callout, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
@@ -46,42 +37,26 @@ struct SpinWheelView: View {
 
             Spacer()
 
-            // Pointer
-            Image(systemName: "arrowtriangle.down.fill")
-                .font(.system(size: 24))
-                .foregroundStyle(AppColors.calorie)
-                .padding(.bottom, 4)
-
-            // Wheel
+            // Scratch card
             ZStack {
-                ForEach(0..<segments.count, id: \.self) { index in
-                    WheelSegment(
-                        startAngle: Double(index) * segmentAngle,
-                        endAngle: Double(index + 1) * segmentAngle,
-                        color: segments[index].1,
-                        text: "\(segments[index].0)%",
-                        isHighlighted: segments[index].0 == 27
-                    )
+                // Hidden layer — the prize
+                prizeLayer
+
+                // Scratch overlay
+                if !revealed {
+                    scratchOverlay
+                        .transition(.opacity)
                 }
-
-                Circle()
-                    .fill(Color(.systemBackground))
-                    .frame(width: 50, height: 50)
-                    .shadow(color: .black.opacity(0.2), radius: 6)
-
-                Image(systemName: "gift.fill")
-                    .font(.system(size: 20))
-                    .foregroundStyle(AppColors.calorie)
             }
-            .frame(width: 280, height: 280)
-            .rotationEffect(.degrees(rotation))
-            .padding(.vertical, 20)
+            .frame(width: cardWidth, height: cardHeight)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .shadow(color: .black.opacity(0.3), radius: 12, y: 6)
 
             Spacer()
 
-            if showResult {
+            if showButton {
                 Button {
-                    onComplete(resultDiscount)
+                    onComplete(27)
                 } label: {
                     Text("Claim My Discount")
                         .font(.system(.body, design: .rounded, weight: .semibold))
@@ -92,102 +67,181 @@ struct SpinWheelView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 36)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             } else {
-                Button {
-                    spin()
-                } label: {
-                    Text("Spin the Wheel!")
-                        .font(.system(.body, design: .rounded, weight: .semibold))
-                        .foregroundStyle(Color(.systemBackground))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 54)
-                        .background(
-                            LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing),
-                            in: Capsule()
-                        )
-                }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 36)
-                .disabled(hasSpun)
+                Color.clear
+                    .frame(height: 54)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 36)
             }
         }
     }
 
-    private func spin() {
-        guard !hasSpun else { return }
-        hasSpun = true
+    // MARK: - Prize Layer
 
-        let fullRotations = 5.0 * 360.0
-        let targetOffset = 360.0 - (7.0 * segmentAngle + segmentAngle / 2.0)
-        let totalRotation = fullRotations + targetOffset
+    private var prizeLayer: some View {
+        ZStack {
+            LinearGradient(
+                colors: [
+                    Color(hex: 0x8B2942),
+                    Color(hex: 0xFF375F),
+                    Color(hex: 0x8B2942)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
 
-        withAnimation(.interpolatingSpring(stiffness: 15, damping: 12).speed(0.3)) {
-            rotation = totalRotation
-        }
+            // Confetti decorations
+            confettiDots
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
-            resultDiscount = 27
-            withAnimation(.spring(response: 0.5)) {
-                showResult = true
-            }
-        }
-    }
-}
-
-struct WheelSegment: View {
-    let startAngle: Double
-    let endAngle: Double
-    let color: Color
-    let text: String
-    let isHighlighted: Bool
-
-    var body: some View {
-        GeometryReader { geo in
-            let center = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
-            let radius = min(geo.size.width, geo.size.height) / 2
-
-            ZStack {
-                Path { path in
-                    path.move(to: center)
-                    path.addArc(
-                        center: center,
-                        radius: radius,
-                        startAngle: .degrees(startAngle - 90),
-                        endAngle: .degrees(endAngle - 90),
-                        clockwise: false
-                    )
-                    path.closeSubpath()
-                }
-                .fill(color)
-
-                Path { path in
-                    path.move(to: center)
-                    path.addArc(
-                        center: center,
-                        radius: radius,
-                        startAngle: .degrees(startAngle - 90),
-                        endAngle: .degrees(endAngle - 90),
-                        clockwise: false
-                    )
-                    path.closeSubpath()
-                }
-                .stroke(Color.black.opacity(0.3), lineWidth: 1.5)
-
-                // Text label — positioned radially, always right-side up
-                let midAngle = (startAngle + endAngle) / 2.0 - 90
-                let textRadius = radius * 0.65
-                let x = center.x + textRadius * cos(midAngle * .pi / 180)
-                let y = center.y + textRadius * sin(midAngle * .pi / 180)
-
-                // Normalize to 0-360 and flip text if it would be upside down
-                let normalized = ((midAngle.truncatingRemainder(dividingBy: 360)) + 360).truncatingRemainder(dividingBy: 360)
-                let textRotation = (normalized > 90 && normalized < 270) ? midAngle + 180 : midAngle
-
-                Text(text)
-                    .font(.system(size: isHighlighted ? 15 : 13, weight: .bold, design: .rounded))
+            VStack(spacing: 8) {
+                Text("27%")
+                    .font(.system(size: 64, weight: .black, design: .rounded))
                     .foregroundStyle(.white)
-                    .position(x: x, y: y)
-                    .rotationEffect(.degrees(textRotation))
+
+                Text("OFF")
+                    .font(.system(size: 32, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.9))
+                    .tracking(8)
+            }
+        }
+        .frame(width: cardWidth, height: cardHeight)
+    }
+
+    private var confettiDots: some View {
+        Canvas { context, size in
+            let dots: [(x: CGFloat, y: CGFloat, r: CGFloat, o: Double)] = [
+                (0.1, 0.15, 4, 0.4), (0.85, 0.2, 5, 0.35),
+                (0.15, 0.8, 3, 0.3), (0.9, 0.85, 4, 0.4),
+                (0.05, 0.5, 3, 0.25), (0.95, 0.5, 3, 0.25),
+                (0.3, 0.1, 3, 0.3), (0.7, 0.9, 4, 0.35),
+                (0.5, 0.05, 3, 0.2), (0.5, 0.95, 3, 0.2),
+                (0.2, 0.4, 2, 0.2), (0.8, 0.6, 2, 0.2),
+            ]
+            for dot in dots {
+                let rect = CGRect(
+                    x: size.width * dot.x - dot.r,
+                    y: size.height * dot.y - dot.r,
+                    width: dot.r * 2,
+                    height: dot.r * 2
+                )
+                context.fill(
+                    Circle().path(in: rect),
+                    with: .color(.white.opacity(dot.o))
+                )
+            }
+        }
+    }
+
+    // MARK: - Scratch Overlay
+
+    private var scratchOverlay: some View {
+        ZStack {
+            LinearGradient(
+                colors: [
+                    Color(hex: 0x2A2A2A),
+                    Color(hex: 0x1A1A1A),
+                    Color(hex: 0x333333),
+                    Color(hex: 0x1A1A1A)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            // Metallic shimmer lines
+            ForEach(0..<5, id: \.self) { i in
+                Rectangle()
+                    .fill(.white.opacity(0.03))
+                    .frame(height: 1)
+                    .rotationEffect(.degrees(-30))
+                    .offset(x: CGFloat(i) * 60 - 120)
+            }
+
+            VStack(spacing: 12) {
+                Image(systemName: "hand.draw.fill")
+                    .font(.system(size: 28))
+                    .foregroundStyle(.white.opacity(0.6))
+
+                Text("SCRATCH HERE")
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.7))
+                    .tracking(3)
+            }
+        }
+        .frame(width: cardWidth, height: cardHeight)
+        .mask(
+            Canvas { context, size in
+                // Fill entire rect first
+                context.fill(
+                    Rectangle().path(in: CGRect(origin: .zero, size: size)),
+                    with: .color(.white)
+                )
+                // Cut out scratched areas with clear blend mode
+                context.blendMode = .clear
+                for point in scratchPoints {
+                    let rect = CGRect(
+                        x: point.x - scratchRadius,
+                        y: point.y - scratchRadius,
+                        width: scratchRadius * 2,
+                        height: scratchRadius * 2
+                    )
+                    context.fill(
+                        Circle().path(in: rect),
+                        with: .color(.white)
+                    )
+                }
+            }
+            .frame(width: cardWidth, height: cardHeight)
+        )
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { value in
+                    let point = value.location
+                    // Only add points within card bounds
+                    guard point.x >= 0, point.x <= cardWidth,
+                          point.y >= 0, point.y <= cardHeight else { return }
+                    scratchPoints.append(point)
+                    updateScratchFraction()
+                }
+        )
+    }
+
+    // MARK: - Logic
+
+    private func updateScratchFraction() {
+        // Estimate scratched area using a grid
+        let gridSize: CGFloat = 10
+        let cols = Int(cardWidth / gridSize)
+        let rows = Int(cardHeight / gridSize)
+        let totalCells = cols * rows
+        var scratchedCells = 0
+
+        for row in 0..<rows {
+            for col in 0..<cols {
+                let cellCenter = CGPoint(
+                    x: CGFloat(col) * gridSize + gridSize / 2,
+                    y: CGFloat(row) * gridSize + gridSize / 2
+                )
+                for sp in scratchPoints {
+                    let dx = cellCenter.x - sp.x
+                    let dy = cellCenter.y - sp.y
+                    if dx * dx + dy * dy <= scratchRadius * scratchRadius {
+                        scratchedCells += 1
+                        break
+                    }
+                }
+            }
+        }
+
+        scratchedFraction = Double(scratchedCells) / Double(totalCells)
+
+        if scratchedFraction >= revealThreshold && !revealed {
+            withAnimation(.easeOut(duration: 0.5)) {
+                revealed = true
+            }
+            withAnimation(.spring(response: 0.5).delay(0.3)) {
+                showButton = true
             }
         }
     }
