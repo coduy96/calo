@@ -1113,6 +1113,28 @@ struct ProfileView: View {
                         }
                         .buttonStyle(.plain)
 
+                        // Privacy Policy
+                        Link(destination: URL(string: "https://fud-ai.vercel.app/privacy.html")!) {
+                            Label {
+                                Text("Privacy Policy")
+                            } icon: {
+                                Image(systemName: "lock.shield.fill")
+                                    .foregroundStyle(AppColors.calorie)
+                            }
+                        }
+                        .buttonStyle(.plain)
+
+                        // Terms of Service
+                        Link(destination: URL(string: "https://fud-ai.vercel.app/terms.html")!) {
+                            Label {
+                                Text("Terms of Service")
+                            } icon: {
+                                Image(systemName: "doc.text.fill")
+                                    .foregroundStyle(AppColors.calorie)
+                            }
+                        }
+                        .buttonStyle(.plain)
+
                         // Sign Out
                         Button {
                             isSigningOut = true
