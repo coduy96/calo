@@ -299,22 +299,34 @@ body:hover .cursor-glow { opacity: 1; }
   .nav-links {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(5,5,5,0.97);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    width: 100vw;
+    height: 100vh;
+    background: rgba(5,5,5,0.98);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
     flex-direction: column;
     justify-content: center;
-    gap: 32px;
+    align-items: center;
+    gap: 28px;
+    z-index: 1000;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.4s;
   }
-  .nav-links a { font-size: 1.3rem; }
+  .nav-links a {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    padding: 8px 0;
+  }
+  .nav-links a:hover,
+  .nav-links a.active { color: var(--text-primary); }
   .nav-links a::after { display: none; }
   .nav-toggle:checked ~ .nav-links {
     opacity: 1;
     pointer-events: auto;
   }
+  .nav-brand { z-index: 1001; }
+  .hamburger { z-index: 1001; }
 }
 
 /* ========== HERO ========== */
