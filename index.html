@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fud AI — Eat Smart, Live Better</title>
+<meta name="description" content="AI-powered calorie and nutrition tracker for iOS. Snap a photo, get instant nutrition data. No barcode databases, no manual searching.">
+<link rel="icon" href="fud ai/calorie logo transparent.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ========== RESET & DESIGN SYSTEM ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+:root {
+  --bg-primary: #0a0a0a;
+  --bg-card: #141414;
+  --bg-card-hover: #1a1a1a;
+  --bg-nav: rgba(10,10,10,0.85);
+  --text-primary: #ffffff;
+  --text-secondary: #999999;
+  --text-muted: #666666;
+  --border: #222222;
+  --cal-from: #FF6B35; --cal-to: #FF2E2E;
+  --pro-from: #FF6B9D; --pro-to: #C850C0;
+  --carb-from: #36D1DC; --carb-to: #5B86E5;
+  --fat-from: #F7B733; --fat-to: #FC4A1A;
+}
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+ul { list-style: none; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+section { padding: 100px 0; }
+
+h1 { font-size: 4rem; font-weight: 700; line-height: 1.1; }
+h2 { font-size: 2.5rem; font-weight: 700; line-height: 1.2; margin-bottom: 16px; }
+h3 { font-size: 1.25rem; font-weight: 600; line-height: 1.3; }
+p { color: var(--text-secondary); }
+
+.section-header { text-align: center; margin-bottom: 60px; }
+.section-header p { max-width: 600px; margin: 12px auto 0; font-size: 1.1rem; }
+.gradient-underline {
+  display: inline-block;
+  position: relative;
+}
+.gradient-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(135deg, var(--cal-from), var(--cal-to));
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, var(--cal-from), var(--cal-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Reveal animation */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ========== NAVIGATION ========== */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 16px 0;
+  transition: background 0.3s, box-shadow 0.3s, padding 0.3s;
+}
+.nav.scrolled {
+  background: var(--bg-nav);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 1px 0 var(--border);
+  padding: 10px 0;
+}
+.nav .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  z-index: 1001;
+}
+.nav-brand img {
+  width: 36px;
+  height: 36px;
+}
+.nav-links {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+.nav-links a {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+  font-weight: 500;
+}
+.nav-links a:hover,
+.nav-links a.active { color: var(--text-primary); }
+
+/* Hamburger */
+.nav-toggle { display: none; }
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  z-index: 1001;
+  padding: 4px;
+}
+.hamburger span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: transform 0.3s, opacity 0.3s;
+}
+.nav-toggle:checked ~ .hamburger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle:checked ~ .hamburger span:nth-child(2) { opacity: 0; }
+.nav-toggle:checked ~ .hamburger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 768px) {
+  .hamburger { display: flex; }
+  .nav-links {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10,10,10,0.98);
+    flex-direction: column;
+    justify-content: center;
+    gap: 28px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .nav-links a { font-size: 1.25rem; }
+  .nav-toggle:checked ~ .nav-links {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* ========== HERO ========== */
+.hero {
+  padding: 140px 0 100px;
+  overflow: hidden;
+}
+.hero .container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+.hero-content {
+  animation: fadeInUp 0.8s ease forwards;
+}
+.hero-icon {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 24px;
+  border-radius: 18px;
+}
+.hero h1 {
+  margin-bottom: 16px;
+}
+.hero-tagline {
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+.hero-description {
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+  max-width: 480px;
+}
+.app-store-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  color: #000;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.app-store-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(255,255,255,0.1);
+}
+.app-store-btn svg { width: 24px; height: 24px; }
+
+/* Phone mockup */
+.hero-phone {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  animation: fadeInUp 0.8s 0.2s ease both;
+}
+.hero-phone::before {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,107,53,0.15), transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  border-radius: 50%;
+  z-index: 0;
+}
+.phone-frame {
+  position: relative;
+  width: 270px;
+  border: 3px solid #333;
+  border-radius: 44px;
+  padding: 12px;
+  background: #000;
+  z-index: 1;
+}
+.phone-frame::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 25px;
+  background: #000;
+  border-radius: 20px;
+  z-index: 10;
+  border: 2px solid #222;
+}
+.phone-screen {
+  border-radius: 34px;
+  overflow: hidden;
+}
+.phone-screen img {
+  width: 100%;
+  display: block;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .hero { padding: 120px 0 60px; }
+  .hero .container {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .hero h1 { font-size: 2.5rem; }
+  .hero-tagline { font-size: 1.2rem; }
+  .hero-description { margin: 0 auto 32px; }
+  .hero-phone { order: -1; margin-bottom: 20px; }
+  .phone-frame { width: 220px; }
+}
+
+/* ========== FEATURES ========== */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+.feature-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 24px;
+  transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+}
+.feature-card:hover {
+  transform: translateY(-4px);
+  background: var(--bg-card-hover);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+.feature-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  font-size: 1.3rem;
+}
+.feature-card h3 { margin-bottom: 12px; color: var(--text-primary); }
+.feature-card ul { display: flex; flex-direction: column; gap: 6px; }
+.feature-card li {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  padding-left: 16px;
+  position: relative;
+}
+.feature-card li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+@media (max-width: 1024px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .features-grid { grid-template-columns: 1fr; } }
+
+/* ========== HOW IT WORKS ========== */
+.steps {
+  display: flex;
+  gap: 24px;
+  position: relative;
+  justify-content: space-between;
+}
+.steps::before {
+  content: '';
+  position: absolute;
+  top: 36px;
+  left: 60px;
+  right: 60px;
+  height: 2px;
+  background: var(--border);
+}
+.step {
+  flex: 1;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+.step-number {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 auto 16px;
+  border: 2px solid var(--border);
+  background: var(--bg-primary);
+}
+.step h3 { margin-bottom: 8px; color: var(--text-primary); }
+.step p { font-size: 0.875rem; max-width: 200px; margin: 0 auto; }
+
+@media (max-width: 768px) {
+  .steps {
+    flex-direction: column;
+    gap: 32px;
+    align-items: flex-start;
+    padding-left: 48px;
+  }
+  .steps::before {
+    top: 0; bottom: 0;
+    left: 35px;
+    right: auto;
+    width: 2px;
+    height: auto;
+  }
+  .step {
+    text-align: left;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .step-number {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    margin: 0;
+    position: absolute;
+    left: -48px;
+  }
+  .step-text { flex: 1; }
+  .step p { max-width: none; }
+}
+
+/* ========== PRICING ========== */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.pricing-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 36px 28px;
+  text-align: center;
+  transition: transform 0.3s;
+}
+.pricing-card:hover { transform: translateY(-4px); }
+.pricing-card.featured {
+  border: 2px solid transparent;
+  background: linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+              linear-gradient(135deg, var(--cal-from), var(--pro-to)) border-box;
+  position: relative;
+}
+.best-value {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--cal-from), var(--cal-to));
+  color: #fff;
+  padding: 4px 20px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: pulse-glow 2s infinite;
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(255,107,53,0.4); }
+  50% { box-shadow: 0 0 20px rgba(255,107,53,0.6); }
+}
+.pricing-card h3 {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+.price {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.price-sub {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+.scan-limit {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: inline-block;
+}
+.pricing-features {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.pricing-features li {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  padding-left: 24px;
+  position: relative;
+}
+.pricing-features li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #4ade80;
+  font-weight: 700;
+}
+.pricing-cta {
+  display: block;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  background: transparent;
+  transition: background 0.2s, border-color 0.2s;
+  cursor: pointer;
+  width: 100%;
+}
+.pricing-cta:hover { background: var(--bg-card-hover); border-color: var(--text-muted); }
+.pricing-card.featured .pricing-cta {
+  background: linear-gradient(135deg, var(--cal-from), var(--cal-to));
+  border: none;
+  color: #fff;
+}
+.pricing-card.featured .pricing-cta:hover { opacity: 0.9; }
+.pricing-footnote {
+  text-align: center;
+  margin-top: 32px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+  .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+  .pricing-card.featured { order: -1; }
+}
+
+/* ========== SCREENSHOTS ========== */
+.screenshots-scroll {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 20px 0 40px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.screenshots-scroll::-webkit-scrollbar { display: none; }
+.screenshot-item {
+  flex-shrink: 0;
+  scroll-snap-align: center;
+}
+.screenshot-item .phone-frame {
+  width: 240px;
+}
+.screenshots-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.screenshots-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: background 0.3s;
+}
+.screenshots-dots span.active { background: var(--cal-from); }
+
+/* ========== LEGAL SECTIONS ========== */
+.legal-section {
+  padding: 80px 0;
+}
+.legal-content {
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 48px;
+}
+.legal-content h2 { font-size: 2rem; margin-bottom: 4px; }
+.legal-date { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 32px; display: block; }
+.legal-content h3 {
+  color: var(--text-primary);
+  font-size: 1.15rem;
+  margin: 32px 0 12px;
+}
+.legal-content h3:first-of-type { margin-top: 0; }
+.legal-content p {
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+.legal-content ul {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.legal-content li {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  padding-left: 20px;
+  position: relative;
+  line-height: 1.6;
+}
+.legal-content li::before {
+  content: '•';
+  position: absolute;
+  left: 4px;
+  color: var(--text-muted);
+}
+.legal-content strong { color: var(--text-primary); font-weight: 600; }
+
+.legal-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 0.875rem;
+}
+.legal-table th, .legal-table td {
+  text-align: left;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+}
+.legal-table th {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.legal-table td { color: var(--text-secondary); }
+
+@media (max-width: 480px) {
+  .legal-content { padding: 28px 20px; }
+  .legal-table { font-size: 0.8rem; }
+  .legal-table th, .legal-table td { padding: 8px 10px; }
+}
+
+/* ========== FOOTER ========== */
+.footer {
+  background: #080808;
+  padding: 60px 0 32px;
+  border-top: 1px solid var(--border);
+}
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.footer-brand img { width: 32px; height: 32px; }
+.footer-links {
+  display: flex;
+  gap: 28px;
+}
+.footer-links a {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--text-primary); }
+.footer-contact a {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+.footer-contact a:hover { color: var(--text-primary); }
+.footer-bottom {
+  text-align: center;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .footer-links { flex-wrap: wrap; justify-content: center; }
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 480px) {
+  h1 { font-size: 2.5rem; }
+  h2 { font-size: 1.75rem; }
+  section { padding: 60px 0; }
+  .section-header { margin-bottom: 40px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ========== NAVIGATION ========== -->
+<nav class="nav" id="nav">
+  <div class="container">
+    <a href="#" class="nav-brand">
+      <img src="fud ai/calorie logo transparent.png" alt="Fud AI Logo">
+      <span>Fud AI</span>
+    </a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true">
+    <label for="nav-toggle" class="hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </label>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#screenshots">Screenshots</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#terms">Terms</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ========== HERO ========== -->
+<section class="hero" id="hero">
+  <div class="container">
+    <div class="hero-content">
+      <img src="fud ai/calorie logo transparent.png" alt="Fud AI App Icon" class="hero-icon">
+      <h1><span class="gradient-text">Fud AI</span></h1>
+      <p class="hero-tagline">Eat Smart, Live Better</p>
+      <p class="hero-description">Just snap, track, and thrive. Your nutrition, simplified. Fud AI is an AI-powered calorie and nutrition tracker for iOS. Snap a photo of your food or nutrition label, and AI instantly identifies the item and estimates its full nutritional breakdown — calories, macros, and 9 micronutrients.</p>
+      <a href="#" class="app-store-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        <span>Download on the App Store</span>
+      </a>
+    </div>
+    <div class="hero-phone">
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <img src="fud ai/app screenshot/home dark.PNG" alt="Fud AI Dashboard">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FEATURES ========== -->
+<section id="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2><span class="gradient-underline">Features</span></h2>
+      <p>Everything you need to take control of your nutrition</p>
+    </div>
+    <div class="features-grid">
+
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: linear-gradient(135deg, var(--cal-from), var(--cal-to));">
+          <span>📸</span>
+        </div>
+        <h3>AI Food Recognition</h3>
+        <ul>
+          <li>Snap a photo of any meal for instant estimates</li>
+          <li>Scan nutrition labels for precise data</li>
+          <li>Analyze photos from your camera roll</li>
+          <li>Type food name and quantity for AI lookup</li>
+        </ul>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: linear-gradient(135deg, var(--pro-from), var(--pro-to));">
+          <span>🔬</span>
+        </div>
+        <h3>Nutrition Tracking</h3>
+        <ul>
+          <li>Track 13 nutrients per entry</li>
+          <li>Adjustable serving sizes with live recalculation</li>
+          <li>Organize by meal type</li>
+          <li>Browse past days with date selector</li>
+        </ul>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: linear-gradient(135deg, var(--carb-from), var(--carb-to));">
+          <span>📊</span>
+        </div>
+        <h3>Smart Dashboard</h3>
+        <ul>
+          <li>Daily calorie display with progress bar</li>
+          <li>Macro cards with gradient visuals</li>
+          <li>Detailed nutrition breakdown view</li>
+          <li>Food log grouped by meal with swipe-to-delete</li>
+        </ul>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: linear-gradient(135deg, var(--fat-from), var(--fat-to));">
+          <span>📈</span>
+        </div>
+        <h3>Progress & Analytics</h3>
+        <ul>
+          <li>Weight chart with trend visualization</li>
+          <li>Calorie trend chart: intake vs. goal</li>
+          <li>Macro averages over selected time range</li>
+          <li>Streak tracking: current, best, days on target</li>
+        </ul>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: linear-gradient(135deg, var(--cal-from), var(--cal-to));">
+          <span>🎯</span>
+        </div>
+        <h3>Personalized Plans</h3>
+        <ul>
+          <li>Onboarding collects your body stats and goals</li>
+          <li>BMR/TDEE calculated automatically</li>
+          <li>Auto daily targets for calories and macros</li>
+          <li>Fully customizable — override any value</li>
+        </ul>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: linear-gradient(135deg, var(--pro-from), var(--pro-to));">
+          <span>❤️</span>
+        </div>
+        <h3>Apple Health</h3>
+        <ul>
+          <li>Writes all 12 nutrition data types</li>
+          <li>Reads weight, height, body fat, and more</li>
+          <li>Bidirectional sync with background observers</li>
+          <li>Per-entry tracking with UUID for accuracy</li>
+        </ul>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: linear-gradient(135deg, var(--carb-from), var(--carb-to));">
+          <span>☁️</span>
+        </div>
+        <h3>iCloud Sync</h3>
+        <ul>
+          <li>Entries sync to your private iCloud database</li>
+          <li>Restore all data on a new device</li>
+          <li>Automatic sync on every add and delete</li>
+          <li>Sign in with Apple for secure auth</li>
+        </ul>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: linear-gradient(135deg, var(--fat-from), var(--fat-to));">
+          <span>🔔</span>
+        </div>
+        <h3>Smart Notifications</h3>
+        <ul>
+          <li>Customizable meal reminders</li>
+          <li>Streak protection alerts</li>
+          <li>Daily summary: consumed vs. remaining</li>
+          <li>Never miss logging a meal</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ========== HOW IT WORKS ========== -->
+<section id="how-it-works">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2><span class="gradient-underline">How It Works</span></h2>
+      <p>From photo to nutrition log in seconds</p>
+    </div>
+    <div class="steps reveal">
+
+      <div class="step">
+        <div class="step-number" style="background: linear-gradient(135deg, var(--cal-from), var(--cal-to)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">1</div>
+        <div class="step-text">
+          <h3>Capture</h3>
+          <p>Snap a photo, scan a label, pick from library, or type food details</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-number" style="background: linear-gradient(135deg, var(--pro-from), var(--pro-to)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">2</div>
+        <div class="step-text">
+          <h3>Analyze</h3>
+          <p>AI identifies the food and estimates full nutrition</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-number" style="background: linear-gradient(135deg, var(--carb-from), var(--carb-to)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">3</div>
+        <div class="step-text">
+          <h3>Review</h3>
+          <p>Edit the name, adjust serving size, and confirm meal type</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-number" style="background: linear-gradient(135deg, var(--fat-from), var(--fat-to)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">4</div>
+        <div class="step-text">
+          <h3>Log</h3>
+          <p>Saved locally, synced to iCloud, written to Apple Health</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-number" style="background: linear-gradient(135deg, var(--cal-from), var(--pro-to)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">5</div>
+        <div class="step-text">
+          <h3>Track</h3>
+          <p>Dashboard and progress charts update in real time</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ========== PRICING ========== -->
+<section id="pricing">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2><span class="gradient-underline">Simple Pricing</span></h2>
+      <p>Start free, upgrade when you're ready</p>
+    </div>
+    <div class="pricing-grid reveal">
+
+      <div class="pricing-card">
+        <h3>Free</h3>
+        <div class="price">$0</div>
+        <div class="price-sub">Forever free</div>
+        <div class="scan-limit">3 AI scans total</div>
+        <ul class="pricing-features">
+          <li>AI food recognition</li>
+          <li>13-nutrient tracking</li>
+          <li>Smart dashboard</li>
+          <li>Apple Health integration</li>
+        </ul>
+        <a href="#" class="pricing-cta">Get Started</a>
+      </div>
+
+      <div class="pricing-card">
+        <h3>Monthly</h3>
+        <div class="price">$7.99</div>
+        <div class="price-sub">per month</div>
+        <div class="scan-limit">25 AI scans / day</div>
+        <ul class="pricing-features">
+          <li>Everything in Free</li>
+          <li>Unlimited daily scans</li>
+          <li>Progress & analytics</li>
+          <li>iCloud sync</li>
+          <li>Smart notifications</li>
+        </ul>
+        <a href="#" class="pricing-cta">Subscribe</a>
+      </div>
+
+      <div class="pricing-card featured">
+        <div class="best-value">Best Value</div>
+        <h3>Yearly</h3>
+        <div class="price">$29.99</div>
+        <div class="price-sub">per year — $2.50/mo</div>
+        <div class="scan-limit">25 AI scans / day</div>
+        <ul class="pricing-features">
+          <li>Everything in Free</li>
+          <li>Unlimited daily scans</li>
+          <li>Progress & analytics</li>
+          <li>iCloud sync</li>
+          <li>Smart notifications</li>
+          <li>Save over 68% vs. monthly</li>
+        </ul>
+        <a href="#" class="pricing-cta">Subscribe & Save</a>
+      </div>
+
+    </div>
+    <p class="pricing-footnote">Auto-renewable subscriptions via Apple App Store. Cancel anytime.</p>
+  </div>
+</section>
+
+<!-- ========== SCREENSHOTS ========== -->
+<section id="screenshots">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2><span class="gradient-underline">See It in Action</span></h2>
+      <p>A beautiful, intuitive experience designed for iOS</p>
+    </div>
+  </div>
+  <div class="screenshots-scroll reveal">
+    <div style="min-width: calc((100vw - 1056px) / 2);"></div>
+
+    <div class="screenshot-item">
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <img src="fud ai/app screenshot/home dark.PNG" alt="Dashboard - Dark Mode">
+        </div>
+      </div>
+    </div>
+
+    <div class="screenshot-item">
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <img src="fud ai/app screenshot/food 1.PNG" alt="Camera Capture View">
+        </div>
+      </div>
+    </div>
+
+    <div class="screenshot-item">
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <img src="fud ai/app screenshot/food 2 dark.PNG" alt="Review Food - Dark Mode">
+        </div>
+      </div>
+    </div>
+
+    <div class="screenshot-item">
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <img src="fud ai/app screenshot/list dark.PNG" alt="Food List - Dark Mode">
+        </div>
+      </div>
+    </div>
+
+    <div style="min-width: calc((100vw - 1056px) / 2);"></div>
+  </div>
+  <div class="screenshots-dots">
+    <span class="active"></span>
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</section>
+
+<!-- ========== PRIVACY POLICY ========== -->
+<section id="privacy" class="legal-section">
+  <div class="container">
+    <div class="legal-content reveal">
+      <h2>Privacy Policy</h2>
+      <span class="legal-date">Last updated: February 9, 2026</span>
+
+      <p>Fud AI ("we", "our", "the app") is developed by Apoorv Darshan. This privacy policy explains how your information is collected, used, and protected when you use Fud AI.</p>
+
+      <h3>Information We Collect</h3>
+      <p><strong>Information you provide directly:</strong></p>
+      <ul>
+        <li>Name, gender, date of birth, height, weight, and body fat percentage (entered during onboarding)</li>
+        <li>Food photos taken within the app</li>
+        <li>Food entries and nutrition data you log</li>
+        <li>Weight log entries</li>
+        <li>Dietary preferences and fitness goals</li>
+        <li>Apple ID credentials (via Sign in with Apple)</li>
+      </ul>
+      <p><strong>Information collected automatically:</strong></p>
+      <ul>
+        <li>Daily scan usage counts (for subscription limit enforcement)</li>
+        <li>App preference settings (appearance, units, notification times)</li>
+      </ul>
+
+      <h3>How We Use Your Information</h3>
+      <ul>
+        <li><strong>AI Food Analysis:</strong> Food photos and text descriptions are sent to the Google Gemini API for nutritional analysis. Photos are processed in real time and are not stored on Google's servers beyond the API request.</li>
+        <li><strong>Local Storage:</strong> All food entries, weight entries, user profile data, and food photos are stored locally on your device using UserDefaults.</li>
+        <li><strong>iCloud Sync:</strong> If you sign in with Apple, your food entries (excluding photos), weight entries, and user profile are synced to your private iCloud database via CloudKit. This data is only accessible to you through your Apple ID.</li>
+        <li><strong>Apple Health:</strong> If you enable Apple Health integration, the app writes nutrition data (12 types) and body measurements to HealthKit, and reads body measurements, date of birth, and biological sex from HealthKit.</li>
+        <li><strong>Subscription Management:</strong> Subscription status is managed entirely by Apple through StoreKit. We do not process or store payment information.</li>
+      </ul>
+
+      <h3>Information We Do NOT Collect</h3>
+      <ul>
+        <li>We do <strong>not</strong> use any third-party analytics services (no Firebase Analytics, Mixpanel, Amplitude, or similar)</li>
+        <li>We do <strong>not</strong> use any crash reporting services</li>
+        <li>We do <strong>not</strong> include any advertising SDKs or ad tracking</li>
+        <li>We do <strong>not</strong> track your behavior, location, or browsing activity</li>
+        <li>We do <strong>not</strong> sell, share, or transfer your personal data to any third parties</li>
+        <li>We do <strong>not</strong> operate any servers — all data is stored on your device or in your private iCloud account</li>
+      </ul>
+
+      <h3>Data Storage & Security</h3>
+      <table class="legal-table">
+        <thead>
+          <tr><th>Data</th><th>Storage Location</th><th>Accessible By</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Food entries & photos</td><td>Device (UserDefaults)</td><td>You only</td></tr>
+          <tr><td>Food entries (no photos)</td><td>Your private iCloud database</td><td>You only (via Apple ID)</td></tr>
+          <tr><td>Weight entries</td><td>Device + your private iCloud</td><td>You only</td></tr>
+          <tr><td>User profile</td><td>Device + your private iCloud</td><td>You only</td></tr>
+          <tr><td>Food photos (for AI)</td><td>Sent to Google Gemini API</td><td>Processed in transit, not stored</td></tr>
+          <tr><td>Subscription status</td><td>Apple App Store</td><td>You + Apple</td></tr>
+          <tr><td>Health data</td><td>Apple HealthKit</td><td>You + apps you authorize</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Data Retention</h3>
+      <ul>
+        <li>All local data remains on your device until you delete it or uninstall the app</li>
+        <li>iCloud data remains in your private CloudKit database until you delete it through the app or through iCloud settings</li>
+        <li>You can delete all data (local and cloud) at any time using the "Delete All Data" option in Profile settings</li>
+      </ul>
+
+      <h3>Children's Privacy</h3>
+      <p>Fud AI is not directed at children under the age of 13. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has provided us with personal data, please contact us so we can delete it.</p>
+
+      <h3>Changes to This Policy</h3>
+      <p>We may update this privacy policy from time to time. Changes will be reflected in the "Last updated" date above. Continued use of the app after changes constitutes acceptance of the updated policy.</p>
+
+      <h3>Contact</h3>
+      <p>For privacy questions or data deletion requests, contact: <strong><a href="mailto:info.fudai@gmail.com">info.fudai@gmail.com</a></strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== TERMS OF SERVICE ========== -->
+<section id="terms" class="legal-section">
+  <div class="container">
+    <div class="legal-content reveal">
+      <h2>Terms of Service</h2>
+      <span class="legal-date">Last updated: February 9, 2026</span>
+
+      <p>By downloading, installing, or using Fud AI ("the app"), you agree to these Terms of Service. If you do not agree, do not use the app.</p>
+
+      <h3>1. Description of Service</h3>
+      <p>Fud AI is a nutrition tracking application that uses artificial intelligence to estimate the nutritional content of food from photos and text descriptions. The app provides tools for logging meals, tracking weight, monitoring nutritional intake, and viewing educational content about nutrition and health.</p>
+
+      <h3>2. AI-Powered Estimates</h3>
+      <p>Nutritional information provided by Fud AI is generated by AI (Google Gemini 2.5 Flash) and is <strong>estimated, not exact</strong>. These estimates should be used as general guidance only. Fud AI is not a medical device and does not provide medical advice. Always consult a healthcare professional or registered dietitian for dietary decisions, especially if you have medical conditions, allergies, or specific dietary requirements.</p>
+
+      <h3>3. Account & Authentication</h3>
+      <ul>
+        <li>You may sign in using Sign in with Apple to enable cloud sync and subscription features</li>
+        <li>You are responsible for maintaining the security of your Apple ID</li>
+        <li>You may delete your account and all associated data at any time through the app's Profile settings</li>
+      </ul>
+
+      <h3>4. Subscriptions & Payments</h3>
+      <ul>
+        <li>Fud AI offers a free tier (3 AI scans) and premium subscription plans (Monthly and Yearly)</li>
+        <li>Subscriptions are auto-renewable and managed through the Apple App Store</li>
+        <li>Payment is charged to your Apple ID account at confirmation of purchase</li>
+        <li>Subscriptions automatically renew unless canceled at least 24 hours before the end of the current billing period</li>
+        <li>You can manage and cancel subscriptions in your iOS Settings > Apple ID > Subscriptions</li>
+        <li>No refunds are provided for partial subscription periods; refund requests must be directed to Apple</li>
+      </ul>
+
+      <h3>5. Acceptable Use</h3>
+      <p>You agree not to:</p>
+      <ul>
+        <li>Use the app for any unlawful purpose</li>
+        <li>Attempt to reverse-engineer, decompile, or disassemble the app</li>
+        <li>Interfere with or disrupt the app's functionality</li>
+        <li>Use the app to collect data about other users</li>
+        <li>Redistribute, sublicense, or resell the app or its content</li>
+      </ul>
+
+      <h3>6. Intellectual Property</h3>
+      <p>All content, design, code, AI integrations, educational articles, and branding in Fud AI are the intellectual property of Apoorv Darshan and are protected by copyright law. You may not reproduce, distribute, or create derivative works from any part of the app without written permission.</p>
+
+      <h3>7. Health Disclaimer</h3>
+      <p>Fud AI is a <strong>nutrition tracking tool, not a medical application</strong>. The app does not diagnose, treat, cure, or prevent any disease or medical condition. Nutritional estimates are AI-generated approximations and may not be accurate for all foods. Users with medical conditions, eating disorders, allergies, or specific dietary needs should consult qualified healthcare professionals before relying on the app's data. The minimum calorie floor of 1,200 kcal/day is a general safety guideline, not medical advice.</p>
+
+      <h3>8. Apple Health Integration</h3>
+      <p>By enabling Apple Health integration, you authorize the app to read and write health data as described in our Privacy Policy. You can revoke this access at any time through iOS Settings > Health > Data Access.</p>
+
+      <h3>9. Limitation of Liability</h3>
+      <p>To the maximum extent permitted by law, Fud AI and its developer shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of data, profits, or goodwill, arising from your use of the app. The app is provided "as is" without warranties of any kind.</p>
+
+      <h3>10. Availability</h3>
+      <p>We strive to keep Fud AI available at all times, but we do not guarantee uninterrupted access. The app requires an internet connection for AI food analysis and iCloud sync. Offline functionality is limited to viewing previously logged data.</p>
+
+      <h3>11. Modifications</h3>
+      <p>We reserve the right to modify these terms at any time. Continued use of the app after changes constitutes acceptance of the updated terms. Material changes will be communicated through an app update.</p>
+
+      <h3>12. Governing Law</h3>
+      <p>These terms are governed by and construed in accordance with the laws of the United States. Any disputes shall be resolved in the courts of competent jurisdiction.</p>
+
+      <h3>13. Contact</h3>
+      <p>For questions about these terms, contact: <strong><a href="mailto:info.fudai@gmail.com">info.fudai@gmail.com</a></strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FOOTER ========== -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <img src="fud ai/calorie logo transparent.png" alt="Fud AI">
+        <span>Fud AI</span>
+      </div>
+      <div class="footer-links">
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#privacy">Privacy Policy</a>
+        <a href="#terms">Terms of Service</a>
+      </div>
+      <div class="footer-contact">
+        <a href="mailto:info.fudai@gmail.com">info.fudai@gmail.com</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; 2026 Apoorv Darshan. All Rights Reserved.
+    </div>
+  </div>
+</footer>
+
+<!-- ========== JAVASCRIPT ========== -->
+<script>
+// Nav scroll effect
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 40);
+});
+
+// Scroll reveal
+const revealEls = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+revealEls.forEach(el => revealObserver.observe(el));
+
+// Close mobile menu on link click
+const navToggle = document.getElementById('nav-toggle');
+document.querySelectorAll('.nav-links a').forEach(link => {
+  link.addEventListener('click', () => { navToggle.checked = false; });
+});
+
+// Active nav link highlighting
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-links a');
+const sectionObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      navLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { threshold: 0.3, rootMargin: '-80px 0px 0px 0px' });
+sections.forEach(s => sectionObserver.observe(s));
+
+// Screenshot dots
+const scrollContainer = document.querySelector('.screenshots-scroll');
+const dots = document.querySelectorAll('.screenshots-dots span');
+if (scrollContainer && dots.length) {
+  scrollContainer.addEventListener('scroll', () => {
+    const items = scrollContainer.querySelectorAll('.screenshot-item');
+    const center = scrollContainer.scrollLeft + scrollContainer.clientWidth / 2;
+    let closestIdx = 0;
+    let closestDist = Infinity;
+    items.forEach((item, i) => {
+      const itemCenter = item.offsetLeft + item.offsetWidth / 2;
+      const dist = Math.abs(center - itemCenter);
+      if (dist < closestDist) { closestDist = dist; closestIdx = i; }
+    });
+    dots.forEach((d, i) => d.classList.toggle('active', i === closestIdx));
+  });
+}
+</script>
+</body>
+</html>
