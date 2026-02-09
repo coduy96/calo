@@ -1,4 +1,4 @@
-# Fud AI — Marketing Website
+# Fud AI — Calorie Tracker
 
 **Live:** [https://fud-ai.vercel.app/](https://fud-ai.vercel.app/)
 
