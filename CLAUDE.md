@@ -41,6 +41,7 @@ SwiftUI iOS app (Swift 5, iOS 26.2) with zero external dependencies. Uses Gemini
 - **`PBXFileSystemSynchronizedRootGroup`** — Xcode auto-discovers new files. Never edit pbxproj manually.
 - **`GeminiService`** — pure struct with static async methods, no state.
 - **Secrets** — `Secrets.plist` (gitignored) loaded via `APIKeyManager`. Contains `GEMINI_API_KEY`.
+- **StoreKit testing** — `Products.storekit` configures local sandbox for Debug builds. Production/Archive builds automatically use App Store Connect. No code changes needed between environments.
 
 ### Data Flow
 
@@ -63,15 +64,15 @@ User captures photo → `GeminiService.autoAnalyze(image:)` → JSON response pa
 | Directory | Purpose |
 |-----------|---------|
 | `Models/` | `UserProfile` (BMR/TDEE/macros), `FoodEntry` (logged food item), `Article` (learn content), `WeightEntry` |
-| `Views/` | `OnboardingView` (24-step flow), `HomeComponents`, `FoodResultView`, `LearnView`, `ProgressComponents`, `Theme` (AppColors) |
+| `Views/` | `OnboardingView` (23-step flow), `HomeComponents`, `FoodResultView`, `LearnView`, `ProgressComponents`, `Theme` (AppColors) |
 | `Services/` | `GeminiService` (Gemini API), `APIKeyManager`, `AuthManager` (Apple Sign-In), `CloudKitService` (iCloud sync) |
 | `Stores/` | `FoodStore` (food entries), `WeightStore` (weight tracking), `NotificationManager` (local notifications), `HealthKitManager` (Apple Health sync), `StoreManager` (StoreKit 2 subscriptions) |
 
 ### Main Views
 
 - **`calorietrackerApp`** — routes to `OnboardingView` → `ContentView` (or `PaywallView` if free scans exhausted) based on `@AppStorage("hasCompletedOnboarding")` and `StoreManager.canUseApp`
-- **`ContentView`** — 4-tab layout: Home, Progress, Learn, Profile. Also contains `HomeView`, `ProfileView`, `CameraView`, `FoodRow`, `MacroPill` inline.
-- **`OnboardingView`** — 24 steps (0-23) with step index switch. Steps shift when inserting new ones.
+- **`ContentView`** — 4-tab layout: Home, Progress, Learn, Profile. Also contains `HomeView`, `ProfileView`, `CameraView`, `FoodRow`, `MacroPill`, `NutritionDetailView` inline.
+- **`OnboardingView`** — 23 steps (0-22) with step index switch. Steps shift when inserting new ones.
 - **`HomeView`** (inside ContentView) — daily tracker with week strip, calorie hero, macro cards, meal-grouped food list, camera toolbar.
 - **`LearnView`** — educational articles with search, category filter chips, and sort options. Articles defined in `Article.swift` with Unsplash image thumbnails.
 - **`ProgressTabView`** (inside ProgressComponents) — weight tracking, calorie/macro charts, streak stats.
