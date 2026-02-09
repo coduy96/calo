@@ -39,11 +39,11 @@ class StoreManager {
             resetDailyCounterIfNeeded()
             return dailyScansUsed < 25
         }
-        return freeScansUsed < 3
+        return freeScansUsed < 4
     }
 
     var canUseApp: Bool {
-        isSubscribed || freeScansUsed < 3
+        isSubscribed || freeScansUsed < 4
     }
 
     var remainingScans: Int {
