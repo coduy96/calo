@@ -4,7 +4,7 @@ window.addEventListener('scroll', () => {
   nav.classList.toggle('scrolled', window.scrollY > 40);
 });
 
-// Scroll reveal
+// Scroll reveal (single elements)
 const revealEls = document.querySelectorAll('.reveal');
 const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
@@ -15,6 +15,18 @@ const revealObserver = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.1 });
 revealEls.forEach(el => revealObserver.observe(el));
+
+// Staggered reveal (grids)
+const staggerEls = document.querySelectorAll('.reveal-stagger');
+const staggerObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      staggerObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.05 });
+staggerEls.forEach(el => staggerObserver.observe(el));
 
 // Close mobile menu on link click
 const navToggle = document.getElementById('nav-toggle');
