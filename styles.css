@@ -445,7 +445,7 @@ body:hover .cursor-glow { opacity: 1; }
 .hero-icon {
   width: 72px;
   height: 72px;
-  margin: 0 auto 28px;
+  margin: 0 0 28px;
   display: block;
   border-radius: 16px;
   animation: heroStagger 0.9s 0.1s cubic-bezier(0.16, 1, 0.3, 1) forwards, iconPulse 4s 2s ease-in-out infinite;
@@ -648,6 +648,7 @@ body:hover .cursor-glow { opacity: 1; }
   .hero-phone { order: -1; margin-bottom: 8px; }
   .phone-frame { width: 220px; }
   .hero-badges { justify-content: center; }
+  .hero-icon { margin: 0 auto 28px; }
 }
 
 /* ========== MARQUEE BANNER ========== */
