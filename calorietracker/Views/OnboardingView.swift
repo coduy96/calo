@@ -20,6 +20,7 @@ struct OnboardingView: View {
     @State private var signInError: String?
     @State private var gender: Gender = .male
     @State private var birthday: Date = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
+    @AppStorage("useMetric") private var useMetric = false
     @State private var isMetric = false
     @State private var heightFeet = 5
     @State private var heightInches = 9
@@ -304,6 +305,7 @@ struct OnboardingView: View {
             .pickerStyle(.segmented)
             .padding(.horizontal, 24)
             .padding(.top, 16)
+            .onChange(of: isMetric) { _, newValue in useMetric = newValue }
             Spacer()
             if isMetric {
                 HStack(spacing: 0) {
