@@ -1172,7 +1172,7 @@ struct ProfileView: View {
                         }
 
                         // Contact
-                        Link(destination: URL(string: "mailto:info.fudai@gmail.com")!) {
+                        Link(destination: URL(string: "mailto:ad13dtu@gmail.com")!) {
                             Label {
                                 Text("Contact Us")
                             } icon: {

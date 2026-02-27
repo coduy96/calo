@@ -342,5 +342,5 @@ See [LICENSE](LICENSE) for details.
 
 - **Developer:** Apoorv Darshan
 - **Developer Email:** ad13dtu@gmail.com
-- **App Support:** info.fudai@gmail.com
+- **App Support:** ad13dtu@gmail.com
 - **Issues:** [GitHub Issues](../../issues)
