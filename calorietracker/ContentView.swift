@@ -499,6 +499,14 @@ struct CameraView: UIViewControllerRepresentable {
 struct FoodRow: View {
     let entry: FoodEntry
 
+    private var servingCalorieText: String {
+        if let grams = entry.servingSizeGrams {
+            let formatted = grams == grams.rounded() ? "\(Int(grams))" : String(format: "%.1f", grams)
+            return "\(formatted)g · \(entry.calories) cal"
+        }
+        return "\(entry.calories) cal"
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             if let imageData = entry.imageData, let uiImage = UIImage(data: imageData) {
@@ -531,7 +539,7 @@ struct FoodRow: View {
                         .foregroundStyle(.tertiary)
                 }
 
-                Text("\(entry.calories) cal")
+                Text(servingCalorieText)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
