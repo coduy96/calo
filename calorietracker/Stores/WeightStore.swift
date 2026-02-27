@@ -11,12 +11,33 @@ class WeightStore {
     init() {
         loadEntries()
         if entries.isEmpty {
+            #if DEBUG
+            seedDebugData()
+            #else
             let profile = UserProfile.load() ?? .default
             let seed = WeightEntry(date: .now, weightKg: profile.weightKg)
             entries.append(seed)
+            #endif
             saveEntries()
         }
     }
+
+    #if DEBUG
+    private func seedDebugData() {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        let startKg = 85.0
+        // ~90 days of data, losing ~0.5 kg/week with some noise
+        for dayOffset in stride(from: 90, through: 0, by: -3) {
+            guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { continue }
+            let weeksElapsed = Double(90 - dayOffset) / 7.0
+            let trend = startKg - weeksElapsed * 0.5
+            let noise = Double.random(in: -0.4...0.4)
+            let weight = max(trend + noise, 60)
+            entries.append(WeightEntry(date: date, weightKg: weight))
+        }
+    }
+    #endif
 
     var latestEntry: WeightEntry? {
         entries.sorted { $0.date > $1.date }.first
