@@ -1061,6 +1061,7 @@ struct ProfileView: View {
                                     .foregroundStyle(AppColors.calorie)
                             }
                         }
+                        .buttonStyle(.plain)
                     } else {
                         #if DEBUG
                         HStack {
