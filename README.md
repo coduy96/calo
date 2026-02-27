@@ -13,4 +13,4 @@ Serves as the public landing page and provides the required URLs for the App Sto
 
 ## Contact
 
-info.fudai@gmail.com
+ad13dtu@gmail.com
