@@ -130,6 +130,20 @@ class FoodStore {
         }
     }
 
+    func updateEntry(_ entry: FoodEntry) {
+        guard let index = entries.firstIndex(where: { $0.id == entry.id }) else { return }
+        let oldID = entry.id
+        entries[index] = entry
+        saveEntries()
+        onEntriesChanged?()
+        // Re-sync HealthKit: delete old samples, write new ones
+        onEntryDeleted?(oldID)
+        onEntryAdded?(entry)
+        if UserDefaults.standard.string(forKey: "appleUserID") != nil {
+            Task { await CloudKitService.saveFoodEntry(entry) }
+        }
+    }
+
     func deleteEntry(_ entry: FoodEntry) {
         let id = entry.id
         entries.removeAll { $0.id == id }

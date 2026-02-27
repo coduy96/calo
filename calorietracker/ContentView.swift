@@ -57,10 +57,11 @@ struct HomeView: View {
     @State private var showScanLimitAlert = false
 
     enum ActiveSheet: String, Identifiable {
-        case analyzing, foodResult, textInput, analyzingText
+        case analyzing, foodResult, textInput, analyzingText, editFood
         var id: String { rawValue }
     }
     @State private var activeSheet: ActiveSheet?
+    @State private var editingEntry: FoodEntry?
 
     @State private var currentFoodResult: GeminiService.FoodAnalysis?
     @State private var currentImage: UIImage?
@@ -181,6 +182,11 @@ struct HomeView: View {
                             ForEach(group.entries) { entry in
                                 FoodRow(entry: entry)
                                     .listRowBackground(AppColors.appCard)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        editingEntry = entry
+                                        activeSheet = .editFood
+                                    }
                             }
                             .onDelete { offsets in
                                 for index in offsets {
@@ -274,6 +280,10 @@ struct HomeView: View {
                                 foodStore.addEntry(entry)
                             }
                         )
+                    }
+                case .editFood:
+                    if let editingEntry {
+                        EditFoodEntryView(entry: editingEntry)
                     }
                 case .textInput:
                     TextFoodInputView { brand, name, quantity, unit in
