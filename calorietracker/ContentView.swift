@@ -276,6 +276,7 @@ struct HomeView: View {
                             cholesterol: result.cholesterol,
                             sodium: result.sodium,
                             potassium: result.potassium,
+                            logDate: selectedDate,
                             onLog: { entry in
                                 foodStore.addEntry(entry)
                             }

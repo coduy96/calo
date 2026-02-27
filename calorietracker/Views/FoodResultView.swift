@@ -26,6 +26,7 @@ struct FoodResultView: View {
     @State private var servingSizeText: String
     @State var mealType: MealType = .currentMeal
 
+    let logDate: Date
     var onLog: (FoodEntry) -> Void
     @Environment(\.dismiss) private var dismiss
 
@@ -69,6 +70,7 @@ struct FoodResultView: View {
         cholesterol: Double? = nil,
         sodium: Double? = nil,
         potassium: Double? = nil,
+        logDate: Date = .now,
         onLog: @escaping (FoodEntry) -> Void
     ) {
         self.image = image
@@ -91,6 +93,7 @@ struct FoodResultView: View {
         self._name = State(initialValue: name)
         self._servingSizeGrams = State(initialValue: servingSizeGrams)
         self._servingSizeText = State(initialValue: Self.formatGrams(servingSizeGrams))
+        self.logDate = logDate
         self.onLog = onLog
     }
 
@@ -220,6 +223,7 @@ struct FoodResultView: View {
             protein: scaledProtein,
             carbs: scaledCarbs,
             fat: scaledFat,
+            timestamp: logDate,
             imageData: image?.jpegData(compressionQuality: 0.5),
             emoji: emoji,
             source: source,
