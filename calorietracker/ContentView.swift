@@ -27,12 +27,6 @@ struct ContentView: View {
                     Text("Progress")
                 }
 
-            LearnView()
-                .tabItem {
-                    Image(systemName: "book.fill")
-                    Text("Learn")
-                }
-
             ProfileView()
                 .tabItem {
                     Image(systemName: "person.circle.fill")
