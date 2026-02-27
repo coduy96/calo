@@ -53,6 +53,7 @@ struct CloudKitService {
         if let v = entry.cholesterol { record["cholesterol"] = v }
         if let v = entry.sodium { record["sodium"] = v }
         if let v = entry.potassium { record["potassium"] = v }
+        if let v = entry.servingSizeGrams { record["servingSizeGrams"] = v }
         return record
     }
 
@@ -93,7 +94,8 @@ struct CloudKitService {
             polyunsaturatedFat: record["polyunsaturatedFat"] as? Double,
             cholesterol: record["cholesterol"] as? Double,
             sodium: record["sodium"] as? Double,
-            potassium: record["potassium"] as? Double
+            potassium: record["potassium"] as? Double,
+            servingSizeGrams: record["servingSizeGrams"] as? Double
         )
     }
 

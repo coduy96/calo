@@ -57,6 +57,7 @@ struct FoodEntry: Identifiable, Codable {
     var cholesterol: Double?    // milligrams
     var sodium: Double?         // milligrams
     var potassium: Double?      // milligrams
+    var servingSizeGrams: Double? // grams (nil for old entries)
 
     init(
         id: UUID = UUID(),
@@ -78,7 +79,8 @@ struct FoodEntry: Identifiable, Codable {
         polyunsaturatedFat: Double? = nil,
         cholesterol: Double? = nil,
         sodium: Double? = nil,
-        potassium: Double? = nil
+        potassium: Double? = nil,
+        servingSizeGrams: Double? = nil
     ) {
         self.id = id
         self.name = name
@@ -100,6 +102,7 @@ struct FoodEntry: Identifiable, Codable {
         self.cholesterol = cholesterol
         self.sodium = sodium
         self.potassium = potassium
+        self.servingSizeGrams = servingSizeGrams
     }
 
     init(from decoder: Decoder) throws {
@@ -124,6 +127,7 @@ struct FoodEntry: Identifiable, Codable {
         cholesterol = try container.decodeIfPresent(Double.self, forKey: .cholesterol)
         sodium = try container.decodeIfPresent(Double.self, forKey: .sodium)
         potassium = try container.decodeIfPresent(Double.self, forKey: .potassium)
+        servingSizeGrams = try container.decodeIfPresent(Double.self, forKey: .servingSizeGrams)
     }
 
     var timeString: String {

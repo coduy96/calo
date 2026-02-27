@@ -5,46 +5,72 @@ struct EditFoodEntryView: View {
     @Environment(FoodStore.self) private var foodStore
     @Environment(\.dismiss) private var dismiss
 
+    // Base values (the entry's nutrition at its logged serving size)
+    private let baseCalories: Int
+    private let baseProtein: Int
+    private let baseCarbs: Int
+    private let baseFat: Int
+    private let baseServingSizeGrams: Double
+    private let baseSugar: Double?
+    private let baseAddedSugar: Double?
+    private let baseFiber: Double?
+    private let baseSaturatedFat: Double?
+    private let baseMonounsaturatedFat: Double?
+    private let basePolyunsaturatedFat: Double?
+    private let baseCholesterol: Double?
+    private let baseSodium: Double?
+    private let basePotassium: Double?
+
     @State private var name: String
-    @State private var caloriesText: String
-    @State private var proteinText: String
-    @State private var carbsText: String
-    @State private var fatText: String
+    @State private var servingSizeGrams: Double
+    @State private var servingSizeText: String
     @State private var mealType: MealType
 
-    @State private var sugarText: String
-    @State private var addedSugarText: String
-    @State private var fiberText: String
-    @State private var saturatedFatText: String
-    @State private var monoFatText: String
-    @State private var polyFatText: String
-    @State private var cholesterolText: String
-    @State private var sodiumText: String
-    @State private var potassiumText: String
+    private var scale: Double {
+        guard baseServingSizeGrams > 0 else { return 1 }
+        return servingSizeGrams / baseServingSizeGrams
+    }
+
+    private var scaledCalories: Int { Int(round(Double(baseCalories) * scale)) }
+    private var scaledProtein: Int { Int(round(Double(baseProtein) * scale)) }
+    private var scaledCarbs: Int { Int(round(Double(baseCarbs) * scale)) }
+    private var scaledFat: Int { Int(round(Double(baseFat) * scale)) }
+    private var scaledSugar: Double? { baseSugar.map { round($0 * scale * 10) / 10 } }
+    private var scaledAddedSugar: Double? { baseAddedSugar.map { round($0 * scale * 10) / 10 } }
+    private var scaledFiber: Double? { baseFiber.map { round($0 * scale * 10) / 10 } }
+    private var scaledSaturatedFat: Double? { baseSaturatedFat.map { round($0 * scale * 10) / 10 } }
+    private var scaledMonounsaturatedFat: Double? { baseMonounsaturatedFat.map { round($0 * scale * 10) / 10 } }
+    private var scaledPolyunsaturatedFat: Double? { basePolyunsaturatedFat.map { round($0 * scale * 10) / 10 } }
+    private var scaledCholesterol: Double? { baseCholesterol.map { round($0 * scale * 10) / 10 } }
+    private var scaledSodium: Double? { baseSodium.map { round($0 * scale * 10) / 10 } }
+    private var scaledPotassium: Double? { basePotassium.map { round($0 * scale * 10) / 10 } }
 
     init(entry: FoodEntry) {
         self.entry = entry
+        let serving = entry.servingSizeGrams ?? 100
+        self.baseCalories = entry.calories
+        self.baseProtein = entry.protein
+        self.baseCarbs = entry.carbs
+        self.baseFat = entry.fat
+        self.baseServingSizeGrams = serving
+        self.baseSugar = entry.sugar
+        self.baseAddedSugar = entry.addedSugar
+        self.baseFiber = entry.fiber
+        self.baseSaturatedFat = entry.saturatedFat
+        self.baseMonounsaturatedFat = entry.monounsaturatedFat
+        self.basePolyunsaturatedFat = entry.polyunsaturatedFat
+        self.baseCholesterol = entry.cholesterol
+        self.baseSodium = entry.sodium
+        self.basePotassium = entry.potassium
         self._name = State(initialValue: entry.name)
-        self._caloriesText = State(initialValue: "\(entry.calories)")
-        self._proteinText = State(initialValue: "\(entry.protein)")
-        self._carbsText = State(initialValue: "\(entry.carbs)")
-        self._fatText = State(initialValue: "\(entry.fat)")
+        self._servingSizeGrams = State(initialValue: serving)
+        self._servingSizeText = State(initialValue: Self.formatGrams(serving))
         self._mealType = State(initialValue: entry.mealType)
-        self._sugarText = State(initialValue: Self.formatOptional(entry.sugar))
-        self._addedSugarText = State(initialValue: Self.formatOptional(entry.addedSugar))
-        self._fiberText = State(initialValue: Self.formatOptional(entry.fiber))
-        self._saturatedFatText = State(initialValue: Self.formatOptional(entry.saturatedFat))
-        self._monoFatText = State(initialValue: Self.formatOptional(entry.monounsaturatedFat))
-        self._polyFatText = State(initialValue: Self.formatOptional(entry.polyunsaturatedFat))
-        self._cholesterolText = State(initialValue: Self.formatOptional(entry.cholesterol))
-        self._sodiumText = State(initialValue: Self.formatOptional(entry.sodium))
-        self._potassiumText = State(initialValue: Self.formatOptional(entry.potassium))
     }
 
-    private static func formatOptional(_ value: Double?) -> String {
-        guard let value else { return "" }
+    private static func formatGrams(_ value: Double) -> String {
         if value == value.rounded() {
-            return "\(Int(value))"
+            return String(Int(value))
         }
         return String(format: "%.1f", value)
     }
@@ -86,24 +112,43 @@ struct EditFoodEntryView: View {
                     }
                 }
 
+                Section("Serving") {
+                    HStack {
+                        Text("Quantity")
+                        Spacer()
+                        TextField("0", text: $servingSizeText)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
+                            .onChange(of: servingSizeText) { _, newValue in
+                                if let parsed = Double(newValue), parsed > 0 {
+                                    servingSizeGrams = parsed
+                                }
+                            }
+                        Text("g")
+                            .foregroundStyle(.secondary)
+                            .frame(width: 36, alignment: .leading)
+                    }
+                }
+
                 Section("Nutrition") {
-                    EditableNutritionRow(label: "Calories", text: $caloriesText, unit: "kcal")
-                    EditableNutritionRow(label: "Protein", text: $proteinText, unit: "g")
-                    EditableNutritionRow(label: "Carbs", text: $carbsText, unit: "g")
-                    EditableNutritionRow(label: "Fat", text: $fatText, unit: "g")
+                    NutritionDisplayRow(label: "Calories", value: "\(scaledCalories)", unit: "kcal")
+                    NutritionDisplayRow(label: "Protein", value: "\(scaledProtein)", unit: "g")
+                    NutritionDisplayRow(label: "Carbs", value: "\(scaledCarbs)", unit: "g")
+                    NutritionDisplayRow(label: "Fat", value: "\(scaledFat)", unit: "g")
                 }
 
                 Section {
                     DisclosureGroup("More Nutrition") {
-                        EditableNutritionRow(label: "Sugar", text: $sugarText, unit: "g")
-                        EditableNutritionRow(label: "Added Sugar", text: $addedSugarText, unit: "g")
-                        EditableNutritionRow(label: "Fiber", text: $fiberText, unit: "g")
-                        EditableNutritionRow(label: "Saturated Fat", text: $saturatedFatText, unit: "g")
-                        EditableNutritionRow(label: "Mono Fat", text: $monoFatText, unit: "g")
-                        EditableNutritionRow(label: "Poly Fat", text: $polyFatText, unit: "g")
-                        EditableNutritionRow(label: "Cholesterol", text: $cholesterolText, unit: "mg")
-                        EditableNutritionRow(label: "Sodium", text: $sodiumText, unit: "mg")
-                        EditableNutritionRow(label: "Potassium", text: $potassiumText, unit: "mg")
+                        OptionalNutritionDisplayRow(label: "Sugar", value: scaledSugar, unit: "g")
+                        OptionalNutritionDisplayRow(label: "Added Sugar", value: scaledAddedSugar, unit: "g")
+                        OptionalNutritionDisplayRow(label: "Fiber", value: scaledFiber, unit: "g")
+                        OptionalNutritionDisplayRow(label: "Saturated Fat", value: scaledSaturatedFat, unit: "g")
+                        OptionalNutritionDisplayRow(label: "Mono Fat", value: scaledMonounsaturatedFat, unit: "g")
+                        OptionalNutritionDisplayRow(label: "Poly Fat", value: scaledPolyunsaturatedFat, unit: "g")
+                        OptionalNutritionDisplayRow(label: "Cholesterol", value: scaledCholesterol, unit: "mg")
+                        OptionalNutritionDisplayRow(label: "Sodium", value: scaledSodium, unit: "mg")
+                        OptionalNutritionDisplayRow(label: "Potassium", value: scaledPotassium, unit: "mg")
                     }
                     .tint(AppColors.calorie)
                 }
@@ -142,56 +187,31 @@ struct EditFoodEntryView: View {
         }
     }
 
-    private func parseOptionalDouble(_ text: String) -> Double? {
-        let trimmed = text.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return nil }
-        return Double(trimmed)
-    }
-
     private func saveChanges() {
         let updated = FoodEntry(
             id: entry.id,
             name: name,
-            calories: Int(caloriesText) ?? entry.calories,
-            protein: Int(proteinText) ?? entry.protein,
-            carbs: Int(carbsText) ?? entry.carbs,
-            fat: Int(fatText) ?? entry.fat,
+            calories: scaledCalories,
+            protein: scaledProtein,
+            carbs: scaledCarbs,
+            fat: scaledFat,
             timestamp: entry.timestamp,
             imageData: entry.imageData,
             emoji: entry.emoji,
             source: entry.source,
             mealType: mealType,
-            sugar: parseOptionalDouble(sugarText),
-            addedSugar: parseOptionalDouble(addedSugarText),
-            fiber: parseOptionalDouble(fiberText),
-            saturatedFat: parseOptionalDouble(saturatedFatText),
-            monounsaturatedFat: parseOptionalDouble(monoFatText),
-            polyunsaturatedFat: parseOptionalDouble(polyFatText),
-            cholesterol: parseOptionalDouble(cholesterolText),
-            sodium: parseOptionalDouble(sodiumText),
-            potassium: parseOptionalDouble(potassiumText)
+            sugar: scaledSugar,
+            addedSugar: scaledAddedSugar,
+            fiber: scaledFiber,
+            saturatedFat: scaledSaturatedFat,
+            monounsaturatedFat: scaledMonounsaturatedFat,
+            polyunsaturatedFat: scaledPolyunsaturatedFat,
+            cholesterol: scaledCholesterol,
+            sodium: scaledSodium,
+            potassium: scaledPotassium,
+            servingSizeGrams: servingSizeGrams
         )
         foodStore.updateEntry(updated)
         dismiss()
-    }
-}
-
-private struct EditableNutritionRow: View {
-    let label: String
-    @Binding var text: String
-    let unit: String
-
-    var body: some View {
-        HStack {
-            Text(label)
-            Spacer()
-            TextField("0", text: $text)
-                .keyboardType(.decimalPad)
-                .multilineTextAlignment(.trailing)
-                .frame(width: 80)
-            Text(unit)
-                .foregroundStyle(.secondary)
-                .frame(width: 36, alignment: .leading)
-        }
     }
 }

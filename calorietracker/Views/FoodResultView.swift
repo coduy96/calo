@@ -232,7 +232,8 @@ struct FoodResultView: View {
             polyunsaturatedFat: scaledPolyunsaturatedFat,
             cholesterol: scaledCholesterol,
             sodium: scaledSodium,
-            potassium: scaledPotassium
+            potassium: scaledPotassium,
+            servingSizeGrams: servingSizeGrams
         )
         onLog(entry)
         dismiss()
