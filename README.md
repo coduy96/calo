@@ -341,6 +341,4 @@ See [LICENSE](LICENSE) for details.
 ## Contact
 
 - **Developer:** Apoorv Darshan
-- **Developer Email:** ad13dtu@gmail.com
-- **App Support:** ad13dtu@gmail.com
-- **Issues:** [GitHub Issues](../../issues)
+- **Email:** ad13dtu@gmail.com
