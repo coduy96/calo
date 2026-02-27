@@ -888,9 +888,9 @@ struct ProfileView: View {
                     }
 
                     Picker(selection: $profile.gender) {
-                        ForEach(Gender.allCases, id: \.self) { gender in
-                            Text(gender.displayName).tag(gender)
-                        }
+                        Text("Male").tag(Gender.male)
+                        Text("Female").tag(Gender.female)
+                        Text("Other").tag(Gender.other)
                     } label: {
                         Label {
                             Text("Gender")
