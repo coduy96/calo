@@ -466,6 +466,73 @@ struct CameraView: UIViewControllerRepresentable {
         picker.delegate = context.coordinator
         picker.modalPresentationStyle = .fullScreen
         picker.edgesForExtendedLayout = .all
+        picker.showsCameraControls = false
+
+        // Custom overlay with shutter + cancel buttons
+        let overlay = UIView(frame: UIScreen.main.bounds)
+        overlay.isUserInteractionEnabled = true
+        overlay.backgroundColor = .clear
+
+        let bottomBar = UIView()
+        bottomBar.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+        bottomBar.translatesAutoresizingMaskIntoConstraints = false
+        overlay.addSubview(bottomBar)
+
+        let shutterOuter = UIView()
+        shutterOuter.backgroundColor = .white
+        shutterOuter.layer.cornerRadius = 37
+        shutterOuter.translatesAutoresizingMaskIntoConstraints = false
+        bottomBar.addSubview(shutterOuter)
+
+        let shutterInner = UIView()
+        shutterInner.backgroundColor = .white
+        shutterInner.layer.cornerRadius = 32
+        shutterInner.layer.borderWidth = 2
+        shutterInner.layer.borderColor = UIColor.black.withAlphaComponent(0.15).cgColor
+        shutterInner.translatesAutoresizingMaskIntoConstraints = false
+        shutterOuter.addSubview(shutterInner)
+
+        let shutterButton = UIButton(type: .system)
+        shutterButton.translatesAutoresizingMaskIntoConstraints = false
+        shutterButton.addTarget(context.coordinator, action: #selector(Coordinator.capture), for: .touchUpInside)
+        shutterOuter.addSubview(shutterButton)
+
+        let cancelButton = UIButton(type: .system)
+        cancelButton.setTitle("Cancel", for: .normal)
+        cancelButton.setTitleColor(.white, for: .normal)
+        cancelButton.titleLabel?.font = .systemFont(ofSize: 17)
+        cancelButton.translatesAutoresizingMaskIntoConstraints = false
+        cancelButton.addTarget(context.coordinator, action: #selector(Coordinator.cancel), for: .touchUpInside)
+        bottomBar.addSubview(cancelButton)
+
+        NSLayoutConstraint.activate([
+            bottomBar.leadingAnchor.constraint(equalTo: overlay.leadingAnchor),
+            bottomBar.trailingAnchor.constraint(equalTo: overlay.trailingAnchor),
+            bottomBar.bottomAnchor.constraint(equalTo: overlay.bottomAnchor),
+            bottomBar.heightAnchor.constraint(equalToConstant: 140),
+
+            shutterOuter.centerXAnchor.constraint(equalTo: bottomBar.centerXAnchor),
+            shutterOuter.centerYAnchor.constraint(equalTo: bottomBar.topAnchor, constant: 50),
+            shutterOuter.widthAnchor.constraint(equalToConstant: 74),
+            shutterOuter.heightAnchor.constraint(equalToConstant: 74),
+
+            shutterInner.centerXAnchor.constraint(equalTo: shutterOuter.centerXAnchor),
+            shutterInner.centerYAnchor.constraint(equalTo: shutterOuter.centerYAnchor),
+            shutterInner.widthAnchor.constraint(equalToConstant: 64),
+            shutterInner.heightAnchor.constraint(equalToConstant: 64),
+
+            shutterButton.leadingAnchor.constraint(equalTo: shutterOuter.leadingAnchor),
+            shutterButton.trailingAnchor.constraint(equalTo: shutterOuter.trailingAnchor),
+            shutterButton.topAnchor.constraint(equalTo: shutterOuter.topAnchor),
+            shutterButton.bottomAnchor.constraint(equalTo: shutterOuter.bottomAnchor),
+
+            cancelButton.leadingAnchor.constraint(equalTo: bottomBar.leadingAnchor, constant: 20),
+            cancelButton.centerYAnchor.constraint(equalTo: shutterOuter.centerYAnchor),
+        ])
+
+        picker.cameraOverlayView = overlay
+        context.coordinator.picker = picker
+
         return picker
     }
 
@@ -477,9 +544,18 @@ struct CameraView: UIViewControllerRepresentable {
 
     class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
         let parent: CameraView
+        weak var picker: UIImagePickerController?
 
         init(_ parent: CameraView) {
             self.parent = parent
+        }
+
+        @objc func capture() {
+            picker?.takePicture()
+        }
+
+        @objc func cancel() {
+            parent.dismiss()
         }
 
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
