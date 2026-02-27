@@ -50,7 +50,7 @@ struct OnboardingView: View {
         var id: String { rawValue }
     }
 
-    private let totalSteps = 23 // 0-22
+    private let totalSteps = 24 // 0-23
 
     private var profile: UserProfile {
         let cm: Double
@@ -78,7 +78,7 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-                if step > 0 && step < 22 {
+                if step > 0 && step < 23 {
                     HStack(spacing: 16) {
                         Button {
                             withAnimation(.snappy) { step -= 1 }
@@ -127,9 +127,10 @@ struct OnboardingView: View {
                     case 17: notificationsStep
                     case 18: appleHealthStep
                     case 19: allDoneStep
-                    case 20: buildingPlanStep
-                    case 21: planReadyStep
-                    case 22: paywallStep
+                    case 20: reviewStep
+                    case 21: buildingPlanStep
+                    case 22: planReadyStep
+                    case 23: paywallStep
                     default: EmptyView()
                     }
                 }
@@ -1073,7 +1074,65 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 20: Building Plan
+    // MARK: - 20: Review
+
+    private var reviewStep: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            VStack(spacing: 24) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(colors: [Color.pink.opacity(0.1), Color.yellow.opacity(0.1)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
+                        .frame(width: 160, height: 160)
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 64))
+                        .foregroundStyle(AppColors.calorie)
+                }
+
+                VStack(spacing: 8) {
+                    Text("Enjoying fud so far?")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .multilineTextAlignment(.center)
+                    Text("A quick rating helps us grow\nand build more features for you!")
+                        .font(.system(.callout, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+            }
+
+            Spacer()
+
+            Button {
+                if let url = URL(string: "https://apps.apple.com/app/id6758935726?action=write-review") {
+                    UIApplication.shared.open(url)
+                }
+                withAnimation(.snappy) { step += 1 }
+            } label: {
+                Text("Rate fud")
+                    .font(.system(.body, design: .rounded, weight: .semibold))
+                    .foregroundStyle(Color(.systemBackground))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 54)
+                    .background(Color.primary, in: Capsule())
+            }
+            .padding(.horizontal, 24)
+
+            Button {
+                withAnimation(.snappy) { step += 1 }
+            } label: {
+                Text("Maybe Later")
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.top, 12)
+            .padding(.bottom, 36)
+        }
+    }
+
+    // MARK: - 21: Building Plan
 
     private var buildingPlanStep: some View {
         BuildingPlanStepView(profile: profile) {
@@ -1081,7 +1140,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 21: Plan Ready
+    // MARK: - 22: Plan Ready
 
     private var planCalories: Int { editedCalories ?? profile.dailyCalories }
     private var planProtein: Int { editedProtein ?? profile.proteinGoal }
@@ -1278,7 +1337,7 @@ struct OnboardingView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - 22: Paywall
+    // MARK: - 23: Paywall
 
     private var paywallStep: some View {
         Group {
