@@ -27,6 +27,7 @@ class StoreManager {
     }
 
     // MARK: - Loading / Error
+    var hasCheckedEntitlements = false
     var isPurchasing = false
     var purchaseError: String?
 
@@ -155,6 +156,7 @@ class StoreManager {
 
         isSubscribed = subscribed
         currentSubscriptionProductID = activeProductID
+        hasCheckedEntitlements = true
     }
 
     // MARK: - Transaction Listener

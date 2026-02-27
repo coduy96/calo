@@ -39,7 +39,7 @@ struct calorietrackerApp: App {
     var body: some Scene {
         WindowGroup {
             if hasCompletedOnboarding && authManager.isSignedIn {
-                if storeManager.canUseApp {
+                if !storeManager.hasCheckedEntitlements || storeManager.canUseApp {
                     ContentView()
                         .environment(foodStore)
                         .environment(weightStore)
