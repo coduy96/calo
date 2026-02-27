@@ -114,9 +114,9 @@ struct OnboardingView: View {
                     case 8: goalSpeedStep
                     case 9: notificationsStep
                     case 10: appleHealthStep
-                    case 11: reviewStep
-                    case 12: buildingPlanStep
-                    case 13: planReadyStep
+                    case 11: buildingPlanStep
+                    case 12: planReadyStep
+                    case 13: reviewStep
                     case 14: paywallStep
                     default: EmptyView()
                     }
