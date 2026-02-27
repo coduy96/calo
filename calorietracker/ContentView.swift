@@ -1112,6 +1112,7 @@ struct ProfileView: View {
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
+                    .buttonStyle(.plain)
                 }
                 .listRowBackground(AppColors.appCard)
 
