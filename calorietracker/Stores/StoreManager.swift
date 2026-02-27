@@ -113,7 +113,7 @@ class StoreManager {
             let result = try await product.purchase()
             switch result {
             case .success(let verification):
-                let transaction = try checkVerified(verification)
+                let transaction = extractTransaction(verification)
                 await transaction.finish()
                 await checkEntitlements()
             case .userCancelled:
@@ -146,11 +146,10 @@ class StoreManager {
         var activeProductID: String?
 
         for await result in Transaction.currentEntitlements {
-            if let transaction = try? checkVerified(result) {
-                if transaction.productType == .autoRenewable {
-                    subscribed = true
-                    activeProductID = transaction.productID
-                }
+            let transaction = extractTransaction(result)
+            if transaction.productType == .autoRenewable {
+                subscribed = true
+                activeProductID = transaction.productID
             }
         }
 
@@ -163,19 +162,18 @@ class StoreManager {
     private func listenForTransactions() -> Task<Void, Never> {
         Task.detached {
             for await result in Transaction.updates {
-                if let transaction = try? self.checkVerified(result) {
-                    await transaction.finish()
-                    await self.checkEntitlements()
-                }
+                let transaction = self.extractTransaction(result)
+                await transaction.finish()
+                await self.checkEntitlements()
             }
         }
     }
 
     // MARK: - Verification
-    private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
+    private func extractTransaction<T>(_ result: VerificationResult<T>) -> T {
         switch result {
-        case .unverified(_, let error):
-            throw error
+        case .unverified(let payload, _):
+            return payload
         case .verified(let safe):
             return safe
         }
