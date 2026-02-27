@@ -5,17 +5,17 @@ enum AppColors {
     static let calorieGradient: [Color] = [Color(hex: 0xFF375F), Color(hex: 0xFF6B8A)]
     static let calorie: Color = Color(hex: 0xFF375F)
 
-    // Protein: Green → Mint
-    static let proteinGradient: [Color] = [Color(hex: 0x30D158), Color(hex: 0x6EE7B7)]
-    static let protein: Color = Color(hex: 0x30D158)
+    // Protein: Rose → Light Pink
+    static let proteinGradient: [Color] = [Color(hex: 0xE8608C), Color(hex: 0xF5A0B8)]
+    static let protein: Color = Color(hex: 0xE8608C)
 
-    // Carbs: Orange → Yellow
-    static let carbsGradient: [Color] = [Color(hex: 0xFF9F0A), Color(hex: 0xFFD60A)]
-    static let carbs: Color = Color(hex: 0xFF9F0A)
+    // Carbs: Mauve → Lavender Pink
+    static let carbsGradient: [Color] = [Color(hex: 0xC47AB8), Color(hex: 0xE0A8D6)]
+    static let carbs: Color = Color(hex: 0xC47AB8)
 
-    // Fat: Blue → Cyan
-    static let fatGradient: [Color] = [Color(hex: 0x0A84FF), Color(hex: 0x5AC8FA)]
-    static let fat: Color = Color(hex: 0x0A84FF)
+    // Fat: Dusty Rose → Blush
+    static let fatGradient: [Color] = [Color(hex: 0xD47C8A), Color(hex: 0xEDB3BD)]
+    static let fat: Color = Color(hex: 0xD47C8A)
 
     // Background: warm cream in light, system dark in dark
     static let appBackground = Color("appBackground")
