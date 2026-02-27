@@ -138,29 +138,6 @@ struct calorietrackerApp: App {
 
         healthKitManager.startBodyMeasurementObserver()
 
-        foodStore.onEntryAdded = { [healthKitManager] entry in
-            healthKitManager.writeNutrition(
-                entryId: entry.id,
-                calories: entry.calories,
-                protein: entry.protein,
-                carbs: entry.carbs,
-                fat: entry.fat,
-                date: entry.timestamp,
-                sugar: entry.sugar,
-                fiber: entry.fiber,
-                saturatedFat: entry.saturatedFat,
-                monounsaturatedFat: entry.monounsaturatedFat,
-                polyunsaturatedFat: entry.polyunsaturatedFat,
-                cholesterol: entry.cholesterol,
-                sodium: entry.sodium,
-                potassium: entry.potassium
-            )
-        }
-
-        foodStore.onEntryDeleted = { [healthKitManager] entryId in
-            healthKitManager.deleteNutrition(for: entryId)
-        }
-
         weightStore.onEntryAdded = { [healthKitManager] entry in
             healthKitManager.writeWeight(kg: entry.weightKg, date: entry.date)
         }
