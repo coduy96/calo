@@ -96,7 +96,7 @@
 
       <h3>How We Use Your Information</h3>
       <ul>
-        <li><strong>AI Food Analysis:</strong> Food photos and text descriptions are sent to the Google Gemini API for nutritional analysis. Photos are processed in real time and are not stored on Google's servers beyond the API request.</li>
+        <li><strong>AI Food Analysis:</strong> Food photos, text descriptions, and voice input are sent to the Google Gemini API for nutritional analysis. Photos are processed in real time and are not stored on Google's servers beyond the API request. Voice input is converted to text on-device before being sent.</li>
         <li><strong>Local Storage:</strong> All food entries, weight entries, user profile data, and food photos are stored locally on your device using UserDefaults.</li>
         <li><strong>iCloud Sync:</strong> If you sign in with Apple, your food entries (excluding photos), weight entries, and user profile are synced to your private iCloud database via CloudKit. This data is only accessible to you through your Apple ID.</li>
         <li><strong>Apple Health:</strong> If you enable Apple Health integration, the app writes body mass, height, and body fat percentage to HealthKit, and reads body mass, height, body fat percentage, date of birth, and biological sex from HealthKit.</li>
