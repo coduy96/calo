@@ -17,43 +17,32 @@ struct VoiceInputView: View {
 
     var body: some View {
         ZStack {
-            // Semi-transparent background
-            Color.black.opacity(0.4)
+            Color.clear
+                .contentShape(Rectangle())
                 .ignoresSafeArea()
                 .onTapGesture {
                     stopRecording()
                     onCancel()
                 }
 
-            VStack(spacing: 24) {
-                // Title
+            VStack(spacing: 20) {
                 Text("Voice Input")
                     .font(.headline)
 
                 // Transcription area
                 ZStack(alignment: .topLeading) {
-                    if transcription.isEmpty && !isRecording {
-                        Text("Listening for your meal…")
+                    if transcription.isEmpty {
+                        Text(isRecording ? "Listening…" : "Listening for your meal…")
                             .foregroundStyle(.tertiary)
-                            .font(.body)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 10)
                             .allowsHitTesting(false)
+                    } else {
+                        Text(transcription)
                     }
-
-                    Text(transcription.isEmpty && isRecording ? "Listening…" : transcription)
-                        .foregroundStyle(transcription.isEmpty ? .secondary : .primary)
-                        .font(.body)
-                        .frame(maxWidth: .infinity, alignment: .topLeading)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 10)
                 }
-                .padding(12)
-                .frame(minHeight: 100, alignment: .topLeading)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(.secondarySystemGroupedBackground))
-                )
+                .font(.body)
+                .frame(maxWidth: .infinity, minHeight: 80, alignment: .topLeading)
+                .padding()
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
 
                 // Mic button
                 Button {
@@ -64,9 +53,9 @@ struct VoiceInputView: View {
                     }
                 } label: {
                     Image(systemName: isRecording ? "mic.fill" : "mic")
-                        .font(.system(size: 32))
+                        .font(.system(size: 28))
                         .foregroundStyle(.white)
-                        .frame(width: 80, height: 80)
+                        .frame(width: 72, height: 72)
                         .background(
                             Circle()
                                 .fill(isRecording ? Color.red : AppColors.calorie)
@@ -93,30 +82,32 @@ struct VoiceInputView: View {
                 }
 
                 // Action buttons
-                HStack(spacing: 16) {
+                VStack(spacing: 10) {
+                    Button {
+                        stopRecording()
+                        onSubmit(transcription)
+                    } label: {
+                        Text("Analyze")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .disabled(transcription.trimmingCharacters(in: .whitespaces).isEmpty)
+
                     Button("Cancel", role: .cancel) {
                         stopRecording()
                         onCancel()
                     }
-                    .buttonStyle(.bordered)
                     .controlSize(.large)
-
-                    Button("Analyze") {
-                        stopRecording()
-                        onSubmit(transcription)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(AppColors.calorie)
-                    .controlSize(.large)
-                    .disabled(transcription.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
-            .padding(24)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(.systemGroupedBackground))
-            )
-            .padding(.horizontal, 24)
+            .padding(20)
+            .background {
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .stroke(.separator, lineWidth: 0.5)
+            }
+            .padding(.horizontal, 20)
         }
         .onAppear {
             startRecording()
