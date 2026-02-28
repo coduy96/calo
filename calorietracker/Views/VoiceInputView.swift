@@ -11,109 +11,100 @@ struct VoiceInputView: View {
     @State private var audioEngine = AVAudioEngine()
     @State private var permissionError: String?
     @State private var pulseScale: CGFloat = 1.0
-    @Environment(\.dismiss) private var dismiss
 
+    var onCancel: () -> Void
     var onSubmit: (String) -> Void
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 24) {
-                // Transcription area
-                ZStack(alignment: .topLeading) {
-                    if transcription.isEmpty {
-                        Text(isRecording ? "Listening…" : "Listening for your meal…")
-                            .foregroundStyle(.tertiary)
-                            .font(.body)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 10)
-                            .allowsHitTesting(false)
-                    }
-
-                    Text(transcription.isEmpty ? "" : transcription)
+        VStack(spacing: 20) {
+            // Transcription area
+            ZStack(alignment: .topLeading) {
+                if transcription.isEmpty {
+                    Text(isRecording ? "Listening…" : "Listening for your meal…")
+                        .foregroundStyle(.tertiary)
                         .font(.body)
-                        .frame(maxWidth: .infinity, alignment: .topLeading)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 10)
-                }
-                .padding(12)
-                .frame(minHeight: 100, alignment: .topLeading)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(.secondarySystemGroupedBackground))
-                )
-
-                // Mic button
-                Button {
-                    if isRecording {
-                        stopRecording()
-                    } else {
-                        startRecording()
-                    }
-                } label: {
-                    Image(systemName: isRecording ? "mic.fill" : "mic")
-                        .font(.system(size: 32))
-                        .foregroundStyle(.white)
-                        .frame(width: 80, height: 80)
-                        .background(
-                            Circle()
-                                .fill(isRecording ? Color.red : AppColors.calorie)
-                        )
-                        .scaleEffect(pulseScale)
-                }
-                .onChange(of: isRecording) { _, recording in
-                    if recording {
-                        withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
-                            pulseScale = 1.15
-                        }
-                    } else {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            pulseScale = 1.0
-                        }
-                    }
+                        .allowsHitTesting(false)
                 }
 
-                if let error = permissionError {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .multilineTextAlignment(.center)
-                }
+                Text(transcription.isEmpty ? "" : transcription)
+                    .font(.body)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 10)
+            }
+            .padding(12)
+            .frame(minHeight: 100, alignment: .topLeading)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.quaternarySystemFill))
+            )
 
-                // Analyze button
-                Button {
+            // Mic button
+            Button {
+                if isRecording {
                     stopRecording()
-                    onSubmit(transcription)
-                } label: {
-                    Text("Analyze")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
+                } else {
+                    startRecording()
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppColors.calorie)
-                .controlSize(.large)
-                .disabled(transcription.trimmingCharacters(in: .whitespaces).isEmpty)
-
-                Spacer()
+            } label: {
+                Image(systemName: isRecording ? "mic.fill" : "mic")
+                    .font(.system(size: 28))
+                    .foregroundStyle(.white)
+                    .frame(width: 72, height: 72)
+                    .background(
+                        Circle()
+                            .fill(isRecording ? Color.red : AppColors.calorie)
+                    )
+                    .scaleEffect(pulseScale)
             }
-            .padding(.horizontal)
-            .padding(.top, 20)
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle("Voice Input")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        stopRecording()
-                        dismiss()
+            .onChange(of: isRecording) { _, recording in
+                if recording {
+                    withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                        pulseScale = 1.15
+                    }
+                } else {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        pulseScale = 1.0
                     }
                 }
             }
-            .onAppear {
-                startRecording()
+
+            if let error = permissionError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .multilineTextAlignment(.center)
             }
-            .onDisappear {
+
+            // Analyze button
+            Button {
                 stopRecording()
+                onSubmit(transcription)
+            } label: {
+                Text("Analyze")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
             }
+            .buttonStyle(.borderedProminent)
+            .tint(AppColors.calorie)
+            .controlSize(.large)
+            .disabled(transcription.trimmingCharacters(in: .whitespaces).isEmpty)
+
+            Button("Cancel") {
+                stopRecording()
+                onCancel()
+            }
+            .foregroundStyle(.secondary)
+        }
+        .padding(20)
+        .frame(width: 320)
+        .onAppear {
+            startRecording()
+        }
+        .onDisappear {
+            stopRecording()
         }
     }
 

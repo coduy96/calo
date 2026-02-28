@@ -49,9 +49,10 @@ struct HomeView: View {
     @State private var errorMessage = ""
     @State private var selectedDate: Date = .now
     @State private var showScanLimitAlert = false
+    @State private var showVoicePopover = false
 
     enum ActiveSheet: String, Identifiable {
-        case analyzing, foodResult, textInput, analyzingText, editFood, voice
+        case analyzing, foodResult, textInput, analyzingText, editFood
         var id: String { rawValue }
     }
     @State private var activeSheet: ActiveSheet?
@@ -229,12 +230,39 @@ struct HomeView: View {
                             }
                             Button(action: {
                                 guard checkScanAvailable() else { return }
-                                activeSheet = .voice
+                                showVoicePopover = true
                             }) {
                                 Label("Voice", systemImage: "mic.fill")
                             }
                         } label: {
                             Image(systemName: "plus")
+                        }
+                        .popover(isPresented: $showVoicePopover) {
+                            VoiceInputView(
+                                onCancel: {
+                                    showVoicePopover = false
+                                },
+                                onSubmit: { description in
+                                    showVoicePopover = false
+                                    currentImage = nil
+                                    currentEmoji = nil
+                                    activeSheet = .analyzingText
+                                    Task {
+                                        do {
+                                            let result = try await GeminiService.analyzeTextInput(description: description)
+                                            storeManager.recordScan()
+                                            currentFoodResult = result
+                                            currentEmoji = result.emoji
+                                            activeSheet = .foodResult
+                                        } catch {
+                                            activeSheet = nil
+                                            errorMessage = error.localizedDescription
+                                            showError = true
+                                        }
+                                    }
+                                }
+                            )
+                            .presentationCompactAdaptation(.popover)
                         }
                 }
             }
@@ -288,25 +316,6 @@ struct HomeView: View {
                     }
                 case .textInput:
                     TextFoodInputView { description in
-                        currentImage = nil
-                        currentEmoji = nil
-                        activeSheet = .analyzingText
-                        Task {
-                            do {
-                                let result = try await GeminiService.analyzeTextInput(description: description)
-                                storeManager.recordScan()
-                                currentFoodResult = result
-                                currentEmoji = result.emoji
-                                activeSheet = .foodResult
-                            } catch {
-                                activeSheet = nil
-                                errorMessage = error.localizedDescription
-                                showError = true
-                            }
-                        }
-                    }
-                case .voice:
-                    VoiceInputView { description in
                         currentImage = nil
                         currentEmoji = nil
                         activeSheet = .analyzingText
