@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 struct TextFoodInputView: View {
     @State private var foodDescription = ""
