@@ -109,7 +109,7 @@ struct VoiceInputView: View {
             .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color(.tertiarySystemBackground))
+                    .fill(Color(.secondarySystemBackground))
                     .stroke(Color.white.opacity(0.15), lineWidth: 0.5)
             )
             .padding(.horizontal, 20)
