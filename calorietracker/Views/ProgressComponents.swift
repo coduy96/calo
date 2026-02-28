@@ -71,19 +71,7 @@ struct WeightChartSection: View {
                         )
                         .foregroundStyle(AppColors.calorie)
                         .interpolationMethod(.catmullRom)
-
-                        AreaMark(
-                            x: .value("Date", entry.date, unit: .day),
-                            y: .value("Weight", displayWeight(entry.weightKg))
-                        )
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [AppColors.calorie.opacity(0.25), AppColors.calorie.opacity(0.02)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .interpolationMethod(.catmullRom)
+                        .lineStyle(StrokeStyle(lineWidth: 2))
 
                         PointMark(
                             x: .value("Date", entry.date, unit: .day),
