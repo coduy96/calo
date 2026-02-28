@@ -11,34 +11,36 @@ struct VoiceInputView: View {
     @State private var audioEngine = AVAudioEngine()
     @State private var permissionError: String?
     @State private var pulseScale: CGFloat = 1.0
+    @Environment(\.dismiss) private var dismiss
 
-    var onCancel: () -> Void
     var onSubmit: (String) -> Void
 
     var body: some View {
-        ZStack {
-            Color.black.opacity(0.2)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    stopRecording()
-                    onCancel()
-                }
-
-            VStack(spacing: 20) {
+        NavigationStack {
+            VStack(spacing: 24) {
                 // Transcription area
                 ZStack(alignment: .topLeading) {
                     if transcription.isEmpty {
                         Text(isRecording ? "Listening…" : "Listening for your meal…")
                             .foregroundStyle(.tertiary)
+                            .font(.body)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 10)
                             .allowsHitTesting(false)
-                    } else {
-                        Text(transcription)
                     }
+
+                    Text(transcription.isEmpty ? "" : transcription)
+                        .font(.body)
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 10)
                 }
-                .font(.body)
-                .frame(maxWidth: .infinity, minHeight: 100, alignment: .topLeading)
-                .padding(14)
-                .background(Color(.quaternarySystemFill), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .padding(12)
+                .frame(minHeight: 100, alignment: .topLeading)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.secondarySystemGroupedBackground))
+                )
 
                 // Mic button
                 Button {
@@ -49,9 +51,9 @@ struct VoiceInputView: View {
                     }
                 } label: {
                     Image(systemName: isRecording ? "mic.fill" : "mic")
-                        .font(.system(size: 28))
+                        .font(.system(size: 32))
                         .foregroundStyle(.white)
-                        .frame(width: 72, height: 72)
+                        .frame(width: 80, height: 80)
                         .background(
                             Circle()
                                 .fill(isRecording ? Color.red : AppColors.calorie)
@@ -77,48 +79,41 @@ struct VoiceInputView: View {
                         .multilineTextAlignment(.center)
                 }
 
-                // Action buttons
-                HStack(spacing: 12) {
-                    Button {
-                        stopRecording()
-                        onCancel()
-                    } label: {
-                        Text("Cancel")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color(.systemGray4))
-                    .foregroundStyle(.primary)
+                // Analyze button
+                Button {
+                    stopRecording()
+                    onSubmit(transcription)
+                } label: {
+                    Text("Analyze")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(AppColors.calorie)
+                .controlSize(.large)
+                .disabled(transcription.trimmingCharacters(in: .whitespaces).isEmpty)
 
-                    Button {
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.top, 20)
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Voice Input")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
                         stopRecording()
-                        onSubmit(transcription)
-                    } label: {
-                        Text("Analyze")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
+                        dismiss()
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(AppColors.calorie)
-                    .disabled(transcription.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
-            .padding(20)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color(.secondarySystemBackground))
-                    .stroke(Color.white.opacity(0.15), lineWidth: 0.5)
-            )
-            .padding(.horizontal, 20)
-        }
-        .onAppear {
-            startRecording()
-        }
-        .onDisappear {
-            stopRecording()
+            .onAppear {
+                startRecording()
+            }
+            .onDisappear {
+                stopRecording()
+            }
         }
     }
 
