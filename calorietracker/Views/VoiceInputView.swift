@@ -17,17 +17,19 @@ struct VoiceInputView: View {
 
     var body: some View {
         ZStack {
-            Color.clear
-                .contentShape(Rectangle())
+            Color.black.opacity(0.2)
                 .ignoresSafeArea()
                 .onTapGesture {
                     stopRecording()
                     onCancel()
                 }
 
-            VStack(spacing: 20) {
+            VStack(spacing: 16) {
                 Text("Voice Input")
-                    .font(.headline)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+                    .padding(.top, 4)
 
                 // Transcription area
                 ZStack(alignment: .topLeading) {
@@ -40,9 +42,9 @@ struct VoiceInputView: View {
                     }
                 }
                 .font(.body)
-                .frame(maxWidth: .infinity, minHeight: 80, alignment: .topLeading)
-                .padding()
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .frame(maxWidth: .infinity, minHeight: 60, alignment: .topLeading)
+                .padding(12)
+                .background(Color(.quaternarySystemFill), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
 
                 // Mic button
                 Button {
@@ -81,33 +83,34 @@ struct VoiceInputView: View {
                         .multilineTextAlignment(.center)
                 }
 
-                // Action buttons
-                VStack(spacing: 10) {
-                    Button {
-                        stopRecording()
-                        onSubmit(transcription)
-                    } label: {
-                        Text("Analyze")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .disabled(transcription.trimmingCharacters(in: .whitespaces).isEmpty)
+                Divider()
 
-                    Button("Cancel", role: .cancel) {
+                // Action buttons
+                HStack {
+                    Button("Cancel", role: .destructive) {
                         stopRecording()
                         onCancel()
                     }
-                    .controlSize(.large)
+                    .frame(maxWidth: .infinity)
+
+                    Divider()
+                        .frame(height: 20)
+
+                    Button("Analyze") {
+                        stopRecording()
+                        onSubmit(transcription)
+                    }
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .disabled(transcription.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
+                .padding(.bottom, 4)
             }
-            .padding(20)
-            .background {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(.ultraThinMaterial)
-                    .stroke(.separator, lineWidth: 0.5)
-            }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .shadow(color: .black.opacity(0.15), radius: 30, y: 10)
+            .padding(.horizontal, 40)
         }
         .onAppear {
             startRecording()
