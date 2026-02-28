@@ -281,13 +281,13 @@ struct HomeView: View {
                         EditFoodEntryView(entry: editingEntry)
                     }
                 case .textInput:
-                    TextFoodInputView { brand, name, quantity, unit in
+                    TextFoodInputView { description in
                         currentImage = nil
                         currentEmoji = nil
                         activeSheet = .analyzingText
                         Task {
                             do {
-                                let result = try await GeminiService.analyzeTextInput(brand: brand, name: name, quantity: quantity, unit: unit)
+                                let result = try await GeminiService.analyzeTextInput(description: description)
                                 storeManager.recordScan()
                                 currentFoodResult = result
                                 currentEmoji = result.emoji

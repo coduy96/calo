@@ -1,66 +1,81 @@
 import SwiftUI
 
 struct TextFoodInputView: View {
-    @State private var brand = ""
-    @State private var foodName = ""
-    @State private var quantity = "1"
-    @State private var unit = "serving"
+    @State private var foodDescription = ""
+    @State private var placeholderIndex = 0
     @Environment(\.dismiss) private var dismiss
 
-    var onSubmit: (String, String, String, String) -> Void
+    var onSubmit: (String) -> Void
 
-    private let units = ["g", "ml", "oz", "cups", "tbsp", "tsp", "pieces", "slices", "serving"]
+    private let placeholders = [
+        "2 eggs, toast with butter and a coffee",
+        "Chipotle burrito bowl with chicken and rice",
+        "Domino's pepperoni pizza, 2 slices",
+        "Greek yogurt with granola and blueberries",
+    ]
+
+    private let timer = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Food") {
-                    TextField("Brand (optional)", text: $brand)
-                        .autocorrectionDisabled()
+            VStack(spacing: 24) {
+                Spacer()
 
-                    TextField("Food name", text: $foodName)
-                        .autocorrectionDisabled()
-                }
-
-                Section("Quantity") {
-                    HStack {
-                        TextField("Amount", text: $quantity)
-                            .keyboardType(.decimalPad)
-                            .frame(width: 80)
-
-                        Spacer()
-
-                        Picker("Unit", selection: $unit) {
-                            ForEach(units, id: \.self) { u in
-                                Text(u).tag(u)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        .tint(AppColors.calorie)
+                ZStack(alignment: .leading) {
+                    if foodDescription.isEmpty {
+                        Text(placeholders[placeholderIndex])
+                            .foregroundStyle(.tertiary)
+                            .font(.title3)
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .bottom).combined(with: .opacity),
+                                removal: .move(edge: .top).combined(with: .opacity)
+                            ))
+                            .id(placeholderIndex)
+                            .allowsHitTesting(false)
                     }
-                }
 
-                Section {
-                    Button {
-                        onSubmit(brand, foodName, quantity, unit)
-                    } label: {
-                        Text("Analyze")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(AppColors.calorie)
-                    .disabled(foodName.trimmingCharacters(in: .whitespaces).isEmpty)
-                    .listRowBackground(Color.clear)
+                    TextField("", text: $foodDescription, axis: .vertical)
+                        .font(.title3)
+                        .lineLimit(1...4)
+                        .textFieldStyle(.plain)
+                        .autocorrectionDisabled()
+                        .submitLabel(.done)
                 }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(.ultraThinMaterial)
+                )
+                .padding(.horizontal)
+
+                Button {
+                    onSubmit(foodDescription)
+                } label: {
+                    Text("Analyze")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(AppColors.calorie)
+                .disabled(foodDescription.trimmingCharacters(in: .whitespaces).isEmpty)
+                .padding(.horizontal)
+
+                Spacer()
+                Spacer()
             }
-            .scrollContentBackground(.hidden)
             .background(AppColors.appBackground)
             .navigationTitle("Text Input")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                }
+            }
+            .onReceive(timer) { _ in
+                guard foodDescription.isEmpty else { return }
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    placeholderIndex = (placeholderIndex + 1) % placeholders.count
                 }
             }
         }

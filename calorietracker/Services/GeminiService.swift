@@ -83,16 +83,13 @@ struct GeminiService {
         }
     }
 
-    static func analyzeTextInput(brand: String, name: String, quantity: String, unit: String) async throws -> FoodAnalysis {
-        let foodDescription = brand.isEmpty ? name : "\(brand) \(name)"
+    static func analyzeTextInput(description: String) async throws -> FoodAnalysis {
         let prompt = """
-        Estimate the nutritional content for:
-        Food: \(foodDescription)
-        Quantity: \(quantity) \(unit)
-        If a brand is mentioned, use that brand's known nutritional data.
+        Estimate the nutritional content for: \(description)
+        Parse any quantities, brands, and multiple items from the text. If a brand is mentioned, use that brand's known nutritional data. If multiple items are described, sum up the total nutrition.
         Respond ONLY with JSON:
         {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"emoji":"🍽️","sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0}
-        Calories/protein/carbs/fat are integers. serving_size_grams is the estimated weight in grams of the quantity specified. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
+        Calories/protein/carbs/fat are integers. serving_size_grams is the estimated total weight in grams. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
         Include a single food emoji that best represents the food. Use null for any nutrient you cannot estimate.
         """
 
