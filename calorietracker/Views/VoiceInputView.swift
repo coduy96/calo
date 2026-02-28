@@ -24,13 +24,7 @@ struct VoiceInputView: View {
                     onCancel()
                 }
 
-            VStack(spacing: 16) {
-                Text("Voice Input")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .textCase(.uppercase)
-                    .padding(.top, 4)
-
+            VStack(spacing: 20) {
                 // Transcription area
                 ZStack(alignment: .topLeading) {
                     if transcription.isEmpty {
@@ -42,9 +36,9 @@ struct VoiceInputView: View {
                     }
                 }
                 .font(.body)
-                .frame(maxWidth: .infinity, minHeight: 60, alignment: .topLeading)
-                .padding(12)
-                .background(Color(.quaternarySystemFill), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .frame(maxWidth: .infinity, minHeight: 100, alignment: .topLeading)
+                .padding(14)
+                .background(Color(.quaternarySystemFill), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                 // Mic button
                 Button {
@@ -83,34 +77,38 @@ struct VoiceInputView: View {
                         .multilineTextAlignment(.center)
                 }
 
-                Divider()
-
                 // Action buttons
-                HStack {
-                    Button("Cancel", role: .destructive) {
+                HStack(spacing: 12) {
+                    Button {
                         stopRecording()
                         onCancel()
+                    } label: {
+                        Text("Cancel")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
                     }
-                    .frame(maxWidth: .infinity)
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color(.systemGray4))
+                    .foregroundStyle(.primary)
 
-                    Divider()
-                        .frame(height: 20)
-
-                    Button("Analyze") {
+                    Button {
                         stopRecording()
                         onSubmit(transcription)
+                    } label: {
+                        Text("Analyze")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
                     }
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
+                    .buttonStyle(.borderedProminent)
+                    .tint(AppColors.calorie)
                     .disabled(transcription.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
-                .padding(.bottom, 4)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .shadow(color: .black.opacity(0.15), radius: 30, y: 10)
-            .padding(.horizontal, 40)
+            .padding(20)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .padding(.horizontal, 24)
         }
         .onAppear {
             startRecording()
