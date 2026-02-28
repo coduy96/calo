@@ -49,6 +49,7 @@ Fud AI is an AI-powered calorie and nutrition tracker for iOS. Snap a photo of y
 - **Nutrition Label Scan** — Photograph a nutrition facts panel for precise per-serving data
 - **Photo Library** — Analyze existing photos from your camera roll
 - **Text Input** — Type a brand, food name, and quantity for AI-powered nutrition lookup
+- **Voice Input** — Tap the mic and speak your meal, no typing needed
 
 ### Comprehensive Nutrition Tracking
 - Track **13 nutrients** per entry: calories, protein, carbs, fat, sugar, added sugar, fiber, saturated fat, monounsaturated fat, polyunsaturated fat, cholesterol, sodium, and potassium
@@ -129,7 +130,7 @@ User captures photo ──> Gemini 2.5 Flash AI ──> JSON nutrition response
             (local JSON)   (iCloud)
 ```
 
-1. **Capture** — Snap a photo, scan a label, pick from library, or type food details
+1. **Capture** — Snap a photo, scan a label, pick from library, type, or speak your food details
 2. **Analyze** — Gemini 2.5 Flash identifies the food and estimates full nutrition
 3. **Review** — Edit the name, adjust serving size, and confirm meal type
 4. **Log** — Entry is saved locally and synced to iCloud
@@ -284,7 +285,7 @@ calorietracker/
 ### Data Flow
 
 ```
-Photo/Text Input
+Photo/Text/Voice Input
       │
       ▼
 GeminiService.autoAnalyze() ──> Gemini 2.5 Flash API
