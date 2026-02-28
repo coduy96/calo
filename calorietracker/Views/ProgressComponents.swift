@@ -112,6 +112,7 @@ struct WeightChartSection: View {
                     }
                 }
                 .frame(height: 180)
+                .clipped()
             }
         }
         .padding()
