@@ -830,6 +830,7 @@ struct ProfileView: View {
     @AppStorage("useMetric") private var useMetric = false
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @AppStorage("healthKitEnabled") private var healthKitEnabled = false
+    @AppStorage("weekStartsOnMonday") private var weekStartsOnMonday = false
 
     enum ActiveSheet: String, Identifiable {
         case editName, editBirthday, editHeight, editWeight, editBodyFat, editGoalWeight, editCalories, editProtein, editCarbs, editFat, paywall
@@ -1049,6 +1050,20 @@ struct ProfileView: View {
                     }
                     .tint(AppColors.calorie)
 
+                    Picker(selection: $weekStartsOnMonday) {
+                        Text("Sunday").tag(false)
+                        Text("Monday").tag(true)
+                    } label: {
+                        Label {
+                            Text("Week Starts On")
+                        } icon: {
+                            Image(systemName: "calendar")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .tint(.secondary)
+
                     NavigationLink {
                         NotificationSettingsView()
                     } label: {
@@ -1170,35 +1185,6 @@ struct ProfileView: View {
                                 .foregroundStyle(.green)
                                 .font(.system(size: 20))
                         }
-
-                        // Sync to iCloud
-                        Button {
-                            isSyncing = true
-                            Task {
-                                await CloudKitService.pushAllData(
-                                    foodEntries: foodStore.entries,
-                                    weightEntries: weightStore.entries,
-                                    profile: UserProfile.load()
-                                )
-                                isSyncing = false
-                            }
-                        } label: {
-                            HStack {
-                                Label {
-                                    Text("Sync to iCloud")
-                                } icon: {
-                                    Image(systemName: "icloud.and.arrow.up")
-                                        .foregroundStyle(AppColors.calorie)
-                                }
-                                Spacer()
-                                if isSyncing || isSigningOut {
-                                    ProgressView()
-                                        .tint(AppColors.calorie)
-                                }
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(isSyncing || isSigningOut)
 
                         // Apple Health
                         HStack {

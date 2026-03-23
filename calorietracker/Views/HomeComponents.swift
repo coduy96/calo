@@ -6,26 +6,86 @@ struct WeekEnergyStrip: View {
     @Binding var selectedDate: Date
     let caloriesForDate: (Date) -> Int
     let calorieGoal: Int
+    @AppStorage("weekStartsOnMonday") private var weekStartsOnMonday = false
 
-    private var weekDates: [Date] {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: .now)
-        let weekday = calendar.component(.weekday, from: today)
-        let startOfWeek = calendar.date(byAdding: .day, value: -(weekday - 1), to: today)!
-        return (0..<7).map { calendar.date(byAdding: .day, value: $0, to: startOfWeek)! }
+    private static let totalWeeks = 53 // ~1 year of history
+    private static let currentWeekIndex = totalWeeks - 1
+
+    private var calendar: Calendar {
+        var cal = Calendar.current
+        cal.firstWeekday = weekStartsOnMonday ? 2 : 1 // 2 = Monday, 1 = Sunday
+        return cal
+    }
+
+    private func weekDates(for weekOffset: Int) -> [Date] {
+        let cal = calendar
+        let today = cal.startOfDay(for: .now)
+        // Find start of current week
+        let weekday = cal.component(.weekday, from: today)
+        let firstWeekday = cal.firstWeekday
+        let daysBack = (weekday - firstWeekday + 7) % 7
+        let startOfCurrentWeek = cal.date(byAdding: .day, value: -daysBack, to: today)!
+        // Offset to the requested week
+        let offset = weekOffset - Self.currentWeekIndex
+        let startOfWeek = cal.date(byAdding: .weekOfYear, value: offset, to: startOfCurrentWeek)!
+        return (0..<7).map { cal.date(byAdding: .day, value: $0, to: startOfWeek)! }
+    }
+
+    private func weekIndex(for date: Date) -> Int {
+        let cal = calendar
+        let today = cal.startOfDay(for: .now)
+        let weekday = cal.component(.weekday, from: today)
+        let firstWeekday = cal.firstWeekday
+        let daysBack = (weekday - firstWeekday + 7) % 7
+        let startOfCurrentWeek = cal.date(byAdding: .day, value: -daysBack, to: today)!
+        let components = cal.dateComponents([.weekOfYear], from: startOfCurrentWeek, to: cal.startOfDay(for: date))
+        let weekDiff = components.weekOfYear ?? 0
+        return Self.currentWeekIndex + weekDiff
     }
 
     var body: some View {
-        HStack(spacing: 0) {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 0) {
+                    ForEach(0..<Self.totalWeeks, id: \.self) { weekIndex in
+                        weekRow(for: weekIndex)
+                            .containerRelativeFrame(.horizontal)
+                            .id(weekIndex)
+                    }
+                }
+                .scrollTargetLayout()
+            }
+            .scrollTargetBehavior(.paging)
+            .onAppear {
+                proxy.scrollTo(Self.currentWeekIndex, anchor: .trailing)
+            }
+            .onChange(of: selectedDate) { _, newDate in
+                let targetWeek = weekIndex(for: newDate)
+                if targetWeek >= 0 && targetWeek < Self.totalWeeks {
+                    withAnimation(.snappy(duration: 0.3)) {
+                        proxy.scrollTo(targetWeek, anchor: .center)
+                    }
+                }
+            }
+            .onChange(of: weekStartsOnMonday) { _, _ in
+                proxy.scrollTo(Self.currentWeekIndex, anchor: .trailing)
+            }
+        }
+    }
+
+    private func weekRow(for weekIndex: Int) -> some View {
+        let dates = weekDates(for: weekIndex)
+        return HStack(spacing: 0) {
             ForEach(0..<7, id: \.self) { index in
-                dayTile(for: weekDates[index])
+                dayTile(for: dates[index])
             }
         }
     }
 
     private func dayTile(for date: Date) -> some View {
-        let isSelected = Calendar.current.isDate(date, inSameDayAs: selectedDate)
-        let isToday = Calendar.current.isDateInToday(date)
+        let cal = Calendar.current
+        let isSelected = cal.isDate(date, inSameDayAs: selectedDate)
+        let isToday = cal.isDateInToday(date)
 
         return Button {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
