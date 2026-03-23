@@ -4,13 +4,21 @@ import Charts
 // MARK: - Time Range
 
 enum TimeRange: String, CaseIterable {
-    case week = "Week"
-    case month = "Month"
+    case week = "1W"
+    case month = "1M"
+    case threeMonths = "3M"
+    case sixMonths = "6M"
+    case year = "1Y"
+    case allTime = "All"
 
     var days: Int {
         switch self {
         case .week: 7
         case .month: 30
+        case .threeMonths: 90
+        case .sixMonths: 180
+        case .year: 365
+        case .allTime: 3650
         }
     }
 
@@ -112,7 +120,9 @@ struct WeightChartSection: View {
         let count = weightEntries.count
         if count <= 7 { return 1 }
         if count <= 30 { return 5 }
-        return 7
+        if count <= 90 { return 14 }
+        if count <= 180 { return 30 }
+        return 60
     }
 
     private var weightYDomain: ClosedRange<Double> {
@@ -186,7 +196,9 @@ struct CalorieChartSection: View {
         let count = dailyCalories.count
         if count <= 7 { return 1 }
         if count <= 30 { return 5 }
-        return 7
+        if count <= 90 { return 14 }
+        if count <= 180 { return 30 }
+        return 60
     }
 }
 
