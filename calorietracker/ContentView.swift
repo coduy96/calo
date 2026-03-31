@@ -1,7 +1,6 @@
 import SwiftUI
 import PhotosUI
 import UIKit
-import AuthenticationServices
 import HealthKit
 
 // MARK: - Camera Mode
@@ -387,13 +386,11 @@ struct HomeView: View {
                 switch mode {
                 case .snapFood:
                     let result = try await GeminiService.analyzeFood(image: image)
-                    storeManager.recordScan()
                     currentFoodResult = result
                     activeSheet = .foodResult
 
                 case .nutritionLabel:
                     let label = try await GeminiService.analyzeNutritionLabel(image: image)
-                    storeManager.recordScan()
                     let servingGrams = label.servingSizeGrams ?? 100
                     currentFoodResult = label.scaled(to: servingGrams)
                     activeSheet = .foodResult
@@ -806,7 +803,6 @@ struct ProgressTabView: View {
 struct ProfileView: View {
     @Environment(WeightStore.self) private var weightStore
     @Environment(FoodStore.self) private var foodStore
-    @Environment(AuthManager.self) private var authManager
     @Environment(NotificationManager.self) private var notificationManager
     @Environment(HealthKitManager.self) private var healthKitManager
     @State private var profile: UserProfile = UserProfile.load() ?? .default
@@ -823,8 +819,6 @@ struct ProfileView: View {
     @State private var activeSheet: ActiveSheet?
     @State private var showDeleteConfirmation = false
     @State private var editingName: String = ""
-    @State private var isSyncing = false
-    @State private var isSigningOut = false
     @State private var signInError: String?
 
     // Height formatting
@@ -1061,126 +1055,78 @@ struct ProfileView: View {
                 }
                 .listRowBackground(AppColors.appCard)
 
-                // Section 4: Account
-                Section("Account") {
-                    if authManager.isSignedIn {
-                        // Apple ID info
-                        HStack(spacing: 12) {
-                            Image(systemName: "apple.logo")
-                                .font(.system(size: 20))
+                // Section 4: About
+                Section("About") {
+                    // Apple Health
+                    HStack {
+                        Label {
+                            Text("Apple Health")
+                        } icon: {
+                            Image(systemName: "heart.fill")
+                                .foregroundStyle(.pink)
+                        }
+                        Spacer()
+                        Toggle("", isOn: $healthKitEnabled)
+                            .labelsHidden()
+                            .onChange(of: healthKitEnabled) { _, enabled in
+                                handleHealthKitToggle(enabled)
+                            }
+                    }
+
+                    // Open Source
+                    Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai")!) {
+                        Label {
+                            Text("Open Source (MIT)")
+                        } icon: {
+                            Image(systemName: "chevron.left.forwardslash.chevron.right")
                                 .foregroundStyle(AppColors.calorie)
-                                .frame(width: 28)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(authManager.userDisplayName ?? "Apple ID")
-                                    .font(.system(.body, design: .rounded, weight: .medium))
-                                if let email = authManager.userEmail {
-                                    Text(email)
-                                        .font(.system(.caption, design: .rounded))
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                            Spacer()
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.green)
-                                .font(.system(size: 20))
-                        }
-
-                        // Apple Health
-                        HStack {
-                            Label {
-                                Text("Apple Health")
-                            } icon: {
-                                Image(systemName: "heart.fill")
-                                    .foregroundStyle(.pink)
-                            }
-                            Spacer()
-                            Toggle("", isOn: $healthKitEnabled)
-                                .labelsHidden()
-                                .onChange(of: healthKitEnabled) { _, enabled in
-                                    handleHealthKitToggle(enabled)
-                                }
-                        }
-
-                        // Contact
-                        Link(destination: URL(string: "mailto:ad13dtu@gmail.com")!) {
-                            Label {
-                                Text("Contact Us")
-                            } icon: {
-                                Image(systemName: "envelope.fill")
-                                    .foregroundStyle(AppColors.calorie)
-                            }
-                        }
-                        .buttonStyle(.plain)
-
-                        // Privacy Policy
-                        Link(destination: URL(string: "https://fud-ai.vercel.app/privacy.html")!) {
-                            Label {
-                                Text("Privacy Policy")
-                            } icon: {
-                                Image(systemName: "lock.shield.fill")
-                                    .foregroundStyle(AppColors.calorie)
-                            }
-                        }
-                        .buttonStyle(.plain)
-
-                        // Terms of Service
-                        Link(destination: URL(string: "https://fud-ai.vercel.app/terms.html")!) {
-                            Label {
-                                Text("Terms of Service")
-                            } icon: {
-                                Image(systemName: "doc.text.fill")
-                                    .foregroundStyle(AppColors.calorie)
-                            }
-                        }
-                        .buttonStyle(.plain)
-
-                        // Sign Out
-                        Button {
-                            isSigningOut = true
-                            Task {
-                                await CloudKitService.pushAllData(
-                                    foodEntries: foodStore.entries,
-                                    weightEntries: weightStore.entries,
-                                    profile: UserProfile.load()
-                                )
-                                isSigningOut = false
-                                authManager.signOut()
-                                hasCompletedOnboarding = false
-                            }
-                        } label: {
-                            HStack {
-                                Label {
-                                    Text("Sign Out")
-                                } icon: {
-                                    Image(systemName: "rectangle.portrait.and.arrow.right")
-                                        .foregroundStyle(AppColors.calorie)
-                                }
-                                Spacer()
-                                if isSigningOut {
-                                    ProgressView()
-                                        .tint(AppColors.calorie)
-                                }
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(isSyncing || isSigningOut)
-                    } else {
-                        // Apple Health
-                        HStack {
-                            Label {
-                                Text("Apple Health")
-                            } icon: {
-                                Image(systemName: "heart.fill")
-                                    .foregroundStyle(.pink)
-                            }
-                            Spacer()
-                            Toggle("", isOn: $healthKitEnabled)
-                                .labelsHidden()
-                                .onChange(of: healthKitEnabled) { _, enabled in
-                                    handleHealthKitToggle(enabled)
-                                }
                         }
                     }
+                    .buttonStyle(.plain)
+
+                    // Report Issues
+                    Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai/issues")!) {
+                        Label {
+                            Text("Report an Issue")
+                        } icon: {
+                            Image(systemName: "exclamationmark.bubble.fill")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .buttonStyle(.plain)
+
+                    // Contact
+                    Link(destination: URL(string: "mailto:ad13dtu@gmail.com")!) {
+                        Label {
+                            Text("Contact Us")
+                        } icon: {
+                            Image(systemName: "envelope.fill")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .buttonStyle(.plain)
+
+                    // Privacy Policy
+                    Link(destination: URL(string: "https://fud-ai.vercel.app/privacy.html")!) {
+                        Label {
+                            Text("Privacy Policy")
+                        } icon: {
+                            Image(systemName: "lock.shield.fill")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .buttonStyle(.plain)
+
+                    // Terms of Service
+                    Link(destination: URL(string: "https://fud-ai.vercel.app/terms.html")!) {
+                        Label {
+                            Text("Terms of Service")
+                        } icon: {
+                            Image(systemName: "doc.text.fill")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .buttonStyle(.plain)
 
                     // Delete All Data — always visible
                     Button(role: .destructive) {
@@ -1202,12 +1148,6 @@ struct ProfileView: View {
             .navigationBarHidden(true)
             .onAppear {
                 profile = UserProfile.load() ?? .default
-                // Auto-populate name from Apple Sign-In if not yet set
-                if (profile.name == nil || profile.name?.isEmpty == true),
-                   let appleName = authManager.userDisplayName, !appleName.isEmpty {
-                    profile.name = appleName
-                    saveProfile()
-                }
             }
             .sheet(item: $activeSheet) { sheet in
                 switch sheet {
@@ -1359,15 +1299,9 @@ struct ProfileView: View {
                     weightStore.replaceAllEntries([])
                     // Cancel all notifications
                     notificationManager.cancelAllNotifications()
-                    // Delete from iCloud
-                    Task { await CloudKitService.deleteAllData() }
-                    // Wipe all auth credentials
-                    authManager.deleteAllCredentials()
                     // Wipe all persisted data
                     let domain = Bundle.main.bundleIdentifier ?? ""
                     UserDefaults.standard.removePersistentDomain(forName: domain)
-                    // Re-check subscription — Apple manages this, not UserDefaults
-                    Task { await storeManager.checkEntitlements() }
                     hasCompletedOnboarding = false
                 }
             } message: {
@@ -1435,5 +1369,4 @@ struct ProfileView: View {
     ContentView()
         .environment(FoodStore())
         .environment(WeightStore())
-        .environment(AuthManager())
 }

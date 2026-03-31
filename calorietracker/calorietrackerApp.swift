@@ -13,7 +13,6 @@ struct calorietrackerApp: App {
     @State private var foodStore = FoodStore()
     @State private var weightStore = WeightStore()
     @State private var notificationManager = NotificationManager()
-    @State private var authManager = AuthManager()
     @State private var healthKitManager = HealthKitManager()
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("appearanceMode") private var appearanceMode = "system"
@@ -37,18 +36,16 @@ struct calorietrackerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if hasCompletedOnboarding && authManager.isSignedIn {
+            if hasCompletedOnboarding {
                 ContentView()
                     .environment(foodStore)
                     .environment(weightStore)
                     .environment(notificationManager)
-                    .environment(authManager)
                     .environment(healthKitManager)
                     .preferredColorScheme(colorScheme)
             } else {
                 OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
                     .environment(notificationManager)
-                    .environment(authManager)
                     .environment(foodStore)
                     .environment(weightStore)
                     .environment(healthKitManager)
@@ -59,7 +56,6 @@ struct calorietrackerApp: App {
             if newPhase == .active {
                 Task {
                     await notificationManager.refreshAuthorizationStatus()
-                    await authManager.checkCredentialState()
                 }
                 if notificationsEnabled, let profile = UserProfile.load() {
                     notificationManager.rescheduleDataDependentNotifications(

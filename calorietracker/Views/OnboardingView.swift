@@ -1,18 +1,14 @@
 import SwiftUI
-import AuthenticationServices
 import HealthKit
 
 struct OnboardingView: View {
     @Binding var hasCompletedOnboarding: Bool
     @Environment(NotificationManager.self) private var notificationManager
-    @Environment(AuthManager.self) private var authManager
     @Environment(FoodStore.self) private var foodStore
     @Environment(WeightStore.self) private var weightStore
     @Environment(HealthKitManager.self) private var healthKitManager
 
     @State private var step = 0
-    @State private var isRestoringFromCloud = false
-    @State private var signInError: String?
     @State private var gender: Gender = .male
     @State private var birthday: Date = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     @AppStorage("useMetric") private var useMetric = false
@@ -168,87 +164,21 @@ struct OnboardingView: View {
             }
             Spacer()
 
-            if isRestoringFromCloud {
-                VStack(spacing: 12) {
-                    ProgressView()
-                        .tint(AppColors.calorie)
-                    Text("Restoring your data...")
-                        .font(.system(.callout, design: .rounded))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.bottom, 36)
-            } else {
-                VStack(spacing: 16) {
-                    SignInWithAppleButton(.signIn) { request in
-                        request.requestedScopes = [.fullName, .email]
-                    } onCompletion: { result in
-                        handleAppleSignIn(result)
-                    }
-                    .signInWithAppleButtonStyle(.whiteOutline)
-                    .frame(height: 54)
-                    .padding(.horizontal, 24)
-
-                    if let signInError {
-                        Text(signInError)
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(.red)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 24)
-                    }
-                }
-                .padding(.bottom, 36)
+            Button {
+                withAnimation(.snappy) { step += 1 }
+            } label: {
+                Text("Get Started")
+                    .font(.system(.headline, design: .rounded, weight: .semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(
+                        LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing)
+                    )
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
             }
-        }
-    }
-
-    private func handleAppleSignIn(_ result: Result<ASAuthorization, Error>) {
-        do {
-            try authManager.handleSignInResult(result)
-            isRestoringFromCloud = true
-            signInError = nil
-            Task {
-                do {
-                    let cloudData = try await CloudKitService.pullAllData()
-                    if let cloudProfile = cloudData.profile {
-                        // Returning user — restore from iCloud
-                        var restored = cloudProfile
-                        setAppleNameIfNeeded(&restored)
-                        restored.save()
-                        foodStore.replaceAllEntries(cloudData.foodEntries)
-                        weightStore.replaceAllEntries(cloudData.weightEntries)
-                        hasCompletedOnboarding = true
-                    } else if var local = UserProfile.load() {
-                        // Local profile exists (sign-out → sign-in) — skip onboarding
-                        setAppleNameIfNeeded(&local)
-                        local.save()
-                        hasCompletedOnboarding = true
-                    } else {
-                        // New user — continue onboarding
-                        withAnimation(.snappy) { step += 1 }
-                    }
-                } catch {
-                    // Cloud fetch failed — check local data
-                    if var local = UserProfile.load() {
-                        setAppleNameIfNeeded(&local)
-                        local.save()
-                        hasCompletedOnboarding = true
-                    } else {
-                        withAnimation(.snappy) { step += 1 }
-                    }
-                }
-                isRestoringFromCloud = false
-            }
-        } catch let error as ASAuthorizationError where error.code == .canceled {
-            // User cancelled — do nothing
-        } catch {
-            signInError = error.localizedDescription
-        }
-    }
-
-    private func setAppleNameIfNeeded(_ profile: inout UserProfile) {
-        if (profile.name == nil || profile.name?.isEmpty == true),
-           let appleName = authManager.userDisplayName, !appleName.isEmpty {
-            profile.name = appleName
+            .padding(.horizontal, 24)
+            .padding(.bottom, 36)
         }
     }
 
