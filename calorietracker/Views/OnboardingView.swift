@@ -1,7 +1,6 @@
 import SwiftUI
 import AuthenticationServices
 import HealthKit
-import StoreKit
 
 struct OnboardingView: View {
     @Binding var hasCompletedOnboarding: Bool
@@ -10,12 +9,8 @@ struct OnboardingView: View {
     @Environment(FoodStore.self) private var foodStore
     @Environment(WeightStore.self) private var weightStore
     @Environment(HealthKitManager.self) private var healthKitManager
-    @Environment(StoreManager.self) private var storeManager
 
     @State private var step = 0
-    @State private var showSpinWheel = false
-    @State private var showDiscountPaywall = false
-    @State private var hasShownSpinWheel = false
     @State private var isRestoringFromCloud = false
     @State private var signInError: String?
     @State private var gender: Gender = .male
@@ -29,7 +24,6 @@ struct OnboardingView: View {
     @State private var weightKg = 70
     @State private var activityLevel: ActivityLevel = .moderate
     @State private var goal: WeightGoal = .maintain
-    @State private var selectedPlan: PaywallPlan = .yearly
     @State private var targetWeightLbs = 154
     @State private var targetWeightKg = 70
     @State private var goalSpeed = 1
@@ -46,7 +40,7 @@ struct OnboardingView: View {
         var id: String { rawValue }
     }
 
-    private let totalSteps = 15 // 0-14
+    private let totalSteps = 14 // 0-13
 
     private var profile: UserProfile {
         let cm: Double
@@ -74,7 +68,7 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-                if step > 0 && step < 14 {
+                if step > 0 && step < totalSteps - 1 {
                     HStack(spacing: 16) {
                         Button {
                             withAnimation(.snappy) { step -= 1 }
@@ -117,7 +111,6 @@ struct OnboardingView: View {
                     case 11: buildingPlanStep
                     case 12: planReadyStep
                     case 13: reviewStep
-                    case 14: paywallStep
                     default: EmptyView()
                     }
                 }
@@ -989,353 +982,6 @@ struct OnboardingView: View {
         }
         .buttonStyle(.plain)
     }
-
-    // MARK: - 14: Paywall
-
-    private var paywallStep: some View {
-        Group {
-            if showSpinWheel && !showDiscountPaywall {
-                SpinWheelView { _ in
-                    withAnimation(.snappy) {
-                        showSpinWheel = false
-                        showDiscountPaywall = true
-                        hasShownSpinWheel = true
-                    }
-                }
-            } else if showDiscountPaywall {
-                discountPaywallContent
-            } else {
-                initialPaywallContent
-            }
-        }
-    }
-
-    private var initialPaywallContent: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Spacer()
-                Button {
-                    if hasShownSpinWheel {
-                        hasCompletedOnboarding = true
-                    } else {
-                        withAnimation(.snappy) { showSpinWheel = true }
-                    }
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 32, height: 32)
-                        .background(Color.primary.opacity(0.06), in: Circle())
-                }
-            }
-            .padding(.horizontal, 24).padding(.top, 8)
-
-            Spacer()
-            VStack(spacing: 8) {
-                Image(systemName: "star.fill").font(.system(size: 44))
-                    .foregroundStyle(LinearGradient(colors: [Color(hex: 0xFF375F), Color(hex: 0x8B2942)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                Text("Unlock Premium").font(.system(size: 28, weight: .bold, design: .rounded))
-                Text("Unlimited scans, detailed insights,\nand personalized plans")
-                    .font(.system(.callout, design: .rounded)).foregroundStyle(.secondary).multilineTextAlignment(.center)
-            }
-            Spacer()
-
-            VStack(spacing: 12) {
-                if let yearly = storeManager.yearlyProduct {
-                    paywallPlanCard(plan: .yearly, title: "Yearly", price: yearly.displayPrice, detail: yearlyPerMonthText(yearly), badge: "Best Value")
-                } else {
-                    paywallPlanCard(plan: .yearly, title: "Yearly", price: "$29.99", detail: "$2.50/mo", badge: "Best Value")
-                }
-                if let monthly = storeManager.monthlyProduct {
-                    paywallPlanCard(plan: .monthly, title: "Monthly", price: monthly.displayPrice, detail: "per month", badge: nil)
-                } else {
-                    paywallPlanCard(plan: .monthly, title: "Monthly", price: "$7.99", detail: "per month", badge: nil)
-                }
-            }.padding(.horizontal, 24)
-
-            Spacer()
-
-            Button {
-                Task {
-                    if storeManager.products.isEmpty {
-                        await storeManager.loadProducts()
-                    }
-                    await purchaseSelectedPlan()
-                }
-            } label: {
-                Group {
-                    if storeManager.isPurchasing {
-                        ProgressView().tint(Color(.systemBackground))
-                    } else {
-                        Text("Subscribe")
-                            .font(.system(.body, design: .rounded, weight: .semibold))
-                    }
-                }
-                .foregroundStyle(Color(.systemBackground))
-                .frame(maxWidth: .infinity).frame(height: 54)
-                .background(Color.primary, in: Capsule())
-            }
-            .padding(.horizontal, 24)
-            .disabled(storeManager.isPurchasing)
-
-            if let error = storeManager.purchaseError {
-                Text(error)
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(.red)
-                    .padding(.top, 8).padding(.horizontal, 24)
-            }
-
-            VStack(spacing: 8) {
-                Button("Restore Purchases") {
-                    Task {
-                        await storeManager.restorePurchases()
-                        if storeManager.isSubscribed { hasCompletedOnboarding = true }
-                    }
-                }
-                .font(.system(.footnote, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
-                Text("No Commitment \u{2022} Cancel Anytime")
-                    .font(.system(.caption2, design: .rounded)).foregroundStyle(.tertiary)
-            }.padding(.top, 12).padding(.bottom, 36)
-        }
-    }
-
-    private var discountPaywallContent: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Spacer()
-                Button { hasCompletedOnboarding = true } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 32, height: 32)
-                        .background(Color.primary.opacity(0.06), in: Circle())
-                }
-            }
-            .padding(.horizontal, 24).padding(.top, 8)
-
-            Spacer()
-            VStack(spacing: 8) {
-                Image(systemName: "star.fill").font(.system(size: 44))
-                    .foregroundStyle(LinearGradient(colors: [Color(hex: 0xFF375F), Color(hex: 0x8B2942)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                Text("Special Offer!").font(.system(size: 28, weight: .bold, design: .rounded))
-                Text("27% off your yearly plan")
-                    .font(.system(.callout, design: .rounded)).foregroundStyle(.secondary).multilineTextAlignment(.center)
-            }
-            Spacer()
-
-            VStack(spacing: 12) {
-                // Discounted yearly card with strikethrough
-                if let discountYearly = storeManager.yearlyDiscountProduct {
-                    let originalPrice = storeManager.yearlyProduct?.displayPrice
-                    paywallPlanCardWithDiscount(
-                        plan: .yearly,
-                        title: "Yearly",
-                        price: discountYearly.displayPrice,
-                        originalPrice: originalPrice,
-                        detail: yearlyPerMonthText(discountYearly),
-                        badge: "27% Off"
-                    )
-                } else {
-                    paywallPlanCardWithDiscount(
-                        plan: .yearly,
-                        title: "Yearly",
-                        price: "$21.99",
-                        originalPrice: "$29.99",
-                        detail: "$1.83/mo",
-                        badge: "27% Off"
-                    )
-                }
-                if let monthly = storeManager.monthlyProduct {
-                    paywallPlanCard(plan: .monthly, title: "Monthly", price: monthly.displayPrice, detail: "per month", badge: nil)
-                } else {
-                    paywallPlanCard(plan: .monthly, title: "Monthly", price: "$7.99", detail: "per month", badge: nil)
-                }
-            }.padding(.horizontal, 24)
-
-            Spacer()
-
-            Button {
-                Task {
-                    if storeManager.products.isEmpty {
-                        await storeManager.loadProducts()
-                    }
-                    await purchaseSelectedPlan(discount: true)
-                }
-            } label: {
-                Group {
-                    if storeManager.isPurchasing {
-                        ProgressView().tint(Color(.systemBackground))
-                    } else {
-                        Text("Subscribe")
-                            .font(.system(.body, design: .rounded, weight: .semibold))
-                    }
-                }
-                .foregroundStyle(Color(.systemBackground))
-                .frame(maxWidth: .infinity).frame(height: 54)
-                .background(Color.primary, in: Capsule())
-            }
-            .padding(.horizontal, 24)
-            .disabled(storeManager.isPurchasing)
-
-            if let error = storeManager.purchaseError {
-                Text(error)
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(.red)
-                    .padding(.top, 8).padding(.horizontal, 24)
-            }
-
-            VStack(spacing: 8) {
-                Button("Restore Purchases") {
-                    Task {
-                        await storeManager.restorePurchases()
-                        if storeManager.isSubscribed { hasCompletedOnboarding = true }
-                    }
-                }
-                .font(.system(.footnote, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
-                Text("No Commitment \u{2022} Cancel Anytime")
-                    .font(.system(.caption2, design: .rounded)).foregroundStyle(.tertiary)
-            }.padding(.top, 12).padding(.bottom, 36)
-        }
-    }
-
-    private func purchaseSelectedPlan(discount: Bool = false) async {
-        let product: Product?
-        if selectedPlan == .yearly {
-            product = discount ? storeManager.yearlyDiscountProduct : storeManager.yearlyProduct
-        } else {
-            product = storeManager.monthlyProduct
-        }
-        guard let product else { return }
-        await storeManager.purchase(product)
-        if storeManager.isSubscribed {
-            hasCompletedOnboarding = true
-        }
-    }
-
-    private func yearlyPerMonthText(_ product: Product) -> String {
-        let monthlyEquivalent = product.price / 12
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.locale = product.priceFormatStyle.locale
-        return "\(formatter.string(from: monthlyEquivalent as NSDecimalNumber) ?? "")/mo"
-    }
-
-    // MARK: - Helpers
-
-    private func stepHeader(title: String, subtitle: String) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title).font(.system(size: 28, weight: .bold, design: .rounded))
-            if !subtitle.isEmpty {
-                Text(subtitle).font(.system(.callout, design: .rounded)).foregroundStyle(.secondary)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 24).padding(.top, 24)
-    }
-
-    private func selectionCard(icon: String, title: String, subtitle: String? = nil, isSelected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 16) {
-                Image(systemName: icon).font(.system(size: 22))
-                    .foregroundStyle(isSelected ? Color.primary : .secondary).frame(width: 40)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.system(.body, design: .rounded, weight: .semibold)).foregroundStyle(.primary)
-                    if let subtitle {
-                        Text(subtitle).font(.system(.caption, design: .rounded)).foregroundStyle(.secondary)
-                    }
-                }
-                Spacer()
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle").font(.system(size: 22))
-                    .foregroundStyle(isSelected ? Color.primary : Color.secondary.opacity(0.3))
-            }
-            .padding(16)
-            .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(isSelected ? Color.primary : Color.clear, lineWidth: 2))
-        }.buttonStyle(.plain)
-    }
-
-    private func healthFeatureRow(icon: String, label: String) -> some View {
-        HStack(spacing: 14) {
-            Image(systemName: icon).font(.system(size: 18)).foregroundStyle(.secondary).frame(width: 28)
-            Text(label).font(.system(.body, design: .rounded)).foregroundStyle(.primary)
-        }
-    }
-
-    private func formatPrice(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.locale = Locale.current
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(String(format: "%.2f", amount))"
-    }
-
-    private func paywallPlanCard(plan: PaywallPlan, title: String, price: String, detail: String, badge: String?) -> some View {
-        Button {
-            withAnimation(.spring(response: 0.3)) { selectedPlan = plan }
-        } label: {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    if let badge {
-                        Text(badge).font(.system(.caption2, design: .rounded, weight: .bold)).foregroundStyle(.white)
-                            .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing), in: Capsule())
-                    }
-                    Text(title).font(.system(.body, design: .rounded, weight: .semibold)).foregroundStyle(.primary)
-                }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(price).font(.system(.body, design: .rounded, weight: .bold)).foregroundStyle(.primary)
-                    Text(detail).font(.system(.caption, design: .rounded)).foregroundStyle(.secondary)
-                }
-                Image(systemName: selectedPlan == plan ? "checkmark.circle.fill" : "circle").font(.system(size: 22))
-                    .foregroundStyle(selectedPlan == plan ? Color.primary : Color.secondary.opacity(0.3)).padding(.leading, 8)
-            }
-            .padding(16)
-            .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(selectedPlan == plan ? Color.primary : Color.clear, lineWidth: 2))
-        }.buttonStyle(.plain)
-    }
-
-    private func paywallPlanCardWithDiscount(plan: PaywallPlan, title: String, price: String, originalPrice: String?, detail: String, badge: String?) -> some View {
-        Button {
-            withAnimation(.spring(response: 0.3)) { selectedPlan = plan }
-        } label: {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    if let badge {
-                        Text(badge).font(.system(.caption2, design: .rounded, weight: .bold)).foregroundStyle(.white)
-                            .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing), in: Capsule())
-                    }
-                    Text(title).font(.system(.body, design: .rounded, weight: .semibold)).foregroundStyle(.primary)
-                }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
-                    HStack(spacing: 6) {
-                        if let originalPrice {
-                            Text(originalPrice)
-                                .font(.system(.caption, design: .rounded, weight: .medium))
-                                .strikethrough()
-                                .foregroundStyle(.secondary)
-                        }
-                        Text(price).font(.system(.body, design: .rounded, weight: .bold)).foregroundStyle(.primary)
-                    }
-                    Text(detail).font(.system(.caption, design: .rounded)).foregroundStyle(.secondary)
-                }
-                Image(systemName: selectedPlan == plan ? "checkmark.circle.fill" : "circle").font(.system(size: 22))
-                    .foregroundStyle(selectedPlan == plan ? Color.primary : Color.secondary.opacity(0.3)).padding(.leading, 8)
-            }
-            .padding(16)
-            .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(selectedPlan == plan ? Color.primary : Color.clear, lineWidth: 2))
-        }.buttonStyle(.plain)
-    }
-}
-
-// MARK: - Paywall Plan Enum
-
-enum PaywallPlan {
-    case yearly, monthly
-}
 
 // MARK: - Building Plan Step (enhanced with percentage + checklist)
 

@@ -32,7 +32,6 @@ Fud AI is an AI-powered calorie and nutrition tracker for iOS. Snap a photo of y
 - [Nutrition Tracking](#nutrition-tracking)
 - [Apple Health Integration](#apple-health-integration)
 - [iCloud Sync](#icloud-sync)
-- [Subscription Plans](#subscription-plans)
 - [Architecture & Developer Guide](#architecture--developer-guide)
 - [Build & Run](#build--run)
 - [Privacy Policy](#privacy-policy)
@@ -103,7 +102,6 @@ Fud AI is an AI-powered calorie and nutrition tracker for iOS. Snap a photo of y
 ### Additional
 - **Dark mode** with system, light, and dark appearance options
 - **Metric and imperial** unit support (synced from onboarding)
-- **Scratch card gamification** during onboarding for subscription discounts
 - **Delete all data** option for full account removal (local + cloud)
 
 ---
@@ -204,22 +202,6 @@ A background observer monitors Apple Health for external weight/height/body fat 
 
 ---
 
-## Subscription Plans
-
-| Plan | Price | Scans | Product ID |
-|------|-------|-------|------------|
-| **Free** | $0 | 3 total | — |
-| **Monthly** | $7.99/mo | 25/day | `fudai.subscription.monthly` |
-| **Yearly** | $29.99/yr ($2.50/mo) | 25/day | `fudai.subscription.yearly` |
-| **Yearly Discount** | $21.99/yr ($1.83/mo) | 25/day | `fudai.subscription.yearly.discount` |
-
-- Auto-renewable subscriptions via StoreKit 2
-- Daily scan counter resets at midnight
-- Restore Purchases available in profile and paywall screens
-- Cancel anytime through iOS subscription management
-
----
-
 ## Architecture & Developer Guide
 
 ### Tech Stack
@@ -227,7 +209,6 @@ A background observer monitors Apple Health for external weight/height/body fat 
 - **UI:** SwiftUI (iOS 26.2+)
 - **AI:** Google Gemini 2.5 Flash API
 - **Storage:** UserDefaults (local), CloudKit (cloud), HealthKit (health)
-- **Payments:** StoreKit 2
 - **Auth:** Sign in with Apple (ASAuthorization)
 - **Dependencies:** Zero external dependencies
 
@@ -250,7 +231,6 @@ A background observer monitors Apple Health for external weight/height/body fat 
 | `NotificationManager` | Local notification scheduling and permissions |
 | `AuthManager` | Apple Sign-In, user identity |
 | `HealthKitManager` | Apple Health read/write, background observers |
-| `StoreManager` | StoreKit 2 subscriptions, scan limits, paywall state |
 
 ### Source Layout
 

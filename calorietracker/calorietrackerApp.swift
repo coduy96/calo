@@ -15,7 +15,6 @@ struct calorietrackerApp: App {
     @State private var notificationManager = NotificationManager()
     @State private var authManager = AuthManager()
     @State private var healthKitManager = HealthKitManager()
-    @State private var storeManager = StoreManager()
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("appearanceMode") private var appearanceMode = "system"
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
@@ -39,20 +38,13 @@ struct calorietrackerApp: App {
     var body: some Scene {
         WindowGroup {
             if hasCompletedOnboarding && authManager.isSignedIn {
-                if !storeManager.hasCheckedEntitlements || storeManager.canUseApp {
-                    ContentView()
-                        .environment(foodStore)
-                        .environment(weightStore)
-                        .environment(notificationManager)
-                        .environment(authManager)
-                        .environment(healthKitManager)
-                        .environment(storeManager)
-                        .preferredColorScheme(colorScheme)
-                } else {
-                    PaywallView()
-                        .environment(storeManager)
-                        .preferredColorScheme(colorScheme)
-                }
+                ContentView()
+                    .environment(foodStore)
+                    .environment(weightStore)
+                    .environment(notificationManager)
+                    .environment(authManager)
+                    .environment(healthKitManager)
+                    .preferredColorScheme(colorScheme)
             } else {
                 OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
                     .environment(notificationManager)
@@ -60,7 +52,6 @@ struct calorietrackerApp: App {
                     .environment(foodStore)
                     .environment(weightStore)
                     .environment(healthKitManager)
-                    .environment(storeManager)
                     .preferredColorScheme(colorScheme)
             }
         }

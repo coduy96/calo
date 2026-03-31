@@ -3,7 +3,6 @@ import PhotosUI
 import UIKit
 import AuthenticationServices
 import HealthKit
-import StoreKit
 
 // MARK: - Camera Mode
 enum CameraMode {
@@ -39,7 +38,6 @@ struct ContentView: View {
 // MARK: - Home View (Main Dashboard)
 struct HomeView: View {
     @Environment(FoodStore.self) private var foodStore
-    @Environment(StoreManager.self) private var storeManager
     @State private var showCamera = false
     @State private var capturedImage: UIImage?
     @State private var cameraMode: CameraMode = .snapFood
@@ -48,7 +46,6 @@ struct HomeView: View {
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var selectedDate: Date = .now
-    @State private var showScanLimitAlert = false
     @State private var showVoicePopover = false
     @State private var showTextPopover = false
 
@@ -204,33 +201,33 @@ struct HomeView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                             Button(action: {
-                                guard checkScanAvailable() else { return }
+
                                 cameraMode = .snapFood
                                 showCamera = true
                             }) {
                                 Label("Camera", systemImage: "camera.fill")
                             }
                             Button(action: {
-                                guard checkScanAvailable() else { return }
+
                                 cameraMode = .nutritionLabel
                                 showCamera = true
                             }) {
                                 Label("Nutrition Label", systemImage: "text.viewfinder")
                             }
                             Button(action: {
-                                guard checkScanAvailable() else { return }
+
                                 showPhotoPicker = true
                             }) {
                                 Label("From Photos", systemImage: "photo.on.rectangle")
                             }
                             Button(action: {
-                                guard checkScanAvailable() else { return }
+
                                 showTextPopover = true
                             }) {
                                 Label("Text Input", systemImage: "character.cursor.ibeam")
                             }
                             Button(action: {
-                                guard checkScanAvailable() else { return }
+
                                 showVoicePopover = true
                             }) {
                                 Label("Voice", systemImage: "mic.fill")
@@ -252,7 +249,7 @@ struct HomeView: View {
                                         activeSheet = .analyzingText
                                         do {
                                             let result = try await GeminiService.analyzeTextInput(description: description)
-                                            storeManager.recordScan()
+
                                             currentFoodResult = result
                                             currentEmoji = result.emoji
                                             activeSheet = .foodResult
@@ -280,7 +277,7 @@ struct HomeView: View {
                                         activeSheet = .analyzingText
                                         do {
                                             let result = try await GeminiService.analyzeTextInput(description: description)
-                                            storeManager.recordScan()
+
                                             currentFoodResult = result
                                             currentEmoji = result.emoji
                                             activeSheet = .foodResult
@@ -359,7 +356,7 @@ struct HomeView: View {
                         activeSheet = .analyzing
                         do {
                             let result = try await GeminiService.autoAnalyze(image: image)
-                            storeManager.recordScan()
+
                             currentFoodResult = result
                             activeSheet = .foodResult
                         } catch {
@@ -375,24 +372,12 @@ struct HomeView: View {
             } message: {
                 Text(errorMessage)
             }
-            .alert("Daily Limit Reached", isPresented: $showScanLimitAlert) {
-                Button("OK") { }
-            } message: {
-                Text("You've used all 25 scans for today. Try again tomorrow!")
-            }
             .sheet(isPresented: $showNutritionDetail) {
                 NutritionDetailView(date: selectedDate)
             }
         }
     }
 
-    private func checkScanAvailable() -> Bool {
-        if !storeManager.canScan {
-            showScanLimitAlert = true
-            return false
-        }
-        return true
-    }
 
     private func startAnalysis(image: UIImage, mode: CameraMode) {
         activeSheet = .analyzing
@@ -824,7 +809,6 @@ struct ProfileView: View {
     @Environment(AuthManager.self) private var authManager
     @Environment(NotificationManager.self) private var notificationManager
     @Environment(HealthKitManager.self) private var healthKitManager
-    @Environment(StoreManager.self) private var storeManager
     @State private var profile: UserProfile = UserProfile.load() ?? .default
     @AppStorage("appearanceMode") private var appearanceMode = "system"
     @AppStorage("useMetric") private var useMetric = false
@@ -833,7 +817,7 @@ struct ProfileView: View {
     @AppStorage("weekStartsOnMonday") private var weekStartsOnMonday = false
 
     enum ActiveSheet: String, Identifiable {
-        case editName, editBirthday, editHeight, editWeight, editBodyFat, editGoalWeight, editCalories, editProtein, editCarbs, editFat, paywall
+        case editName, editBirthday, editHeight, editWeight, editBodyFat, editGoalWeight, editCalories, editProtein, editCarbs, editFat
         var id: String { rawValue }
     }
     @State private var activeSheet: ActiveSheet?
@@ -1077,92 +1061,7 @@ struct ProfileView: View {
                 }
                 .listRowBackground(AppColors.appCard)
 
-                // Section 4: Subscription
-                Section("Subscription") {
-                    if storeManager.isSubscribed {
-                        HStack {
-                            Label {
-                                Text(storeManager.currentPlanName)
-                            } icon: {
-                                Image(systemName: "star.fill")
-                                    .foregroundStyle(AppColors.calorie)
-                            }
-                            Spacer()
-                            Text("Active")
-                                .font(.system(.caption, design: .rounded, weight: .medium))
-                                .foregroundStyle(.green)
-                        }
-
-                        HStack {
-                            Label {
-                                Text("Scans Today")
-                            } icon: {
-                                Image(systemName: "camera.fill")
-                                    .foregroundStyle(AppColors.calorie)
-                            }
-                            Spacer()
-                            Text("\(storeManager.remainingScans) of 25 remaining")
-                                .font(.system(.caption, design: .rounded))
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Button {
-                            Task {
-                                if let windowScene = UIApplication.shared.connectedScenes
-                                    .compactMap({ $0 as? UIWindowScene }).first {
-                                    try? await AppStore.showManageSubscriptions(in: windowScene)
-                                }
-                            }
-                        } label: {
-                            Label {
-                                Text("Manage Subscription")
-                            } icon: {
-                                Image(systemName: "gear")
-                                    .foregroundStyle(AppColors.calorie)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    } else {
-                        HStack {
-                            Label {
-                                Text("Free Plan")
-                            } icon: {
-                                Image(systemName: "star")
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Text("\(storeManager.remainingScans) of 3 scans left")
-                                .font(.system(.caption, design: .rounded))
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Button {
-                            activeSheet = .paywall
-                        } label: {
-                            Label {
-                                Text("Upgrade to Premium")
-                            } icon: {
-                                Image(systemName: "star.fill")
-                                    .foregroundStyle(AppColors.calorie)
-                            }
-                        }
-                    }
-
-                    Button {
-                        Task { await storeManager.restorePurchases() }
-                    } label: {
-                        Label {
-                            Text("Restore Purchases")
-                        } icon: {
-                            Image(systemName: "arrow.clockwise")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
-                .listRowBackground(AppColors.appCard)
-
-                // Section 5: Account
+                // Section 4: Account
                 Section("Account") {
                     if authManager.isSignedIn {
                         // Apple ID info
@@ -1450,9 +1349,6 @@ struct ProfileView: View {
                         saveProfile()
                     }
 
-                case .paywall:
-                    PaywallView()
-                        .environment(storeManager)
                 }
             }
             .alert("Delete All Data", isPresented: $showDeleteConfirmation) {
