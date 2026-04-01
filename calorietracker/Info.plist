@@ -4,10 +4,6 @@
 <dict>
 	<key>CFBundleDisplayName</key>
 	<string>Fud AI</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-	</array>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Read your weight, height, and body composition to keep your profile accurate.</string>
 	<key>NSHealthUpdateUsageDescription</key>
