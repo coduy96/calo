@@ -32,6 +32,7 @@ struct calorietrackerApp: App {
             UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
             UserDefaults.standard.removeObject(forKey: "userProfile")
         }
+        APIKeyManager.migrateIfNeeded()
     }
 
     var body: some Scene {

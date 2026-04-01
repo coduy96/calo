@@ -1,0 +1,188 @@
+import Foundation
+
+enum AIProvider: String, CaseIterable, Codable, Identifiable {
+    case gemini = "Google Gemini"
+    case openai = "OpenAI"
+    case anthropic = "Anthropic Claude"
+    case xai = "xAI Grok"
+    case openrouter = "OpenRouter"
+    case togetherai = "Together AI"
+    case groq = "Groq"
+    case ollama = "Ollama (Local)"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .gemini: "sparkle"
+        case .openai: "brain.head.profile"
+        case .anthropic: "text.bubble"
+        case .xai: "bolt.fill"
+        case .openrouter: "arrow.triangle.branch"
+        case .togetherai: "square.stack.3d.up"
+        case .groq: "hare.fill"
+        case .ollama: "desktopcomputer"
+        }
+    }
+
+    var baseURL: String {
+        switch self {
+        case .gemini: "https://generativelanguage.googleapis.com/v1beta"
+        case .openai: "https://api.openai.com/v1"
+        case .anthropic: "https://api.anthropic.com/v1"
+        case .xai: "https://api.x.ai/v1"
+        case .openrouter: "https://openrouter.ai/api/v1"
+        case .togetherai: "https://api.together.xyz/v1"
+        case .groq: "https://api.groq.com/openai/v1"
+        case .ollama: "http://localhost:11434/v1"
+        }
+    }
+
+    var defaultModel: String {
+        models.first ?? ""
+    }
+
+    var models: [String] {
+        switch self {
+        case .gemini: [
+            "gemini-2.5-flash",
+            "gemini-2.5-pro",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
+            "gemini-1.5-pro",
+        ]
+        case .openai: [
+            "gpt-4o",
+            "gpt-4o-mini",
+            "gpt-4.1",
+            "gpt-4.1-mini",
+            "gpt-4.1-nano",
+            "o4-mini",
+        ]
+        case .anthropic: [
+            "claude-sonnet-4-20250514",
+            "claude-haiku-4-20250414",
+            "claude-3-5-sonnet-20241022",
+            "claude-3-5-haiku-20241022",
+        ]
+        case .xai: [
+            "grok-2-vision-1212",
+            "grok-2-1212",
+        ]
+        case .openrouter: [
+            "google/gemini-2.5-flash",
+            "openai/gpt-4o",
+            "anthropic/claude-sonnet-4",
+            "meta-llama/llama-4-maverick",
+        ]
+        case .togetherai: [
+            "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+            "meta-llama/Llama-Vision-Free",
+        ]
+        case .groq: [
+            "meta-llama/llama-4-scout-17b-16e-instruct",
+            "llama-3.2-90b-vision-preview",
+            "llama-3.2-11b-vision-preview",
+        ]
+        case .ollama: [
+            "llama3.2-vision",
+            "llava",
+            "moondream",
+        ]
+        }
+    }
+
+    var requiresAPIKey: Bool {
+        self != .ollama
+    }
+
+    /// API format grouping
+    enum APIFormat {
+        case gemini
+        case openaiCompatible
+        case anthropic
+    }
+
+    var apiFormat: APIFormat {
+        switch self {
+        case .gemini: .gemini
+        case .anthropic: .anthropic
+        case .openai, .xai, .openrouter, .togetherai, .groq, .ollama: .openaiCompatible
+        }
+    }
+
+    var apiKeyPlaceholder: String {
+        switch self {
+        case .gemini: "AIza..."
+        case .openai: "sk-..."
+        case .anthropic: "sk-ant-..."
+        case .xai: "xai-..."
+        case .openrouter: "sk-or-..."
+        case .togetherai: "..."
+        case .groq: "gsk_..."
+        case .ollama: "No key needed"
+        }
+    }
+}
+
+// MARK: - Settings Persistence
+
+struct AIProviderSettings {
+    private static let providerKey = "selectedAIProvider"
+    private static let modelKey = "selectedAIModel"
+    private static let apiKeyKeychainPrefix = "apikey_"
+    private static let baseURLKey = "customBaseURL_"
+
+    static var selectedProvider: AIProvider {
+        get {
+            guard let raw = UserDefaults.standard.string(forKey: providerKey),
+                  let provider = AIProvider(rawValue: raw) else { return .gemini }
+            return provider
+        }
+        set {
+            UserDefaults.standard.set(newValue.rawValue, forKey: providerKey)
+        }
+    }
+
+    static var selectedModel: String {
+        get {
+            UserDefaults.standard.string(forKey: modelKey) ?? selectedProvider.defaultModel
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: modelKey)
+        }
+    }
+
+    static func apiKey(for provider: AIProvider) -> String? {
+        KeychainHelper.load(key: apiKeyKeychainPrefix + provider.rawValue)
+    }
+
+    static func setAPIKey(_ key: String?, for provider: AIProvider) {
+        let keychainKey = apiKeyKeychainPrefix + provider.rawValue
+        if let key, !key.isEmpty {
+            KeychainHelper.save(key: keychainKey, value: key)
+        } else {
+            KeychainHelper.delete(key: keychainKey)
+        }
+    }
+
+    static func customBaseURL(for provider: AIProvider) -> String? {
+        UserDefaults.standard.string(forKey: baseURLKey + provider.rawValue)
+    }
+
+    static func setCustomBaseURL(_ url: String?, for provider: AIProvider) {
+        if let url, !url.isEmpty {
+            UserDefaults.standard.set(url, forKey: baseURLKey + provider.rawValue)
+        } else {
+            UserDefaults.standard.removeObject(forKey: baseURLKey + provider.rawValue)
+        }
+    }
+
+    static var currentAPIKey: String? {
+        apiKey(for: selectedProvider)
+    }
+
+    static var currentBaseURL: String {
+        customBaseURL(for: selectedProvider) ?? selectedProvider.baseURL
+    }
+}

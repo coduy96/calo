@@ -819,7 +819,9 @@ struct ProfileView: View {
     @State private var activeSheet: ActiveSheet?
     @State private var showDeleteConfirmation = false
     @State private var editingName: String = ""
-    @State private var signInError: String?
+    @State private var selectedProvider: AIProvider = AIProviderSettings.selectedProvider
+    @State private var selectedModel: String = AIProviderSettings.selectedModel
+    @State private var apiKeyText: String = AIProviderSettings.apiKey(for: AIProviderSettings.selectedProvider) ?? ""
 
     // Height formatting
     private var heightDisplay: String {
@@ -1055,7 +1057,70 @@ struct ProfileView: View {
                 }
                 .listRowBackground(AppColors.appCard)
 
-                // Section 4: About
+                // Section 4: AI Provider
+                Section("AI Provider") {
+                    Picker(selection: $selectedProvider) {
+                        ForEach(AIProvider.allCases) { provider in
+                            Label(provider.rawValue, systemImage: provider.icon).tag(provider)
+                        }
+                    } label: {
+                        Label {
+                            Text("Provider")
+                        } icon: {
+                            Image(systemName: "cpu")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .tint(.secondary)
+                    .onChange(of: selectedProvider) { _, newProvider in
+                        AIProviderSettings.selectedProvider = newProvider
+                        selectedModel = newProvider.defaultModel
+                        AIProviderSettings.selectedModel = newProvider.defaultModel
+                        apiKeyText = AIProviderSettings.apiKey(for: newProvider) ?? ""
+                    }
+
+                    Picker(selection: $selectedModel) {
+                        ForEach(selectedProvider.models, id: \.self) { model in
+                            Text(model).tag(model)
+                        }
+                    } label: {
+                        Label {
+                            Text("Model")
+                        } icon: {
+                            Image(systemName: "brain")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .tint(.secondary)
+                    .onChange(of: selectedModel) { _, newModel in
+                        AIProviderSettings.selectedModel = newModel
+                    }
+
+                    if selectedProvider.requiresAPIKey {
+                        HStack {
+                            Label {
+                                Text("API Key")
+                            } icon: {
+                                Image(systemName: "key.fill")
+                                    .foregroundStyle(AppColors.calorie)
+                            }
+                            Spacer()
+                            SecureField(selectedProvider.apiKeyPlaceholder, text: $apiKeyText)
+                                .textFieldStyle(.plain)
+                                .multilineTextAlignment(.trailing)
+                                .autocorrectionDisabled()
+                                .textInputAutocapitalization(.never)
+                                .onChange(of: apiKeyText) { _, newValue in
+                                    AIProviderSettings.setAPIKey(newValue.isEmpty ? nil : newValue, for: selectedProvider)
+                                }
+                        }
+                    }
+                }
+                .listRowBackground(AppColors.appCard)
+
+                // Section 5: About
                 Section("About") {
                     // Apple Health
                     HStack {

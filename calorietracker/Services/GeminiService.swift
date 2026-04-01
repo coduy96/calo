@@ -70,7 +70,7 @@ struct GeminiService {
         var errorDescription: String? {
             switch self {
             case .noAPIKey:
-                return "No API key found. Please add your Gemini API key to Secrets.plist."
+                return "No API key configured. Add your key in Profile → AI Provider."
             case .imageConversionFailed:
                 return "Failed to process the image."
             case .networkError(let error):
@@ -83,6 +83,8 @@ struct GeminiService {
         }
     }
 
+    // MARK: - Public API (unchanged interface)
+
     static func analyzeTextInput(description: String) async throws -> FoodAnalysis {
         let prompt = """
         Estimate the nutritional content for: \(description)
@@ -92,8 +94,7 @@ struct GeminiService {
         Calories/protein/carbs/fat are integers. serving_size_grams is the estimated total weight in grams. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
         Include a single food emoji that best represents the food. Use null for any nutrient you cannot estimate.
         """
-
-        let text = try await callGeminiText(prompt: prompt)
+        let text = try await callAI(prompt: prompt, image: nil)
         return try parseFoodAnalysis(from: text)
     }
 
@@ -109,8 +110,7 @@ struct GeminiService {
         Calories/protein/carbs/fat are integers. serving_size_grams is the estimated weight in grams of the serving. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
         Use null for any nutrient you cannot estimate.
         """
-
-        let text = try await callGemini(image: image, prompt: prompt)
+        let text = try await callAI(prompt: prompt, image: image)
         return try parseFoodAnalysis(from: text)
     }
 
@@ -119,29 +119,12 @@ struct GeminiService {
         Analyze this food image. Identify the food and estimate its nutritional content.
 
         Respond ONLY with a JSON object in this exact format, no other text:
-        {
-          "name": "Food Name",
-          "calories": 000,
-          "protein": 00,
-          "carbs": 00,
-          "fat": 00,
-          "serving_size_grams": 000.0,
-          "sugar": 0.0,
-          "added_sugar": 0.0,
-          "fiber": 0.0,
-          "saturated_fat": 0.0,
-          "monounsaturated_fat": 0.0,
-          "polyunsaturated_fat": 0.0,
-          "cholesterol": 0.0,
-          "sodium": 0.0,
-          "potassium": 0.0
-        }
+        {"name":"Food Name","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0}
 
         Calories/protein/carbs/fat are integers. serving_size_grams is the estimated weight in grams of the serving shown. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
         Give your best estimate for a typical serving size shown in the image. Use null for any nutrient you cannot estimate.
         """
-
-        let text = try await callGemini(image: image, prompt: prompt)
+        let text = try await callAI(prompt: prompt, image: image)
         return try parseFoodAnalysis(from: text)
     }
 
@@ -153,67 +136,165 @@ struct GeminiService {
         For the name, identify the product or brand name visible on the packaging or label.
         If no name is visible, describe the food type (e.g. "Protein Bar", "Yogurt", "Cereal").
 
-        Respond ONLY with a JSON object in this exact format, no other text:
-        {
-          "name": "Product Name",
-          "calories_per_100g": 000.0,
-          "protein_per_100g": 00.0,
-          "carbs_per_100g": 00.0,
-          "fat_per_100g": 00.0,
-          "serving_size_grams": 00.0,
-          "sugar_per_100g": 0.0,
-          "added_sugar_per_100g": 0.0,
-          "fiber_per_100g": 0.0,
-          "saturated_fat_per_100g": 0.0,
-          "monounsaturated_fat_per_100g": 0.0,
-          "polyunsaturated_fat_per_100g": 0.0,
-          "cholesterol_per_100g": 0.0,
-          "sodium_per_100g": 0.0,
-          "potassium_per_100g": 0.0
-        }
+        Respond ONLY with JSON:
+        {"name":"Product Name","calories_per_100g":0.0,"protein_per_100g":0.0,"carbs_per_100g":0.0,"fat_per_100g":0.0,"serving_size_grams":0.0,"sugar_per_100g":0.0,"added_sugar_per_100g":0.0,"fiber_per_100g":0.0,"saturated_fat_per_100g":0.0,"monounsaturated_fat_per_100g":0.0,"polyunsaturated_fat_per_100g":0.0,"cholesterol_per_100g":0.0,"sodium_per_100g":0.0,"potassium_per_100g":0.0}
 
         All values should be numbers. If serving size or any nutrient is not available, use null.
         """
-
-        let text = try await callGemini(image: image, prompt: prompt)
+        let text = try await callAI(prompt: prompt, image: image)
         return try parseNutritionLabel(from: text)
     }
 
-    private static func callGemini(image: UIImage, prompt: String) async throws -> String {
-        guard let apiKey = APIKeyManager.geminiAPIKey() else {
-            throw AnalysisError.noAPIKey
+    // MARK: - Unified AI Call Router
+
+    private static func callAI(prompt: String, image: UIImage?) async throws -> String {
+        let provider = AIProviderSettings.selectedProvider
+        let model = AIProviderSettings.selectedModel
+        let baseURL = AIProviderSettings.currentBaseURL
+
+        if provider.requiresAPIKey {
+            guard let _ = AIProviderSettings.currentAPIKey else {
+                throw AnalysisError.noAPIKey
+            }
         }
 
-        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
-            throw AnalysisError.imageConversionFailed
+        var imageData: Data?
+        if let image {
+            guard let data = image.jpegData(compressionQuality: 0.8) else {
+                throw AnalysisError.imageConversionFailed
+            }
+            imageData = data
         }
 
-        let base64Image = imageData.base64EncodedString()
+        switch provider.apiFormat {
+        case .gemini:
+            return try await callGemini(baseURL: baseURL, model: model, prompt: prompt, imageData: imageData)
+        case .openaiCompatible:
+            return try await callOpenAICompatible(baseURL: baseURL, model: model, prompt: prompt, imageData: imageData, provider: provider)
+        case .anthropic:
+            return try await callAnthropic(baseURL: baseURL, model: model, prompt: prompt, imageData: imageData)
+        }
+    }
 
-        let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=\(apiKey)")!
+    // MARK: - Gemini Format
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    private static func callGemini(baseURL: String, model: String, prompt: String, imageData: Data?) async throws -> String {
+        let apiKey = AIProviderSettings.currentAPIKey!
+        let url = URL(string: "\(baseURL)/models/\(model):generateContent?key=\(apiKey)")!
+
+        var parts: [[String: Any]] = []
+        if let imageData {
+            parts.append([
+                "inlineData": [
+                    "mimeType": "image/jpeg",
+                    "data": imageData.base64EncodedString()
+                ]
+            ])
+        }
+        parts.append(["text": prompt])
 
         let body: [String: Any] = [
-            "contents": [
-                [
-                    "parts": [
-                        [
-                            "inlineData": [
-                                "mimeType": "image/jpeg",
-                                "data": base64Image
-                            ]
-                        ],
-                        [
-                            "text": prompt
-                        ]
-                    ]
-                ]
-            ]
+            "contents": [["parts": parts]]
         ]
 
+        let data = try await makeRequest(url: url, headers: ["Content-Type": "application/json"], body: body)
+
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let candidates = json["candidates"] as? [[String: Any]],
+              let content = candidates.first?["content"] as? [String: Any],
+              let parts = content["parts"] as? [[String: Any]],
+              let text = parts.first?["text"] as? String
+        else { throw AnalysisError.invalidResponse }
+        return text
+    }
+
+    // MARK: - OpenAI-Compatible Format (OpenAI, xAI, OpenRouter, Together, Groq, Ollama)
+
+    private static func callOpenAICompatible(baseURL: String, model: String, prompt: String, imageData: Data?, provider: AIProvider) async throws -> String {
+        let url = URL(string: "\(baseURL)/chat/completions")!
+
+        var content: [[String: Any]] = []
+        if let imageData {
+            content.append([
+                "type": "image_url",
+                "image_url": ["url": "data:image/jpeg;base64,\(imageData.base64EncodedString())"]
+            ])
+        }
+        content.append(["type": "text", "text": prompt])
+
+        let body: [String: Any] = [
+            "model": model,
+            "messages": [["role": "user", "content": content]],
+            "max_tokens": 1024,
+        ]
+
+        var headers = ["Content-Type": "application/json"]
+        if let apiKey = AIProviderSettings.currentAPIKey {
+            headers["Authorization"] = "Bearer \(apiKey)"
+        }
+        if provider == .openrouter {
+            headers["HTTP-Referer"] = "https://github.com/apoorvdarshan/fud-ai"
+            headers["X-Title"] = "Fud AI"
+        }
+
+        let data = try await makeRequest(url: url, headers: headers, body: body)
+
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let choices = json["choices"] as? [[String: Any]],
+              let message = choices.first?["message"] as? [String: Any],
+              let text = message["content"] as? String
+        else { throw AnalysisError.invalidResponse }
+        return text
+    }
+
+    // MARK: - Anthropic Format
+
+    private static func callAnthropic(baseURL: String, model: String, prompt: String, imageData: Data?) async throws -> String {
+        let apiKey = AIProviderSettings.currentAPIKey!
+        let url = URL(string: "\(baseURL)/messages")!
+
+        var content: [[String: Any]] = []
+        if let imageData {
+            content.append([
+                "type": "image",
+                "source": [
+                    "type": "base64",
+                    "media_type": "image/jpeg",
+                    "data": imageData.base64EncodedString()
+                ]
+            ])
+        }
+        content.append(["type": "text", "text": prompt])
+
+        let body: [String: Any] = [
+            "model": model,
+            "max_tokens": 1024,
+            "messages": [["role": "user", "content": content]],
+        ]
+
+        let headers = [
+            "Content-Type": "application/json",
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+        ]
+
+        let data = try await makeRequest(url: url, headers: headers, body: body)
+
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let contentArray = json["content"] as? [[String: Any]],
+              let text = contentArray.first?["text"] as? String
+        else { throw AnalysisError.invalidResponse }
+        return text
+    }
+
+    // MARK: - Network
+
+    private static func makeRequest(url: URL, headers: [String: String], body: [String: Any]) async throws -> Data {
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        for (key, value) in headers {
+            request.setValue(value, forHTTPHeaderField: key)
+        }
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         let (data, response): (Data, URLResponse)
@@ -224,81 +305,24 @@ struct GeminiService {
         }
 
         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-            if let errorJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let error = errorJson["error"] as? [String: Any],
-               let message = error["message"] as? String {
-                throw AnalysisError.apiError(message)
+            if let errorJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                // Try common error formats
+                if let error = errorJson["error"] as? [String: Any], let message = error["message"] as? String {
+                    throw AnalysisError.apiError(message)
+                }
+                if let message = errorJson["error"] as? String {
+                    throw AnalysisError.apiError(message)
+                }
             }
             throw AnalysisError.apiError("HTTP \(httpResponse.statusCode)")
         }
 
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let candidates = json["candidates"] as? [[String: Any]],
-              let firstCandidate = candidates.first,
-              let content = firstCandidate["content"] as? [String: Any],
-              let parts = content["parts"] as? [[String: Any]],
-              let text = parts.first?["text"] as? String
-        else {
-            throw AnalysisError.invalidResponse
-        }
-
-        return text
+        return data
     }
 
-    private static func callGeminiText(prompt: String) async throws -> String {
-        guard let apiKey = APIKeyManager.geminiAPIKey() else {
-            throw AnalysisError.noAPIKey
-        }
-
-        let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=\(apiKey)")!
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        let body: [String: Any] = [
-            "contents": [
-                [
-                    "parts": [
-                        ["text": prompt]
-                    ]
-                ]
-            ]
-        ]
-
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-        let (data, response): (Data, URLResponse)
-        do {
-            (data, response) = try await URLSession.shared.data(for: request)
-        } catch {
-            throw AnalysisError.networkError(error)
-        }
-
-        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-            if let errorJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let error = errorJson["error"] as? [String: Any],
-               let message = error["message"] as? String {
-                throw AnalysisError.apiError(message)
-            }
-            throw AnalysisError.apiError("HTTP \(httpResponse.statusCode)")
-        }
-
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let candidates = json["candidates"] as? [[String: Any]],
-              let firstCandidate = candidates.first,
-              let content = firstCandidate["content"] as? [String: Any],
-              let parts = content["parts"] as? [[String: Any]],
-              let text = parts.first?["text"] as? String
-        else {
-            throw AnalysisError.invalidResponse
-        }
-
-        return text
-    }
+    // MARK: - Parsing (unchanged)
 
     private static func extractJSON(from text: String) -> String {
-        // Strip markdown code fences if present
         var cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if cleaned.hasPrefix("```json") {
             cleaned = String(cleaned.dropFirst(7))
@@ -320,13 +344,11 @@ struct GeminiService {
               let protein = (json["protein"] as? NSNumber)?.intValue,
               let carbs = (json["carbs"] as? NSNumber)?.intValue,
               let fat = (json["fat"] as? NSNumber)?.intValue
-        else {
-            throw AnalysisError.invalidResponse
-        }
-        let emoji = json["emoji"] as? String
-        let servingSizeGrams = (json["serving_size_grams"] as? NSNumber)?.doubleValue ?? 100
+        else { throw AnalysisError.invalidResponse }
         return FoodAnalysis(
-            name: name, calories: calories, protein: protein, carbs: carbs, fat: fat, servingSizeGrams: servingSizeGrams, emoji: emoji,
+            name: name, calories: calories, protein: protein, carbs: carbs, fat: fat,
+            servingSizeGrams: (json["serving_size_grams"] as? NSNumber)?.doubleValue ?? 100,
+            emoji: json["emoji"] as? String,
             sugar: (json["sugar"] as? NSNumber)?.doubleValue,
             addedSugar: (json["added_sugar"] as? NSNumber)?.doubleValue,
             fiber: (json["fiber"] as? NSNumber)?.doubleValue,
@@ -348,17 +370,11 @@ struct GeminiService {
               let proteinPer100g = (json["protein_per_100g"] as? NSNumber)?.doubleValue,
               let carbsPer100g = (json["carbs_per_100g"] as? NSNumber)?.doubleValue,
               let fatPer100g = (json["fat_per_100g"] as? NSNumber)?.doubleValue
-        else {
-            throw AnalysisError.invalidResponse
-        }
-        let servingSize = (json["serving_size_grams"] as? NSNumber)?.doubleValue
+        else { throw AnalysisError.invalidResponse }
         return NutritionLabelAnalysis(
-            name: name,
-            caloriesPer100g: caloriesPer100g,
-            proteinPer100g: proteinPer100g,
-            carbsPer100g: carbsPer100g,
-            fatPer100g: fatPer100g,
-            servingSizeGrams: servingSize,
+            name: name, caloriesPer100g: caloriesPer100g, proteinPer100g: proteinPer100g,
+            carbsPer100g: carbsPer100g, fatPer100g: fatPer100g,
+            servingSizeGrams: (json["serving_size_grams"] as? NSNumber)?.doubleValue,
             sugarPer100g: (json["sugar_per_100g"] as? NSNumber)?.doubleValue,
             addedSugarPer100g: (json["added_sugar_per_100g"] as? NSNumber)?.doubleValue,
             fiberPer100g: (json["fiber_per_100g"] as? NSNumber)?.doubleValue,
