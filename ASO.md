@@ -1,24 +1,35 @@
 # App Store Optimization (ASO)
 
-App Store listing details for Fud AI v2.0.
+App Store listing details for Fud AI v2.0. Each field is in a code block for easy copy-paste.
 
 ## App Name
+```
 Fud AI - Calorie Tracker
+```
 
 ## Subtitle (30 chars max)
+```
 AI Nutrition, Privacy First
+```
 
 ## Promotional Text (170 chars max)
+```
 Free, open-source AI calorie tracker. Bring your own API key — Gemini, OpenAI, Claude, Grok & more. All data stays on your device.
+```
 
 ## Keywords (100 chars max)
+```
 calorie tracker,nutrition,food scanner,AI food,macro tracker,diet,weight loss,health,open source
+```
 
 ## Category
+```
 Primary: Health & Fitness
 Secondary: Utilities
+```
 
 ## What's New (v2.0)
+```
 Fud AI is now free, open source, and privacy-first.
 
 - Bring your own AI — supports Gemini, OpenAI, Claude, xAI Grok, Groq, OpenRouter, Together AI, and Ollama
@@ -30,8 +41,10 @@ Fud AI is now free, open source, and privacy-first.
 - Configurable week start day (Sunday or Monday)
 - Progress charts expanded: 1W, 1M, 3M, 6M, 1Y, All Time
 - Now supports iOS 17.6+
+```
 
 ## Description
+```
 Fud AI is a free, open-source calorie and nutrition tracker powered by AI. Snap a photo, speak your meal, or type it — AI identifies the food and estimates calories, macros, and 9 micronutrients instantly.
 
 Bring your own API key from any supported provider. Your data never leaves your device.
@@ -75,15 +88,24 @@ APPLE HEALTH
 • Syncs weight, height, and body fat with Apple Health
 • Reads date of birth and biological sex
 • Background observer for real-time updates
+```
 
 ## Privacy URL
+```
 https://fud-ai.vercel.app/privacy.html
+```
 
 ## Terms URL
+```
 https://fud-ai.vercel.app/terms.html
+```
 
 ## Support URL
+```
 https://github.com/apoorvdarshan/fud-ai/issues
+```
 
 ## Marketing URL
+```
 https://fud-ai.vercel.app
+```
