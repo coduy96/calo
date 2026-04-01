@@ -6,321 +6,136 @@
 
 <p align="center">
   <strong>Eat Smart, Live Better</strong><br>
-  Just snap, track, and thrive. Your nutrition, simplified.
+  Snap, speak, or type your food — AI handles the rest.
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/platform-iOS%2026.2+-blue?logo=apple" alt="Platform">
   <img src="https://img.shields.io/badge/swift-5-orange?logo=swift" alt="Swift">
   <img src="https://img.shields.io/badge/UI-SwiftUI-purple" alt="SwiftUI">
-  <img src="https://img.shields.io/badge/AI-Gemini%202.5%20Flash-green?logo=google" alt="Gemini AI">
   <img src="https://img.shields.io/badge/dependencies-zero-brightgreen" alt="Zero Dependencies">
-  <img src="https://img.shields.io/badge/license-All%20Rights%20Reserved-red" alt="License">
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
 </p>
 
 ---
 
-Fud AI is an AI-powered calorie and nutrition tracker for iOS. Snap a photo of your food or nutrition label, and Gemini 2.5 Flash instantly identifies the item and estimates its full nutritional breakdown — calories, macros, and 9 micronutrients. No barcode databases, no manual searching. Just point, shoot, and log.
-
----
-
-## Table of Contents
-
-- [Features](#features)
-- [Screenshots](#screenshots)
-- [How It Works](#how-it-works)
-- [Nutrition Tracking](#nutrition-tracking)
-- [Apple Health Integration](#apple-health-integration)
-- [iCloud Sync](#icloud-sync)
-- [Architecture & Developer Guide](#architecture--developer-guide)
-- [Build & Run](#build--run)
-- [Privacy Policy](#privacy-policy)
-- [Terms of Service](#terms-of-service)
-- [License](#license)
-- [Contact](#contact)
+Open-source, privacy-first calorie tracker for iOS. Bring your own AI provider — Gemini, OpenAI, Claude, Grok, Groq, Ollama, and more. All data stays on your device. No accounts, no cloud sync, no tracking.
 
 ---
 
 ## Features
 
-### AI Food Recognition
-- **Snap Food** — Take a photo of any meal and get instant calorie and macro estimates
-- **Nutrition Label Scan** — Photograph a nutrition facts panel for precise per-serving data
-- **Photo Library** — Analyze existing photos from your camera roll
-- **Text Input** — Type a brand, food name, and quantity for AI-powered nutrition lookup
-- **Voice Input** — Tap the mic and speak your meal, no typing needed
+- **Snap food** — camera identifies meals and estimates nutrition
+- **Nutrition label scan** — reads packaging for precise per-serving data
+- **Photo library** — analyze existing photos
+- **Text input** — type food descriptions
+- **Voice input** — speak your meals hands-free
+- **13 nutrients** tracked per entry (calories, protein, carbs, fat + 9 micronutrients)
+- **Scrollable week calendar** — swipe to any past week, configurable start day
+- **Progress charts** — weight trends, calorie history, macro averages (1W to All Time)
+- **Goal tracking** — set target weight, BMR/TDEE auto-calculation
+- **Apple Health** — bidirectional sync for weight, height, body fat
+- **Meal reminders** — customizable breakfast, lunch, dinner notifications
+- **Dark mode** — system, light, or dark
+- **Metric & imperial** units
 
-### Comprehensive Nutrition Tracking
-- Track **13 nutrients** per entry: calories, protein, carbs, fat, sugar, added sugar, fiber, saturated fat, monounsaturated fat, polyunsaturated fat, cholesterol, sodium, and potassium
-- Adjustable **serving sizes** with real-time nutrition recalculation
-- Organize entries by **meal type** (Breakfast, Lunch, Dinner, Snack, Other)
-- **Scrollable week calendar** — swipe to browse any past week, log food for any day
-- Configurable **week start day** (Sunday or Monday)
+## Supported AI Providers
 
-### Smart Dashboard
-- Daily calorie hero display with progress bar
-- Macro cards for protein, carbs, and fat
-- Detailed nutrition breakdown view
-- Food log grouped by meal type with swipe-to-delete
+| Provider | Format | Needs API Key |
+|----------|--------|:---:|
+| Google Gemini | Gemini API | Yes |
+| OpenAI | OpenAI | Yes |
+| Anthropic Claude | Messages API | Yes |
+| xAI Grok | OpenAI-compatible | Yes |
+| OpenRouter | OpenAI-compatible | Yes |
+| Together AI | OpenAI-compatible | Yes |
+| Groq | OpenAI-compatible | Yes |
+| Ollama | OpenAI-compatible (local) | No |
 
-### Progress & Analytics
-- **Weight chart** with trend visualization and **goal weight line**
-- **Goal-reached detection** — get congratulated when you hit your target weight
-- **Calorie trend chart** showing daily intake vs. goal
-- **Macro averages** over selected time range
-- Time range filters: 1W, 1M, 3M, 6M, 1Y, and All Time
-
-### Goal Weight Tracking
-- Set a target weight during onboarding (lose or gain)
-- Dashed goal line on the weight chart
-- Edit goal weight anytime from Profile
-- When you reach your goal, the app suggests switching to maintenance
-
-### Personalized Plans
-- Streamlined 15-step onboarding that collects your gender, age, height, weight, body fat %, activity level, and goals
-- **BMR calculation** using Katch-McArdle (with body fat) or Mifflin-St Jeor
-- **TDEE** with 6 activity level multipliers (1.2x - 2.0x)
-- Auto-calculated daily targets for calories, protein, carbs, and fat
-- Fully customizable — override any calculated value
-
-### Apple Health Integration
-- **Writes** body mass, height, and body fat percentage
-- **Reads** weight, height, body fat, date of birth, and biological sex
-- **Bidirectional sync** — profile updates when Health data changes
-- Background observer for real-time measurement sync
-
-### iCloud Sync
-- Food entries, weight entries, and user profile sync to your private iCloud database
-- Automatic sync on every add, delete, and profile save
-- Returning users can restore all data on a new device during onboarding
-- Sign in with Apple for secure authentication
-
-### Smart Notifications
-- Customizable **meal reminders** for breakfast, lunch, and dinner
-- **Daily summary** — shows calories consumed vs. remaining
-
-### Additional
-- **Dark mode** with system, light, and dark appearance options
-- **Metric and imperial** unit support (synced from onboarding)
-- **Delete all data** option for full account removal (local + cloud)
-
----
-
-## Screenshots
-
-| Home | Snap Food | Nutrition | Meal Log |
-|:---:|:---:|:---:|:---:|
-| <img src="screenshots/home.png" width="200"> | <img src="screenshots/snap.png" width="200"> | <img src="screenshots/nutrition.png" width="200"> | <img src="screenshots/meal.png" width="200"> |
-
----
+API keys are stored in **iOS Keychain** — encrypted, on-device only.
 
 ## How It Works
 
 ```
-User captures photo ──> Gemini 2.5 Flash AI ──> JSON nutrition response
-                                                        │
-                        User reviews & edits  <─────────┘
-                                │
-                        FoodStore.addEntry()
-                                │
-                  ┌─────────────┼─────────────┐
-                  │             │              │
-            UserDefaults    CloudKit
-            (local JSON)   (iCloud)
+Photo / Text / Voice
+        |
+        v
+  AI Provider API  ──>  JSON nutrition response
+        |
+        v
+  User reviews & edits
+        |
+        v
+  FoodStore.addEntry()  ──>  UserDefaults (local)
 ```
 
-1. **Capture** — Snap a photo, scan a label, pick from library, type, or speak your food details
-2. **Analyze** — Gemini 2.5 Flash identifies the food and estimates full nutrition
-3. **Review** — Edit the name, adjust serving size, and confirm meal type
-4. **Log** — Entry is saved locally and synced to iCloud
-5. **Track** — Dashboard and progress charts update in real time via `@Observable`
+## Architecture
 
----
-
-## Nutrition Tracking
-
-### Macronutrients (always tracked)
-| Nutrient | Unit |
-|----------|------|
-| Calories | kcal |
-| Protein | g |
-| Carbohydrates | g |
-| Fat | g |
-
-### Micronutrients (AI-estimated when available)
-| Nutrient | Unit |
-|----------|------|
-| Sugar | g |
-| Added Sugar | g |
-| Fiber | g |
-| Saturated Fat | g |
-| Monounsaturated Fat | g |
-| Polyunsaturated Fat | g |
-| Cholesterol | mg |
-| Sodium | mg |
-| Potassium | mg |
-
-### Calorie & Macro Calculation
-
-| Formula | Method |
-|---------|--------|
-| **BMR** | Katch-McArdle (if body fat known) or Mifflin-St Jeor |
-| **TDEE** | BMR x activity multiplier (1.2 - 2.0) |
-| **Daily Calories** | TDEE + weeklyChangeKg x 7700 / 7 |
-| **Protein** | activityLevel.proteinPerKg x weightKg (1.0 - 2.2 g/kg) |
-| **Fat** | 0.6 x weightKg |
-| **Carbs** | (dailyCalories - protein x 4 - fat x 9) / 4 |
-
----
-
-## Apple Health Integration
-
-### Data Written
-- Body Mass, Height, Body Fat Percentage
-
-### Data Read
-- Body Mass, Height, Body Fat Percentage
-- Date of Birth, Biological Sex
-
-A background observer monitors Apple Health for external weight/height/body fat changes and syncs them back to the app.
-
----
-
-## iCloud Sync
-
-| Data | Synced | Notes |
-|------|--------|-------|
-| Food Entries | Yes | Excludes image data (stored locally only) |
-| Weight Entries | Yes | Full bidirectional sync |
-| User Profile | Yes | Single record, overwritten on save |
-| Food Photos | No | Too large for CloudKit |
-
-- **Container:** `iCloud.com.apoorvdarshan.calorietracker`
-- **Database:** Private CloudKit database (only accessible to the signed-in user)
-- **Merge strategy:** By UUID — cloud records replace local duplicates
-- **Batch size:** Up to 400 records per sync operation
-
----
-
-## Architecture & Developer Guide
-
-### Tech Stack
-- **Language:** Swift 5
-- **UI:** SwiftUI (iOS 26.2+)
-- **AI:** Google Gemini 2.5 Flash API
-- **Storage:** UserDefaults (local), CloudKit (cloud), HealthKit (health)
-- **Auth:** Sign in with Apple (ASAuthorization)
-- **Dependencies:** Zero external dependencies
-
-### Key Patterns
-
-| Pattern | Details |
-|---------|---------|
-| `@Observable` macro | Not `ObservableObject`. Inject with `.environment()`, consume with `@Environment(Type.self)` |
-| Main actor isolation | `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` — no manual `@MainActor` needed |
-| File discovery | `PBXFileSystemSynchronizedRootGroup` — Xcode auto-discovers new files, never edit pbxproj |
-| Stateless services | `GeminiService` and `CloudKitService` are pure structs with static methods |
-| Secrets management | `Secrets.plist` (gitignored) loaded via `APIKeyManager` |
-
-### Environment Objects (injected at app root)
-
-| Object | Purpose |
-|--------|---------|
-| `FoodStore` | Food entry CRUD, daily totals |
-| `WeightStore` | Weight entry CRUD, trend data |
-| `NotificationManager` | Local notification scheduling and permissions |
-| `AuthManager` | Apple Sign-In, user identity |
-| `HealthKitManager` | Apple Health read/write, background observers |
+| Component | Details |
+|-----------|---------|
+| **Language** | Swift 5, SwiftUI |
+| **Target** | iOS 26.2+ |
+| **Storage** | UserDefaults (local JSON), Keychain (API keys) |
+| **AI** | Multi-provider via `GeminiService` (routes by provider format) |
+| **Health** | HealthKit read/write with background observers |
+| **Pattern** | `@Observable` + `.environment()`, main actor isolation |
+| **Dependencies** | Zero |
 
 ### Source Layout
 
 ```
 calorietracker/
-├── calorietrackerApp.swift      # App entry point, environment setup
+├── calorietrackerApp.swift      # Entry point, environment setup
 ├── ContentView.swift            # 3-tab layout (Home, Progress, Profile)
 ├── Models/
-│   ├── UserProfile.swift        # BMR/TDEE/macro calculations, goal weight
-│   ├── FoodEntry.swift          # Logged food item with 13 nutrients
+│   ├── AIProvider.swift         # Provider enum, model lists, settings
+│   ├── UserProfile.swift        # BMR/TDEE/macro calculations
+│   ├── FoodEntry.swift          # Food item with 13 nutrients
 │   └── WeightEntry.swift        # Weight log entry
 ├── Views/
-│   ├── OnboardingView.swift     # 15-step onboarding flow
-│   ├── FoodResultView.swift     # AI result review & edit screen
-│   ├── PaywallView.swift        # Subscription purchase screen
-│   ├── SpinWheelView.swift      # Scratch card discount reveal
-│   ├── HomeComponents/          # Week strip, macro cards, nutrition detail
-│   ├── ProgressComponents/      # Charts, weight tracking, goal line
-│   └── Theme/                   # AppColors, gradients, design tokens
+│   ├── OnboardingView.swift     # Onboarding flow
+│   ├── FoodResultView.swift     # AI result review & edit
+│   ├── HomeComponents.swift     # Week strip, macro cards
+│   └── ProgressComponents.swift # Charts, weight tracking
 ├── Services/
-│   ├── GeminiService.swift      # Gemini 2.5 Flash API integration
-│   ├── APIKeyManager.swift      # Secrets.plist loader
-│   ├── AuthManager.swift        # Apple Sign-In wrapper
-│   └── CloudKitService.swift    # iCloud private database sync
+│   ├── GeminiService.swift      # Multi-provider AI router
+│   ├── KeychainHelper.swift     # iOS Keychain wrapper
+│   └── APIKeyManager.swift      # Keychain migration helper
 └── Stores/
-    ├── FoodStore.swift           # @Observable food entry store
-    ├── WeightStore.swift         # @Observable weight entry store
-    ├── NotificationManager.swift # @Observable notification scheduler
-    ├── HealthKitManager.swift    # @Observable Apple Health bridge
-    └── StoreManager.swift        # @Observable StoreKit 2 manager
+    ├── FoodStore.swift           # Food entry CRUD
+    ├── WeightStore.swift         # Weight entry CRUD
+    ├── NotificationManager.swift # Notification scheduler
+    └── HealthKitManager.swift    # Apple Health bridge
 ```
 
-### Data Flow
-
-```
-Photo/Text/Voice Input
-      │
-      ▼
-GeminiService.autoAnalyze() ──> Gemini 2.5 Flash API
-      │
-      ▼
-FoodAnalysis (parsed JSON)
-      │
-      ▼
-FoodResultView (user review/edit)
-      │
-      ▼
-FoodStore.addEntry()
-      │
-      ├──> UserDefaults (local persistence)
-      └──> CloudKitService.saveFoodEntry() (iCloud sync)
-```
-
-### Build & Run
+## Build & Run
 
 ```bash
-# Build for simulator
+# Clone
+git clone https://github.com/apoorvdarshan/fud-ai.git
+cd fud-ai
+
+# Build
 xcodebuild -scheme calorietracker \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 
-### API Key Setup
+Open in Xcode, select your device, and run. On first launch, go to **Profile > AI Provider** to set your provider and API key.
 
-1. Create `calorietracker/Secrets.plist`
-2. Add a key `GEMINI_API_KEY` with your Gemini API key as the value
-3. The file is gitignored — never commit API keys
+## Contributing
 
----
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## Privacy Policy
+## Privacy
 
-Read our full privacy policy: **[Privacy Policy](https://fud-ai.vercel.app/privacy.html)**
-
----
-
-## Terms of Service
-
-Read our full terms of service: **[Terms of Service](https://fud-ai.vercel.app/terms.html)**
-
----
+All data is stored locally on your device. No accounts, no cloud sync, no analytics. API keys are stored in iOS Keychain. See [Privacy Policy](https://fud-ai.vercel.app/privacy.html).
 
 ## License
 
-Copyright (c) 2026 Apoorv Darshan. All Rights Reserved.
-
-See [LICENSE](LICENSE) for details.
-
----
+MIT License. See [LICENSE](LICENSE).
 
 ## Contact
 
 - **Developer:** Apoorv Darshan
 - **Email:** ad13dtu@gmail.com
+- **Issues:** [github.com/apoorvdarshan/fud-ai/issues](https://github.com/apoorvdarshan/fud-ai/issues)
