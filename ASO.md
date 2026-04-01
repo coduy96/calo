@@ -14,7 +14,7 @@ AI Nutrition, Privacy First
 
 ## Promotional Text (170 chars max)
 ```
-Free, open-source AI calorie tracker. Bring your own API key — Gemini, OpenAI, Claude, Grok & more. All data stays on your device.
+Snap your food, get instant calories. AI-powered nutrition tracking — free, no account needed. Your data stays on your device.
 ```
 
 ## Keywords (100 chars max)
