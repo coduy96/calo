@@ -866,10 +866,6 @@ struct OnboardingView: View {
                 editedProfile.customProtein = editedProtein
                 editedProfile.customFat = editedFat
                 editedProfile.customCarbs = editedCarbs
-                // Set name from Apple Sign-In if available
-                if let appleName = authManager.userDisplayName, !appleName.isEmpty {
-                    editedProfile.name = appleName
-                }
                 editedProfile.save()
             }
         }
