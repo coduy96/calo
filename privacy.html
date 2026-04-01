@@ -63,7 +63,7 @@
     <div class="nav-links">
       <a href="/">Home</a>
       <a href="/#features">Features</a>
-      <a href="/#pricing">Pricing</a>
+      <a href="https://github.com/apoorvdarshan/fud-ai" target="_blank">GitHub</a>
       <a href="privacy.html" class="active">Privacy</a>
       <a href="terms.html">Terms</a>
     </div>
@@ -74,43 +74,35 @@
   <div class="container">
     <div class="legal-content">
       <h2>Privacy Policy</h2>
-      <span class="legal-date">Last updated: February 28, 2026</span>
+      <span class="legal-date">Last updated: April 1, 2026</span>
 
-      <p>Fud AI ("we", "our", "the app") is developed by Apoorv Darshan. This privacy policy explains how your information is collected, used, and protected when you use Fud AI.</p>
+      <p>Fud AI ("we", "our", "the app") is an open-source iOS app developed by Apoorv Darshan. This privacy policy explains how your information is handled.</p>
 
-      <h3>Information We Collect</h3>
-      <p><strong>Information you provide directly:</strong></p>
+      <h3>Information You Provide</h3>
       <ul>
         <li>Name, gender, date of birth, height, weight, and body fat percentage (entered during onboarding)</li>
         <li>Food photos taken within the app</li>
         <li>Food entries and nutrition data you log</li>
         <li>Weight log entries</li>
         <li>Dietary preferences and fitness goals</li>
-        <li>Apple ID credentials (via Sign in with Apple)</li>
-      </ul>
-      <p><strong>Information collected automatically:</strong></p>
-      <ul>
-        <li>Daily scan usage counts (for subscription limit enforcement)</li>
-        <li>App preference settings (appearance, units, notification times)</li>
+        <li>AI provider API keys (stored in iOS Keychain)</li>
       </ul>
 
       <h3>How We Use Your Information</h3>
       <ul>
-        <li><strong>AI Food Analysis:</strong> Food photos, text descriptions, and voice input are sent to the Google Gemini API for nutritional analysis. Photos are processed in real time and are not stored on Google's servers beyond the API request. Voice input is converted to text on-device before being sent.</li>
-        <li><strong>Local Storage:</strong> All food entries, weight entries, user profile data, and food photos are stored locally on your device using UserDefaults.</li>
-        <li><strong>iCloud Sync:</strong> If you sign in with Apple, your food entries (excluding photos), weight entries, and user profile are synced to your private iCloud database via CloudKit. This data is only accessible to you through your Apple ID.</li>
+        <li><strong>AI Food Analysis:</strong> Food photos, text descriptions, and voice input are sent to your chosen AI provider (e.g. Google Gemini, OpenAI, Anthropic Claude, etc.) for nutritional analysis. You bring your own API key. We do not proxy or intercept these requests.</li>
+        <li><strong>Local Storage:</strong> All food entries, weight entries, user profile data, and food photos are stored locally on your device. Nothing leaves your device except AI analysis requests.</li>
+        <li><strong>API Key Storage:</strong> Your API keys are stored in iOS Keychain — encrypted hardware storage accessible only to the app on your device.</li>
         <li><strong>Apple Health:</strong> If you enable Apple Health integration, the app writes body mass, height, and body fat percentage to HealthKit, and reads body mass, height, body fat percentage, date of birth, and biological sex from HealthKit.</li>
-        <li><strong>Subscription Management:</strong> Subscription status is managed entirely by Apple through StoreKit. We do not process or store payment information.</li>
       </ul>
 
       <h3>Information We Do NOT Collect</h3>
       <ul>
-        <li>We do <strong>not</strong> use any third-party analytics services (no Firebase Analytics, Mixpanel, Amplitude, or similar)</li>
-        <li>We do <strong>not</strong> use any crash reporting services</li>
-        <li>We do <strong>not</strong> include any advertising SDKs or ad tracking</li>
+        <li>We do <strong>not</strong> use any third-party analytics, crash reporting, or advertising SDKs</li>
         <li>We do <strong>not</strong> track your behavior, location, or browsing activity</li>
         <li>We do <strong>not</strong> sell, share, or transfer your personal data to any third parties</li>
-        <li>We do <strong>not</strong> operate any servers — all data is stored on your device or in your private iCloud account</li>
+        <li>We do <strong>not</strong> operate any servers — all data stays on your device</li>
+        <li>We do <strong>not</strong> require an account, sign-in, or cloud sync</li>
       </ul>
 
       <h3>Data Storage & Security</h3>
@@ -119,21 +111,22 @@
           <tr><th>Data</th><th>Storage Location</th><th>Accessible By</th></tr>
         </thead>
         <tbody>
-          <tr><td>Food entries & photos</td><td>Device (UserDefaults)</td><td>You only</td></tr>
-          <tr><td>Food entries (no photos)</td><td>Your private iCloud database</td><td>You only (via Apple ID)</td></tr>
-          <tr><td>Weight entries</td><td>Device + your private iCloud</td><td>You only</td></tr>
-          <tr><td>User profile</td><td>Device + your private iCloud</td><td>You only</td></tr>
-          <tr><td>Food photos (for AI)</td><td>Sent to Google Gemini API</td><td>Processed in transit, not stored</td></tr>
-          <tr><td>Subscription status</td><td>Apple App Store</td><td>You + Apple</td></tr>
+          <tr><td>Food entries & photos</td><td>Device only</td><td>You only</td></tr>
+          <tr><td>Weight entries</td><td>Device only</td><td>You only</td></tr>
+          <tr><td>User profile</td><td>Device only</td><td>You only</td></tr>
+          <tr><td>API keys</td><td>iOS Keychain (encrypted)</td><td>You only</td></tr>
+          <tr><td>Food photos (for AI)</td><td>Sent to your chosen AI provider</td><td>Processed in transit, not stored by us</td></tr>
           <tr><td>Health data</td><td>Apple HealthKit</td><td>You + apps you authorize</td></tr>
         </tbody>
       </table>
 
+      <h3>Open Source</h3>
+      <p>Fud AI is open source under the MIT License. You can review the full source code at <a href="https://github.com/apoorvdarshan/fud-ai" target="_blank">github.com/apoorvdarshan/fud-ai</a>.</p>
+
       <h3>Data Retention</h3>
       <ul>
-        <li>All local data remains on your device until you delete it or uninstall the app</li>
-        <li>iCloud data remains in your private CloudKit database until you delete it through the app or through iCloud settings</li>
-        <li>You can delete all data (local and cloud) at any time using the "Delete All Data" option in Profile settings</li>
+        <li>All data remains on your device until you delete it or uninstall the app</li>
+        <li>You can delete all data at any time using the "Delete All Data" option in Profile settings</li>
       </ul>
 
       <h3>Children's Privacy</h3>
@@ -158,7 +151,7 @@
       <div class="footer-links">
         <a href="/">Home</a>
         <a href="/#features">Features</a>
-        <a href="/#pricing">Pricing</a>
+        <a href="https://github.com/apoorvdarshan/fud-ai" target="_blank">GitHub</a>
         <a href="privacy.html">Privacy Policy</a>
         <a href="terms.html">Terms of Service</a>
       </div>
@@ -170,7 +163,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      &copy; 2026 Apoorv Darshan. All Rights Reserved.
+      &copy; 2026 Apoorv Darshan. MIT License. <a href="https://github.com/apoorvdarshan/fud-ai" target="_blank" style="color:inherit;text-decoration:underline;">Open Source</a>
     </div>
   </div>
 </footer>
