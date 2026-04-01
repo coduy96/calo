@@ -1097,6 +1097,12 @@ struct ProfileView: View {
                     }
                     .pickerStyle(.menu)
                     .tint(.secondary)
+                    .onAppear {
+                        if !selectedProvider.models.contains(selectedModel) {
+                            selectedModel = selectedProvider.defaultModel
+                            AIProviderSettings.selectedModel = selectedModel
+                        }
+                    }
                     .onChange(of: selectedModel) { _, newModel in
                         AIProviderSettings.selectedModel = newModel
                     }
