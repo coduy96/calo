@@ -913,6 +913,46 @@ struct OnboardingView: View {
         .buttonStyle(.plain)
     }
 
+    private func stepHeader(title: String, subtitle: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.system(size: 28, weight: .bold, design: .rounded))
+            if !subtitle.isEmpty {
+                Text(subtitle).font(.system(.callout, design: .rounded)).foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 24).padding(.top, 24)
+    }
+
+    private func selectionCard(icon: String, title: String, subtitle: String? = nil, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                Image(systemName: icon).font(.system(size: 22))
+                    .foregroundStyle(isSelected ? Color.primary : .secondary).frame(width: 40)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(.system(.body, design: .rounded, weight: .semibold)).foregroundStyle(.primary)
+                    if let subtitle {
+                        Text(subtitle).font(.system(.caption, design: .rounded)).foregroundStyle(.secondary)
+                    }
+                }
+                Spacer()
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle").font(.system(size: 22))
+                    .foregroundStyle(isSelected ? Color.primary : Color.secondary.opacity(0.3))
+            }
+            .padding(16)
+            .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(isSelected ? Color.primary : Color.clear, lineWidth: 2))
+        }.buttonStyle(.plain)
+    }
+
+    private func healthFeatureRow(icon: String, label: String) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon).font(.system(size: 18)).foregroundStyle(.secondary).frame(width: 28)
+            Text(label).font(.system(.body, design: .rounded)).foregroundStyle(.primary)
+        }
+    }
+}
+
 // MARK: - Building Plan Step (enhanced with percentage + checklist)
 
 struct BuildingPlanStepView: View {
