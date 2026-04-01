@@ -45,21 +45,23 @@ Fud AI is now free, open source, and privacy-first.
 
 ## Description
 ```
-Fud AI is a free, open-source calorie and nutrition tracker powered by AI. Snap a photo, speak your meal, or type it — AI identifies the food and estimates calories, macros, and 9 micronutrients instantly.
+Fud AI makes calorie tracking effortless with AI-powered food recognition. Simply take a photo of your meal, speak it, or type it — and get instant, accurate nutrition data — calories, protein, carbs, fats, and 9 micronutrients.
 
-Bring your own API key from any supported provider. Your data never leaves your device.
+Fud AI is free, open source, and privacy-first. Bring your own API key, and all data stays on your device.
 
-SMART FOOD LOGGING
-• Snap a photo of any meal for instant nutrition estimates
-• Scan nutrition labels for precise per-serving data
-• Voice input — just speak your meal
-• Text input — type food names and quantities
-• Analyze photos from your camera roll
+HOW TO USE FUD AI:
 
-8 AI PROVIDERS
+1) Set up your profile with your goals and body stats
+2) Snap a photo, speak your meal, or type it
+3) Get a detailed nutrition breakdown instantly
+4) Track your progress over time
+
+If you want to hit your nutrition goals, Fud AI will get you there faster than anything else. No more searching through food databases or guessing portion sizes.
+
+8 AI PROVIDERS SUPPORTED
 • Google Gemini, OpenAI, Anthropic Claude, xAI Grok, Groq, OpenRouter, Together AI, Ollama (local)
 • Switch providers and models anytime
-• API keys encrypted in iOS Keychain
+• API keys stored securely in iOS Keychain
 
 13 NUTRIENTS TRACKED
 • Calories, protein, carbs, fat
@@ -76,18 +78,26 @@ PROGRESS & ANALYTICS
 • Weight chart with trend line and goal weight
 • Calorie trend chart with daily intake vs goal
 • Macro averages over 1W, 1M, 3M, 6M, 1Y, or All Time
-• Streaks and stats tracking
 
 PRIVACY FIRST
-• No account required
-• No cloud sync — all data stored locally
+• No account required — no sign-in, no cloud sync
+• All data stored locally on your device
 • No analytics, no ads, no tracking
 • Open source under MIT License
 
 APPLE HEALTH
 • Syncs weight, height, and body fat with Apple Health
-• Reads date of birth and biological sex
 • Background observer for real-time updates
+
+We built Fud AI because tracking calories shouldn't feel like a chore. We want to make healthy eating simple and accessible for everyone.
+
+If you have ideas or questions, reach out at ad13dtu@gmail.com or open an issue on GitHub.
+
+NOTE: Fud AI does not offer medical advice. All nutritional estimates are AI-generated suggestions only. Please consult with a healthcare professional before making significant changes to your diet.
+
+Terms of Service: https://fud-ai.vercel.app/terms.html
+Privacy Policy: https://fud-ai.vercel.app/privacy.html
+Source Code: https://github.com/apoorvdarshan/fud-ai
 ```
 
 ## Privacy URL
