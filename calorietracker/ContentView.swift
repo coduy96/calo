@@ -822,6 +822,7 @@ struct ProfileView: View {
     @State private var selectedProvider: AIProvider = AIProviderSettings.selectedProvider
     @State private var selectedModel: String = AIProviderSettings.selectedModel
     @State private var apiKeyText: String = AIProviderSettings.apiKey(for: AIProviderSettings.selectedProvider) ?? ""
+    @State private var customBaseURL: String = AIProviderSettings.customBaseURL(for: AIProviderSettings.selectedProvider) ?? ""
 
     // Height formatting
     private var heightDisplay: String {
@@ -1078,6 +1079,7 @@ struct ProfileView: View {
                         selectedModel = newProvider.defaultModel
                         AIProviderSettings.selectedModel = newProvider.defaultModel
                         apiKeyText = AIProviderSettings.apiKey(for: newProvider) ?? ""
+                        customBaseURL = AIProviderSettings.customBaseURL(for: newProvider) ?? ""
                     }
 
                     Picker(selection: $selectedModel) {
@@ -1116,6 +1118,24 @@ struct ProfileView: View {
                                     AIProviderSettings.setAPIKey(newValue.isEmpty ? nil : newValue, for: selectedProvider)
                                 }
                         }
+                    }
+
+                    HStack {
+                        Label {
+                            Text("Base URL")
+                        } icon: {
+                            Image(systemName: "link")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                        Spacer()
+                        TextField(selectedProvider.baseURL, text: $customBaseURL)
+                            .textFieldStyle(.plain)
+                            .multilineTextAlignment(.trailing)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                            .onChange(of: customBaseURL) { _, newValue in
+                                AIProviderSettings.setCustomBaseURL(newValue.isEmpty ? nil : newValue, for: selectedProvider)
+                            }
                     }
                 }
                 .listRowBackground(AppColors.appCard)

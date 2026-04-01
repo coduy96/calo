@@ -685,7 +685,7 @@ struct OnboardingView: View {
                 if let url = URL(string: "https://apps.apple.com/app/id6758935726?action=write-review") {
                     UIApplication.shared.open(url)
                 }
-                withAnimation(.snappy) { step += 1 }
+                hasCompletedOnboarding = true
             } label: {
                 Text("Rate fud")
                     .font(.system(.body, design: .rounded, weight: .semibold))
@@ -697,7 +697,7 @@ struct OnboardingView: View {
             .padding(.horizontal, 24)
 
             Button {
-                withAnimation(.snappy) { step += 1 }
+                hasCompletedOnboarding = true
             } label: {
                 Text("Maybe Later")
                     .font(.system(.subheadline, design: .rounded, weight: .medium))

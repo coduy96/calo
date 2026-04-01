@@ -125,9 +125,6 @@ class FoodStore {
         saveEntries()
         onEntriesChanged?()
         onEntryAdded?(entry)
-        if UserDefaults.standard.string(forKey: "appleUserID") != nil {
-            Task { await CloudKitService.saveFoodEntry(entry) }
-        }
     }
 
     func updateEntry(_ entry: FoodEntry) {
@@ -139,9 +136,6 @@ class FoodStore {
         // Re-sync HealthKit: delete old samples, write new ones
         onEntryDeleted?(oldID)
         onEntryAdded?(entry)
-        if UserDefaults.standard.string(forKey: "appleUserID") != nil {
-            Task { await CloudKitService.saveFoodEntry(entry) }
-        }
     }
 
     func deleteEntry(_ entry: FoodEntry) {
@@ -150,9 +144,6 @@ class FoodStore {
         saveEntries()
         onEntriesChanged?()
         onEntryDeleted?(id)
-        if UserDefaults.standard.string(forKey: "appleUserID") != nil {
-            Task { await CloudKitService.deleteFoodEntry(id: id) }
-        }
     }
 
     func replaceAllEntries(_ newEntries: [FoodEntry]) {

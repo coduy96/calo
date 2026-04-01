@@ -38,18 +38,12 @@ class WeightStore {
             profile.weightKg = entry.weightKg
             profile.save()
         }
-        if UserDefaults.standard.string(forKey: "appleUserID") != nil {
-            Task { await CloudKitService.saveWeightEntry(entry) }
-        }
     }
 
     func deleteEntry(_ entry: WeightEntry) {
         let id = entry.id
         entries.removeAll { $0.id == id }
         saveEntries()
-        if UserDefaults.standard.string(forKey: "appleUserID") != nil {
-            Task { await CloudKitService.deleteWeightEntry(id: id) }
-        }
     }
 
     func replaceAllEntries(_ newEntries: [WeightEntry]) {
