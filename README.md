@@ -69,6 +69,22 @@ Photo / Text / Voice
   FoodStore.addEntry()  ──>  UserDefaults (local)
 ```
 
+## Calorie & Macro Calculation
+
+The app calculates personalized daily targets using established nutrition science formulas:
+
+| Step | Formula | Details |
+|------|---------|---------|
+| **BMR** | Katch-McArdle | `370 + 21.6 × lean mass (kg)` — used when body fat % is known |
+| **BMR** | Mifflin-St Jeor | `10w + 6.25h - 5a ± 5` — fallback when body fat is unknown |
+| **TDEE** | BMR × activity | Multiplier ranges from 1.2 (sedentary) to 2.0 (extra active) |
+| **Daily Calories** | TDEE + adjustment | Adjustment = `weeklyChangeKg × 7700 / 7` (deficit or surplus) |
+| **Protein** | Activity-based | `1.0 – 2.2 g/kg` body weight depending on activity level |
+| **Fat** | Fixed ratio | `0.6 g/kg` body weight |
+| **Carbs** | Remainder | `(calories - protein×4 - fat×9) / 4` |
+
+All values can be manually overridden in Profile settings.
+
 ## Architecture
 
 | Component | Details |
