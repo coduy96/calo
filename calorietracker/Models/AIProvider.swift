@@ -185,4 +185,13 @@ struct AIProviderSettings {
     static var currentBaseURL: String {
         customBaseURL(for: selectedProvider) ?? selectedProvider.baseURL
     }
+
+    static func deleteAllData() {
+        for provider in AIProvider.allCases {
+            setAPIKey(nil, for: provider)
+            setCustomBaseURL(nil, for: provider)
+        }
+        UserDefaults.standard.removeObject(forKey: providerKey)
+        UserDefaults.standard.removeObject(forKey: modelKey)
+    }
 }

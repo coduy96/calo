@@ -180,7 +180,9 @@ struct GeminiService {
 
     private static func callGemini(baseURL: String, model: String, prompt: String, imageData: Data?) async throws -> String {
         let apiKey = AIProviderSettings.currentAPIKey!
-        let url = URL(string: "\(baseURL)/models/\(model):generateContent?key=\(apiKey)")!
+        guard let url = URL(string: "\(baseURL)/models/\(model):generateContent?key=\(apiKey)") else {
+            throw AnalysisError.apiError("Invalid API URL. Check your provider settings.")
+        }
 
         var parts: [[String: Any]] = []
         if let imageData {
@@ -211,7 +213,9 @@ struct GeminiService {
     // MARK: - OpenAI-Compatible Format (OpenAI, xAI, OpenRouter, Together, Groq, Ollama)
 
     private static func callOpenAICompatible(baseURL: String, model: String, prompt: String, imageData: Data?, provider: AIProvider) async throws -> String {
-        let url = URL(string: "\(baseURL)/chat/completions")!
+        guard let url = URL(string: "\(baseURL)/chat/completions") else {
+            throw AnalysisError.apiError("Invalid API URL. Check your provider settings.")
+        }
 
         var content: [[String: Any]] = []
         if let imageData {
@@ -251,7 +255,9 @@ struct GeminiService {
 
     private static func callAnthropic(baseURL: String, model: String, prompt: String, imageData: Data?) async throws -> String {
         let apiKey = AIProviderSettings.currentAPIKey!
-        let url = URL(string: "\(baseURL)/messages")!
+        guard let url = URL(string: "\(baseURL)/messages") else {
+            throw AnalysisError.apiError("Invalid API URL. Check your provider settings.")
+        }
 
         var content: [[String: Any]] = []
         if let imageData {

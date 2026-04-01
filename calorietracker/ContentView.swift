@@ -1410,6 +1410,8 @@ struct ProfileView: View {
                     // Wipe all persisted data
                     let domain = Bundle.main.bundleIdentifier ?? ""
                     UserDefaults.standard.removePersistentDomain(forName: domain)
+                    // Wipe Keychain API keys
+                    AIProviderSettings.deleteAllData()
                     hasCompletedOnboarding = false
                 }
             } message: {
