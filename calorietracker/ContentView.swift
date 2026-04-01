@@ -1120,22 +1120,24 @@ struct ProfileView: View {
                         }
                     }
 
-                    HStack {
-                        Label {
-                            Text("Base URL")
-                        } icon: {
-                            Image(systemName: "link")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                        Spacer()
-                        TextField(selectedProvider.baseURL, text: $customBaseURL)
-                            .textFieldStyle(.plain)
-                            .multilineTextAlignment(.trailing)
-                            .autocorrectionDisabled()
-                            .textInputAutocapitalization(.never)
-                            .onChange(of: customBaseURL) { _, newValue in
-                                AIProviderSettings.setCustomBaseURL(newValue.isEmpty ? nil : newValue, for: selectedProvider)
+                    if selectedProvider == .ollama {
+                        HStack {
+                            Label {
+                                Text("Server URL")
+                            } icon: {
+                                Image(systemName: "link")
+                                    .foregroundStyle(AppColors.calorie)
                             }
+                            Spacer()
+                            TextField(selectedProvider.baseURL, text: $customBaseURL)
+                                .textFieldStyle(.plain)
+                                .multilineTextAlignment(.trailing)
+                                .autocorrectionDisabled()
+                                .textInputAutocapitalization(.never)
+                                .onChange(of: customBaseURL) { _, newValue in
+                                    AIProviderSettings.setCustomBaseURL(newValue.isEmpty ? nil : newValue, for: selectedProvider)
+                                }
+                        }
                     }
                 }
                 .listRowBackground(AppColors.appCard)
