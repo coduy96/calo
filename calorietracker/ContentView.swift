@@ -47,6 +47,7 @@ struct HomeView: View {
     @State private var selectedDate: Date = .now
     @State private var showVoicePopover = false
     @State private var showTextPopover = false
+    @State private var showRecentSheet = false
 
     enum ActiveSheet: String, Identifiable {
         case analyzing, foodResult, analyzingText, editFood
@@ -179,11 +180,19 @@ struct HomeView: View {
                                         editingEntry = entry
                                         activeSheet = .editFood
                                     }
-                            }
-                            .onDelete { offsets in
-                                for index in offsets {
-                                    foodStore.deleteEntry(group.entries[index])
-                                }
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                        Button(role: .destructive) {
+                                            foodStore.deleteEntry(entry)
+                                        } label: {
+                                            Label("Delete", systemImage: "trash.fill")
+                                        }
+                                        Button {
+                                            foodStore.toggleFavorite(entry)
+                                        } label: {
+                                            Label(foodStore.isFavorite(entry) ? "Unfavorite" : "Favorite", systemImage: foodStore.isFavorite(entry) ? "heart.slash.fill" : "heart.fill")
+                                        }
+                                        .tint(AppColors.calorie)
+                                    }
                             }
                         } header: {
                             Label(group.meal.displayName, systemImage: group.meal.icon)
@@ -230,6 +239,12 @@ struct HomeView: View {
                                 showVoicePopover = true
                             }) {
                                 Label("Voice", systemImage: "mic.fill")
+                            }
+                            Button(action: {
+                                
+                                showRecentSheet = true
+                            }) {
+                                Label("Saved Meals", systemImage: "bookmark.fill")
                             }
                         } label: {
                             Image(systemName: "plus")
@@ -342,6 +357,9 @@ struct HomeView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showRecentSheet, content: {
+                RecentsView(logDate: selectedDate)
+            })
             .interactiveDismissDisabled(activeSheet == .analyzing || activeSheet == .analyzingText)
             .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .images)
             .onChange(of: selectedPhotoItem) { oldValue, newValue in
