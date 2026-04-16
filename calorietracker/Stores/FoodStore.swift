@@ -160,6 +160,8 @@ class FoodStore {
         if let index = favorites.firstIndex(where: { $0.favoriteKey == entry.favoriteKey }) {
             favorites.remove(at: index)
         } else {
+            // Remove any existing entry with same id to prevent duplicates
+            favorites.removeAll { $0.id == entry.id }
             favorites.append(entry)
         }
         saveFavorites()

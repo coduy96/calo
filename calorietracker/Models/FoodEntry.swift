@@ -152,8 +152,10 @@ struct FoodEntry: Identifiable, Codable {
     }
 
     /// New entry for the given log date (new id), copying nutrition and media from this entry.
-    func duplicatedForLogging(at logDate: Date, mealType: MealType = .currentMeal) -> FoodEntry {
-        FoodEntry(
+    /// Preserves the original meal type by default.
+    func duplicatedForLogging(at logDate: Date, mealType: MealType? = nil) -> FoodEntry {
+        let resolvedMealType = mealType ?? self.mealType
+        return FoodEntry(
             name: name,
             calories: calories,
             protein: protein,
@@ -163,7 +165,7 @@ struct FoodEntry: Identifiable, Codable {
             imageData: imageData,
             emoji: emoji,
             source: source,
-            mealType: mealType,
+            mealType: resolvedMealType,
             sugar: sugar,
             addedSugar: addedSugar,
             fiber: fiber,
