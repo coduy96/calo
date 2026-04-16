@@ -244,7 +244,7 @@ struct HomeView: View {
                                 
                                 showRecentSheet = true
                             }) {
-                                Label("Recent", systemImage: "clock.fill")
+                                Label("Saved Meals", systemImage: "bookmark.fill")
                             }
                         } label: {
                             Image(systemName: "plus")
