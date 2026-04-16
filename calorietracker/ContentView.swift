@@ -654,7 +654,7 @@ struct FoodRow: View {
                     HStack(spacing: 4) {
                         Text(entry.name)
                             .font(.system(.body, design: .rounded, weight: .medium))
-                            .lineLimit(1)
+                            .fixedSize(horizontal: false, vertical: true)
                         if foodStore.isFavorite(entry) {
                             Image(systemName: "heart.fill")
                                 .font(.caption2)
