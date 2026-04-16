@@ -107,6 +107,9 @@ struct RecentsView: View {
                                         }
                                     }
                             }
+                            .onMove { from, to in
+                                foodStore.moveFavorite(from: from, to: to)
+                            }
                         }
                     }
                 }
@@ -118,6 +121,11 @@ struct RecentsView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") { dismiss() }
+                }
+                if segment == .favorites && !foodStore.favorites.isEmpty {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        EditButton()
+                    }
                 }
             }
             .onAppear {

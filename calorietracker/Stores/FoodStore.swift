@@ -165,6 +165,11 @@ class FoodStore {
         saveFavorites()
     }
 
+    func moveFavorite(from source: IndexSet, to destination: Int) {
+        favorites.move(fromOffsets: source, toOffset: destination)
+        saveFavorites()
+    }
+
     private func saveFavorites() {
         if let data = try? JSONEncoder().encode(favorites) {
             UserDefaults.standard.set(data, forKey: favoritesKey)
