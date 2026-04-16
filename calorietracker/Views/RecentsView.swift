@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 struct RecentsView: View {
     let logDate: Date
@@ -41,19 +40,17 @@ struct RecentsView: View {
                 switch segment {
                 case .recents:
                     if recentItems.isEmpty {
-                        Section {
-                            emptyState("No foods logged yet")
-                        }
+                        emptySection(icon: "clock", message: "No foods logged yet")
                     } else {
                         Section {
                             ForEach(recentItems) { entry in
-                                FoodRow(entry: entry)
+                                SavedMealRow(entry: entry, isFavorite: foodStore.isFavorite(entry))
                                     .listRowBackground(AppColors.appCard)
                                     .contentShape(Rectangle())
                                     .onTapGesture { logEntry(entry) }
                                     .swipeActions(edge: .trailing) {
                                         Button {
-                                            foodStore.toggleFavorite(entry)
+                                            withAnimation { foodStore.toggleFavorite(entry) }
                                         } label: {
                                             Label(foodStore.isFavorite(entry) ? "Unfavorite" : "Favorite", systemImage: foodStore.isFavorite(entry) ? "heart.slash.fill" : "heart.fill")
                                         }
@@ -65,19 +62,17 @@ struct RecentsView: View {
 
                 case .frequent:
                     if frequentItems.isEmpty {
-                        Section {
-                            emptyState("No foods logged yet")
-                        }
+                        emptySection(icon: "repeat", message: "No foods logged yet")
                     } else {
                         Section {
                             ForEach(frequentItems) { group in
-                                FrequentFoodRow(group: group)
+                                SavedMealRow(entry: group.template, isFavorite: foodStore.isFavorite(group.template), subtitle: "\(group.count)× logged")
                                     .listRowBackground(AppColors.appCard)
                                     .contentShape(Rectangle())
                                     .onTapGesture { logEntry(group.template) }
                                     .swipeActions(edge: .trailing) {
                                         Button {
-                                            foodStore.toggleFavorite(group.template)
+                                            withAnimation { foodStore.toggleFavorite(group.template) }
                                         } label: {
                                             Label(foodStore.isFavorite(group.template) ? "Unfavorite" : "Favorite", systemImage: foodStore.isFavorite(group.template) ? "heart.slash.fill" : "heart.fill")
                                         }
@@ -89,19 +84,17 @@ struct RecentsView: View {
 
                 case .favorites:
                     if foodStore.favorites.isEmpty {
-                        Section {
-                            emptyState("No favorites yet. Swipe left on any food to add it.")
-                        }
+                        emptySection(icon: "heart", message: "No favorites yet\nSwipe left on any food to add it")
                     } else {
                         Section {
                             ForEach(foodStore.favorites) { entry in
-                                FoodRow(entry: entry)
+                                SavedMealRow(entry: entry, isFavorite: true)
                                     .listRowBackground(AppColors.appCard)
                                     .contentShape(Rectangle())
                                     .onTapGesture { logEntry(entry) }
                                     .swipeActions(edge: .trailing) {
                                         Button(role: .destructive) {
-                                            foodStore.toggleFavorite(entry)
+                                            withAnimation { foodStore.toggleFavorite(entry) }
                                         } label: {
                                             Label("Remove", systemImage: "heart.slash.fill")
                                         }
@@ -116,7 +109,7 @@ struct RecentsView: View {
             }
             .scrollContentBackground(.hidden)
             .background(AppColors.appBackground)
-            .navigationTitle("Log Again")
+            .navigationTitle("Saved Meals")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -144,57 +137,114 @@ struct RecentsView: View {
         dismiss()
     }
 
-    private func emptyState(_ message: String) -> some View {
-        Text(message)
-            .foregroundStyle(.secondary)
+    private func emptySection(icon: String, message: String) -> some View {
+        Section {
+            VStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 32))
+                    .foregroundStyle(AppColors.calorie.opacity(0.4))
+                Text(message)
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
             .frame(maxWidth: .infinity)
+            .padding(.vertical, 24)
             .listRowBackground(AppColors.appCard)
+        }
     }
 }
 
-private struct FrequentFoodRow: View {
-    let group: FrequentFoodGroup
+// MARK: - Saved Meal Row
+
+private struct SavedMealRow: View {
+    let entry: FoodEntry
+    let isFavorite: Bool
+    var subtitle: String? = nil
 
     var body: some View {
         HStack(spacing: 12) {
-            if let imageData = group.template.imageData, let uiImage = UIImage(data: imageData) {
+            // Thumbnail
+            if let imageData = entry.imageData, let uiImage = UIImage(data: imageData) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 64, height: 64)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-            } else if let emoji = group.template.emoji {
+                    .frame(width: 56, height: 56)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .strokeBorder(AppColors.calorie.opacity(0.15), lineWidth: 1)
+                    )
+            } else if let emoji = entry.emoji {
                 Text(emoji)
-                    .font(.system(size: 36))
-                    .frame(width: 64, height: 64)
-                    .background(.quaternary)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .font(.system(size: 28))
+                    .frame(width: 56, height: 56)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             } else {
-                Image(systemName: "photo")
-                    .font(.title)
-                    .frame(width: 64, height: 64)
-                    .background(.quaternary)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                Image(systemName: "fork.knife")
+                    .font(.title3)
+                    .foregroundStyle(AppColors.calorie)
+                    .frame(width: 56, height: 56)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(group.name)
-                    .font(.body.weight(.medium))
+            // Info
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 4) {
+                    Text(entry.name)
+                        .font(.system(.body, design: .rounded, weight: .medium))
+                        .lineLimit(1)
+                    if isFavorite {
+                        Image(systemName: "heart.fill")
+                            .font(.caption2)
+                            .foregroundStyle(AppColors.calorie)
+                    }
+                }
+
+                HStack(spacing: 6) {
+                    Text("\(entry.calories) kcal")
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(AppColors.calorie)
+
+                    if let subtitle {
+                        Text("·")
+                            .foregroundStyle(.tertiary)
+                        Text(subtitle)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                }
 
                 HStack(spacing: 8) {
-                    Text("\(group.calories) kcal")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Text("·")
-                        .foregroundStyle(.tertiary)
-                    Text("Logged \(group.count)×")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    MacroTag(label: "P", value: entry.protein)
+                    MacroTag(label: "C", value: entry.carbs)
+                    MacroTag(label: "F", value: entry.fat)
                 }
             }
 
             Spacer(minLength: 0)
+
+            // Log button
+            Image(systemName: "plus.circle.fill")
+                .font(.title3)
+                .foregroundStyle(AppColors.calorie)
         }
         .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Macro Tag
+
+private struct MacroTag: View {
+    let label: String
+    let value: Int
+
+    var body: some View {
+        Text("\(label) \(value)g")
+            .font(.system(.caption2, design: .rounded, weight: .medium))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(AppColors.calorie.opacity(0.08), in: Capsule())
     }
 }
