@@ -186,8 +186,6 @@ struct HomeView: View {
                                         } label: {
                                             Label("Delete", systemImage: "trash.fill")
                                         }
-                                    }
-                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                         Button {
                                             foodStore.toggleFavorite(entry)
                                         } label: {
