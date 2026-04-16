@@ -7,6 +7,8 @@ struct RecentsView: View {
     @Environment(FoodStore.self) private var foodStore
     @Environment(\.dismiss) private var dismiss
 
+    @AppStorage("lastRecentsSegment") private var lastSegment: String = RecentsSegment.recents.rawValue
+
     @State private var segment: RecentsSegment = .recents
 
     private enum RecentsSegment: String, CaseIterable {
@@ -117,6 +119,14 @@ struct RecentsView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") { dismiss() }
                 }
+            }
+            .onAppear {
+                if let saved = RecentsSegment(rawValue: lastSegment) {
+                    segment = saved
+                }
+            }
+            .onChange(of: segment) { _, newValue in
+                lastSegment = newValue.rawValue
             }
         }
     }
