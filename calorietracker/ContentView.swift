@@ -92,10 +92,10 @@ struct HomeView: View {
 
                 // Calorie hero
                 Section {
-                    VStack(spacing: 16) {
-                        VStack(spacing: 2) {
+                    VStack(spacing: 20) {
+                        VStack(spacing: 4) {
                             Text("\(selectedCalories)")
-                                .font(.system(size: 64, weight: .bold, design: .rounded))
+                                .font(.system(size: 72, weight: .bold, design: .rounded))
                                 .foregroundStyle(
                                     LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
                                 )
@@ -110,57 +110,52 @@ struct HomeView: View {
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
                                 Capsule()
-                                    .fill(AppColors.calorie.opacity(0.08))
-                                    .frame(height: 8)
+                                    .fill(AppColors.calorie.opacity(0.10))
+                                    .frame(height: 10)
 
                                 Capsule()
                                     .fill(LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing))
-                                    .frame(width: max(8, geo.size.width * min(Double(selectedCalories) / Double(calorieGoal), 1.0)), height: 8)
-                                    .shadow(color: AppColors.calorie.opacity(0.3), radius: 6, y: 2)
+                                    .frame(width: max(10, geo.size.width * min(Double(selectedCalories) / Double(calorieGoal), 1.0)), height: 10)
+                                    .shadow(color: AppColors.calorie.opacity(0.35), radius: 8, y: 3)
                                     .animation(.spring(response: 0.8, dampingFraction: 0.75), value: selectedCalories)
                             }
                         }
-                        .frame(height: 8)
-                        .padding(.horizontal, 20)
+                        .frame(height: 10)
+                        .padding(.horizontal, 24)
 
                         Text("\(caloriesRemaining) left")
-                            .font(.system(.caption, design: .rounded, weight: .semibold))
+                            .font(.system(.footnote, design: .rounded, weight: .medium))
                             .foregroundStyle(.secondary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 4)
-                            .background(AppColors.calorie.opacity(0.08), in: Capsule())
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
+                    .padding(.vertical, 20)
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                 }
 
                 // Macro trio
                 Section {
-                    HStack(spacing: 12) {
+                    HStack(spacing: 20) {
                         MacroCard(label: "Protein", current: foodStore.protein(for: selectedDate), goal: proteinGoal, gradientColors: AppColors.proteinGradient)
                         MacroCard(label: "Carbs", current: foodStore.carbs(for: selectedDate), goal: carbsGoal, gradientColors: AppColors.carbsGradient)
                         MacroCard(label: "Fat", current: foodStore.fat(for: selectedDate), goal: fatGoal, gradientColors: AppColors.fatGradient)
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 8)
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
 
                     Button {
                         showNutritionDetail = true
                     } label: {
-                        HStack(spacing: 4) {
+                        HStack {
                             Spacer()
                             Text("View More")
                                 .font(.system(.subheadline, design: .rounded, weight: .medium))
                             Image(systemName: "chevron.right")
-                                .font(.system(.caption2, weight: .semibold))
+                                .font(.caption2)
                             Spacer()
                         }
-                        .foregroundStyle(AppColors.calorie)
-                        .padding(.vertical, 8)
-                        .background(AppColors.calorie.opacity(0.06), in: Capsule())
+                        .foregroundStyle(AppColors.calorie.opacity(0.6))
                     }
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
@@ -170,17 +165,9 @@ struct HomeView: View {
                 let mealGroups = foodStore.entriesByMeal(for: selectedDate)
                 if mealGroups.isEmpty {
                     Section(isToday ? "Today's Food" : "Food Log") {
-                        VStack(spacing: 10) {
-                            Image(systemName: "fork.knife")
-                                .font(.system(size: 28))
-                                .foregroundStyle(AppColors.calorie.opacity(0.3))
-                            Text("No foods logged")
-                                .font(.system(.subheadline, design: .rounded))
-                                .foregroundStyle(.secondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .listRowBackground(AppColors.appCard)
+                        Text("No foods logged")
+                            .foregroundStyle(.secondary)
+                            .listRowBackground(AppColors.appCard)
                     }
                 } else {
                     ForEach(mealGroups, id: \.meal) { group in
@@ -261,14 +248,6 @@ struct HomeView: View {
                             }
                         } label: {
                             Image(systemName: "plus")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .frame(width: 32, height: 32)
-                                .background(
-                                    LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing),
-                                    in: Circle()
-                                )
-                                .shadow(color: AppColors.calorie.opacity(0.25), radius: 4, y: 2)
                         }
                         .popover(isPresented: $showTextPopover) {
                             TextFoodInputView(
