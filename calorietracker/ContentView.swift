@@ -358,7 +358,29 @@ struct HomeView: View {
                 }
             }
             .sheet(isPresented: $showRecentSheet, content: {
-                RecentsView(logDate: selectedDate)
+                RecentsView(logDate: selectedDate, onReview: { entry in
+                    currentImage = nil
+                    currentEmoji = entry.emoji
+                    currentFoodResult = GeminiService.FoodAnalysis(
+                        name: entry.name,
+                        calories: entry.calories,
+                        protein: entry.protein,
+                        carbs: entry.carbs,
+                        fat: entry.fat,
+                        servingSizeGrams: entry.servingSizeGrams ?? 100,
+                        emoji: entry.emoji,
+                        sugar: entry.sugar,
+                        addedSugar: entry.addedSugar,
+                        fiber: entry.fiber,
+                        saturatedFat: entry.saturatedFat,
+                        monounsaturatedFat: entry.monounsaturatedFat,
+                        polyunsaturatedFat: entry.polyunsaturatedFat,
+                        cholesterol: entry.cholesterol,
+                        sodium: entry.sodium,
+                        potassium: entry.potassium
+                    )
+                    activeSheet = .foodResult
+                })
             })
             .interactiveDismissDisabled(activeSheet == .analyzing || activeSheet == .analyzingText)
             .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .images)

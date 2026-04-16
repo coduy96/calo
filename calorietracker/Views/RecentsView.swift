@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RecentsView: View {
     let logDate: Date
+    var onReview: ((FoodEntry) -> Void)? = nil
 
     @Environment(FoodStore.self) private var foodStore
     @Environment(\.dismiss) private var dismiss
@@ -133,8 +134,13 @@ struct RecentsView: View {
     }
 
     private func logEntry(_ entry: FoodEntry) {
-        foodStore.addEntry(entry.duplicatedForLogging(at: logDate))
+        let prepared = entry.duplicatedForLogging(at: logDate)
         dismiss()
+        if let onReview {
+            onReview(prepared)
+        } else {
+            foodStore.addEntry(prepared)
+        }
     }
 
     private func emptySection(icon: String, message: String) -> some View {
