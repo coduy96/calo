@@ -614,55 +614,77 @@ struct CameraView: UIViewControllerRepresentable {
 // MARK: - Food Row
 struct FoodRow: View {
     let entry: FoodEntry
+    @Environment(FoodStore.self) private var foodStore
 
-    private var servingCalorieText: String {
-        if let grams = entry.servingSizeGrams {
-            let formatted = grams == grams.rounded() ? "\(Int(grams))" : String(format: "%.1f", grams)
-            return "\(formatted)g · \(entry.calories) cal"
-        }
-        return "\(entry.calories) cal"
+    private var servingText: String? {
+        guard let grams = entry.servingSizeGrams else { return nil }
+        let formatted = grams == grams.rounded() ? "\(Int(grams))" : String(format: "%.1f", grams)
+        return "\(formatted)g"
     }
 
     var body: some View {
         HStack(spacing: 12) {
+            // Thumbnail
             if let imageData = entry.imageData, let uiImage = UIImage(data: imageData) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 64, height: 64)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .frame(width: 56, height: 56)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .strokeBorder(AppColors.calorie.opacity(0.15), lineWidth: 1)
+                    )
             } else if let emoji = entry.emoji {
                 Text(emoji)
-                    .font(.system(size: 36))
-                    .frame(width: 64, height: 64)
-                    .background(.quaternary)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .font(.system(size: 28))
+                    .frame(width: 56, height: 56)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             } else {
-                Image(systemName: "photo")
-                    .font(.title)
-                    .frame(width: 64, height: 64)
-                    .background(.quaternary)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                Image(systemName: "fork.knife")
+                    .font(.title3)
+                    .foregroundStyle(AppColors.calorie)
+                    .frame(width: 56, height: 56)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
 
-            VStack(alignment: .leading, spacing: 4) {
+            // Info
+            VStack(alignment: .leading, spacing: 3) {
                 HStack {
-                    Text(entry.name)
-                        .fontWeight(.medium)
+                    HStack(spacing: 4) {
+                        Text(entry.name)
+                            .font(.system(.body, design: .rounded, weight: .medium))
+                            .lineLimit(1)
+                        if foodStore.isFavorite(entry) {
+                            Image(systemName: "heart.fill")
+                                .font(.caption2)
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
                     Spacer()
                     Text(entry.timeString)
-                        .font(.caption)
+                        .font(.system(.caption, design: .rounded))
                         .foregroundStyle(.tertiary)
                 }
 
-                Text(servingCalorieText)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-
                 HStack(spacing: 6) {
-                    MacroPill(label: "P", value: entry.protein, color: AppColors.protein)
-                    MacroPill(label: "C", value: entry.carbs, color: AppColors.carbs)
-                    MacroPill(label: "F", value: entry.fat, color: AppColors.fat)
+                    Text("\(entry.calories) kcal")
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(AppColors.calorie)
+
+                    if let serving = servingText {
+                        Text("·")
+                            .foregroundStyle(.tertiary)
+                        Text(serving)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                HStack(spacing: 8) {
+                    MacroPill(label: "P", value: entry.protein)
+                    MacroPill(label: "C", value: entry.carbs)
+                    MacroPill(label: "F", value: entry.fat)
                 }
             }
         }
@@ -673,17 +695,14 @@ struct FoodRow: View {
 struct MacroPill: View {
     let label: String
     let value: Int
-    let color: Color
 
     var body: some View {
-        Text("\(label): \(value)g")
-            .font(.caption2)
-            .fontWeight(.medium)
+        Text("\(label) \(value)g")
+            .font(.system(.caption2, design: .rounded, weight: .medium))
+            .foregroundStyle(.secondary)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(color.opacity(0.15))
-            .foregroundStyle(color)
-            .clipShape(Capsule())
+            .background(AppColors.calorie.opacity(0.08), in: Capsule())
     }
 }
 
