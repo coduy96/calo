@@ -82,6 +82,7 @@ struct WeekEnergyStrip: View {
         let cal = Calendar.current
         let isSelected = cal.isDate(date, inSameDayAs: selectedDate)
         let isToday = cal.isDateInToday(date)
+        let hasFood = caloriesForDate(date) > 0
 
         return Button {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -89,7 +90,7 @@ struct WeekEnergyStrip: View {
                 selectedDate = date
             }
         } label: {
-            VStack(spacing: 6) {
+            VStack(spacing: 4) {
                 Text(date.formatted(.dateTime.weekday(.narrow)))
                     .font(.system(.caption2, design: .rounded, weight: .medium))
                     .foregroundStyle(isSelected ? AppColors.calorie : Color.secondary.opacity(0.6))
@@ -108,6 +109,10 @@ struct WeekEnergyStrip: View {
                                 .strokeBorder(AppColors.calorie.opacity(0.35), lineWidth: 1.5)
                         }
                     }
+
+                Circle()
+                    .fill(hasFood ? AppColors.calorie : Color.clear)
+                    .frame(width: 4, height: 4)
             }
         }
         .buttonStyle(.plain)
@@ -128,27 +133,29 @@ struct MacroCard: View {
     }
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             Text("\(current)")
-                .font(.system(.title, design: .rounded, weight: .bold))
+                .font(.system(.title2, design: .rounded, weight: .bold))
                 .foregroundStyle(gradientColors.first ?? .primary)
+                .contentTransition(.numericText())
+                .animation(.snappy, value: current)
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(gradientColors.first?.opacity(0.12) ?? Color.gray.opacity(0.12))
+                        .fill(gradientColors.first?.opacity(0.10) ?? Color.gray.opacity(0.10))
 
                     Capsule()
                         .fill(LinearGradient(colors: gradientColors, startPoint: .leading, endPoint: .trailing))
-                        .frame(width: max(6, geo.size.width * progress))
-                        .shadow(color: (gradientColors.first ?? .clear).opacity(0.3), radius: 4, y: 2)
+                        .frame(width: max(5, geo.size.width * progress))
+                        .shadow(color: (gradientColors.first ?? .clear).opacity(0.25), radius: 3, y: 1)
                         .animation(.spring(response: 0.8, dampingFraction: 0.75), value: current)
                 }
             }
-            .frame(height: 6)
+            .frame(height: 5)
 
             Text(label)
-                .font(.system(.caption, design: .rounded, weight: .medium))
+                .font(.system(.caption, design: .rounded, weight: .semibold))
                 .foregroundStyle(.secondary)
 
             Text("\(max(goal - current, 0))g left")
@@ -156,5 +163,8 @@ struct MacroCard: View {
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 4)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
