@@ -359,7 +359,11 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showRecentSheet, content: {
                 RecentsView(logDate: selectedDate, onReview: { entry in
-                    currentImage = nil
+                    if let imageData = entry.imageData, let image = UIImage(data: imageData) {
+                        currentImage = image
+                    } else {
+                        currentImage = nil
+                    }
                     currentEmoji = entry.emoji
                     currentFoodResult = GeminiService.FoodAnalysis(
                         name: entry.name,
