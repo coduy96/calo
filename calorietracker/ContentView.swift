@@ -6,6 +6,7 @@ import HealthKit
 // MARK: - Camera Mode
 enum CameraMode {
     case snapFood
+    case snapFoodWithContext
     case nutritionLabel
 }
 
@@ -158,6 +159,9 @@ struct HomeView: View {
     @State private var showVoicePopover = false
     @State private var showTextPopover = false
     @State private var showRecentSheet = false
+    @State private var pendingContextImage: UIImage?
+    @State private var contextDescription: String = ""
+    @State private var showContextSheet = false
 
     enum ActiveSheet: String, Identifiable {
         case analyzing, foodResult, analyzingText, editFood
@@ -327,6 +331,13 @@ struct HomeView: View {
                             }
                             Button(action: {
 
+                                cameraMode = .snapFoodWithContext
+                                showCamera = true
+                            }) {
+                                Label("Camera + Description", systemImage: "camera.badge.ellipsis")
+                            }
+                            Button(action: {
+
                                 cameraMode = .nutritionLabel
                                 showCamera = true
                             }) {
@@ -426,7 +437,33 @@ struct HomeView: View {
                 capturedImage = nil
                 currentImage = image
                 currentEmoji = nil
-                startAnalysis(image: image, mode: cameraMode)
+                if cameraMode == .snapFoodWithContext {
+                    pendingContextImage = image
+                    contextDescription = ""
+                    showContextSheet = true
+                } else {
+                    startAnalysis(image: image, mode: cameraMode)
+                }
+            }
+            .sheet(isPresented: $showContextSheet) {
+                ContextDescriptionSheet(
+                    image: pendingContextImage,
+                    description: $contextDescription,
+                    onAnalyze: {
+                        let desc = contextDescription
+                        let image = pendingContextImage
+                        showContextSheet = false
+                        pendingContextImage = nil
+                        if let image {
+                            startAnalysis(image: image, mode: .snapFoodWithContext, description: desc)
+                        }
+                    },
+                    onCancel: {
+                        showContextSheet = false
+                        pendingContextImage = nil
+                        currentImage = nil
+                    }
+                )
             }
             .sheet(item: $activeSheet) { sheet in
                 switch sheet {
@@ -439,7 +476,7 @@ struct HomeView: View {
                         FoodResultView(
                             image: currentImage,
                             emoji: currentEmoji,
-                            source: currentImage == nil ? .textInput : (cameraMode == .snapFood ? .snapFood : .nutritionLabel),
+                            source: currentImage == nil ? .textInput : (cameraMode == .nutritionLabel ? .nutritionLabel : .snapFood),
                             name: result.name,
                             calories: result.calories,
                             protein: result.protein,
@@ -532,7 +569,7 @@ struct HomeView: View {
     }
 
 
-    private func startAnalysis(image: UIImage, mode: CameraMode) {
+    private func startAnalysis(image: UIImage, mode: CameraMode, description: String? = nil) {
         activeSheet = .analyzing
 
         Task {
@@ -540,6 +577,11 @@ struct HomeView: View {
                 switch mode {
                 case .snapFood:
                     let result = try await GeminiService.analyzeFood(image: image)
+                    currentFoodResult = result
+                    activeSheet = .foodResult
+
+                case .snapFoodWithContext:
+                    let result = try await GeminiService.analyzeFood(image: image, description: description)
                     currentFoodResult = result
                     activeSheet = .foodResult
 
@@ -627,6 +669,86 @@ struct NutritionDetailRow: View {
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }
+        }
+    }
+}
+
+// MARK: - Context Description Sheet
+struct ContextDescriptionSheet: View {
+    let image: UIImage?
+    @Binding var description: String
+    let onAnalyze: () -> Void
+    let onCancel: () -> Void
+
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 20) {
+                    if let image {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxHeight: 240)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .strokeBorder(AppColors.calorie.opacity(0.15), lineWidth: 1)
+                            )
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Add context (optional)")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.secondary)
+
+                        ZStack(alignment: .topLeading) {
+                            if description.isEmpty {
+                                Text("e.g. \"This is a half portion\" or \"Cooked in olive oil\"")
+                                    .foregroundStyle(.tertiary)
+                                    .font(.body)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 10)
+                                    .allowsHitTesting(false)
+                            }
+                            TextField("", text: $description, axis: .vertical)
+                                .font(.body)
+                                .lineLimit(3...6)
+                                .textFieldStyle(.plain)
+                                .focused($isFocused)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 10)
+                        }
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(Color(.secondarySystemGroupedBackground))
+                        )
+                    }
+
+                    Button {
+                        onAnalyze()
+                    } label: {
+                        Text("Analyze")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(AppColors.calorie)
+                    .controlSize(.large)
+                }
+                .padding()
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Add Description")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { onCancel() }
+                }
+            }
+            .onAppear { isFocused = true }
         }
     }
 }
