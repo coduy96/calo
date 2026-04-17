@@ -129,9 +129,14 @@ struct MacroCard: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            Text("\(current)")
-                .font(.system(.title, design: .rounded, weight: .bold))
-                .foregroundStyle(gradientColors.first ?? .primary)
+            HStack(alignment: .lastTextBaseline, spacing: 2) {
+                Text("\(current)")
+                    .font(.system(.title, design: .rounded, weight: .bold))
+                    .foregroundStyle(gradientColors.first ?? .primary)
+                Text("/\(goal)g")
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
