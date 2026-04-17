@@ -7,6 +7,7 @@ class FoodStore {
     var onEntriesChanged: (() -> Void)?
     var onEntryAdded: ((FoodEntry) -> Void)?
     var onEntryDeleted: ((UUID) -> Void)?
+    var onEntryUpdated: ((FoodEntry) -> Void)?
 
     private let storageKey = "foodEntries"
     private let favoritesKey = "favoriteFoodEntries"
@@ -197,13 +198,11 @@ class FoodStore {
 
     func updateEntry(_ entry: FoodEntry) {
         guard let index = entries.firstIndex(where: { $0.id == entry.id }) else { return }
-        let oldID = entry.id
         entries[index] = entry
         saveEntries()
         onEntriesChanged?()
-        // Re-sync HealthKit: delete old samples, write new ones
-        onEntryDeleted?(oldID)
-        onEntryAdded?(entry)
+        // Single callback so HealthKit can serialize delete-then-write atomically.
+        onEntryUpdated?(entry)
     }
 
     func deleteEntry(_ entry: FoodEntry) {

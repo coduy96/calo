@@ -70,7 +70,7 @@ struct GeminiService {
         var errorDescription: String? {
             switch self {
             case .noAPIKey:
-                return "No API key configured. Add your key in Profile → AI Provider."
+                return "No API key configured. Add your key in Settings → AI Provider."
             case .imageConversionFailed:
                 return "Failed to process the image."
             case .networkError(let error):

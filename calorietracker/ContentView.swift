@@ -1707,6 +1707,10 @@ struct ProfileView: View {
             .alert("Delete All Data", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete Everything", role: .destructive) {
+                    // Wipe HealthKit nutrition samples first while we still have entries + auth flag.
+                    for entry in foodStore.entries {
+                        healthKitManager.deleteNutrition(entryID: entry.id)
+                    }
                     // Clear in-memory stores
                     foodStore.replaceAllEntries([])
                     weightStore.replaceAllEntries([])
@@ -1761,6 +1765,7 @@ struct ProfileView: View {
                     }
                     saveProfile()
                     healthKitManager.startBodyMeasurementObserver()
+                    healthKitManager.backfillNutritionIfNeeded(entries: foodStore.entries)
                 } else {
                     healthKitEnabled = false
                 }

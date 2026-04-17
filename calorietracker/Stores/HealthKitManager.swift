@@ -17,11 +17,8 @@ class HealthKitManager {
     private let authVersion = 2
     private let authVersionKey = "healthKitAuthVersion"
 
-    private var shareTypes: Set<HKSampleType> {
+    private var dietaryShareTypes: Set<HKSampleType> {
         [
-            HKQuantityType(.bodyMass),
-            HKQuantityType(.height),
-            HKQuantityType(.bodyFatPercentage),
             // Macronutrients
             HKQuantityType(.dietaryEnergyConsumed),
             HKQuantityType(.dietaryProtein),
@@ -38,6 +35,18 @@ class HealthKitManager {
             HKQuantityType(.dietaryPotassium),
         ]
     }
+
+    private var shareTypes: Set<HKSampleType> {
+        var types: Set<HKSampleType> = [
+            HKQuantityType(.bodyMass),
+            HKQuantityType(.height),
+            HKQuantityType(.bodyFatPercentage),
+        ]
+        types.formUnion(dietaryShareTypes)
+        return types
+    }
+
+    private let nutritionBackfillVersionKey = "healthKitNutritionBackfillVersion"
 
     private var readTypes: Set<HKObjectType> {
         [
@@ -63,11 +72,20 @@ class HealthKitManager {
         do {
             try await healthStore.requestAuthorization(toShare: shareTypes, read: readTypes)
             authorizationStatus = healthStore.authorizationStatus(for: HKQuantityType(.bodyMass))
-            UserDefaults.standard.set(authVersion, forKey: authVersionKey)
+            // Only persist this auth version once dietary write access is actually granted,
+            // otherwise users who deny nutrition can never get re-prompted.
+            if dietaryShareTypes.allSatisfy({ healthStore.authorizationStatus(for: $0) == .sharingAuthorized }) {
+                UserDefaults.standard.set(authVersion, forKey: authVersionKey)
+            }
             return true
         } catch {
             return false
         }
+    }
+
+    /// Whether HealthKit currently has write permission for nutrition samples.
+    var hasNutritionWriteAccess: Bool {
+        dietaryShareTypes.allSatisfy { healthStore.authorizationStatus(for: $0) == .sharingAuthorized }
     }
 
     // MARK: - Write Body Measurements
@@ -132,18 +150,49 @@ class HealthKitManager {
     /// Deletes all nutrition samples written for this entry.
     func deleteNutrition(entryID: UUID) {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
+        Task { await deleteNutritionSamples(entryID: entryID) }
+    }
 
+    /// Deletes the existing samples for an entry, awaits completion, then writes the new samples.
+    /// Used on edits so a stale delete cannot clobber the freshly-written samples.
+    func updateNutrition(for entry: FoodEntry) {
+        guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
+        Task {
+            await deleteNutritionSamples(entryID: entry.id)
+            writeNutrition(for: entry)
+        }
+    }
+
+    /// Backfills nutrition samples for any entries logged before HealthKit nutrition sync was enabled.
+    /// Idempotent — runs once per `authVersion`.
+    func backfillNutritionIfNeeded(entries: [FoodEntry]) {
+        guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
+        guard hasNutritionWriteAccess else { return }
+        let backfilled = UserDefaults.standard.integer(forKey: nutritionBackfillVersionKey)
+        guard backfilled < authVersion else { return }
+        for entry in entries {
+            writeNutrition(for: entry)
+        }
+        UserDefaults.standard.set(authVersion, forKey: nutritionBackfillVersionKey)
+    }
+
+    private func deleteNutritionSamples(entryID: UUID) async {
         let predicate = HKQuery.predicateForObjects(withMetadataKey: "fudai_entry_id", operatorType: .equalTo, value: entryID.uuidString)
-
         let nutritionTypes: [HKQuantityTypeIdentifier] = [
             .dietaryEnergyConsumed, .dietaryProtein, .dietaryCarbohydrates, .dietaryFatTotal,
             .dietarySugar, .dietaryFiber, .dietaryFatSaturated, .dietaryFatMonounsaturated,
             .dietaryFatPolyunsaturated, .dietaryCholesterol, .dietarySodium, .dietaryPotassium,
         ]
-
-        for identifier in nutritionTypes {
-            let type = HKQuantityType(identifier)
-            healthStore.deleteObjects(of: type, predicate: predicate) { _, _, _ in }
+        await withTaskGroup(of: Void.self) { group in
+            for identifier in nutritionTypes {
+                group.addTask { [healthStore] in
+                    await withCheckedContinuation { continuation in
+                        healthStore.deleteObjects(of: HKQuantityType(identifier), predicate: predicate) { _, _, _ in
+                            continuation.resume()
+                        }
+                    }
+                }
+            }
         }
     }
 

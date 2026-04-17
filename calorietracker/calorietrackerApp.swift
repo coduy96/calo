@@ -79,9 +79,15 @@ struct calorietrackerApp: App {
     private func wireUpHealthKit() {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
 
-        // Re-request authorization if new HealthKit types were added since last auth
+        // Re-request authorization if new HealthKit types were added since last auth.
+        // Backfill nutrition entries afterwards so HealthKit reflects the user's existing log.
         if healthKitManager.needsReauthorization {
-            Task { _ = await healthKitManager.requestAuthorization() }
+            Task { [healthKitManager, foodStore] in
+                _ = await healthKitManager.requestAuthorization()
+                healthKitManager.backfillNutritionIfNeeded(entries: foodStore.entries)
+            }
+        } else {
+            healthKitManager.backfillNutritionIfNeeded(entries: foodStore.entries)
         }
 
         healthKitManager.onBodyMeasurementsChanged = { [weightStore] weightKg, heightCm, bodyFat, dob, sex in
@@ -141,6 +147,10 @@ struct calorietrackerApp: App {
 
         foodStore.onEntryDeleted = { [healthKitManager] entryID in
             healthKitManager.deleteNutrition(entryID: entryID)
+        }
+
+        foodStore.onEntryUpdated = { [healthKitManager] entry in
+            healthKitManager.updateNutrition(for: entry)
         }
     }
 

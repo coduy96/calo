@@ -717,7 +717,7 @@ struct OnboardingView: View {
                     // Steps
                     VStack(alignment: .leading, spacing: 10) {
                         aiSetupRow(number: "1", text: "Get a free key at aistudio.google.com/apikey")
-                        aiSetupRow(number: "2", text: "Open Profile → AI Provider")
+                        aiSetupRow(number: "2", text: "Open Settings → AI Provider")
                         aiSetupRow(number: "3", text: "Paste your key — done")
                     }
                     .padding(14)
