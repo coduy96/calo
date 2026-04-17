@@ -5,6 +5,7 @@ import SwiftUI
 class WeightStore {
     private(set) var entries: [WeightEntry] = []
     var onEntryAdded: ((WeightEntry) -> Void)?
+    var onEntryDeleted: ((UUID) -> Void)?
 
     private let storageKey = "weightEntries"
 
@@ -29,14 +30,28 @@ class WeightStore {
     }
 
     func addEntry(_ entry: WeightEntry) {
+        let previousLatest = entries.sorted { $0.date > $1.date }.first
         entries.append(entry)
         saveEntries()
         onEntryAdded?(entry)
 
-        // Sync weight to UserProfile so BMR/TDEE/macros recalculate
+        // Sync weight to UserProfile (formula-derived numbers update; custom goals stay locked).
         if var profile = UserProfile.load() {
             profile.weightKg = entry.weightKg
             profile.save()
+
+            // Detect goal-weight crossing — fire only on the transition, not on every weight past goal.
+            if let goalKg = profile.goalWeightKg, let previous = previousLatest {
+                let crossed: Bool
+                switch profile.goal {
+                case .lose:    crossed = previous.weightKg > goalKg && entry.weightKg <= goalKg
+                case .gain:    crossed = previous.weightKg < goalKg && entry.weightKg >= goalKg
+                case .maintain: crossed = false
+                }
+                if crossed {
+                    NotificationCenter.default.post(name: .weightGoalReached, object: nil)
+                }
+            }
         }
     }
 
@@ -44,6 +59,13 @@ class WeightStore {
         let id = entry.id
         entries.removeAll { $0.id == id }
         saveEntries()
+        onEntryDeleted?(id)
+
+        // Sync remaining latest weight back to UserProfile so the rest of the app stays consistent.
+        if var profile = UserProfile.load(), let newest = entries.sorted(by: { $0.date > $1.date }).first {
+            profile.weightKg = newest.weightKg
+            profile.save()
+        }
     }
 
     func replaceAllEntries(_ newEntries: [WeightEntry]) {

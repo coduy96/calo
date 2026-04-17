@@ -987,6 +987,7 @@ struct OnboardingView: View {
                 editedProfile.customProtein = editedProtein
                 editedProfile.customFat = editedFat
                 editedProfile.customCarbs = editedCarbs
+                editedProfile.autoBalanceMacro = .carbs
                 editedProfile.save()
             }
         }

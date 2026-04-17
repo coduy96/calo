@@ -123,6 +123,7 @@ struct UserProfile: Codable {
     var customProtein: Int?
     var customFat: Int?
     var customCarbs: Int?
+    var autoBalanceMacro: AutoBalanceMacro?
 
     var displayName: String {
         if let name, !name.isEmpty { return name }
@@ -188,9 +189,45 @@ struct UserProfile: Codable {
     }
 
     var effectiveCalories: Int { customCalories ?? dailyCalories }
-    var effectiveProtein: Int { customProtein ?? proteinGoal }
-    var effectiveFat: Int { customFat ?? fatGoal }
-    var effectiveCarbs: Int { customCarbs ?? carbsGoal }
+
+    /// Which of {protein, carbs, fat} is auto-balanced from the other two + calories.
+    /// Defaults to carbs (matches prior behavior).
+    var effectiveAutoBalance: AutoBalanceMacro { autoBalanceMacro ?? .carbs }
+
+    private var rawProtein: Int { customProtein ?? proteinGoal }
+    private var rawFat: Int { customFat ?? fatGoal }
+    private var rawCarbs: Int { customCarbs ?? carbsGoal }
+
+    var effectiveProtein: Int {
+        if effectiveAutoBalance == .protein {
+            return max(0, (effectiveCalories - rawCarbs * 4 - rawFat * 9) / 4)
+        }
+        return rawProtein
+    }
+
+    var effectiveFat: Int {
+        if effectiveAutoBalance == .fat {
+            return max(0, (effectiveCalories - rawProtein * 4 - rawCarbs * 4) / 9)
+        }
+        return rawFat
+    }
+
+    var effectiveCarbs: Int {
+        if effectiveAutoBalance == .carbs {
+            return max(0, (effectiveCalories - rawProtein * 4 - rawFat * 9) / 4)
+        }
+        return rawCarbs
+    }
+
+    /// Recompute all four targets from the underlying weight/activity/goal formulas
+    /// and persist them as custom values. Resets auto-balance back to carbs.
+    mutating func recalculateGoalsFromFormulas() {
+        customCalories = dailyCalories
+        customProtein = proteinGoal
+        customFat = fatGoal
+        customCarbs = carbsGoal
+        autoBalanceMacro = .carbs
+    }
 
     static let `default` = UserProfile(
         name: nil,
@@ -206,7 +243,8 @@ struct UserProfile: Codable {
         customCalories: nil,
         customProtein: nil,
         customFat: nil,
-        customCarbs: nil
+        customCarbs: nil,
+        autoBalanceMacro: nil
     )
 
     // MARK: - Persistence
@@ -228,4 +266,11 @@ struct UserProfile: Codable {
 
 extension Notification.Name {
     static let userProfileDidChange = Notification.Name("userProfileDidChange")
+    static let weightGoalReached = Notification.Name("weightGoalReached")
+}
+
+enum AutoBalanceMacro: String, Codable, CaseIterable, Identifiable {
+    case protein, carbs, fat
+    var id: String { rawValue }
+    var label: String { rawValue.capitalized }
 }

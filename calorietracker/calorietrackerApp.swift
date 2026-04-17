@@ -145,7 +145,11 @@ struct calorietrackerApp: App {
         healthKitManager.startBodyMeasurementObserver()
 
         weightStore.onEntryAdded = { [healthKitManager] entry in
-            healthKitManager.writeWeight(kg: entry.weightKg, date: entry.date)
+            healthKitManager.writeWeight(for: entry)
+        }
+
+        weightStore.onEntryDeleted = { [healthKitManager] entryID in
+            healthKitManager.deleteWeight(entryID: entryID)
         }
 
         foodStore.onEntryAdded = { [healthKitManager] entry in

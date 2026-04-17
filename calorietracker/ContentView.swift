@@ -1015,6 +1015,7 @@ struct MacroPill: View {
 struct ProgressTabView: View {
     @Environment(FoodStore.self) private var foodStore
     @Environment(WeightStore.self) private var weightStore
+    @AppStorage("useMetric") private var useMetric = false
     @State private var timeRange: TimeRange = .week
     @State private var showLogWeight = false
     @State private var showGoalReached = false
@@ -1078,6 +1079,16 @@ struct ProgressTabView: View {
                     )
                     .padding(.horizontal)
 
+                    // Weight History (swipe to delete a mistakenly-logged entry)
+                    if !filteredWeightEntries.isEmpty {
+                        WeightHistorySection(
+                            entries: filteredWeightEntries.sorted { $0.date > $1.date },
+                            useMetric: useMetric,
+                            onDelete: { entry in weightStore.deleteEntry(entry) }
+                        )
+                        .padding(.horizontal)
+                    }
+
                     // Calorie Trend
                     CalorieChartSection(
                         dailyCalories: dailyCalories,
@@ -1106,39 +1117,20 @@ struct ProgressTabView: View {
                 LogWeightSheet(
                     currentWeightKg: weightStore.latestEntry?.weightKg ?? userProfile.weightKg
                 ) { weightKg in
-                    let entry = WeightEntry(weightKg: weightKg)
-                    weightStore.addEntry(entry)
-                    // Check if goal weight reached
-                    if let goalKg = userProfile.goalWeightKg {
-                        let reached: Bool
-                        switch userProfile.goal {
-                        case .lose: reached = weightKg <= goalKg
-                        case .gain: reached = weightKg >= goalKg
-                        case .maintain: reached = false
-                        }
-                        if reached { showGoalReached = true }
-                    }
+                    weightStore.addEntry(WeightEntry(weightKg: weightKg))
                 }
             }
             .alert("Congratulations!", isPresented: $showGoalReached) {
-                Button("Switch to Maintain") {
-                    var profile = userProfile
-                    profile.goal = .maintain
-                    profile.weeklyChangeKg = nil
-                    profile.goalWeightKg = nil
-                    profile.customCalories = nil
-                    profile.customProtein = nil
-                    profile.customCarbs = nil
-                    profile.customFat = nil
-                    profile.save()
-                }
                 Button("Keep Going", role: .cancel) { }
             } message: {
-                Text("You've reached your goal weight! Would you like to switch to maintenance?")
+                Text("You've reached your goal weight! Head to Settings to switch your goal (Maintain, Lose, or Gain) and tap Recalculate Goals to refresh your targets.")
             }
             .onAppear { userProfile = UserProfile.load() ?? .default }
             .onReceive(NotificationCenter.default.publisher(for: .userProfileDidChange)) { _ in
                 userProfile = UserProfile.load() ?? .default
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .weightGoalReached)) { _ in
+                showGoalReached = true
             }
         }
     }
@@ -1164,6 +1156,8 @@ struct ProfileView: View {
     @State private var activeSheet: ActiveSheet?
     @State private var showDeleteConfirmation = false
     @State private var showClearFoodLogConfirmation = false
+    @State private var showRecalculateConfirm = false
+    @State private var showAutoMacroEditAlert = false
     @State private var editingName: String = ""
     @State private var selectedProvider: AIProvider = AIProviderSettings.selectedProvider
     @State private var selectedModel: String = AIProviderSettings.selectedModel
@@ -1239,7 +1233,7 @@ struct ProfileView: View {
                     }
                     .pickerStyle(.menu)
                     .tint(.secondary)
-                    .onChange(of: profile.gender) { _, _ in resetNutritionAndSave() }
+                    .onChange(of: profile.gender) { _, _ in saveProfile() }
 
                     ProfileInfoRow(icon: "birthday.cake", label: "Birthday", value: birthdayDisplay) {
                         activeSheet = .editBirthday
@@ -1286,7 +1280,7 @@ struct ProfileView: View {
                         } else if profile.weeklyChangeKg == nil {
                             profile.weeklyChangeKg = 0.5
                         }
-                        resetNutritionAndSave()
+                        saveProfile()
                     }
 
                     Picker(selection: $profile.activityLevel) {
@@ -1303,12 +1297,12 @@ struct ProfileView: View {
                     }
                     .pickerStyle(.menu)
                     .tint(.secondary)
-                    .onChange(of: profile.activityLevel) { _, _ in resetNutritionAndSave() }
+                    .onChange(of: profile.activityLevel) { _, _ in saveProfile() }
 
                     if profile.goal != .maintain {
                         Picker(selection: Binding(
                             get: { profile.weeklyChangeKg ?? 0.5 },
-                            set: { profile.weeklyChangeKg = $0; resetNutritionAndSave() }
+                            set: { profile.weeklyChangeKg = $0; saveProfile() }
                         )) {
                             Text("Slow (0.25 kg/wk)").tag(0.25)
                             Text("Moderate (0.5 kg/wk)").tag(0.5)
@@ -1337,17 +1331,43 @@ struct ProfileView: View {
                         activeSheet = .editCalories
                     }
 
-                    ProfileInfoRow(icon: "p.circle", label: "Protein", value: "\(profile.effectiveProtein)g") {
-                        activeSheet = .editProtein
-                    }
+                    macroRow(label: "Protein", icon: "p.circle", macro: .protein, value: profile.effectiveProtein, sheet: .editProtein)
+                    macroRow(label: "Carbs", icon: "c.circle", macro: .carbs, value: profile.effectiveCarbs, sheet: .editCarbs)
+                    macroRow(label: "Fat", icon: "f.circle", macro: .fat, value: profile.effectiveFat, sheet: .editFat)
 
-                    ProfileInfoRow(icon: "c.circle", label: "Carbs", value: "\(profile.effectiveCarbs)g") {
-                        activeSheet = .editCarbs
+                    Picker(selection: Binding(
+                        get: { profile.effectiveAutoBalance },
+                        set: { newValue in
+                            freezeMacroBeforeAutoBalanceChange(to: newValue)
+                            profile.autoBalanceMacro = newValue
+                            saveProfile()
+                        }
+                    )) {
+                        ForEach(AutoBalanceMacro.allCases) { macro in
+                            Text(macro.label).tag(macro)
+                        }
+                    } label: {
+                        Label {
+                            Text("Auto-balance")
+                        } icon: {
+                            Image(systemName: "slider.horizontal.3")
+                                .foregroundStyle(AppColors.calorie)
+                        }
                     }
+                    .pickerStyle(.menu)
+                    .tint(.secondary)
 
-                    ProfileInfoRow(icon: "f.circle", label: "Fat", value: "\(profile.effectiveFat)g") {
-                        activeSheet = .editFat
+                    Button {
+                        showRecalculateConfirm = true
+                    } label: {
+                        Label {
+                            Text("Recalculate Goals")
+                        } icon: {
+                            Image(systemName: "arrow.clockwise")
+                                .foregroundStyle(AppColors.calorie)
+                        }
                     }
+                    .tint(.primary)
                 }
                 .listRowBackground(AppColors.appCard)
 
@@ -1603,7 +1623,7 @@ struct ProfileView: View {
                             .labelsHidden()
 
                             Button {
-                                resetNutritionAndSave()
+                                saveProfile()
                                 activeSheet = nil
                             } label: {
                                 Text("Save")
@@ -1635,7 +1655,7 @@ struct ProfileView: View {
                         currentHeightCm: profile.heightCm
                     ) { newHeight in
                         profile.heightCm = newHeight
-                        resetNutritionAndSave()
+                        saveProfile()
                     }
 
                 case .editWeight:
@@ -1644,7 +1664,7 @@ struct ProfileView: View {
                         currentWeightKg: profile.weightKg
                     ) { newWeight in
                         profile.weightKg = newWeight
-                        resetNutritionAndSave()
+                        saveProfile()
                         weightStore.addEntry(WeightEntry(weightKg: newWeight))
                     }
 
@@ -1653,7 +1673,7 @@ struct ProfileView: View {
                         currentPercentage: profile.bodyFatPercentage
                     ) { newValue in
                         profile.bodyFatPercentage = newValue
-                        resetNutritionAndSave()
+                        saveProfile()
                     }
 
                 case .editGoalWeight:
@@ -1668,36 +1688,24 @@ struct ProfileView: View {
                 case .editCalories:
                     NutritionPickerSheet(label: "Calories", unit: "kcal", currentValue: profile.effectiveCalories, range: 800...6000, step: 50) { value in
                         profile.customCalories = value
-                        // Auto-adjust carbs: carbs = (cal - protein*4 - fat*9) / 4
-                        let newCarbs = max(0, (value - profile.effectiveProtein * 4 - profile.effectiveFat * 9) / 4)
-                        profile.customCarbs = newCarbs
                         saveProfile()
                     }
 
                 case .editProtein:
                     NutritionPickerSheet(label: "Protein", unit: "g", currentValue: profile.effectiveProtein, range: 10...500, step: 5) { value in
                         profile.customProtein = value
-                        // Auto-adjust carbs
-                        let newCarbs = max(0, (profile.effectiveCalories - value * 4 - profile.effectiveFat * 9) / 4)
-                        profile.customCarbs = newCarbs
                         saveProfile()
                     }
 
                 case .editCarbs:
                     NutritionPickerSheet(label: "Carbs", unit: "g", currentValue: profile.effectiveCarbs, range: 0...800, step: 5) { value in
                         profile.customCarbs = value
-                        // Auto-adjust calories: cal = protein*4 + carbs*4 + fat*9
-                        let newCal = profile.effectiveProtein * 4 + value * 4 + profile.effectiveFat * 9
-                        profile.customCalories = newCal
                         saveProfile()
                     }
 
                 case .editFat:
                     NutritionPickerSheet(label: "Fat", unit: "g", currentValue: profile.effectiveFat, range: 10...300, step: 5) { value in
                         profile.customFat = value
-                        // Auto-adjust carbs
-                        let newCarbs = max(0, (profile.effectiveCalories - profile.effectiveProtein * 4 - value * 9) / 4)
-                        profile.customCarbs = newCarbs
                         saveProfile()
                     }
 
@@ -1710,6 +1718,17 @@ struct ProfileView: View {
                 }
             } message: {
                 Text("This will permanently delete all your logged food entries. Your profile, weight entries, and favorites will be kept. This action cannot be undone.")
+            }
+            .alert("Recalculate Goals", isPresented: $showRecalculateConfirm) {
+                Button("Cancel", role: .cancel) { }
+                Button("Recalculate") { recalculateGoalsNow() }
+            } message: {
+                Text("Recompute calories, protein, carbs, and fat from your current weight, activity, and goal? Your custom values will be replaced and Auto-balance will reset to Carbs.")
+            }
+            .alert("Auto-balanced", isPresented: $showAutoMacroEditAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("This macro is auto-balanced from the others. To edit it directly, change Auto-balance to a different macro first.")
             }
             .alert("Delete All Data", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { }
@@ -1737,6 +1756,36 @@ struct ProfileView: View {
 
     private func saveProfile() {
         profile.save()
+    }
+
+    /// Macro row that gets an "Auto" badge and a tap-explainer alert when it's the auto-balanced one.
+    @ViewBuilder
+    private func macroRow(label: String, icon: String, macro: AutoBalanceMacro, value: Int, sheet: ActiveSheet) -> some View {
+        let isAuto = profile.effectiveAutoBalance == macro
+        ProfileInfoRow(icon: icon, label: label, value: isAuto ? "\(value)g (auto)" : "\(value)g") {
+            if isAuto {
+                showAutoMacroEditAlert = true
+            } else {
+                activeSheet = sheet
+            }
+        }
+    }
+
+    /// Before switching the auto-balanced macro, freeze the previous auto's current effective value
+    /// as its custom value so it doesn't visibly jump when the new macro takes over the balancer slot.
+    private func freezeMacroBeforeAutoBalanceChange(to newAuto: AutoBalanceMacro) {
+        let previousAuto = profile.effectiveAutoBalance
+        guard previousAuto != newAuto else { return }
+        switch previousAuto {
+        case .protein: profile.customProtein = profile.effectiveProtein
+        case .carbs:   profile.customCarbs   = profile.effectiveCarbs
+        case .fat:     profile.customFat     = profile.effectiveFat
+        }
+    }
+
+    private func recalculateGoalsNow() {
+        profile.recalculateGoalsFromFormulas()
+        saveProfile()
     }
 
     private func handleHealthKitToggle(_ enabled: Bool) {

@@ -99,6 +99,29 @@ class HealthKitManager {
         healthStore.save(sample) { _, _ in }
     }
 
+    /// Writes a weight entry to HealthKit tagged with the entry's UUID so it can be deleted later.
+    func writeWeight(for entry: WeightEntry) {
+        guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
+        let type = HKQuantityType(.bodyMass)
+        let quantity = HKQuantity(unit: .gramUnit(with: .kilo), doubleValue: entry.weightKg)
+        let sample = HKQuantitySample(
+            type: type,
+            quantity: quantity,
+            start: entry.date,
+            end: entry.date,
+            metadata: ["fudai_weight_id": entry.id.uuidString]
+        )
+        healthStore.save(sample) { _, _ in }
+    }
+
+    /// Deletes the HealthKit weight sample tagged with this entry's UUID.
+    /// Bypasses the `healthKitEnabled` flag so a weight synced earlier still gets removed
+    /// even if the user has since turned HealthKit sync off.
+    func deleteWeight(entryID: UUID) {
+        let predicate = HKQuery.predicateForObjects(withMetadataKey: "fudai_weight_id", operatorType: .equalTo, value: entryID.uuidString)
+        healthStore.deleteObjects(of: HKQuantityType(.bodyMass), predicate: predicate) { _, _, _ in }
+    }
+
     func writeHeight(cm: Double) {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
         let type = HKQuantityType(.height)

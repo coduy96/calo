@@ -427,6 +427,87 @@ struct LogWeightSheet: View {
     }
 }
 
+// MARK: - Weight History Section
+
+struct WeightHistorySection: View {
+    let entries: [WeightEntry]
+    let useMetric: Bool
+    let onDelete: (WeightEntry) -> Void
+
+    @State private var pendingDeletion: WeightEntry?
+
+    private var formatter: DateFormatter {
+        let f = DateFormatter()
+        f.dateFormat = "MMM d, yyyy"
+        return f
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Weight History")
+                .font(.system(.headline, design: .rounded, weight: .semibold))
+
+            VStack(spacing: 0) {
+                ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(displayWeight(entry.weightKg))
+                                .font(.system(.body, design: .rounded, weight: .medium))
+                            Text(formatter.string(from: entry.date))
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Button {
+                            pendingDeletion = entry
+                        } label: {
+                            Image(systemName: "trash")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(.red)
+                                .frame(width: 36, height: 36)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 14)
+
+                    if index < entries.count - 1 {
+                        Divider().padding(.leading, 14)
+                    }
+                }
+            }
+            .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 14))
+
+            Text("Tap the trash icon to remove a mistakenly-logged entry. Also deletes from Apple Health.")
+                .font(.system(.caption, design: .rounded))
+                .foregroundStyle(.tertiary)
+        }
+        .alert("Delete Weight Entry", isPresented: Binding(
+            get: { pendingDeletion != nil },
+            set: { if !$0 { pendingDeletion = nil } }
+        )) {
+            Button("Cancel", role: .cancel) { pendingDeletion = nil }
+            Button("Delete", role: .destructive) {
+                if let entry = pendingDeletion { onDelete(entry) }
+                pendingDeletion = nil
+            }
+        } message: {
+            if let entry = pendingDeletion {
+                Text("Remove \(displayWeight(entry.weightKg)) logged on \(formatter.string(from: entry.date))? This also deletes the matching sample from Apple Health.")
+            }
+        }
+    }
+
+    private func displayWeight(_ kg: Double) -> String {
+        if useMetric {
+            return String(format: "%.1f kg", kg)
+        }
+        let lbs = kg * 2.20462
+        return String(format: "%.1f lb", lbs)
+    }
+}
+
 // MARK: - Helpers
 
 private func emptyState(_ message: String) -> some View {
