@@ -108,7 +108,7 @@ enum WeightGoal: String, Codable, CaseIterable {
 
 // MARK: - User Profile
 
-struct UserProfile: Codable {
+struct UserProfile: Codable, Equatable {
     var name: String?
     var gender: Gender
     var birthday: Date

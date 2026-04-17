@@ -219,6 +219,9 @@ struct HomeView: View {
     @State private var showNutritionDetail = false
     @Environment(ProfileStore.self) private var profileStore
 
+    /// Force a body re-evaluation whenever profileStore.profile changes by reading it
+    /// at the top of body. SwiftUI's @Observable tracking sometimes misses the access
+    /// when the read is buried in a computed property; explicit access guarantees it.
     private var userProfile: UserProfile { profileStore.profile }
     private var calorieGoal: Int { userProfile.effectiveCalories }
     private var proteinGoal: Int { userProfile.effectiveProtein }
@@ -234,7 +237,10 @@ struct HomeView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        // Explicit observation tracking — reads profileStore.profile at body root
+        // so SwiftUI invalidates this view on every profile mutation.
+        let _ = profileStore.profile
+        return NavigationStack {
             List {
                 // Week energy strip
                 Section {
@@ -656,7 +662,8 @@ struct NutritionDetailView: View {
     private var userProfile: UserProfile { profileStore.profile }
 
     var body: some View {
-        NavigationStack {
+        let _ = profileStore.profile
+        return NavigationStack {
             List {
                 Section("Macros") {
                     NutritionDetailRow(label: "Calories", value: "\(foodStore.calories(for: date))", unit: "kcal", goal: "\(userProfile.effectiveCalories)")
@@ -1060,7 +1067,8 @@ struct ProgressTabView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        let _ = profileStore.profile
+        return NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
                     // Segmented Picker
