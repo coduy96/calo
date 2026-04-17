@@ -1026,7 +1026,6 @@ struct ProgressTabView: View {
     @State private var showLogWeight = false
     @State private var showGoalReached = false
     @State private var showAllWeights = false
-    @State private var allWeightEntriesSnapshot: [WeightEntry] = []
 
     private var userProfile: UserProfile { profileStore.profile }
 
@@ -1089,18 +1088,11 @@ struct ProgressTabView: View {
                     )
                     .padding(.horizontal)
 
-                    // Weight History (compact preview; tap to see full list)
+                    // Weight History — tap to view/delete entries
                     if !weightStore.entries.isEmpty {
-                        let allSorted = weightStore.entries.sorted { $0.date > $1.date }
-                        WeightHistorySection(
-                            entries: Array(allSorted.prefix(3)),
-                            totalCount: allSorted.count,
-                            useMetric: useMetric,
-                            onDelete: { entry in weightStore.deleteEntry(entry) },
-                            onShowAll: {
-                                allWeightEntriesSnapshot = allSorted
-                                showAllWeights = true
-                            }
+                        WeightHistoryLink(
+                            totalCount: weightStore.entries.count,
+                            onTap: { showAllWeights = true }
                         )
                         .padding(.horizontal)
                     }

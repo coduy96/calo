@@ -434,86 +434,37 @@ struct LogWeightSheet: View {
     }
 }
 
-// MARK: - Weight History Section
+// MARK: - Weight History Link (tap to open full list)
 
-struct WeightHistorySection: View {
-    let entries: [WeightEntry]
+struct WeightHistoryLink: View {
     let totalCount: Int
-    let useMetric: Bool
-    let onDelete: (WeightEntry) -> Void
-    let onShowAll: () -> Void
-
-    @State private var pendingDeletion: WeightEntry?
+    let onTap: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Weight History")
-                    .font(.system(.headline, design: .rounded, weight: .semibold))
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                Image(systemName: "list.bullet.rectangle")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(AppColors.calorie)
+                    .frame(width: 28, height: 28)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Weight History")
+                        .font(.system(.body, design: .rounded, weight: .medium))
+                        .foregroundStyle(.primary)
+                    Text("\(totalCount) \(totalCount == 1 ? "entry" : "entries") · tap to view or delete")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
                 Spacer()
-                if totalCount > entries.count {
-                    Button(action: onShowAll) {
-                        HStack(spacing: 4) {
-                            Text("Show all \(totalCount)")
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 11, weight: .semibold))
-                        }
-                        .font(.system(.subheadline, design: .rounded, weight: .medium))
-                        .foregroundStyle(AppColors.calorie)
-                    }
-                }
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.tertiary)
             }
-
-            VStack(spacing: 0) {
-                ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
-                    weightRow(entry: entry)
-                    if index < entries.count - 1 {
-                        Divider().padding(.leading, 14)
-                    }
-                }
-            }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 14)
             .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 14))
         }
-        .alert("Delete Weight Entry", isPresented: Binding(
-            get: { pendingDeletion != nil },
-            set: { if !$0 { pendingDeletion = nil } }
-        )) {
-            Button("Cancel", role: .cancel) { pendingDeletion = nil }
-            Button("Delete", role: .destructive) {
-                if let entry = pendingDeletion { onDelete(entry) }
-                pendingDeletion = nil
-            }
-        } message: {
-            if let entry = pendingDeletion {
-                Text("Remove \(weightHistoryFormatter.string(from: entry.date))'s entry of \(displayWeight(entry.weightKg, useMetric: useMetric))? This also deletes the matching sample from Apple Health.")
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func weightRow(entry: WeightEntry) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(displayWeight(entry.weightKg, useMetric: useMetric))
-                    .font(.system(.body, design: .rounded, weight: .medium))
-                Text(weightHistoryFormatter.string(from: entry.date))
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            Button {
-                pendingDeletion = entry
-            } label: {
-                Image(systemName: "trash")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(.red)
-                    .frame(width: 36, height: 36)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 14)
+        .buttonStyle(.plain)
     }
 }
 
