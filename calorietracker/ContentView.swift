@@ -1707,10 +1707,9 @@ struct ProfileView: View {
             .alert("Delete All Data", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete Everything", role: .destructive) {
-                    // Wipe HealthKit nutrition samples first while we still have entries + auth flag.
-                    for entry in foodStore.entries {
-                        healthKitManager.deleteNutrition(entryID: entry.id)
-                    }
+                    // Wipe HealthKit nutrition samples first. Use purgeNutrition so previously-synced
+                    // samples are removed even if the user has since turned off HealthKit sync.
+                    healthKitManager.purgeNutrition(entryIDs: foodStore.entries.map(\.id))
                     // Clear in-memory stores
                     foodStore.replaceAllEntries([])
                     weightStore.replaceAllEntries([])

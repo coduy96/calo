@@ -153,6 +153,25 @@ class HealthKitManager {
         Task { await deleteNutritionSamples(entryID: entryID) }
     }
 
+    /// Deletes nutrition samples for the given entries regardless of the current `healthKitEnabled` flag.
+    /// Used by destructive reset paths so previously-exported samples are purged even after the user
+    /// turned off HealthKit sync.
+    func purgeNutrition(entryIDs: [UUID]) {
+        guard !entryIDs.isEmpty else { return }
+        Task {
+            for id in entryIDs {
+                await deleteNutritionSamples(entryID: id)
+            }
+        }
+    }
+
+    /// Marks the current `authVersion` as already-backfilled without re-writing samples.
+    /// Use for users who were already syncing nutrition incrementally before backfill tracking existed,
+    /// to avoid duplicating their entire history.
+    func markBackfillCurrent() {
+        UserDefaults.standard.set(authVersion, forKey: nutritionBackfillVersionKey)
+    }
+
     /// Deletes the existing samples for an entry, awaits completion, then writes the new samples.
     /// Used on edits so a stale delete cannot clobber the freshly-written samples.
     func updateNutrition(for entry: FoodEntry) {
