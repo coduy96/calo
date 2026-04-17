@@ -2,6 +2,7 @@ import SwiftUI
 import PhotosUI
 import UIKit
 import HealthKit
+import StoreKit
 
 // MARK: - Camera Mode
 enum CameraMode {
@@ -47,28 +48,19 @@ struct AboutView: View {
         NavigationStack {
             List {
                 Section {
-                    VStack(spacing: 12) {
-                        Image("onboardingLogo")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 80, height: 80)
-                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-
-                        VStack(spacing: 4) {
-                            Text("Fud AI")
-                                .font(.system(.title2, design: .rounded, weight: .bold))
-                            Text("Eat Smart, Live Better")
-                                .font(.system(.subheadline, design: .rounded))
-                                .foregroundStyle(.secondary)
+                    // Rate the App
+                    Button {
+                        requestNativeReview()
+                    } label: {
+                        Label {
+                            Text("Rate the App")
+                        } icon: {
+                            Image(systemName: "star.fill")
+                                .foregroundStyle(AppColors.calorie)
                         }
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-                }
+                    .buttonStyle(.plain)
 
-                Section {
                     // Open Source
                     Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai")!) {
                         Label {
@@ -80,8 +72,19 @@ struct AboutView: View {
                     }
                     .buttonStyle(.plain)
 
-                    // Report Issues
-                    Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai/issues")!) {
+                    // Star the Repo
+                    Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai")!) {
+                        Label {
+                            Text("Star on GitHub")
+                        } icon: {
+                            Image(systemName: "star.circle.fill")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .buttonStyle(.plain)
+
+                    // Report an Issue
+                    Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai/issues/new?labels=bug&title=Bug:%20")!) {
                         Label {
                             Text("Report an Issue")
                         } icon: {
@@ -91,12 +94,34 @@ struct AboutView: View {
                     }
                     .buttonStyle(.plain)
 
+                    // Request a Feature
+                    Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai/issues/new?labels=enhancement&title=Feature:%20")!) {
+                        Label {
+                            Text("Request a Feature")
+                        } icon: {
+                            Image(systemName: "lightbulb.fill")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .buttonStyle(.plain)
+
                     // Contact
-                    Link(destination: URL(string: "mailto:ad13dtu@gmail.com")!) {
+                    Link(destination: URL(string: "mailto:apoorv@fud-ai.app")!) {
                         Label {
                             Text("Contact Us")
                         } icon: {
                             Image(systemName: "envelope.fill")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .buttonStyle(.plain)
+
+                    // Follow on X
+                    Link(destination: URL(string: "https://x.com/apoorvdarshan")!) {
+                        Label {
+                            Text("Follow on X")
+                        } icon: {
+                            Image(systemName: "at")
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
@@ -106,7 +131,7 @@ struct AboutView: View {
 
                 Section {
                     // Privacy Policy
-                    Link(destination: URL(string: "https://fud-ai.vercel.app/privacy.html")!) {
+                    Link(destination: URL(string: "https://fud-ai.app/privacy.html")!) {
                         Label {
                             Text("Privacy Policy")
                         } icon: {
@@ -117,7 +142,7 @@ struct AboutView: View {
                     .buttonStyle(.plain)
 
                     // Terms of Service
-                    Link(destination: URL(string: "https://fud-ai.vercel.app/terms.html")!) {
+                    Link(destination: URL(string: "https://fud-ai.app/terms.html")!) {
                         Label {
                             Text("Terms of Service")
                         } icon: {
@@ -140,7 +165,14 @@ struct AboutView: View {
             }
             .scrollContentBackground(.hidden)
             .background(AppColors.appBackground)
-            .navigationTitle("About")
+            .navigationBarHidden(true)
+        }
+    }
+
+    private func requestNativeReview() {
+        if let scene = UIApplication.shared.connectedScenes
+            .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+            AppStore.requestReview(in: scene)
         }
     }
 }

@@ -1,5 +1,6 @@
 import SwiftUI
 import HealthKit
+import StoreKit
 
 struct OnboardingView: View {
     @Binding var hasCompletedOnboarding: Bool
@@ -36,7 +37,7 @@ struct OnboardingView: View {
         var id: String { rawValue }
     }
 
-    private let totalSteps = 14 // 0-13
+    private let totalSteps = 15 // 0-14
 
     private var profile: UserProfile {
         let cm: Double
@@ -104,9 +105,10 @@ struct OnboardingView: View {
                     case 8: goalSpeedStep
                     case 9: notificationsStep
                     case 10: appleHealthStep
-                    case 11: buildingPlanStep
-                    case 12: planReadyStep
-                    case 13: reviewStep
+                    case 11: aiProviderStep
+                    case 12: buildingPlanStep
+                    case 13: planReadyStep
+                    case 14: reviewStep
                     default: EmptyView()
                     }
                 }
@@ -650,7 +652,124 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 11: Review
+    // MARK: - 11: AI Provider Setup
+
+    private var aiProviderStep: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            VStack(spacing: 20) {
+                ZStack {
+                    Circle()
+                        .fill(.ultraThinMaterial)
+                        .frame(width: 120, height: 120)
+
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 48))
+                        .foregroundStyle(
+                            LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
+                }
+
+                VStack(spacing: 8) {
+                    Text("Bring Your Own AI")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .multilineTextAlignment(.center)
+
+                    Text("Fud AI needs an AI provider key to\nanalyze your food. You bring your own.")
+                        .font(.system(.callout, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+
+                // Recommended provider card (Liquid Glass)
+                VStack(spacing: 12) {
+                    HStack(spacing: 12) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(.ultraThinMaterial)
+                                .frame(width: 44, height: 44)
+                            Image(systemName: "star.fill")
+                                .font(.system(size: 18))
+                                .foregroundStyle(AppColors.calorie)
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Recommended: Google Gemini")
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            Text("Free tier available, fast & accurate")
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer(minLength: 0)
+                    }
+                    .padding(14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(.ultraThinMaterial)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .strokeBorder(AppColors.calorie.opacity(0.25), lineWidth: 1)
+                    )
+
+                    // Steps
+                    VStack(alignment: .leading, spacing: 10) {
+                        aiSetupRow(number: "1", text: "Get a free key at aistudio.google.com/apikey")
+                        aiSetupRow(number: "2", text: "Open Profile → AI Provider")
+                        aiSetupRow(number: "3", text: "Paste your key — done")
+                    }
+                    .padding(14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(.ultraThinMaterial)
+                    )
+                }
+                .padding(.horizontal, 24)
+
+                Text("8 providers supported. Your key stays\non this device, encrypted in iOS Keychain.")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.tertiary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Spacer()
+
+            Button {
+                withAnimation(.snappy) { step += 1 }
+            } label: {
+                Text("Got It")
+                    .font(.system(.body, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 54)
+                    .background(
+                        LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing),
+                        in: RoundedRectangle(cornerRadius: 16)
+                    )
+                    .shadow(color: AppColors.calorie.opacity(0.3), radius: 8, y: 4)
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 36)
+        }
+    }
+
+    private func aiSetupRow(number: String, text: String) -> some View {
+        HStack(spacing: 12) {
+            Text(number)
+                .font(.system(.caption, design: .rounded, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: 22, height: 22)
+                .background(AppColors.calorie, in: Circle())
+            Text(text)
+                .font(.system(.subheadline, design: .rounded))
+                .foregroundStyle(.primary)
+            Spacer(minLength: 0)
+        }
+    }
+
+    // MARK: - 14: Review
 
     private var reviewStep: some View {
         VStack(spacing: 0) {
@@ -682,17 +801,19 @@ struct OnboardingView: View {
             Spacer()
 
             Button {
-                if let url = URL(string: "https://apps.apple.com/app/id6758935726?action=write-review") {
-                    UIApplication.shared.open(url)
-                }
+                requestNativeReview()
                 hasCompletedOnboarding = true
             } label: {
                 Text("Rate fud")
                     .font(.system(.body, design: .rounded, weight: .semibold))
-                    .foregroundStyle(Color(.systemBackground))
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 54)
-                    .background(Color.primary, in: Capsule())
+                    .background(
+                        LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing),
+                        in: RoundedRectangle(cornerRadius: 16)
+                    )
+                    .shadow(color: AppColors.calorie.opacity(0.3), radius: 8, y: 4)
             }
             .padding(.horizontal, 24)
 
@@ -945,6 +1066,13 @@ struct OnboardingView: View {
         HStack(spacing: 14) {
             Image(systemName: icon).font(.system(size: 18)).foregroundStyle(.secondary).frame(width: 28)
             Text(label).font(.system(.body, design: .rounded)).foregroundStyle(.primary)
+        }
+    }
+
+    private func requestNativeReview() {
+        if let scene = UIApplication.shared.connectedScenes
+            .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+            AppStore.requestReview(in: scene)
         }
     }
 }
