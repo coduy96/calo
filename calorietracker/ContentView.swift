@@ -1020,6 +1020,8 @@ struct ProgressTabView: View {
     @State private var showLogWeight = false
     @State private var showGoalReached = false
     @State private var userProfile: UserProfile = UserProfile.load() ?? .default
+    @State private var showAllWeights = false
+    @State private var allWeightEntriesSnapshot: [WeightEntry] = []
 
     private var dateRange: ClosedRange<Date> { timeRange.dateRange() }
 
@@ -1079,12 +1081,18 @@ struct ProgressTabView: View {
                     )
                     .padding(.horizontal)
 
-                    // Weight History (swipe to delete a mistakenly-logged entry)
-                    if !filteredWeightEntries.isEmpty {
+                    // Weight History (compact preview; tap to see full list)
+                    if !weightStore.entries.isEmpty {
+                        let allSorted = weightStore.entries.sorted { $0.date > $1.date }
                         WeightHistorySection(
-                            entries: filteredWeightEntries.sorted { $0.date > $1.date },
+                            entries: Array(allSorted.prefix(3)),
+                            totalCount: allSorted.count,
                             useMetric: useMetric,
-                            onDelete: { entry in weightStore.deleteEntry(entry) }
+                            onDelete: { entry in weightStore.deleteEntry(entry) },
+                            onShowAll: {
+                                allWeightEntriesSnapshot = allSorted
+                                showAllWeights = true
+                            }
                         )
                         .padding(.horizontal)
                     }
@@ -1131,6 +1139,13 @@ struct ProgressTabView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: .weightGoalReached)) { _ in
                 showGoalReached = true
+            }
+            .sheet(isPresented: $showAllWeights) {
+                AllWeightHistoryView(
+                    entries: weightStore.entries.sorted { $0.date > $1.date },
+                    useMetric: useMetric,
+                    onDelete: { entry in weightStore.deleteEntry(entry) }
+                )
             }
         }
     }
