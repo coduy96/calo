@@ -100,18 +100,20 @@ struct calorietrackerApp: App {
             )
         }
 
-        healthKitManager.onBodyMeasurementsChanged = { [weightStore] weightKg, heightCm, bodyFat, dob, sex in
+        healthKitManager.onBodyMeasurementsChanged = { [weightStore] weightKg, weightDate, heightCm, bodyFat, dob, sex in
             guard var profile = UserProfile.load() else { return }
             var changed = false
 
-            if let kg = weightKg {
+            if let kg = weightKg, let date = weightDate {
+                // Use the sample's actual date so external weights show up at their real date,
+                // and dedup across the whole store (not just today) so re-reads after a delete
+                // don't keep recreating the same entry.
                 let calendar = Calendar.current
                 let alreadyLogged = weightStore.entries.contains {
-                    calendar.isDateInToday($0.date) && abs($0.weightKg - kg) < 0.01
+                    calendar.isDate($0.date, inSameDayAs: date) && abs($0.weightKg - kg) < 0.01
                 }
                 if !alreadyLogged {
-                    let entry = WeightEntry(date: .now, weightKg: kg)
-                    weightStore.addEntry(entry)
+                    weightStore.addEntry(WeightEntry(date: date, weightKg: kg))
                 }
                 if abs(profile.weightKg - kg) > 0.01 {
                     profile.weightKg = kg
