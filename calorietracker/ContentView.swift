@@ -1469,8 +1469,9 @@ struct ProfileView: View {
                         customBaseURL = AIProviderSettings.customBaseURL(for: newProvider) ?? ""
                     }
 
-                    if selectedProvider.requiresCustomModelName {
-                        // Free-form model name for the Custom (OpenAI-compatible) provider.
+                    if selectedProvider.supportsCustomModelName {
+                        // Free-form TextField for any model ID, with optional preset suggestions menu
+                        // (e.g., OpenRouter has presets but lets user type any of openrouter.ai/models).
                         HStack {
                             Label {
                                 Text("Model")
@@ -1479,7 +1480,12 @@ struct ProfileView: View {
                                     .foregroundStyle(AppColors.calorie)
                             }
                             Spacer()
-                            TextField("e.g. gpt-4o-mini", text: $selectedModel)
+                            TextField(
+                                selectedProvider == .openrouter
+                                    ? "e.g. anthropic/claude-sonnet-4"
+                                    : "e.g. gpt-4o-mini",
+                                text: $selectedModel
+                            )
                                 .textFieldStyle(.plain)
                                 .multilineTextAlignment(.trailing)
                                 .autocorrectionDisabled()
@@ -1487,6 +1493,19 @@ struct ProfileView: View {
                                 .onChange(of: selectedModel) { _, newModel in
                                     AIProviderSettings.selectedModel = newModel
                                 }
+                            if !selectedProvider.models.isEmpty {
+                                Menu {
+                                    ForEach(selectedProvider.models, id: \.self) { model in
+                                        Button(model) {
+                                            selectedModel = model
+                                            AIProviderSettings.selectedModel = model
+                                        }
+                                    }
+                                } label: {
+                                    Image(systemName: "list.bullet.circle")
+                                        .foregroundStyle(AppColors.calorie)
+                                }
+                            }
                         }
                     } else {
                         Picker(selection: $selectedModel) {

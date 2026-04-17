@@ -109,6 +109,12 @@ enum AIProvider: String, CaseIterable, Codable, Identifiable {
         self == .customOpenAI
     }
 
+    /// True for providers where free-form input is allowed in addition to the preset list
+    /// (e.g., OpenRouter — user can pick a preset OR type any model ID like `anthropic/claude-sonnet-4`).
+    var supportsCustomModelName: Bool {
+        self == .openrouter || self == .customOpenAI
+    }
+
     /// API format grouping
     enum APIFormat {
         case gemini
@@ -161,9 +167,9 @@ struct AIProviderSettings {
     static var selectedModel: String {
         get {
             let saved = UserDefaults.standard.string(forKey: modelKey)
-            // For providers with a free-form model name (custom OpenAI-compatible), trust the saved value.
-            if selectedProvider.requiresCustomModelName {
-                return saved ?? ""
+            // Providers that allow free-form model names trust whatever the user saved.
+            if selectedProvider.supportsCustomModelName {
+                return saved ?? selectedProvider.defaultModel
             }
             // Otherwise validate against the provider's supported list and fall back to default
             // if the saved one was removed (e.g., a deprecated model we no longer expose).
