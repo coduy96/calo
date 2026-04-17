@@ -74,11 +74,12 @@ enum ActivityLevel: String, Codable, CaseIterable {
         }
     }
 
+    /// g protein per kg bodyweight per activity level (ISSN 2017 / Morton et al 2018 aligned).
     var proteinPerKg: Double {
         switch self {
-        case .sedentary: 1.0
-        case .light: 1.4
-        case .moderate: 1.6
+        case .sedentary: 0.8   // RDA floor
+        case .light: 1.2
+        case .moderate: 1.6    // Morton et al: point of diminishing returns for hypertrophy
         case .active: 1.8
         case .veryActive: 2.0
         case .extraActive: 2.2
@@ -177,7 +178,9 @@ struct UserProfile: Codable, Equatable {
     }
 
     var proteinGoal: Int {
-        Int(activityLevel.proteinPerKg * weightKg)
+        // +0.2 g/kg during cutting phase to preserve lean mass (Helms et al 2014).
+        let cuttingBoost = goal == .lose ? 0.2 : 0.0
+        return Int((activityLevel.proteinPerKg + cuttingBoost) * weightKg)
     }
 
     var fatGoal: Int {
