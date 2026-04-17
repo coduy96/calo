@@ -182,10 +182,22 @@ struct HeightPickerSheet: View {
 struct WeightPickerSheet: View {
     @Environment(\.dismiss) private var dismiss
     let useMetric: Bool
-    @State private var wholeNumber: Int = 154
-    @State private var decimal: Int = 0
     let currentWeightKg: Double
     let onSave: (Double) -> Void
+
+    @State private var wholeNumber: Int
+    @State private var decimal: Int
+
+    init(useMetric: Bool, currentWeightKg: Double, onSave: @escaping (Double) -> Void) {
+        self.useMetric = useMetric
+        self.currentWeightKg = currentWeightKg
+        self.onSave = onSave
+        let displayValue = useMetric ? currentWeightKg : currentWeightKg * 2.20462
+        let whole = Int(displayValue)
+        let dec = min(9, max(0, Int((displayValue - Double(whole)) * 10 + 0.5)))
+        _wholeNumber = State(initialValue: whole)
+        _decimal = State(initialValue: dec)
+    }
 
     private var label: String { useMetric ? "kg" : "lbs" }
 

@@ -1177,6 +1177,8 @@ struct ProfileView: View {
     @State private var showRecalculateConfirm = false
     @State private var showAutoMacroEditAlert = false
     @State private var showMaxPinnedAlert = false
+    @State private var showInvalidGoalWeightAlert = false
+    @State private var invalidGoalWeightMessage = ""
     @State private var editingName: String = ""
     @State private var selectedProvider: AIProvider = AIProviderSettings.selectedProvider
     @State private var selectedModel: String = AIProviderSettings.selectedModel
@@ -1296,8 +1298,19 @@ struct ProfileView: View {
                         if newValue == .maintain {
                             profile.weeklyChangeKg = nil
                             profile.goalWeightKg = nil
-                        } else if profile.weeklyChangeKg == nil {
-                            profile.weeklyChangeKg = 0.5
+                        } else {
+                            if profile.weeklyChangeKg == nil {
+                                profile.weeklyChangeKg = 0.5
+                            }
+                            // Clear goal weight if it no longer matches the new direction
+                            // (e.g., switching from Lose to Gain with an old target below current weight).
+                            if let gw = profile.goalWeightKg {
+                                let mismatch = (newValue == .lose && gw >= profile.weightKg)
+                                            || (newValue == .gain && gw <= profile.weightKg)
+                                if mismatch {
+                                    profile.goalWeightKg = nil
+                                }
+                            }
                         }
                         resetCustomGoalsAndSave()
                     }
@@ -1658,6 +1671,12 @@ struct ProfileView: View {
                         currentWeightKg: profile.weightKg
                     ) { newWeight in
                         profile.weightKg = newWeight
+                        // Invalidate goal weight if the new current weight makes the direction impossible.
+                        if let gw = profile.goalWeightKg {
+                            let mismatch = (profile.goal == .lose && gw >= newWeight)
+                                        || (profile.goal == .gain && gw <= newWeight)
+                            if mismatch { profile.goalWeightKg = nil }
+                        }
                         resetCustomGoalsAndSave()
                         weightStore.addEntry(WeightEntry(weightKg: newWeight))
                     }
@@ -1675,6 +1694,16 @@ struct ProfileView: View {
                         useMetric: useMetric,
                         currentWeightKg: profile.goalWeightKg ?? profile.weightKg
                     ) { newGoalWeight in
+                        // Validate against current goal direction.
+                        let invalid = (profile.goal == .lose && newGoalWeight >= profile.weightKg)
+                                   || (profile.goal == .gain && newGoalWeight <= profile.weightKg)
+                        if invalid {
+                            invalidGoalWeightMessage = profile.goal == .lose
+                                ? "A Lose goal needs a target below your current weight."
+                                : "A Gain goal needs a target above your current weight."
+                            showInvalidGoalWeightAlert = true
+                            return
+                        }
                         profile.goalWeightKg = newGoalWeight
                         saveProfile()
                     }
@@ -1737,6 +1766,11 @@ struct ProfileView: View {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text("At most 2 macros can be pinned at a time. Unpin another macro first (tap its lock icon).")
+            }
+            .alert("Invalid Goal Weight", isPresented: $showInvalidGoalWeightAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(invalidGoalWeightMessage)
             }
             .alert("Delete All Data", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { }
