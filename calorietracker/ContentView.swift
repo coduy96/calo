@@ -59,7 +59,7 @@ struct AboutView: View {
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
-                    .buttonStyle(.plain)
+                    .tint(.primary)
 
                     // Open Source
                     Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai")!) {
@@ -70,7 +70,7 @@ struct AboutView: View {
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
-                    .buttonStyle(.plain)
+                    .tint(.primary)
 
                     // Star the Repo
                     Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai")!) {
@@ -81,7 +81,7 @@ struct AboutView: View {
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
-                    .buttonStyle(.plain)
+                    .tint(.primary)
 
                     // Support the Project
                     Link(destination: URL(string: "https://paypal.me/apoorvdarshan")!) {
@@ -92,7 +92,7 @@ struct AboutView: View {
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
-                    .buttonStyle(.plain)
+                    .tint(.primary)
 
                     // Report an Issue
                     Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai/issues/new?labels=bug&title=Bug:%20")!) {
@@ -103,7 +103,7 @@ struct AboutView: View {
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
-                    .buttonStyle(.plain)
+                    .tint(.primary)
 
                     // Request a Feature
                     Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai/issues/new?labels=enhancement&title=Feature:%20")!) {
@@ -114,7 +114,7 @@ struct AboutView: View {
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
-                    .buttonStyle(.plain)
+                    .tint(.primary)
 
                     // Contact
                     Link(destination: URL(string: "mailto:apoorv@fud-ai.app")!) {
@@ -125,7 +125,7 @@ struct AboutView: View {
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
-                    .buttonStyle(.plain)
+                    .tint(.primary)
 
                     // Follow on X
                     Link(destination: URL(string: "https://x.com/apoorvdarshan")!) {
@@ -136,7 +136,7 @@ struct AboutView: View {
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
-                    .buttonStyle(.plain)
+                    .tint(.primary)
                 }
                 .listRowBackground(AppColors.appCard)
 
@@ -150,7 +150,7 @@ struct AboutView: View {
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
-                    .buttonStyle(.plain)
+                    .tint(.primary)
 
                     // Terms of Service
                     Link(destination: URL(string: "https://fud-ai.app/terms.html")!) {
@@ -161,7 +161,7 @@ struct AboutView: View {
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
-                    .buttonStyle(.plain)
+                    .tint(.primary)
                 }
                 .listRowBackground(AppColors.appCard)
 
