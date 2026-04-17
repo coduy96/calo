@@ -91,7 +91,7 @@ APPLE HEALTH
 
 We built Fud AI because tracking calories shouldn't feel like a chore. We want to make healthy eating simple and accessible for everyone.
 
-If you have ideas or questions, reach out at ad13dtu@gmail.com or open an issue on GitHub.
+If you have ideas or questions, reach out at apoorv@fud-ai.app or open an issue on GitHub.
 
 NOTE: Fud AI does not offer medical advice. All nutritional estimates are AI-generated suggestions only. Please consult with a healthcare professional before making significant changes to your diet.
 
