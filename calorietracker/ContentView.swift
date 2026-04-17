@@ -217,8 +217,8 @@ struct HomeView: View {
     @State private var currentImage: UIImage?
     @State private var currentEmoji: String?
     @State private var showNutritionDetail = false
+    @State private var userProfile: UserProfile = UserProfile.load() ?? .default
 
-    private var userProfile: UserProfile { UserProfile.load() ?? .default }
     private var calorieGoal: Int { userProfile.effectiveCalories }
     private var proteinGoal: Int { userProfile.effectiveProtein }
     private var carbsGoal: Int { userProfile.effectiveCarbs }
@@ -577,6 +577,10 @@ struct HomeView: View {
                 })
             })
             .interactiveDismissDisabled(activeSheet == .analyzing || activeSheet == .analyzingText)
+            .onAppear { userProfile = UserProfile.load() ?? .default }
+            .onReceive(NotificationCenter.default.publisher(for: .userProfileDidChange)) { _ in
+                userProfile = UserProfile.load() ?? .default
+            }
             .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .images)
             .onChange(of: selectedPhotoItem) { oldValue, newValue in
                 guard let item = newValue else { return }
@@ -1014,8 +1018,7 @@ struct ProgressTabView: View {
     @State private var timeRange: TimeRange = .week
     @State private var showLogWeight = false
     @State private var showGoalReached = false
-
-    private var userProfile: UserProfile { UserProfile.load() ?? .default }
+    @State private var userProfile: UserProfile = UserProfile.load() ?? .default
 
     private var dateRange: ClosedRange<Date> { timeRange.dateRange() }
 
@@ -1132,6 +1135,10 @@ struct ProgressTabView: View {
                 Button("Keep Going", role: .cancel) { }
             } message: {
                 Text("You've reached your goal weight! Would you like to switch to maintenance?")
+            }
+            .onAppear { userProfile = UserProfile.load() ?? .default }
+            .onReceive(NotificationCenter.default.publisher(for: .userProfileDidChange)) { _ in
+                userProfile = UserProfile.load() ?? .default
             }
         }
     }

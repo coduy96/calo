@@ -221,6 +221,11 @@ struct UserProfile: Codable {
     func save() {
         if let data = try? JSONEncoder().encode(self) {
             UserDefaults.standard.set(data, forKey: "userProfile")
+            NotificationCenter.default.post(name: .userProfileDidChange, object: nil)
         }
     }
+}
+
+extension Notification.Name {
+    static let userProfileDidChange = Notification.Name("userProfileDidChange")
 }
