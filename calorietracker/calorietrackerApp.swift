@@ -79,6 +79,11 @@ struct calorietrackerApp: App {
     private func wireUpHealthKit() {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
 
+        // Re-request authorization if new HealthKit types were added since last auth
+        if healthKitManager.needsReauthorization {
+            Task { _ = await healthKitManager.requestAuthorization() }
+        }
+
         healthKitManager.onBodyMeasurementsChanged = { [weightStore] weightKg, heightCm, bodyFat, dob, sex in
             guard var profile = UserProfile.load() else { return }
             var changed = false
@@ -128,6 +133,14 @@ struct calorietrackerApp: App {
 
         weightStore.onEntryAdded = { [healthKitManager] entry in
             healthKitManager.writeWeight(kg: entry.weightKg, date: entry.date)
+        }
+
+        foodStore.onEntryAdded = { [healthKitManager] entry in
+            healthKitManager.writeNutrition(for: entry)
+        }
+
+        foodStore.onEntryDeleted = { [healthKitManager] entryID in
+            healthKitManager.deleteNutrition(entryID: entryID)
         }
     }
 
