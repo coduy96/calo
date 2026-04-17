@@ -338,10 +338,23 @@ struct StatBadge: View {
 struct LogWeightSheet: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("useMetric") private var useMetric = false
-    @State private var wholeNumber: Int = 130
-    @State private var decimal: Int = 0
     let currentWeightKg: Double
     let onSave: (Double) -> Void
+
+    @State private var wholeNumber: Int
+    @State private var decimal: Int
+
+    init(currentWeightKg: Double, onSave: @escaping (Double) -> Void) {
+        self.currentWeightKg = currentWeightKg
+        self.onSave = onSave
+        // Respect @AppStorage at the time the sheet is created.
+        let metric = UserDefaults.standard.bool(forKey: "useMetric")
+        let displayValue = metric ? currentWeightKg : currentWeightKg * 2.20462
+        let whole = Int(displayValue)
+        let dec = min(9, max(0, Int((displayValue - Double(whole)) * 10 + 0.5)))
+        _wholeNumber = State(initialValue: whole)
+        _decimal = State(initialValue: dec)
+    }
 
     private var selectedValue: Double {
         Double(wholeNumber) + Double(decimal) / 10.0
@@ -416,12 +429,6 @@ struct LogWeightSheet: View {
                     Button("Cancel") { dismiss() }
                 }
             }
-        }
-        .onAppear {
-            let displayValue = useMetric ? currentWeightKg : currentWeightKg * 2.20462
-            wholeNumber = Int(displayValue)
-            decimal = Int((displayValue - Double(Int(displayValue))) * 10 + 0.5)
-            if decimal >= 10 { decimal = 9 }
         }
         .presentationDetents([.medium])
     }

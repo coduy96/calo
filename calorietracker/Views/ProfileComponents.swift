@@ -75,11 +75,22 @@ struct ProfileInfoRow: View {
 struct HeightPickerSheet: View {
     @Environment(\.dismiss) private var dismiss
     let useMetric: Bool
-    @State private var feet: Int = 5
-    @State private var inches: Int = 9
-    @State private var cm: Int = 175
     let currentHeightCm: Double
     let onSave: (Double) -> Void
+
+    @State private var feet: Int
+    @State private var inches: Int
+    @State private var cm: Int
+
+    init(useMetric: Bool, currentHeightCm: Double, onSave: @escaping (Double) -> Void) {
+        self.useMetric = useMetric
+        self.currentHeightCm = currentHeightCm
+        self.onSave = onSave
+        let totalInches = currentHeightCm / 2.54
+        _cm = State(initialValue: Int(currentHeightCm.rounded()))
+        _feet = State(initialValue: Int(totalInches) / 12)
+        _inches = State(initialValue: Int(totalInches) % 12)
+    }
 
     var body: some View {
         NavigationStack {
@@ -166,12 +177,6 @@ struct HeightPickerSheet: View {
                     Button("Cancel") { dismiss() }
                 }
             }
-        }
-        .onAppear {
-            cm = Int(currentHeightCm)
-            let totalInches = currentHeightCm / 2.54
-            feet = Int(totalInches) / 12
-            inches = Int(totalInches) % 12
         }
         .presentationDetents([.medium])
     }
@@ -265,12 +270,6 @@ struct WeightPickerSheet: View {
                 }
             }
         }
-        .onAppear {
-            let displayValue = useMetric ? currentWeightKg : currentWeightKg * 2.20462
-            wholeNumber = Int(displayValue)
-            decimal = Int((displayValue - Double(Int(displayValue))) * 10 + 0.5)
-            if decimal >= 10 { decimal = 9 }
-        }
         .presentationDetents([.medium])
     }
 }
@@ -279,9 +278,16 @@ struct WeightPickerSheet: View {
 
 struct BodyFatPickerSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var percentage: Int = 20
     let currentPercentage: Double?
     let onSave: (Double?) -> Void
+
+    @State private var percentage: Int
+
+    init(currentPercentage: Double?, onSave: @escaping (Double?) -> Void) {
+        self.currentPercentage = currentPercentage
+        self.onSave = onSave
+        _percentage = State(initialValue: Int((currentPercentage ?? 0.2) * 100))
+    }
 
     var body: some View {
         NavigationStack {
@@ -338,11 +344,6 @@ struct BodyFatPickerSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
-            }
-        }
-        .onAppear {
-            if let pct = currentPercentage {
-                percentage = Int(pct * 100)
             }
         }
         .presentationDetents([.medium])
@@ -636,7 +637,29 @@ struct NutritionPickerSheet: View {
     /// When provided, a "Reset to Auto" button appears in the sheet.
     var onResetToAuto: (() -> Void)? = nil
 
-    @State private var selectedValue: Int = 0
+    @State private var selectedValue: Int
+
+    init(
+        label: String,
+        unit: String,
+        currentValue: Int,
+        range: ClosedRange<Int>,
+        step: Int,
+        onSave: @escaping (Int) -> Void,
+        onResetToAuto: (() -> Void)? = nil
+    ) {
+        self.label = label
+        self.unit = unit
+        self.currentValue = currentValue
+        self.range = range
+        self.step = step
+        self.onSave = onSave
+        self.onResetToAuto = onResetToAuto
+        // Snap to nearest step and clamp into range so the wheel opens at the current value.
+        let snapped = (currentValue / step) * step
+        let clamped = min(max(snapped, range.lowerBound), range.upperBound)
+        _selectedValue = State(initialValue: clamped)
+    }
 
     var body: some View {
         NavigationStack {
@@ -697,11 +720,6 @@ struct NutritionPickerSheet: View {
                     Button("Cancel") { dismiss() }
                 }
             }
-        }
-        .onAppear {
-            // Snap to nearest step value
-            let snapped = (currentValue / step) * step
-            selectedValue = min(max(snapped, range.lowerBound), range.upperBound)
         }
         .presentationDetents([.medium])
     }
