@@ -9,6 +9,7 @@ enum AIProvider: String, CaseIterable, Codable, Identifiable {
     case togetherai = "Together AI"
     case groq = "Groq"
     case ollama = "Ollama (Local)"
+    case customOpenAI = "Custom (OpenAI-compatible)"
 
     var id: String { rawValue }
 
@@ -22,6 +23,7 @@ enum AIProvider: String, CaseIterable, Codable, Identifiable {
         case .togetherai: "square.stack.3d.up"
         case .groq: "hare.fill"
         case .ollama: "desktopcomputer"
+        case .customOpenAI: "wrench.and.screwdriver.fill"
         }
     }
 
@@ -35,6 +37,7 @@ enum AIProvider: String, CaseIterable, Codable, Identifiable {
         case .togetherai: "https://api.together.xyz/v1"
         case .groq: "https://api.groq.com/openai/v1"
         case .ollama: "http://localhost:11434/v1"
+        case .customOpenAI: ""  // user must supply
         }
     }
 
@@ -88,11 +91,22 @@ enum AIProvider: String, CaseIterable, Codable, Identifiable {
             "llava",
             "moondream",
         ]
+        case .customOpenAI: []  // user types model name in Settings
         }
     }
 
     var requiresAPIKey: Bool {
         self != .ollama
+    }
+
+    /// True for providers where the user supplies the base URL and model name themselves.
+    var requiresCustomEndpoint: Bool {
+        self == .customOpenAI
+    }
+
+    /// True for providers where the user types a free-form model name (no preset list).
+    var requiresCustomModelName: Bool {
+        self == .customOpenAI
     }
 
     /// API format grouping
@@ -106,7 +120,7 @@ enum AIProvider: String, CaseIterable, Codable, Identifiable {
         switch self {
         case .gemini: .gemini
         case .anthropic: .anthropic
-        case .openai, .xai, .openrouter, .togetherai, .groq, .ollama: .openaiCompatible
+        case .openai, .xai, .openrouter, .togetherai, .groq, .ollama, .customOpenAI: .openaiCompatible
         }
     }
 
@@ -120,6 +134,7 @@ enum AIProvider: String, CaseIterable, Codable, Identifiable {
         case .togetherai: "..."
         case .groq: "gsk_..."
         case .ollama: "No key needed"
+        case .customOpenAI: "API key (or anything if endpoint doesn't need one)"
         }
     }
 }
@@ -146,8 +161,12 @@ struct AIProviderSettings {
     static var selectedModel: String {
         get {
             let saved = UserDefaults.standard.string(forKey: modelKey)
-            // Validate the saved model is still in the current provider's supported list;
-            // fall back to default if it was removed (e.g., deprecated text-only model).
+            // For providers with a free-form model name (custom OpenAI-compatible), trust the saved value.
+            if selectedProvider.requiresCustomModelName {
+                return saved ?? ""
+            }
+            // Otherwise validate against the provider's supported list and fall back to default
+            // if the saved one was removed (e.g., a deprecated model we no longer expose).
             if let saved, selectedProvider.models.contains(saved) {
                 return saved
             }

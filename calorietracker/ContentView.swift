@@ -1469,28 +1469,49 @@ struct ProfileView: View {
                         customBaseURL = AIProviderSettings.customBaseURL(for: newProvider) ?? ""
                     }
 
-                    Picker(selection: $selectedModel) {
-                        ForEach(selectedProvider.models, id: \.self) { model in
-                            Text(model).tag(model)
+                    if selectedProvider.requiresCustomModelName {
+                        // Free-form model name for the Custom (OpenAI-compatible) provider.
+                        HStack {
+                            Label {
+                                Text("Model")
+                            } icon: {
+                                Image(systemName: "brain")
+                                    .foregroundStyle(AppColors.calorie)
+                            }
+                            Spacer()
+                            TextField("e.g. gpt-4o-mini", text: $selectedModel)
+                                .textFieldStyle(.plain)
+                                .multilineTextAlignment(.trailing)
+                                .autocorrectionDisabled()
+                                .textInputAutocapitalization(.never)
+                                .onChange(of: selectedModel) { _, newModel in
+                                    AIProviderSettings.selectedModel = newModel
+                                }
                         }
-                    } label: {
-                        Label {
-                            Text("Model")
-                        } icon: {
-                            Image(systemName: "brain")
-                                .foregroundStyle(AppColors.calorie)
+                    } else {
+                        Picker(selection: $selectedModel) {
+                            ForEach(selectedProvider.models, id: \.self) { model in
+                                Text(model).tag(model)
+                            }
+                        } label: {
+                            Label {
+                                Text("Model")
+                            } icon: {
+                                Image(systemName: "brain")
+                                    .foregroundStyle(AppColors.calorie)
+                            }
                         }
-                    }
-                    .pickerStyle(.menu)
-                    .tint(.secondary)
-                    .onAppear {
-                        if !selectedProvider.models.contains(selectedModel) {
-                            selectedModel = selectedProvider.defaultModel
-                            AIProviderSettings.selectedModel = selectedModel
+                        .pickerStyle(.menu)
+                        .tint(.secondary)
+                        .onAppear {
+                            if !selectedProvider.models.contains(selectedModel) {
+                                selectedModel = selectedProvider.defaultModel
+                                AIProviderSettings.selectedModel = selectedModel
+                            }
                         }
-                    }
-                    .onChange(of: selectedModel) { _, newModel in
-                        AIProviderSettings.selectedModel = newModel
+                        .onChange(of: selectedModel) { _, newModel in
+                            AIProviderSettings.selectedModel = newModel
+                        }
                     }
 
                     if selectedProvider.requiresAPIKey {
@@ -1527,20 +1548,26 @@ struct ProfileView: View {
                         }
                     }
 
-                    if selectedProvider == .ollama {
+                    if selectedProvider == .ollama || selectedProvider.requiresCustomEndpoint {
                         HStack {
                             Label {
-                                Text("Server URL")
+                                Text(selectedProvider.requiresCustomEndpoint ? "Base URL" : "Server URL")
                             } icon: {
                                 Image(systemName: "link")
                                     .foregroundStyle(AppColors.calorie)
                             }
                             Spacer()
-                            TextField(selectedProvider.baseURL, text: $customBaseURL)
+                            TextField(
+                                selectedProvider.requiresCustomEndpoint
+                                    ? "https://your-endpoint.com/v1"
+                                    : selectedProvider.baseURL,
+                                text: $customBaseURL
+                            )
                                 .textFieldStyle(.plain)
                                 .multilineTextAlignment(.trailing)
                                 .autocorrectionDisabled()
                                 .textInputAutocapitalization(.never)
+                                .keyboardType(.URL)
                                 .onChange(of: customBaseURL) { _, newValue in
                                     AIProviderSettings.setCustomBaseURL(newValue.isEmpty ? nil : newValue, for: selectedProvider)
                                 }
