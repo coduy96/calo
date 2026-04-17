@@ -1764,7 +1764,10 @@ struct ProfileView: View {
                     }
                     saveProfile()
                     healthKitManager.startBodyMeasurementObserver()
-                    healthKitManager.backfillNutritionIfNeeded(entries: foodStore.entries)
+                    healthKitManager.backfillNutritionIfNeeded(
+                        entries: foodStore.entries,
+                        currentEntryIDs: { Set(foodStore.entries.map(\.id)) }
+                    )
                 } else {
                     healthKitEnabled = false
                 }

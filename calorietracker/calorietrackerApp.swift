@@ -85,10 +85,16 @@ struct calorietrackerApp: App {
         if healthKitManager.needsReauthorization {
             Task { [healthKitManager, foodStore] in
                 _ = await healthKitManager.requestAuthorization()
-                healthKitManager.backfillNutritionIfNeeded(entries: foodStore.entries)
+                healthKitManager.backfillNutritionIfNeeded(
+                    entries: foodStore.entries,
+                    currentEntryIDs: { Set(foodStore.entries.map(\.id)) }
+                )
             }
         } else {
-            healthKitManager.backfillNutritionIfNeeded(entries: foodStore.entries)
+            healthKitManager.backfillNutritionIfNeeded(
+                entries: foodStore.entries,
+                currentEntryIDs: { Set(foodStore.entries.map(\.id)) }
+            )
         }
 
         healthKitManager.onBodyMeasurementsChanged = { [weightStore] weightKg, heightCm, bodyFat, dob, sex in

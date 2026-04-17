@@ -47,6 +47,7 @@ class HealthKitManager {
     }
 
     private let nutritionBackfillVersionKey = "healthKitNutritionBackfillVersion"
+    private var isBackfillingNutrition = false
 
     private var readTypes: Set<HKObjectType> {
         [
@@ -177,15 +178,24 @@ class HealthKitManager {
 
     /// Backfills nutrition samples for any entries logged before HealthKit nutrition sync was enabled.
     /// Skips entries that already have samples in Apple Health to avoid duplicating history for users
-    /// who were already syncing incrementally.
-    func backfillNutritionIfNeeded(entries: [FoodEntry]) {
+    /// who were already syncing incrementally. Re-checks `currentEntryIDs` before each write so a meal
+    /// deleted while the backfill is running does not get re-exported as a phantom sample.
+    func backfillNutritionIfNeeded(entries: [FoodEntry], currentEntryIDs: @escaping () -> Set<UUID>) {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
         guard hasNutritionWriteAccess else { return }
         let backfilled = UserDefaults.standard.integer(forKey: nutritionBackfillVersionKey)
         guard backfilled < authVersion else { return }
+        // Guard against overlapping backfill runs — scene-phase changes can re-enter `wireUpHealthKit`
+        // before the first scan finishes, and concurrent existence checks would both miss in-flight saves.
+        guard !isBackfillingNutrition else { return }
+        isBackfillingNutrition = true
         Task {
-            for entry in entries where await !nutritionSampleExists(forEntryID: entry.id) {
-                writeNutrition(for: entry)
+            defer { isBackfillingNutrition = false }
+            for entry in entries {
+                guard currentEntryIDs().contains(entry.id) else { continue }
+                if await !nutritionSampleExists(forEntryID: entry.id) {
+                    writeNutrition(for: entry)
+                }
             }
             UserDefaults.standard.set(authVersion, forKey: nutritionBackfillVersionKey)
         }
