@@ -100,19 +100,27 @@ struct calorietrackerApp: App {
             )
         }
 
-        healthKitManager.onBodyMeasurementsChanged = { [weightStore] weightKg, weightDate, heightCm, bodyFat, dob, sex in
+        healthKitManager.onBodyMeasurementsChanged = { [weightStore] weightKg, weightDate, weightFudaiID, heightCm, bodyFat, dob, sex in
             guard var profile = UserProfile.load() else { return }
             var changed = false
 
             if let kg = weightKg, let date = weightDate {
-                // Use the sample's actual date so external weights show up at their real date,
-                // and dedup across the whole store (not just today) so re-reads after a delete
-                // don't keep recreating the same entry.
-                let calendar = Calendar.current
-                let alreadyLogged = weightStore.entries.contains {
-                    calendar.isDate($0.date, inSameDayAs: date) && abs($0.weightKg - kg) < 0.01
+                // If the HK sample was written by our app (has fudai_weight_id), never re-add
+                // from the observer: either the entry still exists in the store (duplicate) or the
+                // user just deleted it and the HK delete hasn't propagated yet (would resurrect it).
+                // External HK samples (Apple Watch, scale, Health app) have no fudai_weight_id;
+                // those we dedup by same-day + same-value.
+                let shouldAdd: Bool
+                if weightFudaiID != nil {
+                    shouldAdd = false
+                } else {
+                    let calendar = Calendar.current
+                    let alreadyLogged = weightStore.entries.contains {
+                        calendar.isDate($0.date, inSameDayAs: date) && abs($0.weightKg - kg) < 0.01
+                    }
+                    shouldAdd = !alreadyLogged
                 }
-                if !alreadyLogged {
+                if shouldAdd {
                     weightStore.addEntry(WeightEntry(date: date, weightKg: kg))
                 }
                 if abs(profile.weightKg - kg) > 0.01 {

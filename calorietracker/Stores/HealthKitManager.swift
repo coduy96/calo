@@ -5,7 +5,7 @@ import HealthKit
 class HealthKitManager {
     var authorizationStatus: HKAuthorizationStatus = .notDetermined
 
-    var onBodyMeasurementsChanged: ((Double?, Date?, Double?, Double?, Date?, HKBiologicalSex?) -> Void)?
+    var onBodyMeasurementsChanged: ((Double?, Date?, UUID?, Double?, Double?, Date?, HKBiologicalSex?) -> Void)?
 
     private let healthStore = HKHealthStore()
     private var observerQueries: [HKObserverQuery] = []
@@ -263,7 +263,7 @@ class HealthKitManager {
 
     // MARK: - Read Body Measurements
 
-    func fetchLatestBodyMeasurements() async -> (weight: Double?, weightDate: Date?, height: Double?, bodyFat: Double?, dob: Date?, sex: HKBiologicalSex?) {
+    func fetchLatestBodyMeasurements() async -> (weight: Double?, weightDate: Date?, weightFudaiID: UUID?, height: Double?, bodyFat: Double?, dob: Date?, sex: HKBiologicalSex?) {
         async let weightSample = fetchLatestSample(.bodyMass, unit: .gramUnit(with: .kilo))
         async let height = fetchLatestSample(.height, unit: .meterUnit(with: .centi))
         async let bodyFat = fetchLatestSample(.bodyFatPercentage, unit: .percent())
@@ -281,10 +281,10 @@ class HealthKitManager {
         let w = await weightSample
         let h = await height
         let b = await bodyFat
-        return (w?.value, w?.date, h?.value, b?.value, dob, sex)
+        return (w?.value, w?.date, w?.fudaiID, h?.value, b?.value, dob, sex)
     }
 
-    private func fetchLatestSample(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit) async -> (value: Double, date: Date)? {
+    private func fetchLatestSample(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit) async -> (value: Double, date: Date, fudaiID: UUID?)? {
         let type = HKQuantityType(identifier)
         let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
         let predicate = HKQuery.predicateForSamples(withStart: nil, end: nil, options: .strictEndDate)
@@ -292,7 +292,9 @@ class HealthKitManager {
         return await withCheckedContinuation { continuation in
             let query = HKSampleQuery(sampleType: type, predicate: predicate, limit: 1, sortDescriptors: [sortDescriptor]) { _, results, _ in
                 if let sample = results?.first as? HKQuantitySample {
-                    continuation.resume(returning: (sample.quantity.doubleValue(for: unit), sample.startDate))
+                    let idString = sample.metadata?["fudai_weight_id"] as? String
+                    let fudaiID = idString.flatMap(UUID.init(uuidString:))
+                    continuation.resume(returning: (sample.quantity.doubleValue(for: unit), sample.startDate, fudaiID))
                 } else {
                     continuation.resume(returning: nil)
                 }
@@ -318,7 +320,7 @@ class HealthKitManager {
                 Task {
                     let m = await self.fetchLatestBodyMeasurements()
                     self.onBodyMeasurementsChanged?(
-                        m.weight, m.weightDate, m.height, m.bodyFat, m.dob, m.sex
+                        m.weight, m.weightDate, m.weightFudaiID, m.height, m.bodyFat, m.dob, m.sex
                     )
                     completionHandler()
                 }
