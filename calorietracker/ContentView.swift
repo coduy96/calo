@@ -83,6 +83,17 @@ struct AboutView: View {
                     }
                     .tint(.primary)
 
+                    // Vote on Product Hunt
+                    Link(destination: URL(string: "https://www.producthunt.com/products/fud-ai-calorie-tracker")!) {
+                        Label {
+                            Text("Vote on Product Hunt")
+                        } icon: {
+                            Image(systemName: "hand.thumbsup.fill")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .tint(.primary)
+
                     // Support the Project
                     Link(destination: URL(string: "https://paypal.me/apoorvdarshan")!) {
                         Label {
