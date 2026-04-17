@@ -163,5 +163,3 @@ Thanks to everyone who has contributed to making Fud AI better:
 <a href="https://github.com/apoorvdarshan/fud-ai/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=apoorvdarshan/fud-ai" alt="Contributors" />
 </a>
-
-Made with [contrib.rocks](https://contrib.rocks).
