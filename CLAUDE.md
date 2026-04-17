@@ -1,28 +1,17 @@
-# Fud AI — Claude Code Project Notes
+# CLAUDE.md
 
-Open-source iOS calorie tracker built with SwiftUI. This file is loaded automatically by Claude Code; keep it concise and current.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Stack
+## Project
 
-- Swift 5, SwiftUI, iOS 17.6+ deployment target
-- Single target `calorietracker` (no SwiftPM/CocoaPods — zero dependencies)
-- `PBXFileSystemSynchronizedRootGroup` — Xcode auto-discovers new files; do **not** edit `project.pbxproj` to add files
-- Build settings: `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, `SWIFT_APPROACHABLE_CONCURRENCY = YES`
+Fud AI is an open-source iOS calorie tracker (SwiftUI, iOS 17.6+). Snap/speak/type a meal, an AI provider returns nutrition JSON, the user reviews it, and it lands in `FoodStore` + Apple Health. Bring-your-own-key model; all data is local. No subscriptions, no sign-in, no cloud sync.
 
-## Architecture
+## Build, Install, Launch
 
-- State stores use `@Observable` macro (not `ObservableObject`) and are injected via `.environment()` (not `environmentObject`)
-- `FoodStore`, `WeightStore`, `NotificationManager`, `HealthKitManager` are environment-scoped singletons created in `calorietrackerApp.swift`
-- `GeminiService` is a pure struct with static methods that routes to the active provider (Gemini, OpenAI-compatible, or Anthropic Messages format)
-- API keys live in iOS Keychain via `KeychainHelper` / `AIProviderSettings`; settings in `UserDefaults`
-- Camera uses `UIImagePickerController` wrapped in `UIViewControllerRepresentable`
-- HealthKit writes 12 nutrition types per meal tagged with `fudai_entry_id` UUID metadata, plus body measurements (weight/height/body fat)
-- App is fully free — no subscriptions, no sign-in, no iCloud, all data local
-
-## Build, Install, Launch (Apoorv's iPhone)
+The app must be tested on Apoorv's physical iPhone (no simulator). After every change, run all three:
 
 ```bash
-# Build
+# Build (Release config to match what's installed)
 xcodebuild -scheme calorietracker -destination 'id=E2095CDC-E117-527C-818A-9F741A145103' build
 
 # Install
@@ -33,36 +22,79 @@ xcrun devicectl device install app --device E2095CDC-E117-527C-818A-9F741A145103
 xcrun devicectl device process launch --device E2095CDC-E117-527C-818A-9F741A145103 com.apoorvdarshan.calorietracker
 ```
 
-Device: Apoorv's iPhone (iPhone 16, ID `E2095CDC-E117-527C-818A-9F741A145103`).
+Device ID `E2095CDC-E117-527C-818A-9F741A145103` is Apoorv's iPhone (iPhone 16). There is no test target — verify by hand on device.
 
-## Workflow
+## Code Review
 
-After every change: build → install on iPhone → launch → git commit → git push. **No co-author line in commits.** Use simple, direct commit messages — no marketing fluff.
+Use Codex CLI before each PR / after each commit cluster:
 
-For code review, use the Codex CLI:
 ```bash
 codex exec review --commit <SHA> --full-auto
 ```
-Address P1/P2 findings; P3 is judgment-call.
+
+Address P1 and P2 findings. P3 is judgment-call.
+
+## Architecture
+
+### State / Dependency Injection
+
+- All stores use Swift's `@Observable` macro (not `ObservableObject`) and are injected with `.environment(...)` (not `.environmentObject(...)`).
+- `FoodStore`, `WeightStore`, `NotificationManager`, `HealthKitManager` are created once in `calorietrackerApp.swift` and shared.
+- Build setting `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` means most types are main-actor isolated by default.
+- New files are auto-discovered by Xcode via `PBXFileSystemSynchronizedRootGroup`. **Do not** edit `project.pbxproj` to register files.
+
+### AI Provider Routing
+
+`GeminiService` (`Services/GeminiService.swift`) is a pure struct of static methods. `analyzeFood`, `analyzeTextInput`, `autoAnalyze`, `analyzeNutritionLabel` all funnel through `callAI`, which dispatches by provider format:
+- **Gemini API** (Google)
+- **OpenAI-compatible** (OpenAI, Grok, Groq, OpenRouter, Together AI, Ollama)
+- **Anthropic Messages API** (Claude)
+
+The active provider + model + base URL come from `AIProviderSettings` (UserDefaults). API keys come from `KeychainHelper`. To add a provider, extend the `AIProvider` enum and add a branch in `callAI`.
+
+### FoodStore Callbacks
+
+`FoodStore` exposes four hooks that `calorietrackerApp.wireUpHealthKit()` wires to `HealthKitManager`:
+- `onEntryAdded` → `writeNutrition(for:)` (immediate, synchronous)
+- `onEntryDeleted` → `deleteNutrition(entryID:)`
+- `onEntryUpdated` → `updateNutrition(for:)` (delete-then-write, awaited so they don't race)
+- `onEntriesChanged` → notification rescheduling
+
+Edits use `onEntryUpdated` rather than back-to-back delete+add so HealthKit can serialize the two operations atomically.
+
+### HealthKit Conventions
+
+`HealthKitManager` (`Stores/HealthKitManager.swift`) is the only HealthKit boundary.
+
+- `authVersion` is bumped when new HealthKit types are added; `needsReauthorization` becomes true for users still on the old version. `requestAuthorization` only persists the new version when **all** dietary share types are `.sharingAuthorized` so users who deny nutrition can re-prompt.
+- Each nutrition sample carries `fudai_entry_id` metadata = `FoodEntry.id.uuidString`. Deletion uses a metadata predicate.
+- `deleteNutrition`, `writeNutrition`, `updateNutrition` all guard on the `healthKitEnabled` flag. `purgeNutrition` bypasses the flag — used only by Delete-All-Data so previously-synced samples are removed even if HealthKit was later turned off.
+- `backfillNutritionIfNeeded` is idempotent (queries Apple Health for each entry's UUID before writing) and is guarded by `isBackfillingNutrition` so scene-phase re-entry can't spawn overlapping scans. The caller passes `currentEntryIDs: () -> Set<UUID>` so a meal deleted mid-backfill won't be re-exported as a phantom sample.
+
+Clear Food Log keeps Apple Health samples (per product spec — only saves storage). Delete All Data wipes them.
+
+### UI Structure
+
+- `ContentView` hosts a 4-tab layout: Home, Progress, Settings (originally "Profile"), About.
+- `OnboardingView` is the first-run flow including an AI-provider-setup step.
+- Sheets and pickers route through a single `.sheet(item: $activeSheet)` driven by an enum to avoid SwiftUI's stacked-sheet bugs.
+- `Views/Theme.swift` (`AppColors`) holds the gradient palette used across the app.
 
 ## Gotchas
 
-- **SourceKit shows false errors** for UIKit imports and cross-file references when editing on macOS. Ignore them; verify with an actual `xcodebuild`.
-- `ProgressView` is renamed to `ProgressTabView` to avoid clash with SwiftUI's built-in `ProgressView`.
-- **Multiple `.sheet()` modifiers** on the same view cause white/black screens — use a single `.sheet(item:)` driven by an enum instead.
-- **`.buttonStyle(.plain)` kills row tap-highlight** in a `List`. Use `.tint(.primary)` if you want the highlight back while keeping primary text color.
-- **Dead files** present but not referenced: `AuthManager.swift`, `StoreManager.swift`, `PaywallView.swift`, `SpinWheelView.swift`, `CloudKitService.swift`. Don't add new code to them.
-- **CodeQL workflow** uses `maxim-lobanov/setup-xcode@v1` with `latest-stable` because the GitHub macOS runner's default Xcode is too old for our Swift Charts usage.
+- **SourceKit false positives**: editing in Claude Code surfaces "no module 'UIKit'" / "Cannot find type 'FoodEntry' in scope" errors that are not real. Build with `xcodebuild` to verify.
+- **`.buttonStyle(.plain)` kills row tap-highlight** in a `List`. If you need the tap highlight back while keeping primary text color, use `.tint(.primary)` instead.
+- **Multiple `.sheet()` modifiers** on the same view cause white/black-screen bugs. Always use a single `.sheet(item:)` driven by an enum.
+- **`ProgressView`** is renamed to `ProgressTabView` to avoid clashing with SwiftUI's built-in `ProgressView`.
+- **Dead files** (kept for git history but not referenced anywhere): `AuthManager.swift`, `StoreManager.swift`, `PaywallView.swift`, `SpinWheelView.swift`, `CloudKitService.swift`. Don't add new code to these.
+- **CodeQL workflow** (`.github/workflows/codeql.yml`) pins `latest-stable` Xcode via `maxim-lobanov/setup-xcode@v1` because the runner default is too old for our Swift Charts usage.
 
-## HealthKit Conventions
+## Commit Style
 
-- `authVersion` (in `HealthKitManager`) bumps when new HealthKit types are added so existing users get re-prompted.
-- `requestAuthorization` only persists the new `authVersion` if **all** dietary share types are `.sharingAuthorized` — otherwise users who deny nutrition can never re-prompt.
-- `writeNutrition`, `deleteNutrition`, and `updateNutrition` all guard on `healthKitEnabled`. `purgeNutrition` bypasses the guard for the destructive Delete-All-Data path.
-- `backfillNutritionIfNeeded` is idempotent: it queries Apple Health for each entry's UUID before writing, so it's safe to call on every launch.
-- Edits use `onEntryUpdated` (not `onEntryDeleted` + `onEntryAdded` back-to-back) so HealthKit can serialize delete-then-write atomically.
+- Plain factual messages. No co-author trailer. No marketing language.
+- Commit and push immediately after each working change.
 
-## URLs / Identity
+## Identity
 
 - Website: https://fud-ai.app
 - App Store: https://apps.apple.com/us/app/fud-ai-calorie-tracker/id6758935726
