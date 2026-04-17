@@ -334,7 +334,7 @@ struct HomeView: View {
                                 cameraMode = .snapFoodWithContext
                                 showCamera = true
                             }) {
-                                Label("Camera + Description", systemImage: "camera.badge.ellipsis")
+                                Label("Camera + Note", systemImage: "camera.badge.ellipsis")
                             }
                             Button(action: {
 
