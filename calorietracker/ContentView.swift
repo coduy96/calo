@@ -177,12 +177,17 @@ struct AboutView: View {
                 .listRowBackground(AppColors.appCard)
 
                 Section {
-                    Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—")")
-                        .font(.system(.footnote, design: .rounded))
-                        .foregroundStyle(.tertiary)
-                        .frame(maxWidth: .infinity)
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
+                    VStack(spacing: 4) {
+                        Text("Made by Apoorv Darshan")
+                            .font(.system(.footnote, design: .rounded, weight: .medium))
+                            .foregroundStyle(.secondary)
+                        Text("with care, for everyone")
+                            .font(.system(.caption2, design: .rounded))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
             }
             .scrollContentBackground(.hidden)
