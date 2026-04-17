@@ -8,3 +8,6 @@ build/
 # Secrets
 calorietracker/Resources/Secrets.plist
 .DS_Store
+
+# Claude Code runtime
+.claude/
