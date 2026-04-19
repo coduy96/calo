@@ -137,6 +137,8 @@ struct MacroCard: View {
                     .font(.system(.subheadline, design: .rounded, weight: .medium))
                     .foregroundStyle(.secondary)
             }
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
