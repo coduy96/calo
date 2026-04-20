@@ -156,14 +156,18 @@ struct ChatView: View {
             }
             .onChange(of: isInputFocused) { _, focused in
                 guard focused, let lastID = messages.last?.id else { return }
-                // First pass: animate alongside the keyboard (~0.25s) for responsiveness.
+                // Animate alongside the keyboard for responsiveness.
                 withAnimation(.easeOut(duration: 0.25)) {
                     proxy.scrollTo(lastID, anchor: .bottom)
                 }
-                // Safety net: re-anchor once the keyboard safe-area is fully applied.
-                // Without this, a scroll that was already near the bottom can finish
-                // before the viewport shrinks, leaving the last bubble behind the keyboard.
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
+                // Fires *after* the keyboard is fully shown — by now the ScrollView's
+                // safe-area inset is definitely applied, so this re-anchor catches the
+                // case where the initial scroll ran against the pre-keyboard viewport
+                // (bubble was hidden until the user typed and forced a re-layout).
+                guard isInputFocused, let lastID = messages.last?.id else { return }
+                withAnimation(.easeOut(duration: 0.2)) {
                     proxy.scrollTo(lastID, anchor: .bottom)
                 }
             }
