@@ -21,24 +21,27 @@ struct ChatView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                Group {
-                    if messages.isEmpty {
-                        emptyState
-                    } else {
-                        messageList
+            ZStack {
+                ambientBackdrop
+
+                VStack(spacing: 0) {
+                    Group {
+                        if messages.isEmpty {
+                            emptyState
+                        } else {
+                            messageList
+                        }
                     }
+                    .contentShape(Rectangle())
+                    .simultaneousGesture(
+                        TapGesture().onEnded { isInputFocused = false }
+                    )
+
+                    promptChips
+
+                    inputBar
                 }
-                .contentShape(Rectangle())
-                .simultaneousGesture(
-                    TapGesture().onEnded { isInputFocused = false }
-                )
-
-                promptChips
-
-                inputBar
             }
-            .background(AppColors.appBackground)
             .navigationTitle("Coach")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -47,7 +50,11 @@ struct ChatView: View {
                         if !messages.isEmpty { showResetConfirmation = true }
                     } label: {
                         Image(systemName: "arrow.counterclockwise")
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(messages.isEmpty ? Color.secondary : AppColors.calorie)
+                            .frame(width: 32, height: 32)
+                            .background(.ultraThinMaterial, in: Circle())
+                            .overlay(Circle().stroke(Color.white.opacity(0.12), lineWidth: 0.5))
                     }
                     .disabled(messages.isEmpty)
                 }
@@ -64,16 +71,55 @@ struct ChatView: View {
         }
     }
 
+    // MARK: - Backdrop
+
+    /// Soft gradient wash behind the glass — gives the materials something to refract.
+    private var ambientBackdrop: some View {
+        ZStack {
+            AppColors.appBackground
+
+            // Two gentle color blobs, blurred, for depth behind bubbles.
+            Circle()
+                .fill(AppColors.calorie.opacity(0.22))
+                .frame(width: 340, height: 340)
+                .blur(radius: 90)
+                .offset(x: -120, y: -260)
+
+            Circle()
+                .fill(AppColors.calorieGradient.last!.opacity(0.18))
+                .frame(width: 380, height: 380)
+                .blur(radius: 100)
+                .offset(x: 140, y: 240)
+        }
+        .ignoresSafeArea()
+    }
+
     // MARK: - Sections
 
     private var emptyState: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             Spacer()
-            Image(systemName: "bubble.left.and.bubble.right.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(
-                    LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
-                )
+            ZStack {
+                Circle()
+                    .fill(.ultraThinMaterial)
+                    .frame(width: 108, height: 108)
+                    .overlay(
+                        Circle().stroke(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.35), Color.white.opacity(0.05)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 0.8
+                        )
+                    )
+                    .shadow(color: AppColors.calorie.opacity(0.18), radius: 24, x: 0, y: 10)
+                Image(systemName: "bubble.left.and.bubble.right.fill")
+                    .font(.system(size: 44))
+                    .foregroundStyle(
+                        LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+                    )
+            }
             Text("Ask your Coach")
                 .font(.system(.title2, design: .rounded, weight: .semibold))
             Text("Your coach can see your weight history, calorie log, and goals. Ask about expected weight, what to eat, or how to hit your target.")
@@ -98,7 +144,12 @@ struct ChatView: View {
                             TypingIndicator()
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 10)
-                                .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 14))
+                                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                        .stroke(Color.white.opacity(0.15), lineWidth: 0.5)
+                                )
+                                .padding(.leading, 4)
                             Spacer()
                         }
                         .padding(.horizontal)
@@ -108,6 +159,13 @@ struct ChatView: View {
                         Text(err)
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.red)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(Color.red.opacity(0.25), lineWidth: 0.5)
+                            )
                             .padding(.horizontal)
                     }
                 }
@@ -166,10 +224,27 @@ struct ChatView: View {
                     } label: {
                         Text(chip)
                             .font(.system(.footnote, design: .rounded, weight: .medium))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(AppColors.calorie.opacity(0.12), in: Capsule())
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 9)
                             .foregroundStyle(AppColors.calorie)
+                            .background(
+                                Capsule().fill(.ultraThinMaterial)
+                            )
+                            .overlay(
+                                Capsule()
+                                    .fill(AppColors.calorie.opacity(0.10))
+                            )
+                            .overlay(
+                                Capsule()
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [AppColors.calorie.opacity(0.35), AppColors.calorie.opacity(0.10)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 0.6
+                                    )
+                            )
                     }
                     .buttonStyle(.plain)
                     .disabled(isSending)
@@ -181,29 +256,53 @@ struct ChatView: View {
     }
 
     private var inputBar: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             TextField("Ask Coach…", text: $draft, axis: .vertical)
+                .font(.system(.body, design: .rounded))
                 .lineLimit(1...5)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 20))
+                .padding(.horizontal, 18)
+                .padding(.vertical, 12)
                 .focused($isInputFocused)
 
             Button {
                 send()
             } label: {
-                Image(systemName: "arrow.up.circle.fill")
-                    .font(.system(size: 32))
-                    .foregroundStyle(
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 34, height: 34)
+                    .background(
                         canSend
                             ? AnyShapeStyle(LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing))
-                            : AnyShapeStyle(Color.secondary)
+                            : AnyShapeStyle(Color.secondary.opacity(0.35)),
+                        in: Circle()
                     )
+                    .overlay(
+                        Circle().stroke(Color.white.opacity(canSend ? 0.25 : 0.10), lineWidth: 0.6)
+                    )
+                    .shadow(color: canSend ? AppColors.calorie.opacity(0.35) : .clear, radius: 8, x: 0, y: 4)
             }
             .disabled(!canSend)
+            .padding(.trailing, 5)
+            .animation(.easeInOut(duration: 0.15), value: canSend)
         }
-        .padding(.horizontal)
-        .padding(.bottom, 8)
+        .background(
+            Capsule(style: .continuous).fill(.ultraThinMaterial)
+        )
+        .overlay(
+            Capsule(style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.25), Color.white.opacity(0.05)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 0.8
+                )
+        )
+        .shadow(color: Color.black.opacity(0.18), radius: 14, x: 0, y: 6)
+        .padding(.horizontal, 12)
+        .padding(.bottom, 10)
         .padding(.top, 4)
     }
 
@@ -247,48 +346,113 @@ struct ChatView: View {
 private struct MessageBubble: View {
     let message: ChatMessage
 
+    private var isUser: Bool { message.role == .user }
+
     var body: some View {
-        HStack(alignment: .top) {
-            if message.role == .assistant {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(AppColors.calorie)
-                    .padding(.top, 14)
+        HStack(alignment: .top, spacing: 8) {
+            if !isUser {
+                assistantBadge
             } else {
-                Spacer(minLength: 40)
+                Spacer(minLength: 48)
             }
-            Text(message.content)
-                .font(.system(.body, design: .rounded))
-                .textSelection(.enabled)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .background(
-                    message.role == .user
-                        ? AnyShapeStyle(LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing))
-                        : AnyShapeStyle(AppColors.appCard),
-                    in: RoundedRectangle(cornerRadius: 16)
-                )
-                .foregroundStyle(message.role == .user ? .white : .primary)
-                .fixedSize(horizontal: false, vertical: true)
-            if message.role == .user {
-                // no trailing icon for user
+
+            bubble
+
+            if isUser {
+                // no trailing icon
             } else {
-                Spacer(minLength: 40)
+                Spacer(minLength: 48)
             }
         }
         .padding(.horizontal)
+    }
+
+    private var assistantBadge: some View {
+        ZStack {
+            Circle()
+                .fill(.ultraThinMaterial)
+                .frame(width: 26, height: 26)
+                .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 0.5))
+            Image(systemName: "sparkles")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(
+                    LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+                )
+        }
+        .padding(.top, 8)
+    }
+
+    private var bubble: some View {
+        Text(message.content)
+            .font(.system(.body, design: .rounded))
+            .textSelection(.enabled)
+            .foregroundStyle(isUser ? .white : .primary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 11)
+            .background(bubbleBackground)
+            .overlay(bubbleStroke)
+            .overlay(alignment: .top) {
+                if isUser { bubbleHighlight }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .shadow(color: isUser ? AppColors.calorie.opacity(0.28) : Color.black.opacity(0.12),
+                    radius: isUser ? 10 : 6, x: 0, y: isUser ? 6 : 3)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    @ViewBuilder
+    private var bubbleBackground: some View {
+        if isUser {
+            LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+        } else {
+            ZStack {
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(AppColors.calorie.opacity(0.035))
+            }
+        }
+    }
+
+    private var bubbleStroke: some View {
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .stroke(
+                LinearGradient(
+                    colors: isUser
+                        ? [Color.white.opacity(0.45), Color.white.opacity(0.05)]
+                        : [Color.white.opacity(0.22), Color.white.opacity(0.04)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ),
+                lineWidth: 0.7
+            )
+    }
+
+    /// Glassy top highlight on user bubbles — makes the gradient read as polished glass, not flat paint.
+    private var bubbleHighlight: some View {
+        LinearGradient(
+            colors: [Color.white.opacity(0.35), Color.white.opacity(0)],
+            startPoint: .top,
+            endPoint: .center
+        )
+        .blendMode(.plusLighter)
+        .allowsHitTesting(false)
     }
 }
 
 private struct TypingIndicator: View {
     @State private var phase = 0
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 5) {
             ForEach(0..<3) { i in
                 Circle()
-                    .fill(AppColors.calorie)
-                    .frame(width: 6, height: 6)
+                    .fill(
+                        LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+                    )
+                    .frame(width: 7, height: 7)
                     .opacity(phase == i ? 1 : 0.3)
+                    .scaleEffect(phase == i ? 1.15 : 1.0)
+                    .animation(.easeInOut(duration: 0.35), value: phase)
             }
         }
         .onAppear {
