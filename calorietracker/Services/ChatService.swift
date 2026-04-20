@@ -280,24 +280,60 @@ struct ChatService {
         for (k, v) in headers { request.setValue(v, forHTTPHeaderField: k) }
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
-        let (data, response): (Data, URLResponse)
-        do {
-            (data, response) = try await URLSession.shared.data(for: request)
-        } catch {
-            throw ChatError.networkError(error)
-        }
+        // Retry transient overload responses (503/429/529) with exponential backoff: 1s, 2s, 4s.
+        // Mirrors GeminiService — "model experiencing high demand" is usually a global throttle
+        // on the chosen model, so a quick retry resolves it invisibly most of the time.
+        let retryDelaysNs: [UInt64] = [1_000_000_000, 2_000_000_000, 4_000_000_000]
+        var lastError: ChatError = .apiError("Request failed")
 
-        if let http = response as? HTTPURLResponse, http.statusCode != 200 {
-            if let errJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                if let err = errJson["error"] as? [String: Any], let msg = err["message"] as? String {
-                    throw ChatError.apiError(msg)
-                }
-                if let msg = errJson["error"] as? String {
-                    throw ChatError.apiError(msg)
-                }
+        for attempt in 0...retryDelaysNs.count {
+            let (data, response): (Data, URLResponse)
+            do {
+                (data, response) = try await URLSession.shared.data(for: request)
+            } catch {
+                throw ChatError.networkError(error)
             }
-            throw ChatError.apiError("HTTP \(http.statusCode)")
+
+            guard let http = response as? HTTPURLResponse else { return data }
+
+            if http.statusCode == 200 { return data }
+
+            let parsed = parseErrorMessage(from: data) ?? "HTTP \(http.statusCode)"
+            lastError = .apiError(friendlyMessage(for: http.statusCode, raw: parsed))
+
+            let isRetryable = http.statusCode == 503
+                           || http.statusCode == 529
+                           || http.statusCode == 429
+            if isRetryable && attempt < retryDelaysNs.count {
+                try? await Task.sleep(nanoseconds: retryDelaysNs[attempt])
+                continue
+            }
+            throw lastError
         }
-        return data
+        throw lastError
+    }
+
+    private static func parseErrorMessage(from data: Data) -> String? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        if let error = json["error"] as? [String: Any], let message = error["message"] as? String {
+            return message
+        }
+        if let message = json["error"] as? String {
+            return message
+        }
+        return nil
+    }
+
+    private static func friendlyMessage(for status: Int, raw: String) -> String {
+        switch status {
+        case 503, 529:
+            return "The AI provider is overloaded right now. We retried a few times — please try again in a minute, or switch to a different provider/model in Settings → AI Provider."
+        case 429:
+            return "Rate limit hit on your API key. Wait a minute, or switch to another provider in Settings → AI Provider."
+        case 401, 403:
+            return "Your API key was rejected. Open Settings → AI Provider and re-paste a valid key."
+        default:
+            return raw
+        }
     }
 }
