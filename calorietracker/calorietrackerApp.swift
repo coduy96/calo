@@ -39,24 +39,28 @@ struct calorietrackerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if hasCompletedOnboarding {
-                ContentView()
-                    .environment(foodStore)
-                    .environment(weightStore)
-                    .environment(notificationManager)
-                    .environment(healthKitManager)
-                    .environment(profileStore)
-                    .environment(chatStore)
-                    .preferredColorScheme(colorScheme)
-            } else {
-                OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
-                    .environment(notificationManager)
-                    .environment(foodStore)
-                    .environment(weightStore)
-                    .environment(healthKitManager)
-                    .environment(profileStore)
-                    .environment(chatStore)
-                    .preferredColorScheme(colorScheme)
+            Group {
+                if hasCompletedOnboarding {
+                    ContentView()
+                        .environment(foodStore)
+                        .environment(weightStore)
+                        .environment(notificationManager)
+                        .environment(healthKitManager)
+                        .environment(profileStore)
+                        .environment(chatStore)
+                } else {
+                    OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
+                        .environment(notificationManager)
+                        .environment(foodStore)
+                        .environment(weightStore)
+                        .environment(healthKitManager)
+                        .environment(profileStore)
+                        .environment(chatStore)
+                }
+            }
+            .preferredColorScheme(colorScheme)
+            .onReceive(NotificationCenter.default.publisher(for: .userProfileDidChange)) { _ in
+                refreshWidgetSnapshot()
             }
         }
         .onChange(of: scenePhase) { _, newPhase in
@@ -72,12 +76,16 @@ struct calorietrackerApp: App {
                 if hasCompletedOnboarding {
                     wireUpHealthKit()
                 }
+                // Refresh on scene-active so widgets roll over at midnight even
+                // without an explicit food change.
+                refreshWidgetSnapshot()
             }
         }
         .onChange(of: hasCompletedOnboarding) { _, completed in
             if completed {
                 wireUpFoodStoreCallback()
                 wireUpHealthKit()
+                refreshWidgetSnapshot()
             }
         }
     }
@@ -187,11 +195,20 @@ struct calorietrackerApp: App {
 
     private func wireUpFoodStoreCallback() {
         foodStore.onEntriesChanged = { [notificationManager, foodStore] in
-            guard UserDefaults.standard.bool(forKey: "notificationsEnabled"),
-                  let profile = UserProfile.load() else { return }
-            notificationManager.rescheduleDataDependentNotifications(
-                foodStore: foodStore, profile: profile
-            )
+            if UserDefaults.standard.bool(forKey: "notificationsEnabled"),
+               let profile = UserProfile.load() {
+                notificationManager.rescheduleDataDependentNotifications(
+                    foodStore: foodStore, profile: profile
+                )
+            }
+            if let profile = UserProfile.load() {
+                WidgetSnapshotWriter.publish(foods: foodStore.entries, profile: profile)
+            }
         }
+    }
+
+    private func refreshWidgetSnapshot() {
+        guard let profile = UserProfile.load() else { return }
+        WidgetSnapshotWriter.publish(foods: foodStore.entries, profile: profile)
     }
 }

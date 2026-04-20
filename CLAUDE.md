@@ -127,6 +127,19 @@ Edits use `onEntryUpdated` rather than back-to-back delete+add so HealthKit can 
 
 Clear Food Log keeps Apple Health samples (per product spec — only saves storage). Delete All Data wipes them **and** the Coach chat history, Keychain API keys, HealthKit nutrition, and all UserDefaults.
 
+### Widgets (`FudAIWidgetsExtension` target + App Group)
+
+The widget extension lives in the `FudAIWidgets/` folder as its own target (`com.apoorvdarshan.calorietracker.FudAIWidgets`). It's embedded into the main app via the `Embed Foundation Extensions` copy phase. Five supported families: `.systemSmall`, `.systemMedium`, `.accessoryCircular`, `.accessoryRectangular`, `.accessoryInline`.
+
+Because widgets run in a separate process, they can't read the main app's `UserDefaults`. Data flows through an **App Group** shared container:
+- **App Group ID**: `group.com.apoorvdarshan.calorietracker` (declared in both `calorietracker.entitlements` and `FudAIWidgets/FudAIWidgets.entitlements` — must match exactly).
+- **`WidgetSnapshot`** is a small Codable struct (today's totals + goals) written by the main app into the shared suite under key `widget_snapshot_v1`.
+- **Duplicated file**: `calorietracker/Services/WidgetSnapshot.swift` and `FudAIWidgets/WidgetSnapshot.swift` are identical copies. The widget target can't see the main app's sources (auto-discovery via `PBXFileSystemSynchronizedRootGroup` is per-target), so we keep two files in sync manually. If you change one, change both.
+- **`WidgetSnapshotWriter.publish(...)`** (main app only) recomputes today's totals, writes the snapshot, and calls `WidgetCenter.shared.reloadAllTimelines()`. Called from three places in `calorietrackerApp.swift`: on `foodStore.onEntriesChanged`, on `.userProfileDidChange` notification (goal edits), and on scene-phase `.active` (so midnight rollover doesn't require an explicit food change).
+- **Timeline policy**: `CalorieProvider.getTimeline` emits one entry for "now" and refreshes after 30 minutes as a safety net for days when the user doesn't log anything.
+
+Adding a new widget: add a new `Widget` conforming type in `FudAIWidgets/`, add it to `FudAIWidgetsBundle.body`, extend `CalorieWidgetView`'s `@Environment(\.widgetFamily)` switch if you're adding a new family. If you need additional data, extend `WidgetSnapshot` in **both** files (add fields with Codable defaults so old snapshots still decode).
+
 ### Localization (15 languages)
 
 The app ships with `calorietracker/Localizable.xcstrings` (String Catalog) — ~200 UI strings × 15 locales: `en` (source), `ar`, `az`, `de`, `es`, `fr`, `hi`, `it`, `ja`, `ko`, `nl`, `pt-BR`, `ro`, `ru`, `zh-Hans`.

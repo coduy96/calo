@@ -53,6 +53,7 @@ Open-source, privacy-first calorie tracker for iOS. Bring your own AI provider �
 
 ### Health & platform
 - **Apple Health** — bidirectional sync for body measurements + 12 nutrition types written per meal
+- **Widgets** — Home Screen (small / medium with calorie ring + macro bars) and Lock Screen (circular / rectangular / inline). Update live whenever you log a meal
 - **15 languages** — Arabic, Azerbaijani, Dutch, English, French, German, Hindi, Italian, Japanese, Korean, Portuguese (Brazil), Romanian, Russian, Simplified Chinese, Spanish (auto-selected by iPhone's Language setting)
 - **Meal reminders** — customizable breakfast, lunch, dinner notifications
 - **Dark mode** — system, light, or dark

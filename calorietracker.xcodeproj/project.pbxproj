@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		BA8E0E2D2F33F198007DD537 /* FudAIWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BA8E0E272F33F198007DD537 /* FudAIWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		BA8E0E082F33F198007DD537 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -21,12 +25,34 @@
 			remoteGlobalIDString = BA8E0DF22F33F197007DD537;
 			remoteInfo = calorietracker;
 		};
+		BA8E0E2F2F33F198007DD537 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BA8E0DEB2F33F197007DD537 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BA8E0E282F33F198007DD537;
+			remoteInfo = FudAIWidgetsExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		BA8E0E2C2F33F198007DD537 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				BA8E0E2D2F33F198007DD537 /* FudAIWidgetsExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		BA8E0DF32F33F197007DD537 /* calorietracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = calorietracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BA8E0E072F33F198007DD537 /* calorietrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = calorietrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BA8E0E112F33F198007DD537 /* calorietrackerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = calorietrackerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BA8E0E272F33F198007DD537 /* FudAIWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FudAIWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -36,6 +62,14 @@
 				Info.plist,
 			);
 			target = BA8E0DF22F33F197007DD537 /* calorietracker */;
+		};
+		BA8E0E262F33F198007DD537 /* Exceptions for "FudAIWidgets" folder in "FudAIWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				FudAIWidgets.entitlements,
+			);
+			target = BA8E0E282F33F198007DD537 /* FudAIWidgetsExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -56,6 +90,14 @@
 		BA8E0E142F33F198007DD537 /* calorietrackerUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = calorietrackerUITests;
+			sourceTree = "<group>";
+		};
+		BA8E0E252F33F198007DD537 /* FudAIWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				BA8E0E262F33F198007DD537 /* Exceptions for "FudAIWidgets" folder in "FudAIWidgetsExtension" target */,
+			);
+			path = FudAIWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -82,6 +124,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BA8E0E2A2F33F198007DD537 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -89,6 +138,7 @@
 			isa = PBXGroup;
 			children = (
 				BA8E0DF52F33F197007DD537 /* calorietracker */,
+				BA8E0E252F33F198007DD537 /* FudAIWidgets */,
 				BA8E0E0A2F33F198007DD537 /* calorietrackerTests */,
 				BA8E0E142F33F198007DD537 /* calorietrackerUITests */,
 				BA8E0DF42F33F197007DD537 /* Products */,
@@ -101,6 +151,7 @@
 				BA8E0DF32F33F197007DD537 /* calorietracker.app */,
 				BA8E0E072F33F198007DD537 /* calorietrackerTests.xctest */,
 				BA8E0E112F33F198007DD537 /* calorietrackerUITests.xctest */,
+				BA8E0E272F33F198007DD537 /* FudAIWidgetsExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -115,10 +166,12 @@
 				BA8E0DEF2F33F197007DD537 /* Sources */,
 				BA8E0DF02F33F197007DD537 /* Frameworks */,
 				BA8E0DF12F33F197007DD537 /* Resources */,
+				BA8E0E2C2F33F198007DD537 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				BA8E0E2E2F33F198007DD537 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				BA8E0DF52F33F197007DD537 /* calorietracker */,
@@ -176,6 +229,28 @@
 			productReference = BA8E0E112F33F198007DD537 /* calorietrackerUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		BA8E0E282F33F198007DD537 /* FudAIWidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BA8E0E322F33F198007DD537 /* Build configuration list for PBXNativeTarget "FudAIWidgetsExtension" */;
+			buildPhases = (
+				BA8E0E292F33F198007DD537 /* Sources */,
+				BA8E0E2A2F33F198007DD537 /* Frameworks */,
+				BA8E0E2B2F33F198007DD537 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				BA8E0E252F33F198007DD537 /* FudAIWidgets */,
+			);
+			name = FudAIWidgetsExtension;
+			packageProductDependencies = (
+			);
+			productName = FudAIWidgetsExtension;
+			productReference = BA8E0E272F33F198007DD537 /* FudAIWidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -196,6 +271,9 @@
 					BA8E0E102F33F198007DD537 = {
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = BA8E0DF22F33F197007DD537;
+					};
+					BA8E0E282F33F198007DD537 = {
+						CreatedOnToolsVersion = 26.2;
 					};
 				};
 			};
@@ -228,6 +306,7 @@
 			projectRoot = "";
 			targets = (
 				BA8E0DF22F33F197007DD537 /* calorietracker */,
+				BA8E0E282F33F198007DD537 /* FudAIWidgetsExtension */,
 				BA8E0E062F33F198007DD537 /* calorietrackerTests */,
 				BA8E0E102F33F198007DD537 /* calorietrackerUITests */,
 			);
@@ -250,6 +329,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		BA8E0E0F2F33F198007DD537 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BA8E0E2B2F33F198007DD537 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -280,6 +366,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BA8E0E292F33F198007DD537 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -292,6 +385,11 @@
 			isa = PBXTargetDependency;
 			target = BA8E0DF22F33F197007DD537 /* calorietracker */;
 			targetProxy = BA8E0E122F33F198007DD537 /* PBXContainerItemProxy */;
+		};
+		BA8E0E2E2F33F198007DD537 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BA8E0E282F33F198007DD537 /* FudAIWidgetsExtension */;
+			targetProxy = BA8E0E2F2F33F198007DD537 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -595,6 +693,70 @@
 			};
 			name = Release;
 		};
+		BA8E0E302F33F198007DD537 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = FudAIWidgets/FudAIWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 23RV7FYH36;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FudAIWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Fud AI";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietracker.FudAIWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		BA8E0E312F33F198007DD537 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = FudAIWidgets/FudAIWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 23RV7FYH36;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FudAIWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Fud AI";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietracker.FudAIWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -630,6 +792,15 @@
 			buildConfigurations = (
 				BA8E0E232F33F198007DD537 /* Debug */,
 				BA8E0E242F33F198007DD537 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BA8E0E322F33F198007DD537 /* Build configuration list for PBXNativeTarget "FudAIWidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BA8E0E302F33F198007DD537 /* Debug */,
+				BA8E0E312F33F198007DD537 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
