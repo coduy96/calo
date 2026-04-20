@@ -11,9 +11,6 @@ struct VoiceInputView: View {
     @State private var isTranscribing = false
     @State private var permissionError: String?
     @State private var pulseScale: CGFloat = 1.0
-    /// Set true when user taps Analyze while a remote transcription is still pending.
-    /// The remote completion handler checks this and submits automatically when ready.
-    @State private var submitWhenReady = false
 
     // Native path
     @State private var speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
@@ -31,17 +28,18 @@ struct VoiceInputView: View {
     private var provider: SpeechProvider { SpeechSettings.selectedProvider }
     private var isNative: Bool { provider == .nativeIOS }
 
-    private var analyzeButtonLabel: String {
-        if submitWhenReady && isTranscribing { return "Analyzing…" }
-        if isRecording { return isNative ? "Analyze" : "Stop & Analyze" }
-        return "Analyze"
-    }
+    private var analyzeButtonLabel: String { "Analyze" }
 
     private var analyzeButtonDisabled: Bool {
-        if submitWhenReady { return true }          // mid-flight, don't let user double-tap
-        if isRecording { return false }              // always allow one-tap stop + submit
-        if isTranscribing { return true }            // wait for remote upload to finish
-        return transcription.trimmingCharacters(in: .whitespaces).isEmpty
+        // Native: one-tap — allow Analyze while recording (live transcription is already visible).
+        // Remote: two-tap — force user to stop recording first, review the transcription, then Analyze.
+        if isNative {
+            if isRecording { return false }
+            return transcription.trimmingCharacters(in: .whitespaces).isEmpty
+        } else {
+            if isRecording || isTranscribing { return true }
+            return transcription.trimmingCharacters(in: .whitespaces).isEmpty
+        }
     }
 
     var body: some View {
@@ -131,31 +129,18 @@ struct VoiceInputView: View {
                     .multilineTextAlignment(.center)
             }
 
-            // Analyze button — one-tap stop + submit.
-            // Native: submits the live transcription immediately.
-            // Remote: stops recording, marks submitWhenReady; transcription completion auto-submits.
+            // Analyze button.
+            // Native: one-tap — stops the live recognizer and submits.
+            // Remote: two-tap — user must stop via mic first, review the transcription, then Analyze.
             Button {
-                if isRecording {
-                    if isNative {
-                        stopRecording()
-                        onSubmit(transcription)
-                    } else {
-                        submitWhenReady = true
-                        stopRecording()
-                    }
-                } else if !transcription.trimmingCharacters(in: .whitespaces).isEmpty {
-                    onSubmit(transcription)
+                if isNative && isRecording {
+                    stopRecording()
                 }
+                onSubmit(transcription)
             } label: {
-                HStack(spacing: 8) {
-                    if isTranscribing || (submitWhenReady && !isNative) {
-                        ProgressView()
-                            .tint(.white)
-                    }
-                    Text(analyzeButtonLabel)
-                        .font(.headline)
-                }
-                .frame(maxWidth: .infinity)
+                Text(analyzeButtonLabel)
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .tint(AppColors.calorie)
@@ -329,13 +314,7 @@ struct VoiceInputView: View {
             do {
                 let text = try await SpeechService.transcribe(audioURL: fileURL)
                 transcription = text
-                // If user already tapped Analyze while we were uploading, submit now.
-                if submitWhenReady, !text.trimmingCharacters(in: .whitespaces).isEmpty {
-                    submitWhenReady = false
-                    onSubmit(text)
-                }
             } catch {
-                submitWhenReady = false
                 permissionError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
             }
             try? FileManager.default.removeItem(at: fileURL)
