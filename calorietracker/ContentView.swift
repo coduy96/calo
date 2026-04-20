@@ -682,23 +682,25 @@ struct NutritionDetailView: View {
         return NavigationStack {
             List {
                 Section("Macros") {
-                    NutritionDetailRow(label: "Calories", value: "\(foodStore.calories(for: date))", unit: "kcal", goal: "\(userProfile.effectiveCalories)")
-                    NutritionDetailRow(label: "Protein", value: "\(foodStore.protein(for: date))", unit: "g", goal: "\(userProfile.effectiveProtein)")
-                     NutritionDetailRow(label: "Carbs", value: "\(foodStore.carbs(for: date))", unit: "g", goal: "\(userProfile.effectiveCarbs)")
-                    NutritionDetailRow(label: "Fat", value: "\(foodStore.fat(for: date))", unit: "g", goal: "\(userProfile.effectiveFat)")
+                    NutritionDetailRow(icon: "flame.fill", label: "Calories", value: "\(foodStore.calories(for: date))", unit: "kcal", goal: "\(userProfile.effectiveCalories)")
+                    NutritionDetailRow(icon: "p.circle.fill", label: "Protein", value: "\(foodStore.protein(for: date))", unit: "g", goal: "\(userProfile.effectiveProtein)")
+                    NutritionDetailRow(icon: "c.circle.fill", label: "Carbs", value: "\(foodStore.carbs(for: date))", unit: "g", goal: "\(userProfile.effectiveCarbs)")
+                    NutritionDetailRow(icon: "f.circle.fill", label: "Fat", value: "\(foodStore.fat(for: date))", unit: "g", goal: "\(userProfile.effectiveFat)")
                 }
+                .listRowBackground(AppColors.appCard)
 
                 Section("Detailed Nutrition") {
-                    NutritionDetailRow(label: "Sugar", value: formatMicro(foodStore.sugar(for: date)), unit: "g")
-                    NutritionDetailRow(label: "Added Sugar", value: formatMicro(foodStore.addedSugar(for: date)), unit: "g")
-                    NutritionDetailRow(label: "Fiber", value: formatMicro(foodStore.fiber(for: date)), unit: "g")
-                    NutritionDetailRow(label: "Saturated Fat", value: formatMicro(foodStore.saturatedFat(for: date)), unit: "g")
-                    NutritionDetailRow(label: "Mono Unsat. Fat", value: formatMicro(foodStore.monounsaturatedFat(for: date)), unit: "g")
-                    NutritionDetailRow(label: "Poly Unsat. Fat", value: formatMicro(foodStore.polyunsaturatedFat(for: date)), unit: "g")
-                    NutritionDetailRow(label: "Cholesterol", value: formatMicro(foodStore.cholesterol(for: date)), unit: "mg")
-                    NutritionDetailRow(label: "Sodium", value: formatMicro(foodStore.sodium(for: date)), unit: "mg")
-                    NutritionDetailRow(label: "Potassium", value: formatMicro(foodStore.potassium(for: date)), unit: "mg")
+                    NutritionDetailRow(icon: "cube.fill", label: "Sugar", value: formatMicro(foodStore.sugar(for: date)), unit: "g")
+                    NutritionDetailRow(icon: "plus.circle.fill", label: "Added Sugar", value: formatMicro(foodStore.addedSugar(for: date)), unit: "g")
+                    NutritionDetailRow(icon: "leaf.fill", label: "Fiber", value: formatMicro(foodStore.fiber(for: date)), unit: "g")
+                    NutritionDetailRow(icon: "drop.fill", label: "Saturated Fat", value: formatMicro(foodStore.saturatedFat(for: date)), unit: "g")
+                    NutritionDetailRow(icon: "drop", label: "Mono Unsat. Fat", value: formatMicro(foodStore.monounsaturatedFat(for: date)), unit: "g")
+                    NutritionDetailRow(icon: "drop.halffull", label: "Poly Unsat. Fat", value: formatMicro(foodStore.polyunsaturatedFat(for: date)), unit: "g")
+                    NutritionDetailRow(icon: "heart.circle.fill", label: "Cholesterol", value: formatMicro(foodStore.cholesterol(for: date)), unit: "mg")
+                    NutritionDetailRow(icon: "sparkles", label: "Sodium", value: formatMicro(foodStore.sodium(for: date)), unit: "mg")
+                    NutritionDetailRow(icon: "bolt.fill", label: "Potassium", value: formatMicro(foodStore.potassium(for: date)), unit: "mg")
                 }
+                .listRowBackground(AppColors.appCard)
             }
             .scrollContentBackground(.hidden)
             .background(AppColors.appBackground)
@@ -707,6 +709,7 @@ struct NutritionDetailView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
+                        .tint(AppColors.calorie)
                 }
             }
         }
@@ -718,23 +721,37 @@ struct NutritionDetailView: View {
 }
 
 struct NutritionDetailRow: View {
+    var icon: String? = nil
     let label: String
     let value: String
     let unit: String
     var goal: String? = nil
 
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
+            if let icon {
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(
+                        LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+                    )
+                    .frame(width: 24)
+            }
             Text(label)
+                .font(.system(.body, design: .rounded))
             Spacer()
-            Text(value)
-                .fontWeight(.medium)
-            Text(unit)
-                .foregroundStyle(.secondary)
-                .frame(width: 36, alignment: .leading)
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(value)
+                    .font(.system(.body, design: .rounded, weight: .semibold))
+                    .foregroundStyle(AppColors.calorie)
+                    .contentTransition(.numericText())
+                Text(unit)
+                    .font(.system(.footnote, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
             if let goal {
                 Text("/ \(goal)")
-                    .font(.caption)
+                    .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.tertiary)
             }
         }
