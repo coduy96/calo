@@ -193,16 +193,6 @@ struct FoodResultView: View {
                     .tint(AppColors.calorie)
                 }
 
-                Section {
-                    Button(action: logFood) {
-                        Text("Log Food")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(AppColors.calorie)
-                    .listRowBackground(Color.clear)
-                }
             }
             .scrollContentBackground(.hidden)
             .background(AppColors.appBackground)
@@ -211,6 +201,11 @@ struct FoodResultView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Log", action: logFood)
+                        .font(.system(.body, design: .rounded, weight: .semibold))
+                        .tint(AppColors.calorie)
                 }
             }
         }
