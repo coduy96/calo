@@ -75,6 +75,11 @@ struct calorietrackerApp: App {
                 }
                 if hasCompletedOnboarding {
                     wireUpHealthKit()
+                    // Re-wire on every scene-active so the widget refresh callback
+                    // is connected for users who completed onboarding before this
+                    // hook existed (the .onChange(hasCompletedOnboarding) branch
+                    // only fires on the false→true transition, never on cold launch).
+                    wireUpFoodStoreCallback()
                 }
                 // Refresh on scene-active so widgets roll over at midnight even
                 // without an explicit food change.
