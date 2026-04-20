@@ -150,6 +150,74 @@ struct GeminiService {
         return try parseNutritionLabel(from: text)
     }
 
+    // MARK: - Weight Forecast Insight
+
+    /// Asks the user's selected LLM to summarize their weight trend and suggest 2–3 adjustments
+    /// in plain English. Caller provides an already-computed WeightForecast so the LLM gets hard
+    /// numbers instead of guessing.
+    static func analyzeWeightTrend(
+        profile: UserProfile,
+        forecast: WeightForecast,
+        recentAvgMacros: (protein: Int, carbs: Int, fat: Int)?,
+        useMetric: Bool
+    ) async throws -> String {
+        let unit = useMetric ? "kg" : "lbs"
+        let wUnit: (Double) -> String = { kg in
+            useMetric ? String(format: "%.1f kg", kg) : String(format: "%.1f lbs", kg * 2.20462)
+        }
+        let weekly: (Double) -> String = { kg in
+            useMetric ? String(format: "%+.2f kg/week", kg) : String(format: "%+.2f lbs/week", kg * 2.20462)
+        }
+
+        var lines: [String] = []
+        lines.append("User profile:")
+        lines.append("- Gender: \(profile.gender.rawValue)")
+        lines.append("- Age: \(profile.age)")
+        lines.append("- Height: \(useMetric ? String(format: "%.0f cm", profile.heightCm) : String(format: "%.1f in", profile.heightCm / 2.54))")
+        lines.append("- Current weight: \(wUnit(forecast.currentWeightKg))")
+        lines.append("- Activity level: \(profile.activityLevel.displayName)")
+        lines.append("- Goal: \(profile.goal.displayName)")
+        if let goal = profile.goalWeightKg {
+            lines.append("- Goal weight: \(wUnit(goal))")
+        }
+        if let bf = profile.bodyFatPercentage {
+            lines.append("- Body fat: \(Int(bf * 100))%")
+        }
+        lines.append("")
+        lines.append("Energy balance (from \(forecast.daysOfFoodData) days of logged food):")
+        lines.append("- Avg daily intake: \(forecast.avgDailyCalories) kcal")
+        lines.append("- TDEE estimate: \(forecast.tdee) kcal")
+        lines.append("- Daily balance: \(forecast.dailyEnergyBalance >= 0 ? "+" : "")\(forecast.dailyEnergyBalance) kcal")
+        if let macros = recentAvgMacros {
+            lines.append("- Avg macros: \(macros.protein)g protein, \(macros.carbs)g carbs, \(macros.fat)g fat")
+        }
+        lines.append("")
+        lines.append("Projection:")
+        lines.append("- Predicted (from diet): \(weekly(forecast.predictedWeeklyChangeKg))")
+        if let observed = forecast.observedWeeklyChangeKg {
+            lines.append("- Observed (from \(forecast.weightEntriesUsed) weight entries): \(weekly(observed))")
+        }
+        lines.append("- Expected weight in 30 days: \(wUnit(forecast.predictedWeight30dKg))")
+        lines.append("- Expected weight in 90 days: \(wUnit(forecast.predictedWeight90dKg))")
+        if let days = forecast.daysToGoal {
+            lines.append("- At current pace, reach goal in ~\(days) days")
+        }
+        if forecast.trendsDisagree {
+            lines.append("- NOTE: predicted and observed trends differ by >0.3 kg/week (possibly under-logging food).")
+        }
+
+        let prompt = """
+        You are a nutrition coach analyzing a user's weight trend. Write 3–4 short sentences (plain English, no bullets, no markdown, no bold) that:
+        1. State the predicted weight in \(unit) 30 days out and whether they're on track for their goal.
+        2. Give one or two specific, actionable suggestions (e.g. calorie target, protein amount, activity change) grounded in the numbers below.
+        3. If predicted and observed trends disagree, mention possible under-logging briefly.
+        Be direct, factual, and encouraging. Do not exceed 100 words.
+
+        \(lines.joined(separator: "\n"))
+        """
+        return try await callAI(prompt: prompt, image: nil)
+    }
+
     // MARK: - Unified AI Call Router
 
     private static func callAI(prompt: String, image: UIImage?) async throws -> String {
