@@ -47,11 +47,7 @@ struct ChatView: View {
                         if !messages.isEmpty { showResetConfirmation = true }
                     } label: {
                         Image(systemName: "arrow.counterclockwise")
-                            .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(messages.isEmpty ? Color.secondary : AppColors.calorie)
-                            .frame(width: 32, height: 32)
-                            .background(.ultraThinMaterial, in: Circle())
-                            .overlay(Circle().stroke(Color.white.opacity(0.12), lineWidth: 0.5))
                     }
                     .disabled(messages.isEmpty)
                 }
