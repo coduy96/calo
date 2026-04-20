@@ -39,9 +39,10 @@ Open-source, privacy-first calorie tracker for iOS. Bring your own AI provider �
 - **Saved Meals** — Recents, Frequent, and Favorites with swipe-to-delete and drag-to-reorder
 
 ### Intelligence
-- **AI Coach tab** — multi-turn chat with memory. Coach sees your profile, weight history, and food log and answers questions like "what's my expected weight in 30 days?" or "how do I lose 2 kg?". Memory persists across launches; Reset button starts a fresh conversation.
+- **AI Coach tab** — multi-turn chat with memory. Coach sees your profile, weight history, and food log and answers questions like "what's my expected weight in 30 days?" or "how do I lose 2 kg?". Memory persists across launches; Reset button starts a fresh conversation. Long-press any reply to copy.
 - **Goal-aware prompt chips** — suggested questions change based on whether your goal is Lose / Gain / Maintain
-- **Weight forecast** — expected weight at 30/60/90 days, predicted vs observed weekly change, days-to-goal, under-logging detection
+- **Thermodynamic weight forecast** — expected weight at 30/60/90 days, predicted vs observed weekly change, days-to-goal, under-logging detection. Surfaced through Coach as live context on every turn.
+- **Resilient requests** — transient provider overloads (503 / 529 / 429) auto-retry with 1s / 2s / 4s exponential backoff across both food analysis and Coach chat, so short spikes resolve invisibly
 
 ### Tracking
 - **13 nutrients** per entry (calories, protein, carbs, fat + 9 micronutrients)
