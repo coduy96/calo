@@ -298,7 +298,10 @@ struct ChatService {
 
             if http.statusCode == 200 { return data }
 
-            let parsed = parseErrorMessage(from: data) ?? "HTTP \(http.statusCode)"
+            // Fall back to a status-only message when parsing finds nothing OR when the parsed
+            // value is empty (e.g. `{"error": {"message": ""}}`) so we never show a blank alert.
+            let parsedRaw = parseErrorMessage(from: data) ?? ""
+            let parsed = parsedRaw.isEmpty ? "HTTP \(http.statusCode)" : parsedRaw
             lastError = .apiError(friendlyMessage(for: http.statusCode, raw: parsed))
 
             let isRetryable = http.statusCode == 503

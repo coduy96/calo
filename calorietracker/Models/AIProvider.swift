@@ -76,9 +76,12 @@ enum AIProvider: String, CaseIterable, Codable, Identifiable {
             "gpt-4.1-mini",              // vision, legacy
         ]
         case .anthropic: [
-            "claude-sonnet-4-5-20250929",  // vision, current Sonnet
-            "claude-haiku-4-5-20251001",   // vision, current Haiku (Haiku 3.5 had no vision)
-            "claude-opus-4-1-20250805",    // vision, highest quality
+            "claude-sonnet-4-6",           // vision, current Sonnet (default)
+            "claude-opus-4-7",             // vision, current flagship
+            "claude-haiku-4-5",            // vision, current Haiku, fastest
+            "claude-opus-4-5",             // vision, prior Opus
+            "claude-sonnet-4-5-20250929",  // vision, prior Sonnet (dated)
+            "claude-opus-4-1-20250805",    // vision, legacy Opus
         ]
         case .xai: [
             "grok-4",                    // vision, current flagship

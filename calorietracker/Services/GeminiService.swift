@@ -403,7 +403,11 @@ struct GeminiService {
             }
 
             // Parse the API's error message once so we can surface the friendliest version.
-            let parsedMessage = parseErrorMessage(from: data) ?? "HTTP \(httpResponse.statusCode)"
+            // Fall back to a status-code-only message when parsing finds nothing OR when the
+            // parsed value is empty (some providers return `{"error": {"message": ""}}`,
+            // which used to slip through as a literal blank "API error: " alert).
+            let parsed = parseErrorMessage(from: data) ?? ""
+            let parsedMessage = parsed.isEmpty ? "HTTP \(httpResponse.statusCode)" : parsed
             lastError = .apiError(friendlyMessage(for: httpResponse.statusCode, raw: parsedMessage))
 
             let isRetryable = httpResponse.statusCode == 503
