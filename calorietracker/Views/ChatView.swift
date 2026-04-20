@@ -156,8 +156,14 @@ struct ChatView: View {
             }
             .onChange(of: isInputFocused) { _, focused in
                 guard focused, let lastID = messages.last?.id else { return }
-                // Animate alongside the keyboard (~0.25s) so both land at the same time.
+                // First pass: animate alongside the keyboard (~0.25s) for responsiveness.
                 withAnimation(.easeOut(duration: 0.25)) {
+                    proxy.scrollTo(lastID, anchor: .bottom)
+                }
+                // Safety net: re-anchor once the keyboard safe-area is fully applied.
+                // Without this, a scroll that was already near the bottom can finish
+                // before the viewport shrinks, leaving the last bubble behind the keyboard.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     proxy.scrollTo(lastID, anchor: .bottom)
                 }
             }
