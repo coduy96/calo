@@ -32,7 +32,11 @@ struct ChatView: View {
 
                 inputBar
             }
-            .background(AppColors.appBackground)
+            .background(
+                AppColors.appBackground
+                    .contentShape(Rectangle())
+                    .onTapGesture { isInputFocused = false }
+            )
             .navigationTitle("Coach")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -107,6 +111,7 @@ struct ChatView: View {
                 }
                 .padding(.vertical, 12)
             }
+            .scrollDismissesKeyboard(.interactively)
             .onChange(of: messages.count) { _, _ in
                 withAnimation { proxy.scrollTo(messages.last?.id, anchor: .bottom) }
             }
@@ -247,6 +252,7 @@ private struct MessageBubble: View {
             }
             Text(message.content)
                 .font(.system(.body, design: .rounded))
+                .textSelection(.enabled)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(
