@@ -14,13 +14,14 @@
   <img src="https://img.shields.io/badge/swift-5-orange?logo=swift" alt="Swift">
   <img src="https://img.shields.io/badge/UI-SwiftUI-purple" alt="SwiftUI">
   <img src="https://img.shields.io/badge/dependencies-zero-brightgreen" alt="Zero Dependencies">
+  <img src="https://img.shields.io/badge/languages-15-blue" alt="15 Languages">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
   <a href="https://apps.apple.com/us/app/fud-ai-calorie-tracker/id6758935726"><img src="https://img.shields.io/badge/App%20Store-Download-black?logo=apple" alt="App Store"></a>
 </p>
 
 ---
 
-Open-source, privacy-first calorie tracker for iOS. Bring your own AI provider — Gemini, OpenAI, Claude, Grok, Groq, Ollama, and more. All data stays on your device. No accounts, no cloud sync, no tracking, no subscriptions.
+Open-source, privacy-first calorie tracker for iOS. Bring your own AI provider — 9 supported including Gemini, OpenAI, Claude, Grok, Groq, and any custom OpenAI-compatible endpoint. Snap a meal, ask your AI coach how to hit your goal, speak your lunch. All data stays on your device. No accounts, no cloud sync, no tracking, no subscriptions.
 
 [Download on the App Store](https://apps.apple.com/us/app/fud-ai-calorie-tracker/id6758935726) · [Website](https://fud-ai.app) · [Report an Issue](https://github.com/apoorvdarshan/fud-ai/issues/new?labels=bug&title=Bug:%20) · [Request a Feature](https://github.com/apoorvdarshan/fud-ai/issues/new?labels=enhancement&title=Feature:%20)
 
@@ -28,23 +29,37 @@ Open-source, privacy-first calorie tracker for iOS. Bring your own AI provider �
 
 ## Features
 
+### Logging
 - **Snap food** — camera identifies meals and estimates nutrition
 - **Camera + Note** — add a description with the photo for better accuracy
 - **Nutrition label scan** — reads packaging for precise per-serving data
 - **Photo library** — analyze existing photos
 - **Text input** — type food descriptions
-- **Voice input** — speak your meals hands-free
-- **Saved Meals** — Recents, Frequent, and Favorites tabs with swipe actions and drag-to-reorder
-- **13 nutrients** tracked per entry (calories, protein, carbs, fat + 9 micronutrients)
+- **Voice input** — speak your meals hands-free (5 STT providers, see below)
+- **Saved Meals** — Recents, Frequent, and Favorites with swipe-to-delete and drag-to-reorder
+
+### Intelligence
+- **AI Coach tab** — multi-turn chat with memory. Coach sees your profile, weight history, and food log and answers questions like "what's my expected weight in 30 days?" or "how do I lose 2 kg?". Memory persists across launches; Reset button starts a fresh conversation.
+- **Goal-aware prompt chips** — suggested questions change based on whether your goal is Lose / Gain / Maintain
+- **Weight forecast** — expected weight at 30/60/90 days, predicted vs observed weekly change, days-to-goal, under-logging detection
+
+### Tracking
+- **13 nutrients** per entry (calories, protein, carbs, fat + 9 micronutrients)
 - **Scrollable week calendar** — swipe to any past week, configurable start day
 - **Progress charts** — weight trends, calorie history, macro averages (1W to All Time)
-- **Goal tracking** — set target weight, BMR/TDEE auto-calculation
+- **Weight History** — tap-to-delete past entries, syncs deletion to Apple Health
+- **Goal tracking** — set target weight, BMR/TDEE auto-calculation; goal-reached alert fires from both manual logs and Apple Health reads
+
+### Health & platform
 - **Apple Health** — bidirectional sync for body measurements + 12 nutrition types written per meal
+- **15 languages** — Arabic, Azerbaijani, Dutch, English, French, German, Hindi, Italian, Japanese, Korean, Portuguese (Brazil), Romanian, Russian, Simplified Chinese, Spanish (auto-selected by iPhone's Language setting)
 - **Meal reminders** — customizable breakfast, lunch, dinner notifications
 - **Dark mode** — system, light, or dark
 - **Metric & imperial** units
 
-## Supported AI Providers
+## AI Providers
+
+Pick any of the **9 LLM providers** for both food analysis and the Coach chat. Free Gemini keys are available at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
 
 | Provider | Format | Needs API Key |
 |----------|--------|:---:|
@@ -52,27 +67,42 @@ Open-source, privacy-first calorie tracker for iOS. Bring your own AI provider �
 | OpenAI | OpenAI | Yes |
 | Anthropic Claude | Messages API | Yes |
 | xAI Grok | OpenAI-compatible | Yes |
-| OpenRouter | OpenAI-compatible | Yes |
+| OpenRouter | OpenAI-compatible | Yes (free-form model ID supported) |
 | Together AI | OpenAI-compatible | Yes |
 | Groq | OpenAI-compatible | Yes |
 | Ollama | OpenAI-compatible (local) | No |
+| Custom (OpenAI-compatible) | OpenAI-compatible | Optional — you set base URL + model name |
 
-API keys are stored in **iOS Keychain** — encrypted, on-device only. Switch providers and models any time from Settings.
+## Speech-to-Text Providers
+
+Pick how voice input is transcribed. Native iOS is the default — free, on-device, real-time.
+
+| Provider | Notes |
+|----------|-------|
+| Native iOS (On-Device) | Free, offline on modern iPhones, real-time partial results |
+| OpenAI Whisper | Whisper-1 via `/v1/audio/transcriptions` |
+| Groq (Whisper) | Whisper-large-v3, very fast, has a free tier |
+| Deepgram | Nova-3, fast and accurate |
+| AssemblyAI | Universal model, strong accuracy, free tier |
+
+All API keys are stored in **iOS Keychain** — encrypted, on-device only.
 
 ## How It Works
 
 ```
 Photo / Text / Voice
-        |
-        v
-  AI Provider API  ──>  JSON nutrition response
-        |
-        v
+        │
+        ▼
+  AI Provider API  ──▶  JSON nutrition response
+        │
+        ▼
   User reviews & edits
-        |
-        v
-  FoodStore.addEntry()  ──>  UserDefaults (local) + Apple Health (optional)
+        │
+        ▼
+  FoodStore.addEntry()  ──▶  UserDefaults (local) + Apple Health (optional)
 ```
+
+For the Coach chat, every turn builds a fresh system prompt from your live profile, BMR formula in use, computed forecast, last 10 weights, and last 7 days of calorie totals, then sends it along with the conversation history to your selected LLM.
 
 ## Calorie & Macro Calculation
 
@@ -81,53 +111,64 @@ The app calculates personalized daily targets using established nutrition scienc
 | Step | Formula | Details |
 |------|---------|---------|
 | **BMR** | Katch-McArdle | `370 + 21.6 × lean mass (kg)` — used when body fat % is known |
-| **BMR** | Mifflin-St Jeor | `10w + 6.25h - 5a ± 5` — fallback when body fat is unknown |
+| **BMR** | Mifflin-St Jeor | `10w + 6.25h − 5a ± 5` — fallback when body fat is unknown |
 | **TDEE** | BMR × activity | Multiplier ranges from 1.2 (sedentary) to 2.0 (extra active) |
 | **Daily Calories** | TDEE + adjustment | Adjustment = `weeklyChangeKg × 7700 / 7` (deficit or surplus) |
-| **Protein** | Activity-based | `1.0 – 2.2 g/kg` body weight depending on activity level |
+| **Protein** | Activity + goal | `0.8 – 2.2 g/kg` by activity, plus +0.2 g/kg during cutting phase (Helms et al 2014) |
 | **Fat** | Fixed ratio | `0.6 g/kg` body weight |
-| **Carbs** | Remainder | `(calories - protein×4 - fat×9) / 4` |
+| **Carbs** | Auto-balanced | Remainder from calories − protein − fat (any macro can be pinned; max 2 pinned) |
 
-All values can be manually overridden in Settings.
+All values can be manually overridden in Settings, with a **Recalculate Goals** button to snap back to formula defaults.
 
 ## Architecture
 
 | Component | Details |
 |-----------|---------|
-| **Language** | Swift 5, SwiftUI |
-| **Target** | iOS 17.6+ |
+| **Language** | Swift 5, SwiftUI, iOS 17.6+ |
 | **Storage** | UserDefaults (local JSON), Keychain (API keys) |
-| **AI** | Multi-provider via `GeminiService` (routes by provider format) |
-| **Health** | HealthKit read/write (body measurements + 12 nutrition types) with background observers |
+| **AI** | `GeminiService` for food + label analysis, `ChatService` for multi-turn Coach chat, both route across all 9 providers |
+| **Speech** | Native `SFSpeechRecognizer` or remote providers via `SpeechService` (m4a upload) |
+| **Health** | HealthKit read/write (body measurements + 12 nutrition types) with background observers, UUID-tagged samples for safe delete |
 | **Pattern** | `@Observable` + `.environment()`, main actor isolation |
+| **Localization** | `Localizable.xcstrings` (String Catalog), 15 languages, auto-selected by iPhone's system language |
 | **Dependencies** | Zero |
 
 ### Source Layout
 
 ```
 calorietracker/
-├── calorietrackerApp.swift      # Entry point, environment setup
-├── ContentView.swift            # 4-tab layout (Home, Progress, Settings, About)
+├── calorietrackerApp.swift       # Entry point, environment setup
+├── ContentView.swift             # 5-tab layout (Home, Progress, Coach, Settings, About)
+├── Localizable.xcstrings         # String Catalog, 15 languages
 ├── Models/
-│   ├── AIProvider.swift         # Provider enum, model lists, settings
-│   ├── UserProfile.swift        # BMR/TDEE/macro calculations
-│   ├── FoodEntry.swift          # Food item with 13 nutrients
-│   └── WeightEntry.swift        # Weight log entry
+│   ├── AIProvider.swift          # 9 LLM providers, model lists, settings
+│   ├── SpeechProvider.swift      # 5 STT providers + Keychain settings
+│   ├── ChatMessage.swift         # Coach chat message model
+│   ├── UserProfile.swift         # BMR/TDEE/macro calculations
+│   ├── FoodEntry.swift           # Food item with 13 nutrients
+│   └── WeightEntry.swift         # Weight log entry
 ├── Views/
-│   ├── OnboardingView.swift     # Onboarding flow
-│   ├── FoodResultView.swift     # AI result review & edit
-│   ├── RecentsView.swift        # Saved Meals (Recents / Frequent / Favorites)
-│   ├── HomeComponents.swift     # Week strip, macro cards
-│   └── ProgressComponents.swift # Charts, weight tracking
+│   ├── OnboardingView.swift      # 15-step onboarding flow
+│   ├── ChatView.swift            # Coach tab: bubbles, prompt chips, reset
+│   ├── FoodResultView.swift      # AI result review & edit
+│   ├── RecentsView.swift         # Saved Meals (Recents / Frequent / Favorites)
+│   ├── VoiceInputView.swift      # Native + remote STT routing
+│   ├── HomeComponents.swift      # Week strip, macro cards
+│   └── ProgressComponents.swift  # Charts, weight history
 ├── Services/
-│   ├── GeminiService.swift      # Multi-provider AI router
-│   ├── KeychainHelper.swift     # iOS Keychain wrapper
-│   └── APIKeyManager.swift      # Keychain migration helper
+│   ├── GeminiService.swift       # Food/label analysis, routes 9 providers
+│   ├── ChatService.swift         # Multi-turn Coach chat, routes 9 providers
+│   ├── SpeechService.swift       # Remote STT router (OpenAI / Groq / Deepgram / AssemblyAI)
+│   ├── WeightAnalysisService.swift # Thermodynamic weight-forecast math
+│   ├── KeychainHelper.swift      # iOS Keychain wrapper
+│   └── APIKeyManager.swift       # Keychain migration helper
 └── Stores/
-    ├── FoodStore.swift           # Food entry CRUD + favorites
-    ├── WeightStore.swift         # Weight entry CRUD
-    ├── NotificationManager.swift # Notification scheduler
-    └── HealthKitManager.swift    # Apple Health bridge (body + nutrition)
+    ├── FoodStore.swift            # Food CRUD + favorites
+    ├── WeightStore.swift          # Weight CRUD (auto-syncs profile weight)
+    ├── ProfileStore.swift         # @Observable wrapper over UserProfile
+    ├── ChatStore.swift            # Coach chat history (persisted locally)
+    ├── NotificationManager.swift  # Notification scheduler
+    └── HealthKitManager.swift     # Apple Health bridge (body + nutrition)
 ```
 
 ## Build & Run
@@ -142,19 +183,21 @@ xcodebuild -scheme calorietracker \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 
-Open in Xcode, select your device, and run. On first launch, go to **Settings > AI Provider** to set your provider and API key. A free Gemini key is available at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
+Open in Xcode, select your device, and run. On first launch, go to **Settings → AI Provider** to set your provider and API key. A free Gemini key is available at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. Bug reports and feature requests are welcome.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. Bug reports and feature requests welcome.
+
+Adding a new translation? Open `calorietracker/Localizable.xcstrings` in Xcode and fill in your language column — everything else is already wired.
 
 ## Security
 
-See [SECURITY.md](SECURITY.md) for vulnerability disclosure. Use [private vulnerability reporting](https://github.com/apoorvdarshan/fud-ai/security/advisories/new) for sensitive issues.
+See [SECURITY.md](SECURITY.md). Use [private vulnerability reporting](https://github.com/apoorvdarshan/fud-ai/security/advisories/new) for sensitive issues.
 
 ## Privacy
 
-All data is stored locally on your device. No accounts, no cloud sync, no analytics. API keys are stored in iOS Keychain. See [Privacy Policy](https://fud-ai.app/privacy.html).
+All data stays on your device. No accounts, no cloud sync, no analytics. API keys are stored in iOS Keychain. See [Privacy Policy](https://fud-ai.app/privacy.html).
 
 ## License
 
