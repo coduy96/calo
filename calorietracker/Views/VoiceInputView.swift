@@ -11,6 +11,9 @@ struct VoiceInputView: View {
     @State private var isTranscribing = false
     @State private var permissionError: String?
     @State private var pulseScale: CGFloat = 1.0
+    /// Set true when user taps Analyze while a remote transcription is still pending.
+    /// The remote completion handler checks this and submits automatically when ready.
+    @State private var submitWhenReady = false
 
     // Native path
     @State private var speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
@@ -27,6 +30,19 @@ struct VoiceInputView: View {
 
     private var provider: SpeechProvider { SpeechSettings.selectedProvider }
     private var isNative: Bool { provider == .nativeIOS }
+
+    private var analyzeButtonLabel: String {
+        if submitWhenReady && isTranscribing { return "Analyzing…" }
+        if isRecording { return isNative ? "Analyze" : "Stop & Analyze" }
+        return "Analyze"
+    }
+
+    private var analyzeButtonDisabled: Bool {
+        if submitWhenReady { return true }          // mid-flight, don't let user double-tap
+        if isRecording { return false }              // always allow one-tap stop + submit
+        if isTranscribing { return true }            // wait for remote upload to finish
+        return transcription.trimmingCharacters(in: .whitespaces).isEmpty
+    }
 
     var body: some View {
         VStack(spacing: 20) {
@@ -115,19 +131,36 @@ struct VoiceInputView: View {
                     .multilineTextAlignment(.center)
             }
 
-            // Analyze button
+            // Analyze button — one-tap stop + submit.
+            // Native: submits the live transcription immediately.
+            // Remote: stops recording, marks submitWhenReady; transcription completion auto-submits.
             Button {
-                stopRecording()
-                onSubmit(transcription)
+                if isRecording {
+                    if isNative {
+                        stopRecording()
+                        onSubmit(transcription)
+                    } else {
+                        submitWhenReady = true
+                        stopRecording()
+                    }
+                } else if !transcription.trimmingCharacters(in: .whitespaces).isEmpty {
+                    onSubmit(transcription)
+                }
             } label: {
-                Text("Analyze")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
+                HStack(spacing: 8) {
+                    if isTranscribing || (submitWhenReady && !isNative) {
+                        ProgressView()
+                            .tint(.white)
+                    }
+                    Text(analyzeButtonLabel)
+                        .font(.headline)
+                }
+                .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .tint(AppColors.calorie)
             .controlSize(.large)
-            .disabled(transcription.trimmingCharacters(in: .whitespaces).isEmpty || isRecording || isTranscribing)
+            .disabled(analyzeButtonDisabled)
 
             Button("Cancel") {
                 stopRecording()
@@ -296,7 +329,13 @@ struct VoiceInputView: View {
             do {
                 let text = try await SpeechService.transcribe(audioURL: fileURL)
                 transcription = text
+                // If user already tapped Analyze while we were uploading, submit now.
+                if submitWhenReady, !text.trimmingCharacters(in: .whitespaces).isEmpty {
+                    submitWhenReady = false
+                    onSubmit(text)
+                }
             } catch {
+                submitWhenReady = false
                 permissionError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
             }
             try? FileManager.default.removeItem(at: fileURL)
