@@ -22,21 +22,23 @@ struct ChatView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                if messages.isEmpty {
-                    emptyState
-                } else {
-                    messageList
+                Group {
+                    if messages.isEmpty {
+                        emptyState
+                    } else {
+                        messageList
+                    }
                 }
+                .contentShape(Rectangle())
+                .simultaneousGesture(
+                    TapGesture().onEnded { isInputFocused = false }
+                )
 
                 promptChips
 
                 inputBar
             }
-            .background(
-                AppColors.appBackground
-                    .contentShape(Rectangle())
-                    .onTapGesture { isInputFocused = false }
-            )
+            .background(AppColors.appBackground)
             .navigationTitle("Coach")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
