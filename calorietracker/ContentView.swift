@@ -27,6 +27,12 @@ struct ContentView: View {
                     Text("Progress")
                 }
 
+            ChatView()
+                .tabItem {
+                    Image(systemName: "bubble.left.and.bubble.right.fill")
+                    Text("Coach")
+                }
+
             ProfileView()
                 .tabItem {
                     Image(systemName: "gearshape.fill")
@@ -1060,13 +1066,6 @@ struct ProgressTabView: View {
     @State private var showGoalReached = false
     @State private var showAllWeights = false
 
-    // Weight Forecast state
-    @State private var forecast: WeightForecast?
-    @State private var aiInsight: String?
-    @State private var aiInsightAt: Date?
-    @State private var aiInsightError: String?
-    @State private var isGeneratingInsight = false
-
     private var userProfile: UserProfile { profileStore.profile }
 
     private var dateRange: ClosedRange<Date> { timeRange.dateRange() }
@@ -1137,20 +1136,6 @@ struct ProgressTabView: View {
                         .padding(.horizontal)
                     }
 
-                    // Weight Forecast — thermodynamic projection + AI suggestion
-                    WeightForecastSection(
-                        forecast: forecast,
-                        useMetric: useMetric,
-                        isGeneratingInsight: isGeneratingInsight,
-                        aiInsight: aiInsight,
-                        aiError: aiInsightError,
-                        lastGenerated: aiInsightAt,
-                        onAnalyze: { refreshForecast() },
-                        onAskAI: { askAIForInsight() }
-                    )
-                    .padding(.horizontal)
-                    .onAppear { refreshForecast() }
-
                     // Calorie Trend
                     CalorieChartSection(
                         dailyCalories: dailyCalories,
@@ -1200,58 +1185,12 @@ struct ProgressTabView: View {
         }
     }
 
-    // MARK: - Weight Forecast
-
-    private func refreshForecast() {
-        forecast = WeightAnalysisService.compute(
-            weights: weightStore.entries,
-            foods: foodStore.entries,
-            profile: userProfile
-        )
-    }
-
-    private func askAIForInsight() {
-        // Respect a 24h cache so re-opening Progress doesn't burn an API call each time.
-        if let at = aiInsightAt, aiInsight != nil, Date().timeIntervalSince(at) < 86_400 {
-            return
-        }
-        refreshForecast()
-        guard let f = forecast, f.hasEnoughData else { return }
-
-        let dayCount = f.daysOfFoodData
-        let proteinAvg = dayCount > 0 ? foodStore.entries
-            .filter { $0.timestamp >= Calendar.current.date(byAdding: .day, value: -WeightForecast.maxLookbackDays, to: .now)! }
-            .reduce(0) { $0 + $1.protein } / max(1, dayCount) : 0
-        let carbsAvg = dayCount > 0 ? foodStore.entries
-            .filter { $0.timestamp >= Calendar.current.date(byAdding: .day, value: -WeightForecast.maxLookbackDays, to: .now)! }
-            .reduce(0) { $0 + $1.carbs } / max(1, dayCount) : 0
-        let fatAvg = dayCount > 0 ? foodStore.entries
-            .filter { $0.timestamp >= Calendar.current.date(byAdding: .day, value: -WeightForecast.maxLookbackDays, to: .now)! }
-            .reduce(0) { $0 + $1.fat } / max(1, dayCount) : 0
-
-        isGeneratingInsight = true
-        aiInsightError = nil
-        Task {
-            defer { isGeneratingInsight = false }
-            do {
-                let text = try await GeminiService.analyzeWeightTrend(
-                    profile: userProfile,
-                    forecast: f,
-                    recentAvgMacros: (protein: proteinAvg, carbs: carbsAvg, fat: fatAvg),
-                    useMetric: useMetric
-                )
-                aiInsight = text
-                aiInsightAt = Date()
-            } catch {
-                aiInsightError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-            }
-        }
-    }
 }
 
 
 struct ProfileView: View {
     @Environment(ProfileStore.self) private var profileStore
+    @Environment(ChatStore.self) private var chatStore
     @Environment(WeightStore.self) private var weightStore
     @Environment(FoodStore.self) private var foodStore
     @Environment(NotificationManager.self) private var notificationManager
@@ -1976,6 +1915,7 @@ struct ProfileView: View {
                     // Wipe Keychain API keys
                     AIProviderSettings.deleteAllData()
                     SpeechSettings.deleteAllData()
+                    chatStore.reset()
                     hasCompletedOnboarding = false
                 }
             } message: {

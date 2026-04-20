@@ -15,6 +15,7 @@ struct calorietrackerApp: App {
     @State private var notificationManager = NotificationManager()
     @State private var healthKitManager = HealthKitManager()
     @State private var profileStore = ProfileStore()
+    @State private var chatStore = ChatStore()
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("appearanceMode") private var appearanceMode = "system"
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
@@ -45,6 +46,7 @@ struct calorietrackerApp: App {
                     .environment(notificationManager)
                     .environment(healthKitManager)
                     .environment(profileStore)
+                    .environment(chatStore)
                     .preferredColorScheme(colorScheme)
             } else {
                 OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
@@ -53,6 +55,7 @@ struct calorietrackerApp: App {
                     .environment(weightStore)
                     .environment(healthKitManager)
                     .environment(profileStore)
+                    .environment(chatStore)
                     .preferredColorScheme(colorScheme)
             }
         }
