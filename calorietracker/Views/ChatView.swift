@@ -88,7 +88,7 @@ struct ChatView: View {
     private var messageList: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 10) {
+                VStack(spacing: 10) {
                     ForEach(messages) { msg in
                         MessageBubble(message: msg)
                             .id(msg.id)
@@ -114,9 +114,9 @@ struct ChatView: View {
                 .padding(.vertical, 12)
             }
             .scrollDismissesKeyboard(.interactively)
-            .defaultScrollAnchor(.bottom)
             .onAppear {
-                if let lastID = messages.last?.id {
+                guard let lastID = messages.last?.id else { return }
+                DispatchQueue.main.async {
                     proxy.scrollTo(lastID, anchor: .bottom)
                 }
             }
