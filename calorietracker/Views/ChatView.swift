@@ -156,11 +156,9 @@ struct ChatView: View {
             }
             .onChange(of: isInputFocused) { _, focused in
                 guard focused, let lastID = messages.last?.id else { return }
-                // Delay so the scroll runs after the keyboard has changed the safe-area
-                // inset — otherwise we scroll against the pre-keyboard viewport and the
-                // newest message ends up hidden behind the keyboard.
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                    withAnimation { proxy.scrollTo(lastID, anchor: .bottom) }
+                // Animate alongside the keyboard (~0.25s) so both land at the same time.
+                withAnimation(.easeOut(duration: 0.25)) {
+                    proxy.scrollTo(lastID, anchor: .bottom)
                 }
             }
         }
