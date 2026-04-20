@@ -188,7 +188,6 @@ struct ChatView: View {
                 .padding(.vertical, 10)
                 .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 20))
                 .focused($isInputFocused)
-                .disabled(isSending)
 
             Button {
                 send()
