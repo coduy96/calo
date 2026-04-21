@@ -102,9 +102,10 @@ class HealthKitManager {
 
     // MARK: - Write Body Measurements
 
-    /// Profile-state push (no associated WeightEntry). Tagged with a synthetic UUID so a later
-    /// per-app purge can still target it — without the tag, `deleteWeight(entryID:)` and
-    /// `purgeAllWeights()` would leave these samples behind in Health forever.
+    /// Profile-state push (no associated WeightEntry). Tagged with a synthetic UUID for
+    /// forward compatibility — without the tag, a per-entry `deleteWeight(entryID:)` can't
+    /// target it later. Delete All Data is local-only so untagged samples here wouldn't
+    /// have been purged anyway, but tagging is cheap and keeps options open.
     func writeWeight(kg: Double, date: Date) {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
         let type = HKQuantityType(.bodyMass)
@@ -139,15 +140,6 @@ class HealthKitManager {
     /// even if the user has since turned HealthKit sync off.
     func deleteWeight(entryID: UUID) {
         let predicate = HKQuery.predicateForObjects(withMetadataKey: "fudai_weight_id", operatorType: .equalTo, value: entryID.uuidString)
-        healthStore.deleteObjects(of: HKQuantityType(.bodyMass), predicate: predicate) { _, _, _ in }
-    }
-
-    /// Purges every bodyMass sample written by this app — including the profile-sync
-    /// samples from `writeWeight(kg:date:)` whose synthetic `fudai_weight_id` isn't
-    /// tracked anywhere. Used only by Delete All Data; bypasses `healthKitEnabled`
-    /// so orphaned samples are still cleaned up if the user turned sync off earlier.
-    func purgeAllWeights() {
-        let predicate = HKQuery.predicateForObjects(from: HKSource.default())
         healthStore.deleteObjects(of: HKQuantityType(.bodyMass), predicate: predicate) { _, _, _ in }
     }
 
@@ -206,18 +198,6 @@ class HealthKitManager {
     /// stick around in Health forever.
     func deleteNutrition(entryID: UUID) {
         Task { await deleteNutritionSamples(entryID: entryID) }
-    }
-
-    /// Deletes nutrition samples for the given entries regardless of the current `healthKitEnabled` flag.
-    /// Used by destructive reset paths so previously-exported samples are purged even after the user
-    /// turned off HealthKit sync.
-    func purgeNutrition(entryIDs: [UUID]) {
-        guard !entryIDs.isEmpty else { return }
-        Task {
-            for id in entryIDs {
-                await deleteNutritionSamples(entryID: id)
-            }
-        }
     }
 
     /// Deletes the existing samples for an entry, awaits completion, then writes the new samples.

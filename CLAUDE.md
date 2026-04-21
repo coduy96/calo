@@ -121,11 +121,11 @@ Edits use `onEntryUpdated` rather than back-to-back delete+add so HealthKit can 
 - **`typesVersion`** (renamed from the old `authVersion` to dodge a CodeQL heuristic on "auth" keywords) is bumped when new HealthKit types are added. `needsReauthorization` returns `max(typesVersionKey, legacy healthKitAuthVersion)` < current so existing users aren't re-prompted after the rename.
 - `requestAuthorization` only persists the new version via `persistCurrentTypesVersion()` when **all** dietary share types are `.sharingAuthorized`, so users who deny nutrition can re-prompt.
 - Each nutrition sample carries `fudai_entry_id` metadata; each weight sample carries `fudai_weight_id`. Deletion uses metadata predicates.
-- `deleteNutrition`, `writeNutrition`, `updateNutrition` guard on `healthKitEnabled`. `purgeNutrition` bypasses the flag — used only by Delete-All-Data so previously-synced samples are removed even if HealthKit was later turned off.
+- `writeNutrition` guards on `healthKitEnabled`. `deleteNutrition` and the delete half of `updateNutrition` always run (even with sync off) so in-app edits/deletes still clean up samples that were exported before the user flipped sync off — otherwise those would orphan in Apple Health forever.
 - `backfillNutritionIfNeeded` is idempotent (queries Apple Health for each entry's UUID before writing) and is guarded by `isBackfillingNutrition` so scene-phase re-entry can't spawn overlapping scans. The caller passes `currentEntryIDs: () -> Set<UUID>` so a meal deleted mid-backfill won't be re-exported as a phantom sample.
 - The body-measurements observer skips adding weights whose sample metadata contains `fudai_weight_id` — those are our own writes and are handled by `WeightStore.addEntry` directly. External samples (Apple Watch, scale, Health app entry) go through the observer's date+value dedup and get added to `WeightStore` with the sample's real date.
 
-Clear Food Log keeps Apple Health samples (per product spec — only saves storage). Delete All Data wipes them **and** the Coach chat history, Keychain API keys, HealthKit nutrition, and all UserDefaults.
+Clear Food Log keeps Apple Health samples (per product spec — only saves storage). **Delete All Data is local-only too**: it wipes in-memory stores, UserDefaults, Keychain API keys, the Coach chat history, and the widget App Group snapshot — but intentionally does NOT touch Apple Health. Health data is user-owned and personal; if they want it gone they can use the Health app's Sources → Fud AI panel. (Earlier revisions purged HK nutrition in this flow; that was reverted in favor of treating HK as read/write-while-synced but untouched on resets.)
 
 ### Widgets (`FudAIWidgetsExtension` target + App Group)
 

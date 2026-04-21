@@ -1902,14 +1902,10 @@ struct ProfileView: View {
             .alert("Delete All Data", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete Everything", role: .destructive) {
-                    // Wipe HealthKit nutrition AND weight samples first. Both purges bypass
-                    // the `healthKitEnabled` flag so samples synced earlier are removed even
-                    // if the user has since turned off HealthKit sync. purgeAllWeights uses
-                    // an HKSource predicate so it also catches profile-sync samples from
-                    // `writeWeight(kg:date:)` whose synthetic metadata ID isn't tracked.
-                    healthKitManager.purgeNutrition(entryIDs: foodStore.entries.map(\.id))
-                    healthKitManager.purgeAllWeights()
-                    // Clear in-memory stores
+                    // Delete All Data is local-only. We intentionally do NOT touch Apple
+                    // Health samples — that data is personal and belongs to the user, not
+                    // this app's storage. If they want HK cleaned up they can do it from
+                    // the Health app's Sources → Fud AI screen.
                     foodStore.replaceAllEntries([])
                     weightStore.replaceAllEntries([])
                     // Cancel all notifications
