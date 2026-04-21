@@ -52,7 +52,14 @@ struct FoodEntry: Identifiable, Codable {
     var carbs: Int
     var fat: Int
     let timestamp: Date
+    /// In-memory image bytes. NEVER persisted directly — see `imageFilename`.
+    /// Kept as a property so existing views continue to read `entry.imageData`
+    /// unchanged; the on-disk filename is the source of truth for persistence.
     var imageData: Data?
+    /// Filename (not path) under Application Support/fudai-food-images/ where
+    /// the JPEG lives. Tiny string; JSON-safe. The actual bytes live on disk
+    /// to keep the foodEntries UserDefaults blob under iOS's 4 MiB cap.
+    var imageFilename: String?
     var emoji: String?
     var source: FoodSource
     var mealType: MealType
@@ -78,6 +85,7 @@ struct FoodEntry: Identifiable, Codable {
         fat: Int,
         timestamp: Date = Date(),
         imageData: Data? = nil,
+        imageFilename: String? = nil,
         emoji: String? = nil,
         source: FoodSource,
         mealType: MealType = .other,
@@ -100,6 +108,7 @@ struct FoodEntry: Identifiable, Codable {
         self.fat = fat
         self.timestamp = timestamp
         self.imageData = imageData
+        self.imageFilename = imageFilename
         self.emoji = emoji
         self.source = source
         self.mealType = mealType
@@ -115,6 +124,16 @@ struct FoodEntry: Identifiable, Codable {
         self.servingSizeGrams = servingSizeGrams
     }
 
+    private enum CodingKeys: String, CodingKey {
+        case id, name, calories, protein, carbs, fat, timestamp
+        case imageData     // legacy — old rows stored bytes inline; kept only for decode
+        case imageFilename // current — filename on disk
+        case emoji, source, mealType
+        case sugar, addedSugar, fiber, saturatedFat
+        case monounsaturatedFat, polyunsaturatedFat
+        case cholesterol, sodium, potassium, servingSizeGrams
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
@@ -124,7 +143,17 @@ struct FoodEntry: Identifiable, Codable {
         carbs = try container.decode(Int.self, forKey: .carbs)
         fat = try container.decode(Int.self, forKey: .fat)
         timestamp = try container.decode(Date.self, forKey: .timestamp)
-        imageData = try container.decodeIfPresent(Data.self, forKey: .imageData)
+
+        // Prefer filename (new format). Fall back to inline bytes (legacy rows).
+        // FoodStore.loadEntries() migrates legacy rows to disk on first load so
+        // subsequent saves shed the inline bytes and fit under the 4 MiB cap.
+        imageFilename = try container.decodeIfPresent(String.self, forKey: .imageFilename)
+        if let filename = imageFilename {
+            imageData = FoodImageStore.shared.load(filename: filename)
+        } else {
+            imageData = try container.decodeIfPresent(Data.self, forKey: .imageData)
+        }
+
         emoji = try container.decodeIfPresent(String.self, forKey: .emoji)
         source = try container.decode(FoodSource.self, forKey: .source)
         mealType = try container.decodeIfPresent(MealType.self, forKey: .mealType) ?? .other
@@ -138,6 +167,33 @@ struct FoodEntry: Identifiable, Codable {
         sodium = try container.decodeIfPresent(Double.self, forKey: .sodium)
         potassium = try container.decodeIfPresent(Double.self, forKey: .potassium)
         servingSizeGrams = try container.decodeIfPresent(Double.self, forKey: .servingSizeGrams)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(calories, forKey: .calories)
+        try container.encode(protein, forKey: .protein)
+        try container.encode(carbs, forKey: .carbs)
+        try container.encode(fat, forKey: .fat)
+        try container.encode(timestamp, forKey: .timestamp)
+        // Persist ONLY the filename — never the raw bytes. This is the fix for
+        // the silent 4 MiB UserDefaults cap that was dropping adds/deletes.
+        try container.encodeIfPresent(imageFilename, forKey: .imageFilename)
+        try container.encodeIfPresent(emoji, forKey: .emoji)
+        try container.encode(source, forKey: .source)
+        try container.encode(mealType, forKey: .mealType)
+        try container.encodeIfPresent(sugar, forKey: .sugar)
+        try container.encodeIfPresent(addedSugar, forKey: .addedSugar)
+        try container.encodeIfPresent(fiber, forKey: .fiber)
+        try container.encodeIfPresent(saturatedFat, forKey: .saturatedFat)
+        try container.encodeIfPresent(monounsaturatedFat, forKey: .monounsaturatedFat)
+        try container.encodeIfPresent(polyunsaturatedFat, forKey: .polyunsaturatedFat)
+        try container.encodeIfPresent(cholesterol, forKey: .cholesterol)
+        try container.encodeIfPresent(sodium, forKey: .sodium)
+        try container.encodeIfPresent(potassium, forKey: .potassium)
+        try container.encodeIfPresent(servingSizeGrams, forKey: .servingSizeGrams)
     }
 
     var timeString: String {
@@ -163,6 +219,7 @@ struct FoodEntry: Identifiable, Codable {
             fat: fat,
             timestamp: logDate,
             imageData: imageData,
+            imageFilename: nil,  // new id → new filename will be assigned on save
             emoji: emoji,
             source: source,
             mealType: resolvedMealType,

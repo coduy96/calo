@@ -190,6 +190,8 @@ class FoodStore {
     // MARK: - CRUD
 
     func addEntry(_ entry: FoodEntry) {
+        var entry = entry
+        offloadImageToDiskIfNeeded(&entry)
         entries.append(entry)
         saveEntries()
         onEntriesChanged?()
@@ -198,6 +200,8 @@ class FoodStore {
 
     func updateEntry(_ entry: FoodEntry) {
         guard let index = entries.firstIndex(where: { $0.id == entry.id }) else { return }
+        var entry = entry
+        offloadImageToDiskIfNeeded(&entry)
         entries[index] = entry
         saveEntries()
         onEntriesChanged?()
@@ -207,6 +211,9 @@ class FoodStore {
 
     func deleteEntry(_ entry: FoodEntry) {
         let id = entry.id
+        if let filename = entry.imageFilename {
+            FoodImageStore.shared.delete(filename: filename)
+        }
         entries.removeAll { $0.id == id }
         saveEntries()
         onEntriesChanged?()
@@ -214,7 +221,7 @@ class FoodStore {
     }
 
     func replaceAllEntries(_ newEntries: [FoodEntry]) {
-        entries = newEntries
+        entries = newEntries.map { var e = $0; offloadImageToDiskIfNeeded(&e); return e }
         saveEntries()
         onEntriesChanged?()
     }
@@ -229,6 +236,17 @@ class FoodStore {
         onEntriesChanged?()
     }
 
+    /// If `entry` carries in-memory `imageData` but no `imageFilename`, write
+    /// the bytes to disk and stamp the filename onto the entry. No-op when
+    /// there are no bytes, or when a filename is already set (idempotent).
+    /// The 4 MiB UserDefaults cap demands we never persist raw bytes.
+    private func offloadImageToDiskIfNeeded(_ entry: inout FoodEntry) {
+        guard entry.imageFilename == nil, let data = entry.imageData else { return }
+        if let filename = FoodImageStore.shared.store(data: data, for: entry.id) {
+            entry.imageFilename = filename
+        }
+    }
+
     private func saveEntries() {
         if let data = try? JSONEncoder().encode(entries) {
             UserDefaults.standard.set(data, forKey: storageKey)
@@ -241,6 +259,24 @@ class FoodStore {
               let decoded = try? JSONDecoder().decode([FoodEntry].self, from: data)
         else { return }
         entries = decoded
+
+        // Legacy migration: rows written by pre-FoodImageStore builds embedded
+        // JPEG bytes in the JSON blob. Offload any such rows to disk, stamp
+        // the filename, and rewrite the UserDefaults blob — shrinking it from
+        // multi-MB to ~a few KB so the 4 MiB cap stops silently swallowing
+        // adds/deletes. Idempotent: runs only on entries that need it.
+        var migrated = false
+        for i in entries.indices {
+            if entries[i].imageFilename == nil, let data = entries[i].imageData {
+                if let filename = FoodImageStore.shared.store(data: data, for: entries[i].id) {
+                    entries[i].imageFilename = filename
+                    migrated = true
+                }
+            }
+        }
+        if migrated {
+            saveEntries()
+        }
     }
 }
 
