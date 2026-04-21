@@ -660,7 +660,11 @@ body:hover .cursor-glow { opacity: 1; }
 }
 
 @media (max-width: 600px) {
-  .cta-group { gap: 10px; }
+  .cta-group {
+    gap: 10px;
+    width: 100%;
+    justify-content: center;
+  }
   .app-store-btn,
   .ph-badge {
     height: 48px;
@@ -669,9 +673,23 @@ body:hover .cursor-glow { opacity: 1; }
   .ph-badge img { height: 48px; border-radius: 12px; }
   .app-store-btn { padding: 0 20px; font-size: 0.86rem; }
   .app-store-btn svg { width: 17px; height: 17px; }
-  .cta-sub { gap: 7px; margin-top: 12px; }
+  .cta-sub {
+    gap: 7px;
+    margin-top: 12px;
+    width: 100%;
+    justify-content: center;
+  }
   .chip-btn { height: 34px; padding: 0 12px; font-size: 0.78rem; }
   .chip-btn i { font-size: 12px; }
+}
+
+/* Very narrow phones (iPhone SE / small Androids) — let primary CTAs span full width
+   so each one is a proper tap target, and keep chips flowing. */
+@media (max-width: 420px) {
+  .app-store-btn,
+  .ph-badge { width: 100%; max-width: 280px; }
+  .ph-badge img { width: 100%; height: auto; }
+  .chip-btn span { display: inline; }
 }
 
 /* Phone mockup */
@@ -771,6 +789,9 @@ body:hover .cursor-glow { opacity: 1; }
   .hero-phone { order: -1; margin-bottom: 8px; }
   .phone-frame { width: 220px; }
   .hero-badges { justify-content: center; }
+  /* Hero switches to center-aligned on mobile — match the button rows too. */
+  .hero-content .cta-group,
+  .hero-content .cta-sub { justify-content: center; }
 }
 
 /* ========== MARQUEE BANNER ========== */
@@ -1375,6 +1396,11 @@ body:hover .cursor-glow { opacity: 1; }
 }
 .cta-content .app-store-btn {
   margin: 0 auto;
+}
+/* Bottom CTA section's button rows — always center-justified */
+.cta-content .cta-group,
+.cta-content .cta-sub {
+  justify-content: center;
 }
 
 /* ========== LEGAL SECTIONS ========== */
