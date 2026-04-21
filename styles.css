@@ -535,134 +535,150 @@ body:hover .cursor-glow { opacity: 1; }
   box-shadow: 0 4px 16px rgba(255,77,106,0.1);
 }
 
-/* App Store button with shine */
+/* ============================================================
+   CTA Button System
+   ------------------------------------------------------------
+   All four CTAs share a 54px height so they align cleanly in
+   one or two rows. Tiered by visual weight:
+     • PRIMARY   — App Store (filled white) + Product Hunt official
+                   embed badge with LIVE vote count
+     • GLASS     — GitHub (amber star) + PayPal (blue icon)
+   ============================================================ */
+
+@keyframes btnShine {
+  0%, 100% { left: -100%; }
+  50%      { left: 150%; }
+}
+
+.cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+/* Shared base — identical height/motion across every CTA */
+.app-store-btn,
+.pill-btn,
+.ph-badge {
+  height: 54px;
+  border-radius: 14px;
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), background var(--transition), filter var(--transition);
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.app-store-btn:hover,
+.pill-btn:hover,
+.ph-badge:hover {
+  transform: translateY(-2px);
+}
+
+/* ---- PRIMARY: App Store (filled white) ---- */
 .app-store-btn {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 24px;
   background: #fff;
   color: #000;
-  padding: 14px 32px;
-  border-radius: 14px;
+  font-family: inherit;
   font-weight: 600;
-  font-size: 0.95rem;
-  transition: all var(--transition);
+  font-size: 0.94rem;
   letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 10px 30px rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.06);
 }
+.app-store-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
 .app-store-btn::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 60%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-  transition: none;
-  animation: btnShine 4s ease-in-out infinite;
-}
-@keyframes btnShine {
-  0%, 100% { left: -100%; }
-  50% { left: 150%; }
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+  transform: translateX(-100%);
+  animation: btnShine 5s ease-in-out infinite;
+  pointer-events: none;
 }
 .app-store-btn:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 16px 48px rgba(255,255,255,0.1);
-}
-.app-store-btn svg { width: 22px; height: 22px; }
-
-/* CTA button group — App Store + Product Hunt badge side by side, wrap on small screens */
-.cta-group {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  align-items: center;
+  box-shadow: 0 18px 44px rgba(255,255,255,0.14), inset 0 -1px 0 rgba(0,0,0,0.06);
 }
 
-/* Product Hunt button — matches App Store button geometry + shine, PH-orange fill */
-.ph-btn {
+/* ---- PRIMARY: Product Hunt official embed badge (LIVE vote count) ---- */
+.ph-badge {
   display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  background: linear-gradient(135deg, #ff6154 0%, #da552f 100%);
-  color: #fff;
-  padding: 14px 32px;
-  border-radius: 14px;
-  font-weight: 600;
-  font-size: 0.95rem;
-  transition: all var(--transition);
-  letter-spacing: -0.01em;
-  position: relative;
+  align-items: stretch;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(218, 85, 47, 0.25);
+  line-height: 0;
+  box-shadow: 0 10px 30px rgba(218, 85, 47, 0.22);
+  isolation: isolate;
 }
-.ph-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 60%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
-  transition: none;
-  animation: btnShine 4s ease-in-out infinite;
-  animation-delay: 2s;
+.ph-badge img {
+  display: block;
+  height: 54px;
+  width: auto;
+  border-radius: 14px;
 }
-.ph-btn:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 16px 48px rgba(218, 85, 47, 0.45);
-  filter: brightness(1.08);
+.ph-badge:hover {
+  box-shadow: 0 18px 44px rgba(218, 85, 47, 0.4);
+  filter: brightness(1.06);
 }
-.ph-btn i { font-size: 1.3rem; }
 
-/* Secondary pill buttons (PayPal donate, GitHub star) — outlined, dark-theme friendly */
+/* ---- GLASS: shared base for GitHub + PayPal ---- */
 .pill-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  padding: 14px 24px;
-  border-radius: 14px;
-  font-weight: 600;
-  font-size: 0.92rem;
-  letter-spacing: -0.01em;
-  border: 1.5px solid rgba(255,255,255,0.22);
-  background: rgba(255,255,255,0.04);
+  padding: 0 22px;
+  background: rgba(255,255,255,0.045);
   color: #fff;
-  transition: all var(--transition);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.94rem;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
 }
-.pill-btn i { font-size: 1.05rem; }
-.pill-btn:hover {
-  transform: translateY(-3px) scale(1.02);
-  border-color: rgba(255,255,255,0.45);
-  background: rgba(255,255,255,0.08);
-  box-shadow: 0 14px 38px rgba(0,0,0,0.35);
-}
+.pill-btn i { font-size: 18px; line-height: 1; flex-shrink: 0; }
 
-/* PayPal donate — blue accent on hover */
-.pill-btn.pill-paypal:hover {
-  border-color: #0070ba;
-  background: rgba(0, 112, 186, 0.14);
-  box-shadow: 0 14px 38px rgba(0, 112, 186, 0.28);
-}
-.pill-btn.pill-paypal i { color: #00b7f0; }
-
-/* GitHub star — subtle yellow on hover */
+/* GitHub variant — amber star accent */
+.pill-btn.pill-github i { color: #ffc857; }
 .pill-btn.pill-github:hover {
-  border-color: #ffc857;
-  background: rgba(255, 200, 87, 0.10);
-  box-shadow: 0 14px 38px rgba(255, 200, 87, 0.22);
+  border-color: rgba(255, 200, 87, 0.55);
+  background: rgba(255, 200, 87, 0.09);
+  box-shadow: 0 14px 38px rgba(255, 200, 87, 0.18), inset 0 1px 0 rgba(255,255,255,0.08);
 }
-.pill-btn.pill-github .fa-star { color: #ffc857; }
+
+/* PayPal variant — cyan-blue accent */
+.pill-btn.pill-paypal i { color: #0bafe2; }
+.pill-btn.pill-paypal:hover {
+  border-color: rgba(11, 175, 226, 0.55);
+  background: rgba(11, 175, 226, 0.09);
+  box-shadow: 0 14px 38px rgba(11, 175, 226, 0.22), inset 0 1px 0 rgba(255,255,255,0.08);
+}
 
 @media (max-width: 600px) {
   .cta-group { gap: 10px; }
-  .ph-btn { padding: 12px 20px; font-size: 0.84rem; gap: 10px; border-radius: 12px; }
-  .ph-btn i { font-size: 1.05rem; }
-  .pill-btn { padding: 12px 18px; font-size: 0.84rem; gap: 8px; border-radius: 12px; }
-  .pill-btn i { font-size: 0.95rem; }
+  .app-store-btn,
+  .pill-btn,
+  .ph-badge {
+    height: 48px;
+    border-radius: 12px;
+  }
+  .ph-badge img { height: 48px; border-radius: 12px; }
+  .app-store-btn { padding: 0 20px; font-size: 0.86rem; }
+  .app-store-btn svg { width: 17px; height: 17px; }
+  .pill-btn { padding: 0 18px; font-size: 0.86rem; gap: 8px; }
+  .pill-btn i { font-size: 15px; }
 }
 
 /* Phone mockup */
