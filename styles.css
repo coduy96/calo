@@ -580,21 +580,41 @@ body:hover .cursor-glow { opacity: 1; }
   align-items: center;
 }
 
-/* Product Hunt official embed badge — subtle hover scale, keep native dimensions */
-.ph-badge {
+/* Product Hunt button — matches App Store button geometry + shine, PH-orange fill */
+.ph-btn {
   display: inline-flex;
   align-items: center;
-  transition: transform var(--transition);
-  line-height: 0;
+  gap: 12px;
+  background: linear-gradient(135deg, #ff6154 0%, #da552f 100%);
+  color: #fff;
+  padding: 14px 32px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all var(--transition);
+  letter-spacing: -0.01em;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(218, 85, 47, 0.25);
 }
-.ph-badge img {
-  display: block;
-  height: 54px;
-  width: auto;
+.ph-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+  transition: none;
+  animation: btnShine 4s ease-in-out infinite;
+  animation-delay: 2s;
 }
-.ph-badge:hover {
+.ph-btn:hover {
   transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 16px 48px rgba(218, 85, 47, 0.45);
+  filter: brightness(1.08);
 }
+.ph-btn i { font-size: 1.3rem; }
 
 /* Secondary pill buttons (PayPal donate, GitHub star) — outlined, dark-theme friendly */
 .pill-btn {
@@ -639,7 +659,8 @@ body:hover .cursor-glow { opacity: 1; }
 
 @media (max-width: 600px) {
   .cta-group { gap: 10px; }
-  .ph-badge img { height: 46px; }
+  .ph-btn { padding: 12px 20px; font-size: 0.84rem; gap: 10px; border-radius: 12px; }
+  .ph-btn i { font-size: 1.05rem; }
   .pill-btn { padding: 12px 18px; font-size: 0.84rem; gap: 8px; border-radius: 12px; }
   .pill-btn i { font-size: 0.95rem; }
 }
