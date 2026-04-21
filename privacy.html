@@ -74,9 +74,9 @@
   <div class="container">
     <div class="legal-content">
       <h2>Privacy Policy</h2>
-      <span class="legal-date">Last updated: April 1, 2026</span>
+      <span class="legal-date">Last updated: April 21, 2026</span>
 
-      <p>Fud AI ("we", "our", "the app") is an open-source iOS app developed by Apoorv Darshan. This privacy policy explains how your information is handled.</p>
+      <p>Fud AI ("we", "our", "the app") is an open-source iOS app developed by Apoorv Darshan. This privacy policy explains how your information is handled. In short: we don't run servers, we don't have accounts, and your data stays on your device. The only thing that leaves your phone is the specific request you initiate to your own AI provider using your own API key.</p>
 
       <h3>Information You Provide</h3>
       <ul>
@@ -85,15 +85,20 @@
         <li>Food entries and nutrition data you log</li>
         <li>Weight log entries</li>
         <li>Dietary preferences and fitness goals</li>
-        <li>AI provider API keys (stored in iOS Keychain)</li>
+        <li>Voice recordings (when using voice meal input)</li>
+        <li>AI Coach chat messages (multi-turn conversation history)</li>
+        <li>AI provider and speech-to-text provider API keys (stored in iOS Keychain)</li>
       </ul>
 
       <h3>How We Use Your Information</h3>
       <ul>
-        <li><strong>AI Food Analysis:</strong> Food photos, text descriptions, and voice input are sent to your chosen AI provider (e.g. Google Gemini, OpenAI, Anthropic Claude, etc.) for nutritional analysis. You bring your own API key. We do not proxy or intercept these requests.</li>
-        <li><strong>Local Storage:</strong> All food entries, weight entries, user profile data, and food photos are stored locally on your device. Nothing leaves your device except AI analysis requests.</li>
-        <li><strong>API Key Storage:</strong> Your API keys are stored in iOS Keychain — encrypted hardware storage accessible only to the app on your device.</li>
-        <li><strong>Apple Health:</strong> If you enable Apple Health integration, the app writes body mass, height, and body fat percentage to HealthKit, and reads body mass, height, body fat percentage, date of birth, and biological sex from HealthKit.</li>
+        <li><strong>AI Food Analysis:</strong> Food photos, text descriptions, and the text produced from voice input are sent to your chosen AI provider (any of 13 supported: Google Gemini, OpenAI, Anthropic Claude, xAI Grok, OpenRouter, Together AI, Groq, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama running locally, or a custom OpenAI-compatible endpoint you configure). You bring your own API key. We do not proxy, route, or intercept these requests — they go directly from your device to the provider you selected.</li>
+        <li><strong>AI Coach Chat:</strong> When you use the Coach tab, the app sends a system prompt built from your profile, recent weight entries, recent daily calorie totals, and your chosen conversation history to the AI provider you selected. Full chat history is kept locally in UserDefaults; only the last 20 messages are included in each LLM request to cap token cost.</li>
+        <li><strong>Speech-to-Text:</strong> If you pick Native iOS as your STT provider, voice recognition happens entirely on your device. If you pick a remote provider (OpenAI Whisper, Groq, Deepgram, AssemblyAI), a short audio recording is uploaded to that provider and its text response is returned to the app. No audio is ever uploaded anywhere else.</li>
+        <li><strong>Local Storage:</strong> All food entries, weight entries, user profile, Coach chat history, food photos, and app preferences are stored locally on your device in UserDefaults. Nothing leaves your device except the specific AI/STT requests described above.</li>
+        <li><strong>API Key Storage:</strong> Your API keys are stored in iOS Keychain — encrypted hardware-backed storage accessible only to the app on your device.</li>
+        <li><strong>Home Screen &amp; Lock Screen Widgets:</strong> To display today's calorie and macro totals, the main app writes a small snapshot (today's totals + goals) to a shared App Group container on your device. The widget extension reads this snapshot to render. The snapshot never leaves your device and contains only numbers — no food names, photos, or identifiers.</li>
+        <li><strong>Apple Health:</strong> If you enable Apple Health integration, the app writes body measurements (weight, height, body fat percentage) and 12 nutrition types per meal (calories, protein, carbs, fat, sugar, fiber, saturated fat, monounsaturated fat, polyunsaturated fat, cholesterol, sodium, potassium) to HealthKit. It also reads weight, height, body fat, date of birth, and biological sex from HealthKit to keep your profile accurate. You control this via iOS Settings → Health → Data Access → Fud AI.</li>
       </ul>
 
       <h3>Information We Do NOT Collect</h3>
@@ -103,40 +108,66 @@
         <li>We do <strong>not</strong> sell, share, or transfer your personal data to any third parties</li>
         <li>We do <strong>not</strong> operate any servers — all data stays on your device</li>
         <li>We do <strong>not</strong> require an account, sign-in, or cloud sync</li>
+        <li>We do <strong>not</strong> see your API keys or any payloads sent to AI providers</li>
       </ul>
 
-      <h3>Data Storage & Security</h3>
+      <h3>Data Storage &amp; Security</h3>
       <table class="legal-table">
         <thead>
           <tr><th>Data</th><th>Storage Location</th><th>Accessible By</th></tr>
         </thead>
         <tbody>
-          <tr><td>Food entries & photos</td><td>Device only</td><td>You only</td></tr>
-          <tr><td>Weight entries</td><td>Device only</td><td>You only</td></tr>
-          <tr><td>User profile</td><td>Device only</td><td>You only</td></tr>
-          <tr><td>API keys</td><td>iOS Keychain (encrypted)</td><td>You only</td></tr>
-          <tr><td>Food photos (for AI)</td><td>Sent to your chosen AI provider</td><td>Processed in transit, not stored by us</td></tr>
+          <tr><td>Food entries &amp; photos</td><td>Device only (UserDefaults)</td><td>You only</td></tr>
+          <tr><td>Weight entries</td><td>Device only (UserDefaults)</td><td>You only</td></tr>
+          <tr><td>User profile</td><td>Device only (UserDefaults)</td><td>You only</td></tr>
+          <tr><td>Coach chat history</td><td>Device only (UserDefaults)</td><td>You only</td></tr>
+          <tr><td>Widget snapshot (today's totals)</td><td>Device only (App Group container)</td><td>You only</td></tr>
+          <tr><td>API keys (LLM + STT)</td><td>iOS Keychain (encrypted)</td><td>You only</td></tr>
+          <tr><td>Food photos (for AI analysis)</td><td>Sent to your chosen AI provider</td><td>Processed in transit per that provider's policy</td></tr>
+          <tr><td>Voice audio (remote STT)</td><td>Sent to your chosen STT provider</td><td>Processed in transit per that provider's policy</td></tr>
+          <tr><td>Coach chat messages</td><td>Sent to your chosen AI provider</td><td>Processed in transit per that provider's policy</td></tr>
           <tr><td>Health data</td><td>Apple HealthKit</td><td>You + apps you authorize</td></tr>
         </tbody>
       </table>
 
-      <h3>Open Source</h3>
-      <p>Fud AI is open source under the MIT License. You can review the full source code at <a href="https://github.com/apoorvdarshan/fud-ai" target="_blank">github.com/apoorvdarshan/fud-ai</a>.</p>
-
-      <h3>Data Retention</h3>
+      <h3>Third-Party AI Providers</h3>
+      <p>When you send a request to an AI or STT provider, you are subject to <strong>that provider's</strong> privacy policy. Each provider handles data differently — some log prompts, some don't; some train on inputs, some don't. We recommend reviewing the policy of whichever provider you choose:</p>
       <ul>
-        <li>All data remains on your device until you delete it or uninstall the app</li>
-        <li>You can delete all data at any time using the "Delete All Data" option in Profile settings</li>
+        <li><a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Gemini</a></li>
+        <li><a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noopener">OpenAI</a></li>
+        <li><a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener">Anthropic</a></li>
+        <li><a href="https://x.ai/legal/privacy-policy" target="_blank" rel="noopener">xAI</a></li>
+        <li><a href="https://openrouter.ai/terms" target="_blank" rel="noopener">OpenRouter</a></li>
+        <li><a href="https://www.together.ai/privacy" target="_blank" rel="noopener">Together AI</a></li>
+        <li><a href="https://groq.com/privacy-policy/" target="_blank" rel="noopener">Groq</a></li>
+        <li><a href="https://huggingface.co/privacy" target="_blank" rel="noopener">Hugging Face</a></li>
+        <li><a href="https://fireworks.ai/privacy-policy" target="_blank" rel="noopener">Fireworks AI</a></li>
+        <li><a href="https://deepinfra.com/privacy" target="_blank" rel="noopener">DeepInfra</a></li>
+        <li><a href="https://mistral.ai/terms/#privacy-policy" target="_blank" rel="noopener">Mistral</a></li>
+        <li><a href="https://deepgram.com/privacy" target="_blank" rel="noopener">Deepgram</a></li>
+        <li><a href="https://www.assemblyai.com/legal/privacy-policy" target="_blank" rel="noopener">AssemblyAI</a></li>
+      </ul>
+      <p>If you use Ollama or a custom OpenAI-compatible endpoint, requests go to whatever URL you configure — typically your own machine or a self-hosted server.</p>
+
+      <h3>Open Source</h3>
+      <p>Fud AI is open source under the MIT License. You can review exactly what the app does — including every network call — at <a href="https://github.com/apoorvdarshan/fud-ai" target="_blank">github.com/apoorvdarshan/fud-ai</a>.</p>
+
+      <h3>Data Retention &amp; Deletion</h3>
+      <ul>
+        <li>All data remains on your device until you delete it or uninstall the app.</li>
+        <li><strong>Delete All Data</strong> (Profile → Delete All Data) wipes the app's local storage: food log, weight log, profile, Coach chat history, saved meals, widget snapshot, API keys, and preferences. It <strong>intentionally does not touch Apple Health</strong> — your HealthKit samples are personal and survive the reset. If you want them removed too, go to iOS Settings → Health → Data Access &amp; Devices → Fud AI and delete the data from there.</li>
+        <li><strong>Clear Food Log</strong> (Profile → Clear Food Log) removes local food entries only; previously-synced Apple Health samples are kept.</li>
+        <li>Uninstalling the app removes everything in its sandbox (same as Delete All Data) — again, Apple Health samples persist in Health unless deleted separately.</li>
       </ul>
 
       <h3>Children's Privacy</h3>
-      <p>Fud AI is not directed at children under the age of 13. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has provided us with personal data, please contact us so we can delete it.</p>
+      <p>Fud AI is not directed at children under the age of 13. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has provided us with personal data, please contact us so we can assist.</p>
 
       <h3>Changes to This Policy</h3>
-      <p>We may update this privacy policy from time to time. Changes will be reflected in the "Last updated" date above. Continued use of the app after changes constitutes acceptance of the updated policy.</p>
+      <p>We may update this privacy policy from time to time as the app evolves. Changes will be reflected in the "Last updated" date above. Continued use of the app after changes constitutes acceptance of the updated policy.</p>
 
       <h3>Contact</h3>
-      <p>For privacy questions or data deletion requests, contact: <strong><a href="mailto:ad13dtu@gmail.com">ad13dtu@gmail.com</a></strong></p>
+      <p>For privacy questions or deletion requests, contact: <strong><a href="mailto:apoorv@fud-ai.app">apoorv@fud-ai.app</a></strong></p>
     </div>
   </div>
 </section>
