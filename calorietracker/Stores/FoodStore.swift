@@ -221,6 +221,15 @@ class FoodStore {
     }
 
     func replaceAllEntries(_ newEntries: [FoodEntry]) {
+        // Delete on-disk JPEGs for any entry that's about to be removed —
+        // otherwise Clear Food Log / Delete All Data orphan files in
+        // Application Support forever.
+        let surviving = Set(newEntries.map(\.id))
+        for old in entries where !surviving.contains(old.id) {
+            if let filename = old.imageFilename {
+                FoodImageStore.shared.delete(filename: filename)
+            }
+        }
         entries = newEntries.map { var e = $0; offloadImageToDiskIfNeeded(&e); return e }
         saveEntries()
         onEntriesChanged?()

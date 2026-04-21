@@ -1949,6 +1949,10 @@ struct ProfileView: View {
                     // the Health app's Sources → Fud AI screen.
                     foodStore.replaceAllEntries([])
                     weightStore.replaceAllEntries([])
+                    // Wipe the food-image folder defensively — replaceAllEntries
+                    // already cleans per-entry files, but a belt-and-braces
+                    // deleteAll catches any orphans from earlier crash recovery.
+                    FoodImageStore.shared.deleteAll()
                     // Cancel all notifications
                     notificationManager.cancelAllNotifications()
                     // Wipe all persisted data
