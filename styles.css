@@ -539,16 +539,12 @@ body:hover .cursor-glow { opacity: 1; }
    CTA Button System
    ------------------------------------------------------------
    All four CTAs share a 54px height so they align cleanly in
-   one or two rows. Tiered by visual weight:
-     • PRIMARY   — App Store (filled white) + Product Hunt official
-                   embed badge with LIVE vote count
+   one or two rows. Flat surfaces, no glow, no shine — just
+   a simple 2px hover lift + border/background hover state.
+     • PRIMARY   — App Store (filled white) + Product Hunt
+                   official embed badge with LIVE vote count
      • GLASS     — GitHub (amber star) + PayPal (blue icon)
    ============================================================ */
-
-@keyframes btnShine {
-  0%, 100% { left: -100%; }
-  50%      { left: 150%; }
-}
 
 .cta-group {
   display: flex;
@@ -558,13 +554,13 @@ body:hover .cursor-glow { opacity: 1; }
   margin-top: 4px;
 }
 
-/* Shared base — identical height/motion across every CTA */
+/* Shared base */
 .app-store-btn,
 .pill-btn,
 .ph-badge {
   height: 54px;
   border-radius: 14px;
-  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), background var(--transition), filter var(--transition);
+  transition: transform var(--transition), border-color var(--transition), background var(--transition);
   text-decoration: none;
   cursor: pointer;
   box-sizing: border-box;
@@ -590,23 +586,8 @@ body:hover .cursor-glow { opacity: 1; }
   letter-spacing: -0.01em;
   line-height: 1;
   white-space: nowrap;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.06);
 }
 .app-store-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
-.app-store-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
-  transform: translateX(-100%);
-  animation: btnShine 5s ease-in-out infinite;
-  pointer-events: none;
-}
-.app-store-btn:hover {
-  box-shadow: 0 18px 44px rgba(255,255,255,0.14), inset 0 -1px 0 rgba(0,0,0,0.06);
-}
 
 /* ---- PRIMARY: Product Hunt official embed badge (LIVE vote count) ---- */
 .ph-badge {
@@ -614,18 +595,12 @@ body:hover .cursor-glow { opacity: 1; }
   align-items: stretch;
   overflow: hidden;
   line-height: 0;
-  box-shadow: 0 10px 30px rgba(218, 85, 47, 0.22);
-  isolation: isolate;
 }
 .ph-badge img {
   display: block;
   height: 54px;
   width: auto;
   border-radius: 14px;
-}
-.ph-badge:hover {
-  box-shadow: 0 18px 44px rgba(218, 85, 47, 0.4);
-  filter: brightness(1.06);
 }
 
 /* ---- GLASS: shared base for GitHub + PayPal ---- */
@@ -637,33 +612,28 @@ body:hover .cursor-glow { opacity: 1; }
   padding: 0 22px;
   background: rgba(255,255,255,0.045);
   color: #fff;
-  border: 1px solid rgba(255,255,255,0.12);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid rgba(255,255,255,0.14);
   font-family: inherit;
   font-weight: 600;
   font-size: 0.94rem;
   letter-spacing: -0.01em;
   line-height: 1;
   white-space: nowrap;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
 }
 .pill-btn i { font-size: 18px; line-height: 1; flex-shrink: 0; }
 
 /* GitHub variant — amber star accent */
 .pill-btn.pill-github i { color: #ffc857; }
 .pill-btn.pill-github:hover {
-  border-color: rgba(255, 200, 87, 0.55);
-  background: rgba(255, 200, 87, 0.09);
-  box-shadow: 0 14px 38px rgba(255, 200, 87, 0.18), inset 0 1px 0 rgba(255,255,255,0.08);
+  border-color: rgba(255, 200, 87, 0.45);
+  background: rgba(255, 200, 87, 0.07);
 }
 
 /* PayPal variant — cyan-blue accent */
 .pill-btn.pill-paypal i { color: #0bafe2; }
 .pill-btn.pill-paypal:hover {
-  border-color: rgba(11, 175, 226, 0.55);
-  background: rgba(11, 175, 226, 0.09);
-  box-shadow: 0 14px 38px rgba(11, 175, 226, 0.22), inset 0 1px 0 rgba(255,255,255,0.08);
+  border-color: rgba(11, 175, 226, 0.45);
+  background: rgba(11, 175, 226, 0.07);
 }
 
 @media (max-width: 600px) {
