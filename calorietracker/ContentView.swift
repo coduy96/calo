@@ -1902,9 +1902,13 @@ struct ProfileView: View {
             .alert("Delete All Data", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete Everything", role: .destructive) {
-                    // Wipe HealthKit nutrition samples first. Use purgeNutrition so previously-synced
-                    // samples are removed even if the user has since turned off HealthKit sync.
+                    // Wipe HealthKit nutrition AND weight samples first. Both purges bypass
+                    // the `healthKitEnabled` flag so samples synced earlier are removed even
+                    // if the user has since turned off HealthKit sync. purgeAllWeights uses
+                    // an HKSource predicate so it also catches profile-sync samples from
+                    // `writeWeight(kg:date:)` whose synthetic metadata ID isn't tracked.
                     healthKitManager.purgeNutrition(entryIDs: foodStore.entries.map(\.id))
+                    healthKitManager.purgeAllWeights()
                     // Clear in-memory stores
                     foodStore.replaceAllEntries([])
                     weightStore.replaceAllEntries([])

@@ -91,6 +91,12 @@ struct calorietrackerApp: App {
             if completed {
                 wireUpFoodStoreCallback()
                 wireUpHealthKit()
+                // Seed the user's first WeightEntry from their onboarding-entered profile
+                // weight. Used to be seeded in WeightStore.init with .default fallback,
+                // which produced a 70 kg phantom entry for every fresh user.
+                if let profile = UserProfile.load() {
+                    weightStore.seedInitialWeightFromProfileIfEmpty(profile.weightKg)
+                }
                 refreshWidgetSnapshot()
             }
         }

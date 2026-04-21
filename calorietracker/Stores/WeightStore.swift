@@ -10,17 +10,20 @@ class WeightStore {
     private let storageKey = "weightEntries"
 
     init() {
-        // Only seed a starter entry on a FRESH install (no storage key yet).
-        // If the user has ever logged and later deleted everything, the key exists
-        // (pointing to an empty array) and we must respect that — don't resurrect.
-        let isFreshInstall = UserDefaults.standard.data(forKey: storageKey) == nil
         loadEntries()
-        if entries.isEmpty && isFreshInstall {
-            let profile = UserProfile.load() ?? .default
-            let seed = WeightEntry(date: .now, weightKg: profile.weightKg)
-            entries.append(seed)
-            saveEntries()
-        }
+        // No default seed — WeightStore.init runs before onboarding finishes on a fresh
+        // install, so `UserProfile.load()` is nil and the old seed fell back to .default
+        // (70 kg), dropping a phantom 70 kg entry onto every new user's chart even if
+        // their real weight was different. Onboarding now seeds the first WeightEntry
+        // via `seedInitialWeightFromProfileIfEmpty(_:)` once the profile is real.
+    }
+
+    /// Add the first WeightEntry from the user's onboarding-set profile weight.
+    /// Safe to call multiple times — no-op if any entries already exist, so subsequent
+    /// scene-active firings or re-onboarding paths can't duplicate.
+    func seedInitialWeightFromProfileIfEmpty(_ weightKg: Double) {
+        guard entries.isEmpty else { return }
+        addEntry(WeightEntry(date: .now, weightKg: weightKg))
     }
 
     var latestEntry: WeightEntry? {

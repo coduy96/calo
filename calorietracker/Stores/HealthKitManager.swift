@@ -102,11 +102,20 @@ class HealthKitManager {
 
     // MARK: - Write Body Measurements
 
+    /// Profile-state push (no associated WeightEntry). Tagged with a synthetic UUID so a later
+    /// per-app purge can still target it — without the tag, `deleteWeight(entryID:)` and
+    /// `purgeAllWeights()` would leave these samples behind in Health forever.
     func writeWeight(kg: Double, date: Date) {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
         let type = HKQuantityType(.bodyMass)
         let quantity = HKQuantity(unit: .gramUnit(with: .kilo), doubleValue: kg)
-        let sample = HKQuantitySample(type: type, quantity: quantity, start: date, end: date)
+        let sample = HKQuantitySample(
+            type: type,
+            quantity: quantity,
+            start: date,
+            end: date,
+            metadata: ["fudai_weight_id": UUID().uuidString]
+        )
         healthStore.save(sample) { _, _ in }
     }
 
@@ -130,6 +139,15 @@ class HealthKitManager {
     /// even if the user has since turned HealthKit sync off.
     func deleteWeight(entryID: UUID) {
         let predicate = HKQuery.predicateForObjects(withMetadataKey: "fudai_weight_id", operatorType: .equalTo, value: entryID.uuidString)
+        healthStore.deleteObjects(of: HKQuantityType(.bodyMass), predicate: predicate) { _, _, _ in }
+    }
+
+    /// Purges every bodyMass sample written by this app — including the profile-sync
+    /// samples from `writeWeight(kg:date:)` whose synthetic `fudai_weight_id` isn't
+    /// tracked anywhere. Used only by Delete All Data; bypasses `healthKitEnabled`
+    /// so orphaned samples are still cleaned up if the user turned sync off earlier.
+    func purgeAllWeights() {
+        let predicate = HKQuery.predicateForObjects(from: HKSource.default())
         healthStore.deleteObjects(of: HKQuantityType(.bodyMass), predicate: predicate) { _, _, _ in }
     }
 
@@ -182,9 +200,11 @@ class HealthKitManager {
         healthStore.save(samples) { _, _ in }
     }
 
-    /// Deletes all nutrition samples written for this entry.
+    /// Deletes all nutrition samples written for this entry. Bypasses `healthKitEnabled` so
+    /// an in-app delete still cleans up the corresponding HK samples when sync was enabled
+    /// at the time of the write but has since been turned off — otherwise old samples would
+    /// stick around in Health forever.
     func deleteNutrition(entryID: UUID) {
-        guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
         Task { await deleteNutritionSamples(entryID: entryID) }
     }
 
@@ -202,11 +222,14 @@ class HealthKitManager {
 
     /// Deletes the existing samples for an entry, awaits completion, then writes the new samples.
     /// Used on edits so a stale delete cannot clobber the freshly-written samples.
+    /// The delete portion always runs (even if sync is currently off) to clean up samples the user
+    /// exported earlier; the write portion respects the flag so we don't push fresh data while off.
     func updateNutrition(for entry: FoodEntry) {
-        guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
         Task {
             await deleteNutritionSamples(entryID: entry.id)
-            writeNutrition(for: entry)
+            if UserDefaults.standard.bool(forKey: "healthKitEnabled") {
+                writeNutrition(for: entry)
+            }
         }
     }
 
@@ -319,6 +342,11 @@ class HealthKitManager {
     func startBodyMeasurementObserver() {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
         guard HKHealthStore.isHealthDataAvailable() else { return }
+
+        // Tear down any prior observers before re-registering. `wireUpHealthKit()` runs on
+        // every scene-active, and without this a single HK change would fire the callback
+        // N times (once per cold-launch-plus-background-resume cycle in the session).
+        stopObserver()
 
         let types: [HKQuantityTypeIdentifier] = [.bodyMass, .height, .bodyFatPercentage]
         for identifier in types {
