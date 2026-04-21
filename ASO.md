@@ -129,7 +129,7 @@ https://fud-ai.app/terms.html
 
 ## Support URL
 ```
-https://github.com/apoorvdarshan/fud-ai/issues
+https://fud-ai.app
 ```
 
 ## Marketing URL
