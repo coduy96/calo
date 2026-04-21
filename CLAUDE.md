@@ -114,6 +114,10 @@ Edits use `onEntryUpdated` rather than back-to-back delete+add so HealthKit can 
 
 `WeightStore.addEntry` also detects goal-weight crossings (previous-on-wrong-side → new-on-correct-side) and posts `.weightGoalReached` — the Progress tab listens and shows "Congratulations!".
 
+**`WeightStore.init()` does NOT seed a starter entry.** An earlier version did, falling back to `UserProfile.default` (70 kg) when the store initialized before onboarding finished — that dropped a phantom 70 kg entry onto every fresh user's chart regardless of their real starting weight. The seed now runs from `calorietrackerApp.onChange(of: hasCompletedOnboarding)` via `weightStore.seedInitialWeightFromProfileIfEmpty(profile.weightKg)` once the profile is real. The method is idempotent (no-ops when `entries` is non-empty). Don't reintroduce an init-time seed.
+
+`HealthKitManager.writeWeight(kg:date:)` (the profile-state push used by onboarding/Settings, not the per-entry variant) also tags samples with a synthetic `fudai_weight_id = UUID().uuidString`. Untagged samples are invisible to `deleteWeight(entryID:)`'s metadata predicate.
+
 ### HealthKit Conventions
 
 `HealthKitManager` (`Stores/HealthKitManager.swift`) is the only HealthKit boundary.
@@ -124,6 +128,7 @@ Edits use `onEntryUpdated` rather than back-to-back delete+add so HealthKit can 
 - `writeNutrition` guards on `healthKitEnabled`. `deleteNutrition` and the delete half of `updateNutrition` always run (even with sync off) so in-app edits/deletes still clean up samples that were exported before the user flipped sync off — otherwise those would orphan in Apple Health forever.
 - `backfillNutritionIfNeeded` is idempotent (queries Apple Health for each entry's UUID before writing) and is guarded by `isBackfillingNutrition` so scene-phase re-entry can't spawn overlapping scans. The caller passes `currentEntryIDs: () -> Set<UUID>` so a meal deleted mid-backfill won't be re-exported as a phantom sample.
 - The body-measurements observer skips adding weights whose sample metadata contains `fudai_weight_id` — those are our own writes and are handled by `WeightStore.addEntry` directly. External samples (Apple Watch, scale, Health app entry) go through the observer's date+value dedup and get added to `WeightStore` with the sample's real date.
+- `startBodyMeasurementObserver()` calls `stopObserver()` **first** before registering the three `HKObserverQuery` instances. `wireUpHealthKit()` runs on every scene-active, so without the tear-down the `observerQueries` array kept growing and one HK change would fire the callback N times per session.
 
 Clear Food Log keeps Apple Health samples (per product spec — only saves storage). **Delete All Data is local-only too**: it wipes in-memory stores, UserDefaults, Keychain API keys, the Coach chat history, and the widget App Group snapshot — but intentionally does NOT touch Apple Health. Health data is user-owned and personal; if they want it gone they can use the Health app's Sources → Fud AI panel. (Earlier revisions purged HK nutrition in this flow; that was reverted in favor of treating HK as read/write-while-synced but untouched on resets.)
 
@@ -138,6 +143,10 @@ Because widgets run in a separate process, they can't read the main app's `UserD
 - **`WidgetSnapshotWriter.publish(...)`** (main app only) recomputes today's totals, writes the snapshot, and calls `WidgetCenter.shared.reloadAllTimelines()`. Called from three places in `calorietrackerApp.swift`: on `foodStore.onEntriesChanged`, on `.userProfileDidChange` notification (goal edits), and on scene-phase `.active` (so midnight rollover doesn't require an explicit food change).
 - **Callback-wiring gotcha**: `wireUpFoodStoreCallback()` (where the `onEntriesChanged` closure gets installed) must run on **every** scene-active, not just the onboarding `false→true` transition. The `.onChange(of: hasCompletedOnboarding)` branch only fires once ever; if it were the sole wire-up site, existing users who completed onboarding before this code landed would never get the widget-refresh callback installed and would have to open the app to see new entries. Closure assignment is idempotent, so re-wiring on scene-active is safe.
 - **Timeline policy**: `CalorieProvider.getTimeline` emits one entry for "now" and refreshes after 30 minutes as a safety net for days when the user doesn't log anything.
+- **Freshness rules baked into the data layer** (don't regress these):
+  1. `FudAIWidgets/WidgetSnapshot.read()` returns `nil` when `snapshot.dayStart` isn't today. The widget then falls back to `.empty` (zeroed today). Without this the 30-min timeline refresh kept showing yesterday's totals past midnight.
+  2. `WidgetSnapshotWriter.publish(...)` filters entries with `Calendar.isDate($0.timestamp, inSameDayAs: Date())` — NOT a plain `>= startOfDay`. The latter would fold tomorrow-dated entries (pre-logged via the week strip) into today's widget totals.
+  3. `WidgetSnapshot.clear()` is called from Delete All Data and from `refreshWidgetSnapshot()` when no profile is loaded. The App Group container sits outside `UserDefaults.standard`, so `removePersistentDomain` doesn't touch it — without `clear()` the widget would keep showing the previous profile's numbers after a reset.
 
 Adding a new widget: add a new `Widget` conforming type in `FudAIWidgets/`, add it to `FudAIWidgetsBundle.body`, extend `CalorieWidgetView`'s `@Environment(\.widgetFamily)` switch if you're adding a new family. If you need additional data, extend `WidgetSnapshot` in **both** files (add fields with Codable defaults so old snapshots still decode).
 
