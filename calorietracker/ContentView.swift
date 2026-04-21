@@ -68,6 +68,21 @@ struct AboutView: View {
                     }
                     .tint(.primary)
 
+                    // Share the App
+                    ShareLink(
+                        item: URL(string: "https://apps.apple.com/us/app/fud-ai-calorie-tracker/id6758935726")!,
+                        subject: Text("Fud AI — AI Calorie Tracker"),
+                        message: Text("I've been tracking my meals with Fud AI — snap a photo, speak it, or type it, and the AI logs the calories. It's free, open source, and your data stays on your device.\n\nLearn more: https://fud-ai.app")
+                    ) {
+                        Label {
+                            Text("Share the App")
+                        } icon: {
+                            Image(systemName: "square.and.arrow.up.fill")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .tint(.primary)
+
                     // Open Source
                     Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai")!) {
                         Label {

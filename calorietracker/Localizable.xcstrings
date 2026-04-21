@@ -18988,6 +18988,291 @@
           }
         }
       }
+    },
+    "Share the App": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share the App"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شارك التطبيق"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tətbiqi Paylaş"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App teilen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir la app"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partager l'app"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ऐप शेयर करें"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condividi l'app"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アプリを共有"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 공유하기"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App delen"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartilhar o app"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distribuie aplicația"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поделиться приложением"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分享应用"
+          }
+        }
+      }
+    },
+    "Fud AI — AI Calorie Tracker": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI — AI Calorie Tracker"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI — متتبع السعرات الحرارية بالذكاء الاصطناعي"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI — Süni Zəkalı Kalori İzləyicisi"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI — KI-Kalorienzähler"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI — Contador de calorías con IA"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI — Suivi des calories par IA"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI — AI कैलोरी ट्रैकर"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI — Contatore di calorie con IA"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI — AIカロリートラッカー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI — AI 칼로리 트래커"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI — AI-calorieënteller"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI — Contador de calorias com IA"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI — Tracker de calorii cu AI"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI — ИИ-трекер калорий"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI — AI 卡路里追踪器"
+          }
+        }
+      }
+    },
+    "I've been tracking my meals with Fud AI — snap a photo, speak it, or type it, and the AI logs the calories. It's free, open source, and your data stays on your device.\n\nLearn more: https://fud-ai.app": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I've been tracking my meals with Fud AI — snap a photo, speak it, or type it, and the AI logs the calories. It's free, open source, and your data stays on your device.\n\nLearn more: https://fud-ai.app"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أتتبّع وجباتي مع Fud AI — التقط صورة أو تحدّث أو اكتب، والذكاء الاصطناعي يسجّل السعرات الحرارية. التطبيق مجاني ومفتوح المصدر، وتبقى بياناتك على جهازك.\n\nاعرف المزيد: https://fud-ai.app"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeməklərimi Fud AI ilə izləyirəm — şəkil çək, danış və ya yaz, süni zəka kaloriləri qeyd etsin. Pulsuz, açıq mənbəlidir və məlumatların cihazında qalır.\n\nƏtraflı: https://fud-ai.app"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich tracke meine Mahlzeiten mit Fud AI — fotografieren, einsprechen oder eintippen, die KI erfasst die Kalorien. Kostenlos, Open Source, alle Daten bleiben auf deinem Gerät.\n\nMehr erfahren: https://fud-ai.app"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Llevo el control de mis comidas con Fud AI — haz una foto, dícela o escríbela, y la IA registra las calorías. Es gratis, de código abierto, y tus datos se quedan en tu dispositivo.\n\nMás información: https://fud-ai.app"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je suis mes repas avec Fud AI — prends une photo, parle ou tape, l'IA enregistre les calories. C'est gratuit, open source, et tes données restent sur ton appareil.\n\nEn savoir plus : https://fud-ai.app"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "मैं अपने भोजन को Fud AI से ट्रैक करता हूँ — फोटो लो, बोलो या टाइप करो, AI कैलोरी रिकॉर्ड कर लेगा। यह मुफ्त है, ओपन सोर्स है, और आपका डेटा आपके डिवाइस पर रहता है।\n\nऔर जानें: https://fud-ai.app"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tengo traccia dei miei pasti con Fud AI — scatta una foto, parlalo o scrivilo, e l'IA registra le calorie. È gratis, open source, e i tuoi dati restano sul tuo dispositivo.\n\nScopri di più: https://fud-ai.app"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "食事の記録は Fud AI で。写真を撮るか話すか入力するだけで、AI がカロリーを記録します。無料・オープンソースで、データは端末内に残ります。\n\n詳しくはこちら: https://fud-ai.app"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI로 식단을 기록하고 있어요 — 사진을 찍거나 말하거나 입력하면 AI가 칼로리를 기록해 줍니다. 무료에 오픈소스이고, 데이터는 모두 기기 안에만 저장돼요.\n\n자세히 보기: https://fud-ai.app"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ik volg mijn maaltijden met Fud AI — maak een foto, spreek het in of typ het, en de AI registreert de calorieën. Gratis, open source, en je gegevens blijven op je apparaat.\n\nMeer info: https://fud-ai.app"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eu acompanho minhas refeições com o Fud AI — tire uma foto, fale ou digite, e a IA registra as calorias. É grátis, código aberto, e seus dados ficam no seu dispositivo.\n\nSaiba mais: https://fud-ai.app"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Îmi urmăresc mesele cu Fud AI — fă o poză, spune-o sau tasteaz-o, iar AI înregistrează caloriile. E gratuit, open source, iar datele rămân pe dispozitivul tău.\n\nAflă mai multe: https://fud-ai.app"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Я слежу за питанием с помощью Fud AI — сфотографируй блюдо, наговори его или введи текстом, и ИИ запишет калории. Бесплатно, с открытым кодом, все данные остаются на твоём устройстве.\n\nПодробнее: https://fud-ai.app"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我用 Fud AI 记录每一餐——拍照、说话或输入，AI 自动记录卡路里。完全免费、开源，所有数据都保存在你的设备上。\n\n了解更多：https://fud-ai.app"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
