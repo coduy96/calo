@@ -572,6 +572,35 @@ body:hover .cursor-glow { opacity: 1; }
 }
 .app-store-btn svg { width: 22px; height: 22px; }
 
+/* CTA button group — App Store + Product Hunt badge side by side, wrap on small screens */
+.cta-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+}
+
+/* Product Hunt official embed badge — subtle hover scale, keep native dimensions */
+.ph-badge {
+  display: inline-flex;
+  align-items: center;
+  transition: transform var(--transition);
+  line-height: 0;
+}
+.ph-badge img {
+  display: block;
+  height: 54px;
+  width: auto;
+}
+.ph-badge:hover {
+  transform: translateY(-3px) scale(1.02);
+}
+
+@media (max-width: 600px) {
+  .cta-group { gap: 10px; }
+  .ph-badge img { height: 46px; }
+}
+
 /* Phone mockup */
 .hero-phone {
   display: flex;
