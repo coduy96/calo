@@ -205,39 +205,46 @@ All values can be manually overridden in Settings, with a **Recalculate Goals** 
 ### Source Layout
 
 ```
-calorietracker/
-├── calorietrackerApp.swift       # Entry point, environment setup
-├── ContentView.swift             # 5-tab layout (Home, Progress, Coach, Settings, About)
-├── Localizable.xcstrings         # String Catalog, 15 languages
-├── Models/
-│   ├── AIProvider.swift          # 13 LLM providers, model lists, settings
-│   ├── SpeechProvider.swift      # 5 STT providers + Keychain settings
-│   ├── ChatMessage.swift         # Coach chat message model
-│   ├── UserProfile.swift         # BMR/TDEE/macro calculations
-│   ├── FoodEntry.swift           # Food item with 13 nutrients
-│   └── WeightEntry.swift         # Weight log entry
-├── Views/
-│   ├── OnboardingView.swift      # 15-step onboarding flow
-│   ├── ChatView.swift            # Coach tab: bubbles, prompt chips, reset
-│   ├── FoodResultView.swift      # AI result review & edit
-│   ├── RecentsView.swift         # Saved Meals (Recents / Frequent / Favorites)
-│   ├── VoiceInputView.swift      # Native + remote STT routing
-│   ├── HomeComponents.swift      # Week strip, macro cards
-│   └── ProgressComponents.swift  # Charts, weight history
-├── Services/
-│   ├── GeminiService.swift       # Food/label analysis, routes 13 providers
-│   ├── ChatService.swift         # Multi-turn Coach chat, routes 13 providers
-│   ├── SpeechService.swift       # Remote STT router (OpenAI / Groq / Deepgram / AssemblyAI)
-│   ├── WeightAnalysisService.swift # Thermodynamic weight-forecast math
-│   ├── KeychainHelper.swift      # iOS Keychain wrapper
-│   └── APIKeyManager.swift       # Keychain migration helper
-└── Stores/
-    ├── FoodStore.swift            # Food CRUD + favorites
-    ├── WeightStore.swift          # Weight CRUD (auto-syncs profile weight)
-    ├── ProfileStore.swift         # @Observable wrapper over UserProfile
-    ├── ChatStore.swift            # Coach chat history (persisted locally)
-    ├── NotificationManager.swift  # Notification scheduler
-    └── HealthKitManager.swift     # Apple Health bridge (body + nutrition)
+ios/
+├── calorietracker.xcodeproj/         # Xcode project
+├── calorietrackerTests/              # Unit test target (boilerplate)
+├── calorietrackerUITests/            # UI test target (boilerplate)
+├── FudAIWidgets/                     # Widget extension target (Home + Lock Screen)
+├── ASO.md                            # App Store listing copy
+├── screenshots/                      # README screenshots
+└── calorietracker/
+    ├── calorietrackerApp.swift       # Entry point, environment setup
+    ├── ContentView.swift             # 5-tab layout (Home, Progress, Coach, Settings, About)
+    ├── Localizable.xcstrings         # String Catalog, 15 languages
+    ├── Models/
+    │   ├── AIProvider.swift          # 13 LLM providers, model lists, settings
+    │   ├── SpeechProvider.swift      # 5 STT providers + Keychain settings
+    │   ├── ChatMessage.swift         # Coach chat message model
+    │   ├── UserProfile.swift         # BMR/TDEE/macro calculations
+    │   ├── FoodEntry.swift           # Food item with 13 nutrients
+    │   └── WeightEntry.swift         # Weight log entry
+    ├── Views/
+    │   ├── OnboardingView.swift      # 15-step onboarding flow
+    │   ├── ChatView.swift            # Coach tab: bubbles, prompt chips, reset
+    │   ├── FoodResultView.swift      # AI result review & edit
+    │   ├── RecentsView.swift         # Saved Meals (Recents / Frequent / Favorites)
+    │   ├── VoiceInputView.swift      # Native + remote STT routing
+    │   ├── HomeComponents.swift      # Week strip, macro cards
+    │   └── ProgressComponents.swift  # Charts, weight history
+    ├── Services/
+    │   ├── GeminiService.swift       # Food/label analysis, routes 13 providers
+    │   ├── ChatService.swift         # Multi-turn Coach chat, routes 13 providers
+    │   ├── SpeechService.swift       # Remote STT router (OpenAI / Groq / Deepgram / AssemblyAI)
+    │   ├── WeightAnalysisService.swift # Thermodynamic weight-forecast math
+    │   ├── KeychainHelper.swift      # iOS Keychain wrapper
+    │   └── APIKeyManager.swift       # Keychain migration helper
+    └── Stores/
+        ├── FoodStore.swift            # Food CRUD + favorites
+        ├── WeightStore.swift          # Weight CRUD (auto-syncs profile weight)
+        ├── ProfileStore.swift         # @Observable wrapper over UserProfile
+        ├── ChatStore.swift            # Coach chat history (persisted locally)
+        ├── NotificationManager.swift  # Notification scheduler
+        └── HealthKitManager.swift     # Apple Health bridge (body + nutrition)
 ```
 
 ## Build & Run
@@ -247,18 +254,19 @@ calorietracker/
 git clone https://github.com/apoorvdarshan/fud-ai.git
 cd fud-ai
 
-# Build
-xcodebuild -scheme calorietracker \
+# Build (iOS)
+xcodebuild -project ios/calorietracker.xcodeproj \
+  -scheme calorietracker \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 
-Open in Xcode, select your device, and run. On first launch, go to **Settings → AI Provider** to set your provider and API key. A free Gemini key is available at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
+Open `ios/calorietracker.xcodeproj` in Xcode, select your device, and run. On first launch, go to **Settings → AI Provider** to set your provider and API key. A free Gemini key is available at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
 
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. Bug reports and feature requests welcome.
 
-Adding a new translation? Open `calorietracker/Localizable.xcstrings` in Xcode and fill in your language column — everything else is already wired.
+Adding a new translation? Open `ios/calorietracker/Localizable.xcstrings` in Xcode and fill in your language column — everything else is already wired.
 
 ## Security
 

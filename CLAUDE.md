@@ -56,7 +56,7 @@ codex exec review --commit <SHA> --full-auto
 
 Address P1 and P2 findings. P3 is judgment-call.
 
-## Architecture
+## Architecture (iOS)
 
 ### State / Dependency Injection
 
@@ -147,29 +147,29 @@ Clear Food Log keeps Apple Health samples (per product spec — only saves stora
 
 ### Widgets (`FudAIWidgetsExtension` target + App Group)
 
-The widget extension lives in the `FudAIWidgets/` folder as its own target (`com.apoorvdarshan.calorietracker.FudAIWidgets`). It's embedded into the main app via the `Embed Foundation Extensions` copy phase. Five supported families: `.systemSmall`, `.systemMedium`, `.accessoryCircular`, `.accessoryRectangular`, `.accessoryInline`.
+The widget extension lives in the `ios/FudAIWidgets/` folder as its own target (`com.apoorvdarshan.calorietracker.FudAIWidgets`). It's embedded into the main app via the `Embed Foundation Extensions` copy phase. Five supported families: `.systemSmall`, `.systemMedium`, `.accessoryCircular`, `.accessoryRectangular`, `.accessoryInline`.
 
 Because widgets run in a separate process, they can't read the main app's `UserDefaults`. Data flows through an **App Group** shared container:
-- **App Group ID**: `group.com.apoorvdarshan.calorietracker` (declared in both `calorietracker.entitlements` and `FudAIWidgets/FudAIWidgets.entitlements` — must match exactly).
+- **App Group ID**: `group.com.apoorvdarshan.calorietracker` (declared in both `ios/calorietracker/calorietracker.entitlements` and `ios/FudAIWidgets/FudAIWidgets.entitlements` — must match exactly).
 - **`WidgetSnapshot`** is a small Codable struct (today's totals + goals) written by the main app into the shared suite under key `widget_snapshot_v1`.
-- **Duplicated file**: `calorietracker/Services/WidgetSnapshot.swift` and `FudAIWidgets/WidgetSnapshot.swift` are identical copies. The widget target can't see the main app's sources (auto-discovery via `PBXFileSystemSynchronizedRootGroup` is per-target), so we keep two files in sync manually. If you change one, change both.
+- **Duplicated file**: `ios/calorietracker/Services/WidgetSnapshot.swift` and `ios/FudAIWidgets/WidgetSnapshot.swift` are identical copies. The widget target can't see the main app's sources (auto-discovery via `PBXFileSystemSynchronizedRootGroup` is per-target), so we keep two files in sync manually. If you change one, change both.
 - **`WidgetSnapshotWriter.publish(...)`** (main app only) recomputes today's totals, writes the snapshot, and calls `WidgetCenter.shared.reloadAllTimelines()`. Called from three places in `calorietrackerApp.swift`: on `foodStore.onEntriesChanged`, on `.userProfileDidChange` notification (goal edits), and on scene-phase `.active` (so midnight rollover doesn't require an explicit food change).
 - **Callback-wiring gotcha**: `wireUpFoodStoreCallback()` (where the `onEntriesChanged` closure gets installed) must run on **every** scene-active, not just the onboarding `false→true` transition. The `.onChange(of: hasCompletedOnboarding)` branch only fires once ever; if it were the sole wire-up site, existing users who completed onboarding before this code landed would never get the widget-refresh callback installed and would have to open the app to see new entries. Closure assignment is idempotent, so re-wiring on scene-active is safe.
 - **Timeline policy**: `CalorieProvider.getTimeline` emits one entry for "now" and refreshes after 30 minutes as a safety net for days when the user doesn't log anything.
 - **Freshness rules baked into the data layer** (don't regress these):
-  1. `FudAIWidgets/WidgetSnapshot.read()` returns `nil` when `snapshot.dayStart` isn't today. The widget then falls back to `.empty` (zeroed today). Without this the 30-min timeline refresh kept showing yesterday's totals past midnight.
+  1. `ios/FudAIWidgets/WidgetSnapshot.read()` returns `nil` when `snapshot.dayStart` isn't today. The widget then falls back to `.empty` (zeroed today). Without this the 30-min timeline refresh kept showing yesterday's totals past midnight.
   2. `WidgetSnapshotWriter.publish(...)` filters entries with `Calendar.isDate($0.timestamp, inSameDayAs: Date())` — NOT a plain `>= startOfDay`. The latter would fold tomorrow-dated entries (pre-logged via the week strip) into today's widget totals.
   3. `WidgetSnapshot.clear()` is called from Delete All Data and from `refreshWidgetSnapshot()` when no profile is loaded. The App Group container sits outside `UserDefaults.standard`, so `removePersistentDomain` doesn't touch it — without `clear()` the widget would keep showing the previous profile's numbers after a reset.
 
-Adding a new widget: add a new `Widget` conforming type in `FudAIWidgets/`, add it to `FudAIWidgetsBundle.body`, extend `CalorieWidgetView`'s `@Environment(\.widgetFamily)` switch if you're adding a new family. If you need additional data, extend `WidgetSnapshot` in **both** files (add fields with Codable defaults so old snapshots still decode).
+Adding a new widget: add a new `Widget` conforming type in `ios/FudAIWidgets/`, add it to `FudAIWidgetsBundle.body`, extend `CalorieWidgetView`'s `@Environment(\.widgetFamily)` switch if you're adding a new family. If you need additional data, extend `WidgetSnapshot` in **both** files (add fields with Codable defaults so old snapshots still decode).
 
 ### Localization (15 languages)
 
-The app ships with `calorietracker/Localizable.xcstrings` (String Catalog) — ~200 UI strings × 15 locales: `en` (source), `ar`, `az`, `de`, `es`, `fr`, `hi`, `it`, `ja`, `ko`, `nl`, `pt-BR`, `ro`, `ru`, `zh-Hans`.
+The app ships with `ios/calorietracker/Localizable.xcstrings` (String Catalog) — ~200 UI strings × 15 locales: `en` (source), `ar`, `az`, `de`, `es`, `fr`, `hi`, `it`, `ja`, `ko`, `nl`, `pt-BR`, `ro`, `ru`, `zh-Hans`.
 
 No in-app language picker. iOS auto-selects from the device language (matches Cal AI / MyFitnessPal / Yazio).
 
-**Rule when adding UI strings**: every new `Text("...")`, `Button("...")`, `Section("...")`, `.alert("...")`, `.navigationTitle("...")`, placeholder, etc. must land in the catalog with translations for all 14 non-English locales before commit. For batches of 10+ strings spawn a general-purpose agent with the translation prompt (see prior commits for the format), merge the JSON into the catalog via a small Python script. `SWIFT_EMIT_LOC_STRINGS = YES` is set — Xcode auto-extracts new English strings on build, but will leave non-English entries empty; fill them in manually before shipping. Adding a new language requires a new code in the catalog + a new `knownRegions` entry in `project.pbxproj`.
+**Rule when adding UI strings**: every new `Text("...")`, `Button("...")`, `Section("...")`, `.alert("...")`, `.navigationTitle("...")`, placeholder, etc. must land in the catalog with translations for all 14 non-English locales before commit. For batches of 10+ strings spawn a general-purpose agent with the translation prompt (see prior commits for the format), merge the JSON into the catalog via a small Python script. `SWIFT_EMIT_LOC_STRINGS = YES` is set — Xcode auto-extracts new English strings on build, but will leave non-English entries empty; fill them in manually before shipping. Adding a new language requires a new code in the catalog + a new `knownRegions` entry in `ios/calorietracker.xcodeproj/project.pbxproj`.
 
 ### UI Structure
 
@@ -179,6 +179,10 @@ No in-app language picker. iOS auto-selects from the device language (matches Ca
 - `Views/Theme.swift` (`AppColors`) holds the gradient palette used across the app.
 - Picker sheets (height, weight, body-fat, calories/macros) seed their `@State` in `init()`, not `.onAppear`, to avoid a "flash to default value" on open.
 - **Share sheets use `ActivityShareSheet`** (a `UIViewControllerRepresentable` over `UIActivityViewController` defined in `ContentView.swift`) — **not** SwiftUI's `ShareLink`. SwiftUI's `ShareLink(item: URL, message:)` silently drops the `message` arg for most share targets (Messages, Mail, X), so only the URL gets shared. Wrapping `UIActivityViewController` with `[String, URL]` in `activityItems` forwards both: iMessage shows the text plus the URL preview, Mail uses the text as body. Used by About → Share the App.
+
+## Android (placeholder)
+
+`android/` exists as an empty folder with a `.gitkeep`. The Kotlin + Jetpack Compose client has not been scaffolded yet. When it is, this file grows a parallel "Build, Install, Launch (Android)", "Tests (Android)", and "Architecture (Android)" set of sections.
 
 ## Gotchas
 
@@ -201,7 +205,7 @@ No in-app language picker. iOS auto-selects from the device language (matches Ca
 
 - **`ios/ASO.md`** holds the App Store listing copy (name, subtitle, promo text, keywords, What's New, full description, reviewer notes). Update it whenever the version bumps; the current header is `v3.0`. App Store Connect uploads happen by hand-pasting from this file — don't let it drift from the code.
 - **App Store screenshots** live in `~/Documents/fud ai/appstore screenshots/` (raw 1179×2556 captures from device) and get composited into 1242×2688 marketing PNGs by ad-hoc Python scripts in `/tmp/`. The scripts are not in the repo — they're rebuilt per release. The current iteration uses PIL gradient backgrounds + a pixel-perfect iPhone 15 Pro Max frame + Bricolage Grotesque ExtraBold typography.
-- Bump `MARKETING_VERSION` in `project.pbxproj` (two occurrences — main app + widget extension) before each App Store submission. `CURRENT_PROJECT_VERSION` is the build number.
+- Bump `MARKETING_VERSION` in `ios/calorietracker.xcodeproj/project.pbxproj` (two occurrences — main app + widget extension) before each App Store submission. `CURRENT_PROJECT_VERSION` is the build number.
 
 ## Identity
 
