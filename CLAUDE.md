@@ -165,6 +165,7 @@ No in-app language picker. iOS auto-selects from the device language (matches Ca
 - Sheets and pickers route through a single `.sheet(item: $activeSheet)` driven by an enum to avoid SwiftUI's stacked-sheet bugs.
 - `Views/Theme.swift` (`AppColors`) holds the gradient palette used across the app.
 - Picker sheets (height, weight, body-fat, calories/macros) seed their `@State` in `init()`, not `.onAppear`, to avoid a "flash to default value" on open.
+- **Share sheets use `ActivityShareSheet`** (a `UIViewControllerRepresentable` over `UIActivityViewController` defined in `ContentView.swift`) — **not** SwiftUI's `ShareLink`. SwiftUI's `ShareLink(item: URL, message:)` silently drops the `message` arg for most share targets (Messages, Mail, X), so only the URL gets shared. Wrapping `UIActivityViewController` with `[String, URL]` in `activityItems` forwards both: iMessage shows the text plus the URL preview, Mail uses the text as body. Used by About → Share the App.
 
 ## Gotchas
 
@@ -182,6 +183,12 @@ No in-app language picker. iOS auto-selects from the device language (matches Ca
 - Plain factual messages. No co-author trailer. No marketing language.
 - Commit and push immediately after each working change.
 - When a commit adds user-facing strings, the message should mention the catalog was updated.
+
+## Release Artifacts
+
+- **`ASO.md`** at repo root holds the App Store listing copy (name, subtitle, promo text, keywords, What's New, full description, reviewer notes). Update it whenever the version bumps; the current header is `v3.0`. App Store Connect uploads happen by hand-pasting from this file — don't let it drift from the code.
+- **App Store screenshots** live in `~/Documents/fud ai/appstore screenshots/` (raw 1179×2556 captures from device) and get composited into 1242×2688 marketing PNGs by ad-hoc Python scripts in `/tmp/`. The scripts are not in the repo — they're rebuilt per release. The current iteration uses PIL gradient backgrounds + a pixel-perfect iPhone 15 Pro Max frame + Bricolage Grotesque ExtraBold typography.
+- Bump `MARKETING_VERSION` in `project.pbxproj` (two occurrences — main app + widget extension) before each App Store submission. `CURRENT_PROJECT_VERSION` is the build number.
 
 ## Identity
 
