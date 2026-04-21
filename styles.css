@@ -202,9 +202,9 @@ p { color: var(--ink-soft); }
 }
 .hero-grid {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 80px;
-  align-items: start;
+  grid-template-columns: 1fr 0.95fr;
+  gap: 72px;
+  align-items: center;
 }
 .hero-text { position: relative; }
 .hero-title {
@@ -256,21 +256,21 @@ p { color: var(--ink-soft); }
 .hero-card-frame {
   display: flex;
   justify-content: center;
-  margin-bottom: 28px;
+  margin-bottom: 0;
 }
 .phone-frame {
-  width: 280px;
+  width: min(360px, 100%);
   aspect-ratio: 9/19;
   background: var(--hardware);
-  border-radius: 38px;
-  padding: 8px;
+  border-radius: 44px;
+  padding: 9px;
   position: relative;
-  box-shadow: 0 0 0 1px var(--rule-strong), 0 24px 60px rgba(0,0,0,0.45);
+  box-shadow: 0 0 0 1px var(--rule-strong), 0 32px 80px rgba(0,0,0,0.55);
 }
 .phone-screen {
   width: 100%;
   height: 100%;
-  border-radius: 30px;
+  border-radius: 35px;
   overflow: hidden;
   background: var(--hardware);
 }
@@ -280,30 +280,6 @@ p { color: var(--ink-soft); }
   object-fit: cover;
   object-position: top;
 }
-.hero-spec {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px 20px;
-  padding-top: 20px;
-  border-top: 1px solid var(--rule);
-}
-.hero-spec dt {
-  font-family: var(--mono);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--ink-mute);
-  margin-bottom: 4px;
-}
-.hero-spec dd {
-  font-family: var(--serif);
-  font-size: 1.6rem;
-  font-weight: 500;
-  color: var(--ink);
-  letter-spacing: -0.02em;
-  font-variation-settings: "opsz" 60;
-}
-
 /* ---------------- CTA BUTTONS ---------------- */
 .cta-group {
   display: flex;
@@ -959,16 +935,8 @@ p { color: var(--ink-soft); }
     margin-bottom: 32px;
   }
   .hero-lede .dropcap { font-size: 3.2rem; line-height: 0.85; }
-  .hero-card { padding: 18px 18px 16px; }
-  .hero-card::before { left: 18px; font-size: 9px; }
-  .phone-frame { width: 220px; }
-  .hero-spec {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px 12px;
-    padding-top: 16px;
-  }
-  .hero-spec dt { font-size: 9px; letter-spacing: 0.14em; }
-  .hero-spec dd { font-size: 1.3rem; }
+  .hero-card { padding: 0; }
+  .phone-frame { width: 280px; }
 
   .ticker { animation-duration: 28s; gap: 32px; }
   .ticker-item { font-size: 10px; letter-spacing: 0.16em; }
@@ -1059,8 +1027,7 @@ p { color: var(--ink-soft); }
   }
   .stat-number { font-size: clamp(2.4rem, 14vw, 3.2rem); margin-bottom: 12px; }
 
-  .hero-card { padding: 16px 16px 14px; }
-  .hero-card::before { font-size: 9px; padding: 0 6px; }
+  .hero-card { padding: 0; }
 
   .plate-caption { font-size: 9.5px; }
   .plate-caption .num { letter-spacing: 0.16em; }
@@ -1099,8 +1066,6 @@ p { color: var(--ink-soft); }
   .app-store-btn,
   .ph-badge { width: 100%; max-width: 100%; }
   .ph-badge img { width: 100%; height: auto; }
-  .hero-spec { grid-template-columns: repeat(2, 1fr); gap: 12px 14px; }
-  .hero-spec dd { font-size: 1.2rem; }
 
   .plate .phone-frame { width: 170px; }
   .plates { padding: 8px 16px; gap: 16px; }
