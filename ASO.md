@@ -106,7 +106,7 @@ APPLE HEALTH
 • External samples (Apple Watch, scales, Health app) auto-imported
 • Background observer for real-time updates
 
-We built Fud AI because tracking calories shouldn't feel like a chore. We want to make healthy eating simple and accessible for everyone.
+I built Fud AI because tracking calories shouldn't feel like a chore. I want to make healthy eating simple and accessible for everyone.
 
 If you have ideas or questions, reach out at apoorv@fud-ai.app or open an issue on GitHub.
 
