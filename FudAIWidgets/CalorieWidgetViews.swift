@@ -174,26 +174,32 @@ private struct RectangularCalorieView: View {
     let snapshot: WidgetSnapshot
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(alignment: .center, spacing: 12) {
             ZStack {
                 Circle()
-                    .stroke(.secondary.opacity(0.3), lineWidth: 2.5)
+                    .stroke(.secondary.opacity(0.3), lineWidth: 3)
                 Circle()
                     .trim(from: 0, to: snapshot.calorieProgress)
-                    .stroke(style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                    .stroke(style: StrokeStyle(lineWidth: 3, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                 Image(systemName: "flame.fill")
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.system(size: 13, weight: .bold))
             }
-            .frame(width: 28, height: 28)
+            .frame(width: 42, height: 42)
             .widgetAccentable()
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text("\(snapshot.calories) / \(snapshot.calorieGoal) kcal")
-                    .font(.system(.caption, design: .rounded, weight: .semibold))
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(snapshot.calories)")
+                    .font(.system(.title3, design: .rounded, weight: .bold))
+                    .widgetAccentable()
                     .lineLimit(1)
-                Text("P \(snapshot.protein)g · C \(snapshot.carbs)g · F \(snapshot.fat)g")
+                    .minimumScaleFactor(0.7)
+                Text("of \(snapshot.calorieGoal) kcal")
                     .font(.system(.caption2, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                Text("P \(snapshot.protein) · C \(snapshot.carbs) · F \(snapshot.fat)")
+                    .font(.system(.caption2, design: .rounded, weight: .medium))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
