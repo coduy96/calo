@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Fud AI is an open-source calorie tracker. The iOS client (SwiftUI, iOS 17.6+) lives in `ios/`; the Android client will live in `android/` (empty placeholder for now). Snap/speak/type a meal, an AI provider returns nutrition JSON, the user reviews it, and it lands in `FoodStore` + Apple Health. There's also a "Coach" tab — multi-turn AI chat that sees the user's full profile, weight history, and food log and answers questions like "what's my expected weight in 30 days?". Bring-your-own-key model; all data is local. No subscriptions, no sign-in, no cloud sync.
+Fud AI is an open-source calorie tracker. The iOS client (SwiftUI, iOS 17.6+) lives in `ios/`; the Android client will live in `android/` (empty placeholder for now); the marketing website (plain HTML/CSS, deployed to Vercel at https://fud-ai.app) lives in `web/`. Snap/speak/type a meal, an AI provider returns nutrition JSON, the user reviews it, and it lands in `FoodStore` + Apple Health. There's also a "Coach" tab — multi-turn AI chat that sees the user's full profile, weight history, and food log and answers questions like "what's my expected weight in 30 days?". Bring-your-own-key model; all data is local. No subscriptions, no sign-in, no cloud sync.
 
 ## Repo Layout
 
@@ -13,6 +13,7 @@ fud-ai/
 ├── ios/        ← iOS app (SwiftUI, Xcode project)
 │   └── ASO.md  ← App Store listing copy (title, promo, keywords, reviewer notes)
 ├── android/    ← Android app (empty placeholder; Kotlin + Compose coming)
+├── web/        ← Marketing site (index.html, styles.css, privacy/terms, sitemap)
 └── …root-level meta (README, LICENSE, CONTRIBUTING, SECURITY, CLAUDE.md, .github/)
 ```
 
@@ -183,6 +184,16 @@ No in-app language picker. iOS auto-selects from the device language (matches Ca
 ## Android (placeholder)
 
 `android/` exists as an empty folder with a `.gitkeep`. The Kotlin + Jetpack Compose client has not been scaffolded yet. When it is, this file grows a parallel "Build, Install, Launch (Android)", "Tests (Android)", and "Architecture (Android)" set of sections.
+
+## Website (`web/`)
+
+Plain static HTML + CSS — no build step, no framework. Deployed to Vercel with the domain `fud-ai.app`. After the monorepo merge, Vercel's git integration must point at this repo with **Root Directory = `web/`** (previously it pointed at the now-obsolete `apoorvdarshan/fud-ai-web` repo).
+
+- **Pages**: `web/index.html` (landing), `web/privacy.html`, `web/terms.html`.
+- **Assets**: `web/assets/` — logo, OG preview image, screenshots used by the landing hero.
+- **OG image**: `web/assets/og-preview.png` is referenced with `?v=N` cache-busting in `index.html` meta tags. Bump the version when replacing the image so X / Facebook / LinkedIn re-scrape.
+- **SEO**: `web/robots.txt`, `web/sitemap.xml`.
+- **Preview locally**: any static server, e.g. `cd web && python3 -m http.server 8000`.
 
 ## Gotchas
 

@@ -202,7 +202,17 @@ All values can be manually overridden in Settings, with a **Recalculate Goals** 
 | **Localization** | `Localizable.xcstrings` (String Catalog), 15 languages, auto-selected by iPhone's system language |
 | **Dependencies** | Zero |
 
-### Source Layout
+### Repo Layout
+
+```
+fud-ai/
+├── ios/        # SwiftUI iOS app (this is the current shipping product)
+├── android/    # Kotlin + Jetpack Compose app (coming)
+├── web/        # Marketing site — https://fud-ai.app (static HTML/CSS, Vercel)
+└── README, LICENSE, CONTRIBUTING, SECURITY, CLAUDE.md, .github/
+```
+
+### Source Layout (iOS)
 
 ```
 ios/
