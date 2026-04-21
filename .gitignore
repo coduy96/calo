@@ -5,8 +5,16 @@
 DerivedData/
 build/
 
+# Android Studio / Gradle
+.gradle/
+local.properties
+*.iml
+.idea/
+*.jks
+.cxx/
+
 # Secrets
-calorietracker/Resources/Secrets.plist
+ios/calorietracker/Resources/Secrets.plist
 .DS_Store
 
 # Claude Code runtime

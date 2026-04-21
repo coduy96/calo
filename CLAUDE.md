@@ -4,19 +4,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Fud AI is an open-source iOS calorie tracker (SwiftUI, iOS 17.6+). Snap/speak/type a meal, an AI provider returns nutrition JSON, the user reviews it, and it lands in `FoodStore` + Apple Health. There's also a "Coach" tab — multi-turn AI chat that sees the user's full profile, weight history, and food log and answers questions like "what's my expected weight in 30 days?". Bring-your-own-key model; all data is local. No subscriptions, no sign-in, no cloud sync.
+Fud AI is an open-source calorie tracker. The iOS client (SwiftUI, iOS 17.6+) lives in `ios/`; the Android client will live in `android/` (empty placeholder for now). Snap/speak/type a meal, an AI provider returns nutrition JSON, the user reviews it, and it lands in `FoodStore` + Apple Health. There's also a "Coach" tab — multi-turn AI chat that sees the user's full profile, weight history, and food log and answers questions like "what's my expected weight in 30 days?". Bring-your-own-key model; all data is local. No subscriptions, no sign-in, no cloud sync.
 
-## Build, Install, Launch
+## Repo Layout
 
-The app is tested on Apoorv's physical iPhone (iPhone 16, device ID `E2095CDC-E117-527C-818A-9F741A145103`). After every change run all three commands. The Release config is intentional — it matches what users actually see.
+```
+fud-ai/
+├── ios/        ← iOS app (SwiftUI, Xcode project)
+│   └── ASO.md  ← App Store listing copy (title, promo, keywords, reviewer notes)
+├── android/    ← Android app (empty placeholder; Kotlin + Compose coming)
+└── …root-level meta (README, LICENSE, CONTRIBUTING, SECURITY, CLAUDE.md, .github/)
+```
+
+## Build, Install, Launch (iOS)
+
+The app is tested on Apoorv's physical iPhone (iPhone 16, device ID `E2095CDC-E117-527C-818A-9F741A145103`). After every change run all three commands. The Release config is intentional — it matches what users actually see. `-derivedDataPath ios/build` keeps the build output at a known location so the install path doesn't depend on Xcode's hashed DerivedData folder.
 
 ```bash
 # Build
-xcodebuild -scheme calorietracker -destination 'id=E2095CDC-E117-527C-818A-9F741A145103' build
+xcodebuild -project ios/calorietracker.xcodeproj -scheme calorietracker \
+  -destination 'id=E2095CDC-E117-527C-818A-9F741A145103' \
+  -derivedDataPath ios/build build
 
 # Install
 xcrun devicectl device install app --device E2095CDC-E117-527C-818A-9F741A145103 \
-  ~/Library/Developer/Xcode/DerivedData/calorietracker-gyjqfuacfxocddfrskbcdsbwqhxa/Build/Products/Release-iphoneos/calorietracker.app
+  ios/build/Build/Products/Release-iphoneos/calorietracker.app
 
 # Launch
 xcrun devicectl device process launch --device E2095CDC-E117-527C-818A-9F741A145103 com.apoorvdarshan.calorietracker
@@ -25,12 +37,13 @@ xcrun devicectl device process launch --device E2095CDC-E117-527C-818A-9F741A145
 xcrun devicectl device process launch --device E2095CDC-E117-527C-818A-9F741A145103 com.apoorvdarshan.calorietracker -- --reset-onboarding
 ```
 
-## Tests
+## Tests (iOS)
 
 `calorietrackerTests` and `calorietrackerUITests` targets exist but only contain Xcode boilerplate — there are no real tests. Verify behavior by hand on device. If you do add tests, run them with:
 
 ```bash
-xcodebuild test -scheme calorietracker -destination 'id=E2095CDC-E117-527C-818A-9F741A145103'
+xcodebuild test -project ios/calorietracker.xcodeproj -scheme calorietracker \
+  -destination 'id=E2095CDC-E117-527C-818A-9F741A145103'
 ```
 
 ## Code Review
@@ -186,7 +199,7 @@ No in-app language picker. iOS auto-selects from the device language (matches Ca
 
 ## Release Artifacts
 
-- **`ASO.md`** at repo root holds the App Store listing copy (name, subtitle, promo text, keywords, What's New, full description, reviewer notes). Update it whenever the version bumps; the current header is `v3.0`. App Store Connect uploads happen by hand-pasting from this file — don't let it drift from the code.
+- **`ios/ASO.md`** holds the App Store listing copy (name, subtitle, promo text, keywords, What's New, full description, reviewer notes). Update it whenever the version bumps; the current header is `v3.0`. App Store Connect uploads happen by hand-pasting from this file — don't let it drift from the code.
 - **App Store screenshots** live in `~/Documents/fud ai/appstore screenshots/` (raw 1179×2556 captures from device) and get composited into 1242×2688 marketing PNGs by ad-hoc Python scripts in `/tmp/`. The scripts are not in the repo — they're rebuilt per release. The current iteration uses PIL gradient backgrounds + a pixel-perfect iPhone 15 Pro Max frame + Bricolage Grotesque ExtraBold typography.
 - Bump `MARKETING_VERSION` in `project.pbxproj` (two occurrences — main app + widget extension) before each App Store submission. `CURRENT_PROJECT_VERSION` is the build number.
 
