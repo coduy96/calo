@@ -25,7 +25,7 @@ calorie,tracker,nutrition,macro,AI,food,scanner,diet,protein,weight,health,fitne
 ## Category
 ```
 Primary: Health & Fitness
-Secondary: Utilities
+Secondary: Food & Drink
 ```
 
 ## What's New (v3.0)
