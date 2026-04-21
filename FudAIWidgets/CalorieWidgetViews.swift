@@ -198,10 +198,11 @@ private struct RectangularCalorieView: View {
                     .font(.system(.caption2, design: .rounded))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                Text("P \(snapshot.protein) · C \(snapshot.carbs) · F \(snapshot.fat)")
+                Text("P\(snapshot.protein) · C\(snapshot.carbs) · F\(snapshot.fat)")
                     .font(.system(.caption2, design: .rounded, weight: .medium))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
             Spacer(minLength: 0)
         }
