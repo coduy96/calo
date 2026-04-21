@@ -1,10 +1,8 @@
 /* ================================================================
-   FUD AI — ALMANAC
+   FUD AI — ALMANAC (DARK)
    ----------------------------------------------------------------
-   An editorial design language: cream paper, ink type, restrained
-   coral accent. Borrowed sensibility from Anthropic Claude's
-   marketing pages, Stripe Press editorial layouts, and the
-   typographic discipline of a well-set almanac.
+   The same editorial design language as the almanac, but inverted
+   onto a warm near-black "paper". Restrained coral accent stays.
 
    Type stack:
      • Fraunces        — display serif, optical-size adjusted
@@ -14,22 +12,29 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-/* ---------------- DESIGN TOKENS ---------------- */
+/* ---------------- DESIGN TOKENS — DARK ALMANAC ---------------- */
 :root {
-  /* Paper + ink */
-  --paper:        #F4EFE6;
-  --paper-deep:   #ECE6D8;
-  --paper-warm:   #FBF7EF;
-  --ink:          #1A1814;
-  --ink-soft:     #44403A;
-  --ink-mute:     #8A857B;
-  --rule:         rgba(26, 24, 20, 0.10);
-  --rule-strong:  rgba(26, 24, 20, 0.22);
+  /* Inverted paper — warm near-black tones (an old printer's plate
+     inverted). Keeps the editorial warmth without going gray. */
+  --paper:        #0C0B09;
+  --paper-deep:   #15130E;
+  --paper-warm:   #1A1813;
 
-  /* Single accent — coral, used sparingly */
-  --coral:        #E63946;
-  --coral-deep:   #C7202D;
-  --coral-soft:   rgba(230, 57, 70, 0.10);
+  /* Ink, inverted — warm cream type on dark paper */
+  --ink:          #F2EDE3;
+  --ink-soft:     #A8A192;
+  --ink-mute:     #6E6759;
+  --rule:         rgba(242, 237, 227, 0.09);
+  --rule-strong:  rgba(242, 237, 227, 0.20);
+
+  /* Single accent — coral, brightened for dark contrast */
+  --coral:        #FF6B7A;
+  --coral-deep:   #E63946;
+  --coral-soft:   rgba(255, 107, 122, 0.12);
+
+  /* True dark for hardware-like surfaces (phone frame) — independent
+     of ink/paper inversion. */
+  --hardware:     #050505;
 
   /* Type */
   --serif:    'Fraunces', 'Times New Roman', Georgia, serif;
@@ -115,7 +120,7 @@ p { color: var(--ink-soft); }
   top: 0; left: 0; right: 0;
   z-index: 100;
   padding: 18px 0;
-  background: rgba(244, 239, 230, 0.75);
+  background: rgba(12, 11, 9, 0.72);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
   border-bottom: 1px solid transparent;
@@ -267,18 +272,18 @@ p { color: var(--ink-soft); }
 .phone-frame {
   width: 280px;
   aspect-ratio: 9/19;
-  background: var(--ink);
+  background: var(--hardware);
   border-radius: 38px;
   padding: 8px;
   position: relative;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+  box-shadow: 0 0 0 1px var(--rule-strong), 0 24px 60px rgba(0,0,0,0.45);
 }
 .phone-screen {
   width: 100%;
   height: 100%;
   border-radius: 30px;
   overflow: hidden;
-  background: #050505;
+  background: var(--hardware);
 }
 .phone-screen img {
   width: 100%;
@@ -344,8 +349,8 @@ p { color: var(--ink-soft); }
   justify-content: center;
   gap: 10px;
   padding: 0 22px;
-  background: var(--ink);
-  color: var(--paper-warm);
+  background: var(--ink);            /* warm cream on dark paper */
+  color: var(--paper);                /* dark text on cream button */
   font-family: var(--sans);
   font-weight: 600;
   font-size: 0.92rem;
@@ -354,7 +359,7 @@ p { color: var(--ink-soft); }
   white-space: nowrap;
 }
 .app-store-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
-.app-store-btn:hover { background: #000; }
+.app-store-btn:hover { background: #fff; color: #000; }
 
 .ph-badge {
   display: inline-flex;
@@ -392,11 +397,12 @@ p { color: var(--ink-soft); }
 .chip-btn:hover {
   color: var(--ink);
   border-color: var(--ink);
+  background: rgba(242, 237, 227, 0.04);
   transform: translateY(-1px);
 }
-.chip-btn.chip-github:hover { color: var(--ink); border-color: var(--ink); background: rgba(26,24,20,0.04); }
-.chip-btn.chip-paypal:hover { color: var(--ink); border-color: var(--ink); background: rgba(26,24,20,0.04); }
-.chip-btn.chip-x:hover      { color: var(--ink); border-color: var(--ink); background: rgba(26,24,20,0.04); }
+.chip-btn.chip-github:hover i { color: #FFC857; }
+.chip-btn.chip-paypal:hover i { color: #0BAFE2; }
+.chip-btn.chip-x:hover i      { color: #FFFFFF; }
 
 /* ---------------- EDITORIAL TICKER (replaces marquee) ---------------- */
 .ticker-section {
@@ -908,8 +914,11 @@ p { color: var(--ink-soft); }
   .footer-brand { grid-column: 1 / -1; }
 }
 
-@media (max-width: 720px) {
-  .nav { padding: 14px 0; }
+@media (max-width: 768px) {
+  .nav { padding: 12px 0; }
+  .nav .container { gap: 16px; }
+  .nav-brand { font-size: 1rem; }
+  .nav-brand img { width: 24px; height: 24px; }
   .nav-links {
     display: none;
     position: absolute;
@@ -917,23 +926,25 @@ p { color: var(--ink-soft); }
     left: 0; right: 0;
     flex-direction: column;
     gap: 0;
-    background: var(--paper-warm);
+    background: var(--paper);
     border-bottom: 1px solid var(--rule);
-    padding: 16px 24px 24px;
+    padding: 8px 24px 16px;
   }
   .nav-toggle { display: none; }
   .nav-toggle:checked ~ .nav-links { display: flex; }
   .nav-links a {
-    padding: 12px 0;
+    padding: 14px 0;
     border-bottom: 1px solid var(--rule);
     width: 100%;
+    font-size: 12px;
   }
+  .nav-links a:last-child { border-bottom: 0; }
   .hamburger {
     display: flex;
     flex-direction: column;
     gap: 5px;
     cursor: pointer;
-    padding: 8px;
+    padding: 6px;
   }
   .hamburger span {
     width: 22px;
@@ -941,27 +952,71 @@ p { color: var(--ink-soft); }
     background: var(--ink);
     transition: transform var(--t-fast);
   }
-  .hero-meta { gap: 16px; flex-wrap: wrap; }
-  .hero-card { padding: 20px; }
-  .phone-frame { width: 240px; }
-  .hero-spec { grid-template-columns: 1fr 1fr; gap: 14px; }
-  .hero-lede .dropcap { font-size: 3.6rem; }
 
-  .ticker { animation-duration: 28s; gap: 36px; }
-  .ticker-item { font-size: 11px; }
+  .hero { padding: 120px 0 64px; }
+  .hero-meta {
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+  }
+  .hero-title {
+    font-size: clamp(2.6rem, 11vw, 4.2rem);
+    margin-bottom: 24px;
+  }
+  .hero-lede {
+    font-size: 1rem;
+    margin-bottom: 32px;
+  }
+  .hero-lede .dropcap { font-size: 3.2rem; line-height: 0.85; }
+  .hero-card { padding: 18px 18px 16px; }
+  .hero-card::before { left: 18px; font-size: 9px; }
+  .phone-frame { width: 220px; }
+  .hero-spec {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px 12px;
+    padding-top: 16px;
+  }
+  .hero-spec dt { font-size: 9px; letter-spacing: 0.14em; }
+  .hero-spec dd { font-size: 1.3rem; }
 
+  .ticker { animation-duration: 28s; gap: 32px; }
+  .ticker-item { font-size: 10px; letter-spacing: 0.16em; }
+
+  .stats-section { padding: 72px 0; }
+  .stat-number { font-size: clamp(2.6rem, 12vw, 3.4rem); }
+
+  .section-head { margin-bottom: 48px; padding-bottom: 20px; }
+  .section-head h2 { font-size: clamp(2rem, 7vw, 2.8rem); }
+
+  .chapter { padding: 36px 0; }
+
+  .plates-section { padding: 80px 0; }
+  .plates { padding: 8px 24px; gap: 20px; }
+  .plate .phone-frame { width: 200px; }
+
+  .cta-section { padding: 88px 0; }
+  .cta-content h2 { font-size: clamp(2.2rem, 9vw, 3.2rem); }
+  .cta-content p { font-size: 0.98rem; margin-bottom: 28px; }
+
+  .footer { padding: 48px 0 32px; }
   .footer-grid {
     grid-template-columns: 1fr;
     gap: 32px;
+    margin-bottom: 36px;
   }
   .footer-bottom {
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     text-align: center;
+    font-size: 9px;
+    letter-spacing: 0.16em;
   }
 }
 
 @media (max-width: 600px) {
+  .container { padding: 0 20px; }
   .cta-group, .cta-sub {
     width: 100%;
     justify-content: flex-start;
@@ -977,16 +1032,21 @@ p { color: var(--ink-soft); }
   .ph-badge img { height: 48px; }
   .app-store-btn { padding: 0 18px; font-size: 0.86rem; }
   .app-store-btn svg { width: 16px; height: 16px; }
+  .chip-btn { height: 32px; padding: 0 12px; font-size: 10px; }
+  .chip-btn i { font-size: 11px; }
   .chapter {
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  .chapter-num { padding-top: 0; }
+  .chapter-num { padding-top: 0; font-size: 1.4rem; }
+  .chapter-head h3 { font-size: clamp(1.5rem, 6.5vw, 2rem); }
   .chapter-body { grid-column: 1; }
+  .chapter-tag { font-size: 9px; }
   .process-step {
     grid-template-columns: 1fr;
     gap: 8px;
   }
+  .process-text h3 { font-size: 1.5rem; }
   .stats-grid { grid-template-columns: 1fr; gap: 0; }
   .stat-card {
     border-right: 0;
@@ -995,15 +1055,28 @@ p { color: var(--ink-soft); }
   }
   .stat-card:not(:first-child) {
     border-top: 1px solid var(--rule);
-    margin-top: 24px;
-    padding-top: 24px;
+    margin-top: 20px;
+    padding-top: 20px;
   }
+  .legal-section { padding: 120px 0 64px; }
+  .legal-content h2 { font-size: clamp(2rem, 8vw, 2.8rem); }
+  .legal-content h3 { font-size: 1.25rem; margin: 36px 0 12px; }
+  .legal-table { font-size: 0.82rem; }
+  .legal-table th, .legal-table td { padding: 10px 8px; }
 }
 
 @media (max-width: 420px) {
+  .container { padding: 0 18px; }
+  .hero-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
   .app-store-btn,
-  .ph-badge { width: 100%; max-width: 300px; }
+  .ph-badge { width: 100%; max-width: 320px; }
   .ph-badge img { width: 100%; height: auto; }
+  .hero-spec { grid-template-columns: repeat(2, 1fr); }
+  .plate .phone-frame { width: 180px; }
 }
 
 /* ---------------- ENTRY ANIMATIONS ---------------- */
