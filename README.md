@@ -203,7 +203,7 @@ See [SECURITY.md](SECURITY.md). Use [private vulnerability reporting](https://gi
 
 ## Privacy
 
-All data stays on your device. No accounts, no cloud sync, no analytics. API keys are stored in iOS Keychain. See [Privacy Policy](https://fud-ai.app/privacy.html).
+All data stays on your device. No accounts, no cloud sync, no analytics. API keys are stored in iOS Keychain. **Delete All Data** is local-only — it wipes the app's storage (food log, weight log, profile, Coach chat, API keys, widget snapshot) but never touches Apple Health. Samples you've synced are yours; if you want them cleaned up, do it from Health → Sources → Fud AI. See [Privacy Policy](https://fud-ai.app/privacy.html).
 
 ## License
 
