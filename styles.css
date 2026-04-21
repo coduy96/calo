@@ -564,20 +564,20 @@ body:hover .cursor-glow { opacity: 1; }
 
 /* ---- TIER 1 SHARED (primary buttons) ---- */
 .app-store-btn,
-.ph-btn {
+.ph-badge {
   height: 54px;
   border-radius: 14px;
-  transition: transform var(--transition), filter var(--transition), background var(--transition);
+  transition: transform var(--transition), border-color var(--transition), background var(--transition);
   text-decoration: none;
   cursor: pointer;
   box-sizing: border-box;
 }
 .app-store-btn:hover,
-.ph-btn:hover {
+.ph-badge:hover {
   transform: translateY(-2px);
 }
 
-/* ---- TIER 1: App Store (filled white — matches Apple brand) ---- */
+/* ---- TIER 1: App Store (filled white) ---- */
 .app-store-btn {
   display: inline-flex;
   align-items: center;
@@ -595,38 +595,19 @@ body:hover .cursor-glow { opacity: 1; }
 }
 .app-store-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
 
-/* ---- TIER 1: Product Hunt (filled orange — matches PH brand) ---- */
-.ph-btn {
+/* ---- TIER 1: Product Hunt official badge (LIVE vote count) ---- */
+.ph-badge {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 0 20px 0 22px;
-  background: linear-gradient(135deg, #ff6154 0%, #da552f 100%);
-  color: #fff;
-  font-family: inherit;
-  font-weight: 600;
-  font-size: 0.94rem;
-  letter-spacing: -0.01em;
-  line-height: 1;
-  white-space: nowrap;
+  align-items: stretch;
+  overflow: hidden;
+  line-height: 0;
 }
-.ph-btn > i { font-size: 20px; flex-shrink: 0; }
-.ph-btn:hover { filter: brightness(1.08); }
-.ph-count {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-left: 4px;
-  padding: 5px 9px;
-  background: rgba(0,0,0,0.22);
-  border-radius: 7px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  line-height: 1;
+.ph-badge img {
+  display: block;
+  height: 54px;
+  width: auto;
+  border-radius: 14px;
 }
-.ph-count .fa-caret-up { font-size: 11px; color: #fff; }
 
 /* ---- TIER 2: compact glass chips ---- */
 .chip-btn {
@@ -685,15 +666,13 @@ body:hover .cursor-glow { opacity: 1; }
     justify-content: center;
   }
   .app-store-btn,
-  .ph-btn {
+  .ph-badge {
     height: 48px;
     border-radius: 12px;
   }
+  .ph-badge img { height: 48px; border-radius: 12px; }
   .app-store-btn { padding: 0 20px; font-size: 0.86rem; }
   .app-store-btn svg { width: 17px; height: 17px; }
-  .ph-btn { padding: 0 16px 0 18px; font-size: 0.86rem; gap: 8px; }
-  .ph-btn > i { font-size: 17px; }
-  .ph-count { padding: 4px 7px; font-size: 0.72rem; }
   .cta-sub {
     gap: 7px;
     margin-top: 12px;
@@ -708,7 +687,8 @@ body:hover .cursor-glow { opacity: 1; }
    so each one is a proper tap target, and keep chips flowing. */
 @media (max-width: 420px) {
   .app-store-btn,
-  .ph-btn { width: 100%; max-width: 280px; }
+  .ph-badge { width: 100%; max-width: 280px; }
+  .ph-badge img { width: 100%; height: auto; }
   .chip-btn span { display: inline; }
 }
 
