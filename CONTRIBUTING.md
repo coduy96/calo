@@ -1,30 +1,45 @@
 # Contributing to Fud AI
 
-Thanks for your interest in contributing! Fud AI is an open-source iOS calorie tracker with a "bring-your-own-key" AI model — PRs, bug reports, and feature ideas are all welcome.
+Thanks for your interest in contributing! Fud AI is an open-source, "bring-your-own-key" calorie tracker. The repo is a monorepo:
 
-## Getting Started
+- `ios/` — SwiftUI iOS app (currently shipping)
+- `android/` — Kotlin + Jetpack Compose app (coming; empty placeholder for now)
+- `web/` — marketing site at [fud-ai.app](https://fud-ai.app) (plain HTML/CSS, Vercel)
+
+PRs, bug reports, and feature ideas for any of these are welcome.
+
+## Getting Started (iOS)
 
 1. Fork the repo
 2. Clone your fork
-3. Open `calorietracker.xcodeproj` in Xcode (16+)
+3. Open `ios/calorietracker.xcodeproj` in Xcode (16+)
 4. Build and run on a simulator or device running iOS 17.6 or later
 
 No external dependencies — just Xcode and a valid Apple developer account.
 
-## Setup
+## Getting Started (Web)
+
+1. Fork the repo
+2. Clone your fork
+3. `cd web && python3 -m http.server 8000` (any static server works)
+4. Open http://localhost:8000
+
+The site is plain HTML/CSS — no build step, no framework, no dependencies. Deployed to Vercel from `web/`.
+
+## Setup (iOS)
 
 Go to **Settings → AI Provider** in the running app and paste an API key for any of the 13 supported providers (Gemini, OpenAI, Claude, Grok, Groq, OpenRouter, Together AI, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama for local, or any custom OpenAI-compatible endpoint). A free Gemini key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey) is the fastest way to get started. Keys are stored in iOS Keychain — never transmitted to us.
 
 > For a full architecture deep-dive (stores, services, widget extension, HealthKit conventions, localization rules, gotchas), read [`CLAUDE.md`](CLAUDE.md) in the repo root. It's the source of truth for how the codebase is organized.
 
-## Code Style
+## Code Style (iOS)
 
 - **SwiftUI** with `@Observable` (not `ObservableObject`)
 - Environment injection via `.environment()` (not `.environmentObject()`)
 - Main actor isolation is default (`SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`) — no manual `@MainActor` annotations needed
 - Services are stateless structs with static methods (`GeminiService`, `ChatService`, `SpeechService`, etc.)
 - Xcode auto-discovers files via `PBXFileSystemSynchronizedRootGroup` — **do not** edit `project.pbxproj` to register source files
-- Every user-facing string must be localized in `calorietracker/Localizable.xcstrings` across all 15 supported languages before commit
+- Every user-facing string must be localized in `ios/calorietracker/Localizable.xcstrings` across all 15 supported languages before commit
 - All data persistence is local (`UserDefaults` + iOS Keychain). No Core Data, no iCloud, no CloudKit
 
 ## Pull Requests
@@ -51,7 +66,7 @@ For feature ideas, use [the enhancement label](https://github.com/apoorvdarshan/
 
 The app already supports 13 providers across 3 API dialects. Adding a new one is straightforward:
 
-1. Add a case to the `AIProvider` enum in `calorietracker/Models/AIProvider.swift`
+1. Add a case to the `AIProvider` enum in `ios/calorietracker/Models/AIProvider.swift`
 2. Set its `baseURL`, `models`, `apiFormat`, and `apiKeyPlaceholder`
 3. **If `apiFormat` is `.openaiCompatible`** → you're done. Both `GeminiService` and `ChatService` will route to it automatically.
 4. **If it uses a custom API shape** → add a branch in both `GeminiService.callAI` (food analysis) and `ChatService.sendMessage` (Coach chat). Keep the 1s/2s/4s exponential-backoff retry loop intact for 503 / 529 / 429 responses.
@@ -60,7 +75,7 @@ Include working `vision`-capable model IDs in the `models` list since the app ne
 
 ## Adding a Speech-to-Text Provider
 
-Extend `SpeechProvider` in `calorietracker/Models/SpeechProvider.swift`, then add the matching handler in `SpeechService.transcribe`. Follow the pattern from existing providers (OpenAI, Groq, Deepgram, AssemblyAI).
+Extend `SpeechProvider` in `ios/calorietracker/Models/SpeechProvider.swift`, then add the matching handler in `SpeechService.transcribe`. Follow the pattern from existing providers (OpenAI, Groq, Deepgram, AssemblyAI).
 
 ## Localization
 
