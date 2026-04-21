@@ -3,6 +3,7 @@ import PhotosUI
 import UIKit
 import HealthKit
 import StoreKit
+import WidgetKit
 
 // MARK: - Camera Mode
 enum CameraMode {
@@ -1916,6 +1917,11 @@ struct ProfileView: View {
                     AIProviderSettings.deleteAllData()
                     SpeechSettings.deleteAllData()
                     chatStore.reset()
+                    // Wipe the widget snapshot out of the App Group container —
+                    // it lives outside UserDefaults.standard and would otherwise
+                    // keep showing the previous profile's numbers on the widget.
+                    WidgetSnapshot.clear()
+                    WidgetCenter.shared.reloadAllTimelines()
                     hasCompletedOnboarding = false
                 }
             } message: {

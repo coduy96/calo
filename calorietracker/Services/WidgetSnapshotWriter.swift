@@ -8,8 +8,11 @@ enum WidgetSnapshotWriter {
     /// Recomputes today's totals from the current FoodStore + ProfileStore and
     /// publishes them to the widget.
     static func publish(foods: [FoodEntry], profile: UserProfile) {
-        let startOfDay = Calendar.current.startOfDay(for: Date())
-        let today = foods.filter { $0.timestamp >= startOfDay }
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: Date())
+        // Must be same-day — `timestamp >= startOfDay` alone would fold future-logged
+        // entries (meals planned on tomorrow via the week strip) into today's totals.
+        let today = foods.filter { calendar.isDate($0.timestamp, inSameDayAs: Date()) }
 
         let cal = today.reduce(0) { $0 + $1.calories }
         let p = today.reduce(0) { $0 + $1.protein }

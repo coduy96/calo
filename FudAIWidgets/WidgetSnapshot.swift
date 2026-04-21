@@ -26,6 +26,14 @@ struct WidgetSnapshot: Codable, Equatable {
         guard let data = sharedDefaults?.data(forKey: key),
               let snapshot = try? JSONDecoder().decode(WidgetSnapshot.self, from: data)
         else { return nil }
+        // If the snapshot's dayStart is not today, treat it as stale. The main app
+        // will refresh on its next scene-active, but until then we should show an
+        // empty today rather than yesterday's totals. Returning nil lets the timeline
+        // provider substitute `.empty` (zeroed today).
+        let today = Calendar.current.startOfDay(for: Date())
+        guard Calendar.current.isDate(snapshot.dayStart, inSameDayAs: today) else {
+            return nil
+        }
         return snapshot
     }
 

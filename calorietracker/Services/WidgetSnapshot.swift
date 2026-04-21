@@ -37,6 +37,12 @@ struct WidgetSnapshot: Codable, Equatable {
         sharedDefaults?.set(data, forKey: key)
     }
 
+    /// Wipes the shared snapshot. Called from Delete All Data so widgets don't keep
+    /// showing the previous profile's numbers after a reset.
+    static func clear() {
+        sharedDefaults?.removeObject(forKey: key)
+    }
+
     static var placeholder: WidgetSnapshot {
         let now = Date()
         return WidgetSnapshot(

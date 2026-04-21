@@ -7,6 +7,7 @@
 
 import SwiftUI
 import HealthKit
+import WidgetKit
 
 @main
 struct calorietrackerApp: App {
@@ -213,7 +214,14 @@ struct calorietrackerApp: App {
     }
 
     private func refreshWidgetSnapshot() {
-        guard let profile = UserProfile.load() else { return }
+        guard let profile = UserProfile.load() else {
+            // No profile — onboarding not complete OR data was wiped. Clear the
+            // shared snapshot so the widget shows an empty day instead of stale
+            // numbers from a previous profile.
+            WidgetSnapshot.clear()
+            WidgetCenter.shared.reloadAllTimelines()
+            return
+        }
         WidgetSnapshotWriter.publish(foods: foodStore.entries, profile: profile)
     }
 }
