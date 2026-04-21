@@ -536,14 +536,15 @@ body:hover .cursor-glow { opacity: 1; }
 }
 
 /* ============================================================
-   CTA Button System
+   CTA Button System — TWO-TIER HIERARCHY
    ------------------------------------------------------------
-   All four CTAs share a 54px height so they align cleanly in
-   one or two rows. Flat surfaces, no glow, no shine — just
-   a simple 2px hover lift + border/background hover state.
-     • PRIMARY   — App Store (filled white) + Product Hunt
-                   official embed badge with LIVE vote count
-     • GLASS     — GitHub (amber star) + PayPal (blue icon)
+   Tier 1 (.cta-group): Primary actions. Big filled pills (54px).
+     • App Store (white) + Product Hunt official badge
+   Tier 2 (.cta-sub):   Secondary support/follow actions. Small
+                        glass chips (36px) so they don't compete
+                        with the primary CTAs.
+     • Star on GitHub + Support on PayPal + Follow on X
+   Flat surfaces, no glow, no shine — subtle 2px hover lift only.
    ============================================================ */
 
 .cta-group {
@@ -553,10 +554,16 @@ body:hover .cursor-glow { opacity: 1; }
   align-items: center;
   margin-top: 4px;
 }
+.cta-sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+}
 
-/* Shared base */
+/* ---- TIER 1 SHARED (primary buttons) ---- */
 .app-store-btn,
-.pill-btn,
 .ph-badge {
   height: 54px;
   border-radius: 14px;
@@ -566,12 +573,11 @@ body:hover .cursor-glow { opacity: 1; }
   box-sizing: border-box;
 }
 .app-store-btn:hover,
-.pill-btn:hover,
 .ph-badge:hover {
   transform: translateY(-2px);
 }
 
-/* ---- PRIMARY: App Store (filled white) ---- */
+/* ---- TIER 1: App Store (filled white) ---- */
 .app-store-btn {
   display: inline-flex;
   align-items: center;
@@ -589,7 +595,7 @@ body:hover .cursor-glow { opacity: 1; }
 }
 .app-store-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
 
-/* ---- PRIMARY: Product Hunt official embed badge (LIVE vote count) ---- */
+/* ---- TIER 1: Product Hunt official badge (LIVE vote count) ---- */
 .ph-badge {
   display: inline-flex;
   align-items: stretch;
@@ -603,50 +609,59 @@ body:hover .cursor-glow { opacity: 1; }
   border-radius: 14px;
 }
 
-/* ---- GLASS: shared base for GitHub + PayPal ---- */
-.pill-btn {
+/* ---- TIER 2: compact glass chips ---- */
+.chip-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 0 22px;
-  background: rgba(255,255,255,0.045);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.14);
+  gap: 7px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.035);
+  color: rgba(255,255,255,0.82);
+  border: 1px solid rgba(255,255,255,0.10);
   font-family: inherit;
-  font-weight: 600;
-  font-size: 0.94rem;
-  letter-spacing: -0.01em;
+  font-weight: 500;
+  font-size: 0.82rem;
+  letter-spacing: -0.005em;
   line-height: 1;
   white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: transform var(--transition), border-color var(--transition), background var(--transition), color var(--transition);
 }
-.pill-btn i { font-size: 18px; line-height: 1; flex-shrink: 0; }
-
-/* GitHub variant — amber star accent */
-.pill-btn.pill-github i { color: #ffc857; }
-.pill-btn.pill-github:hover {
-  border-color: rgba(255, 200, 87, 0.45);
-  background: rgba(255, 200, 87, 0.07);
-}
-
-/* PayPal variant — cyan-blue accent */
-.pill-btn.pill-paypal i { color: #0bafe2; }
-.pill-btn.pill-paypal:hover {
-  border-color: rgba(11, 175, 226, 0.45);
-  background: rgba(11, 175, 226, 0.07);
+.chip-btn i { font-size: 13px; line-height: 1; flex-shrink: 0; }
+.chip-btn:hover {
+  color: #fff;
+  transform: translateY(-1px);
 }
 
-/* X (Twitter) variant — pure white icon, white hover tint */
-.pill-btn.pill-x i { color: #fff; }
-.pill-btn.pill-x:hover {
-  border-color: rgba(255, 255, 255, 0.55);
-  background: rgba(255, 255, 255, 0.08);
+/* GitHub chip — amber star */
+.chip-btn.chip-github i { color: #ffc857; }
+.chip-btn.chip-github:hover {
+  border-color: rgba(255, 200, 87, 0.35);
+  background: rgba(255, 200, 87, 0.06);
+}
+
+/* PayPal chip — cyan icon */
+.chip-btn.chip-paypal i { color: #0bafe2; }
+.chip-btn.chip-paypal:hover {
+  border-color: rgba(11, 175, 226, 0.35);
+  background: rgba(11, 175, 226, 0.06);
+}
+
+/* X chip — white icon */
+.chip-btn.chip-x i { color: #fff; }
+.chip-btn.chip-x:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 @media (max-width: 600px) {
   .cta-group { gap: 10px; }
   .app-store-btn,
-  .pill-btn,
   .ph-badge {
     height: 48px;
     border-radius: 12px;
@@ -654,8 +669,9 @@ body:hover .cursor-glow { opacity: 1; }
   .ph-badge img { height: 48px; border-radius: 12px; }
   .app-store-btn { padding: 0 20px; font-size: 0.86rem; }
   .app-store-btn svg { width: 17px; height: 17px; }
-  .pill-btn { padding: 0 18px; font-size: 0.86rem; gap: 8px; }
-  .pill-btn i { font-size: 15px; }
+  .cta-sub { gap: 7px; margin-top: 12px; }
+  .chip-btn { height: 34px; padding: 0 12px; font-size: 0.78rem; }
+  .chip-btn i { font-size: 12px; }
 }
 
 /* Phone mockup */
