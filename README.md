@@ -53,7 +53,7 @@ Open-source, privacy-first calorie tracker for iOS. Bring your own AI provider �
 
 ### Health & platform
 - **Apple Health** — bidirectional sync for body measurements + 12 nutrition types written per meal
-- **Widgets** — Home Screen (small / medium with calorie ring + macro bars) and Lock Screen (circular / rectangular / inline). Update live whenever you log a meal
+- **Widgets** — Home Screen (small / medium with calorie ring + macro bars) and Lock Screen (circular / rectangular / inline). Update live whenever you add or delete a meal — no tap-to-open-app needed
 - **15 languages** — Arabic, Azerbaijani, Dutch, English, French, German, Hindi, Italian, Japanese, Korean, Portuguese (Brazil), Romanian, Russian, Simplified Chinese, Spanish (auto-selected by iPhone's Language setting)
 - **Meal reminders** — customizable breakfast, lunch, dinner notifications
 - **Dark mode** — system, light, or dark
@@ -67,7 +67,7 @@ Pick any of the **13 LLM providers** for both food analysis and the Coach chat. 
 |----------|--------|-----------|:---:|
 | Google Gemini | Gemini API | Gemini 2.5 Pro / Flash | Yes |
 | OpenAI | OpenAI | GPT-5 / 4o | Yes |
-| Anthropic Claude | Messages API | Sonnet 4.5 / Haiku 4.5 / Opus 4.1 | Yes |
+| Anthropic Claude | Messages API | Sonnet 4.6 (default) / Opus 4.7 / Haiku 4.5 | Yes |
 | xAI Grok | OpenAI-compatible | Grok 4 | Yes |
 | OpenRouter | OpenAI-compatible | Any model, free-form IDs | Yes |
 | Together AI | OpenAI-compatible | Llama 4, Qwen VL | Yes |
