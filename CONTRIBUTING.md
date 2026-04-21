@@ -1,52 +1,79 @@
 # Contributing to Fud AI
 
-Thanks for your interest in contributing!
+Thanks for your interest in contributing! Fud AI is an open-source iOS calorie tracker with a "bring-your-own-key" AI model — PRs, bug reports, and feature ideas are all welcome.
 
 ## Getting Started
 
 1. Fork the repo
 2. Clone your fork
-3. Open `calorietracker.xcodeproj` in Xcode
-4. Build and run on a simulator or device
+3. Open `calorietracker.xcodeproj` in Xcode (16+)
+4. Build and run on a simulator or device running iOS 17.6 or later
 
 No external dependencies — just Xcode and a valid Apple developer account.
 
 ## Setup
 
-Go to **Profile > AI Provider** in the app and add your API key for any supported provider (Gemini, OpenAI, Claude, etc.). Keys are stored locally in iOS Keychain.
+Go to **Settings → AI Provider** in the running app and paste an API key for any of the 13 supported providers (Gemini, OpenAI, Claude, Grok, Groq, OpenRouter, Together AI, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama for local, or any custom OpenAI-compatible endpoint). A free Gemini key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey) is the fastest way to get started. Keys are stored in iOS Keychain — never transmitted to us.
+
+> For a full architecture deep-dive (stores, services, widget extension, HealthKit conventions, localization rules, gotchas), read [`CLAUDE.md`](CLAUDE.md) in the repo root. It's the source of truth for how the codebase is organized.
 
 ## Code Style
 
-- SwiftUI with `@Observable` (not `ObservableObject`)
-- Environment injection via `.environment()` (not `environmentObject`)
-- Main actor isolation is default — no manual `@MainActor` needed
-- Services are stateless structs with static methods
-- Xcode auto-discovers files — don't edit `project.pbxproj` manually
+- **SwiftUI** with `@Observable` (not `ObservableObject`)
+- Environment injection via `.environment()` (not `.environmentObject()`)
+- Main actor isolation is default (`SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`) — no manual `@MainActor` annotations needed
+- Services are stateless structs with static methods (`GeminiService`, `ChatService`, `SpeechService`, etc.)
+- Xcode auto-discovers files via `PBXFileSystemSynchronizedRootGroup` — **do not** edit `project.pbxproj` to register source files
+- Every user-facing string must be localized in `calorietracker/Localizable.xcstrings` across all 15 supported languages before commit
+- All data persistence is local (`UserDefaults` + iOS Keychain). No Core Data, no iCloud, no CloudKit
 
 ## Pull Requests
 
 1. Create a branch from `main`
 2. Keep changes focused — one feature or fix per PR
-3. Test on a real device if possible
-4. Write a clear PR description
+3. Test on a real device if possible (the Release config is intentional — it matches what users see)
+4. Run the Codex review before opening the PR if you have it set up: `codex exec review --commit <SHA> --full-auto`
+5. Address P1 and P2 findings. P3 is judgment-call
+6. Write a clear PR description explaining the **why**, not just the **what**
 
 ## Reporting Issues
 
-Open an issue at [github.com/apoorvdarshan/fud-ai/issues](https://github.com/apoorvdarshan/fud-ai/issues) with:
+Open a bug at [github.com/apoorvdarshan/fud-ai/issues/new?labels=bug](https://github.com/apoorvdarshan/fud-ai/issues/new?labels=bug&title=Bug:%20) with:
 - Steps to reproduce
 - Expected vs actual behavior
-- Device and iOS version
-- Screenshots if relevant
+- Device model and iOS version
+- Which AI provider you were using (if the bug is analysis-related)
+- Screenshots or a short screen recording if relevant
 
-## Adding AI Providers
+For feature ideas, use [the enhancement label](https://github.com/apoorvdarshan/fud-ai/issues/new?labels=enhancement&title=Feature:%20).
 
-To add a new provider:
+## Adding an AI Provider
 
-1. Add a case to `AIProvider` enum in `Models/AIProvider.swift`
+The app already supports 13 providers across 3 API dialects. Adding a new one is straightforward:
+
+1. Add a case to the `AIProvider` enum in `calorietracker/Models/AIProvider.swift`
 2. Set its `baseURL`, `models`, `apiFormat`, and `apiKeyPlaceholder`
-3. If it uses OpenAI-compatible format, it works automatically
-4. If it needs a custom format, add a handler in `GeminiService.swift`
+3. **If `apiFormat` is `.openaiCompatible`** → you're done. Both `GeminiService` and `ChatService` will route to it automatically.
+4. **If it uses a custom API shape** → add a branch in both `GeminiService.callAI` (food analysis) and `ChatService.sendMessage` (Coach chat). Keep the 1s/2s/4s exponential-backoff retry loop intact for 503 / 529 / 429 responses.
+
+Include working `vision`-capable model IDs in the `models` list since the app needs vision for food photo analysis.
+
+## Adding a Speech-to-Text Provider
+
+Extend `SpeechProvider` in `calorietracker/Models/SpeechProvider.swift`, then add the matching handler in `SpeechService.transcribe`. Follow the pattern from existing providers (OpenAI, Groq, Deepgram, AssemblyAI).
+
+## Localization
+
+When you add any new `Text("...")`, `Button("...")`, `Section("...")`, `.alert("...")`, `.navigationTitle("...")`, placeholder, etc., translate it into all 14 non-English locales before opening the PR. See the localization rule in [`CLAUDE.md`](CLAUDE.md) for the exact workflow.
+
+## Contact
+
+If you want to chat before opening a big PR, or you hit a wall and need help:
+
+- **Email:** **apoorv@fud-ai.app** or **ad13dtu@gmail.com**
+- **X (Twitter):** [@apoorvdarshan](https://x.com/apoorvdarshan)
+- **GitHub Issues:** [github.com/apoorvdarshan/fud-ai/issues](https://github.com/apoorvdarshan/fud-ai/issues)
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+By contributing, you agree that your contributions will be licensed under the [MIT License](LICENSE).
