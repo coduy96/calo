@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,9 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.apoorvdarshan.calorietracker.ui.components.liquidGlass
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
-import dev.chrisbanes.haze.HazeState
 
 data class BottomTab(val route: String, val icon: ImageVector, val label: String)
 
@@ -50,19 +49,11 @@ val BottomTabs = listOf(
 fun FudAIBottomNavBar(
     currentRoute: String?,
     onTap: (String) -> Unit,
-    hazeState: HazeState,
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 10.dp)
-            .clip(RoundedCornerShape(28.dp))
-            .liquidGlass(
-                hazeState = hazeState,
-                shape = RoundedCornerShape(28.dp),
-                tint = Color.White.copy(alpha = 0.08f)
-            )
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        modifier = modifier.fillMaxWidth()
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
