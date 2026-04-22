@@ -132,6 +132,12 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    fun updateEntry(entry: FoodEntry) {
+        viewModelScope.launch {
+            container.foodRepository.updateEntry(entry)
+        }
+    }
+
     /** Re-log a saved meal (from Saved Meals sheet) as a new entry timestamped now. */
     fun relogMeal(template: FoodEntry) {
         viewModelScope.launch {

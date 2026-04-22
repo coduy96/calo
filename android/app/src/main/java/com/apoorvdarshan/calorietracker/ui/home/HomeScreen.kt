@@ -109,6 +109,7 @@ fun HomeScreen(container: AppContainer) {
     var showVoice by remember { mutableStateOf(false) }
     var showSaved by remember { mutableStateOf(false) }
     var showAddMenu by remember { mutableStateOf(false) }
+    var editingEntry by remember { mutableStateOf<FoodEntry?>(null) }
 
     // Holds the file the next camera capture will write to. We need this outside
     // the lambda because TakePicture only gives us a Boolean, not the bytes.
@@ -364,7 +365,10 @@ fun HomeScreen(container: AppContainer) {
                     items(entries, key = { it.id }) { entry ->
                         val index = entries.indexOf(entry)
                         SectionCardWrapper(isFirst = index == 0, isLast = index == entries.lastIndex) {
-                            FoodRow(entry = entry, onDelete = { vm.deleteEntry(entry.id) })
+                            // Tap row -> open EditFoodEntrySheet (matches iOS .onTapGesture).
+                            Box(modifier = Modifier.clickable { editingEntry = entry }) {
+                                FoodRow(entry = entry, onDelete = { vm.deleteEntry(entry.id) })
+                            }
                             if (index != entries.lastIndex) Divider()
                         }
                     }
@@ -393,6 +397,17 @@ fun HomeScreen(container: AppContainer) {
             container = container,
             onDismiss = { showSaved = false },
             onRelogEntry = { vm.relogMeal(it) }
+        )
+    }
+
+    editingEntry?.let { entry ->
+        EditFoodEntrySheet(
+            entry = entry,
+            onSave = { updated ->
+                vm.updateEntry(updated)
+                editingEntry = null
+            },
+            onDismiss = { editingEntry = null }
         )
     }
 
