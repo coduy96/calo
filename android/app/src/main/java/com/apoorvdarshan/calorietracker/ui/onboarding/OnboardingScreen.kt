@@ -23,7 +23,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.painterResource
+import com.apoorvdarshan.calorietracker.R
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -101,6 +104,12 @@ fun OnboardingScreen(container: AppContainer, onComplete: () -> Unit) {
 @Composable
 private fun WelcomeStep() {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_logo),
+            contentDescription = "Fud AI logo",
+            modifier = Modifier.size(120.dp)
+        )
+        Spacer(Modifier.height(16.dp))
         Text("Fud AI", style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
         Text(

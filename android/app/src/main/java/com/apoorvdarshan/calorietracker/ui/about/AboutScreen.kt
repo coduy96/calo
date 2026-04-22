@@ -29,7 +29,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.painterResource
+import com.apoorvdarshan.calorietracker.R
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,11 +62,12 @@ fun AboutScreen(container: AppContainer) {
                 modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(
-                    Modifier
+                Image(
+                    painter = painterResource(id = R.drawable.ic_logo),
+                    contentDescription = "Fud AI logo",
+                    modifier = Modifier
                         .size(84.dp)
                         .clip(CircleShape)
-                        .padding(2.dp)
                 )
                 Text(
                     "Fud AI",
