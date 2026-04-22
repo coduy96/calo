@@ -181,9 +181,117 @@ No in-app language picker. iOS auto-selects from the device language (matches Ca
 - Picker sheets (height, weight, body-fat, calories/macros) seed their `@State` in `init()`, not `.onAppear`, to avoid a "flash to default value" on open.
 - **Share sheets use `ActivityShareSheet`** (a `UIViewControllerRepresentable` over `UIActivityViewController` defined in `ContentView.swift`) — **not** SwiftUI's `ShareLink`. SwiftUI's `ShareLink(item: URL, message:)` silently drops the `message` arg for most share targets (Messages, Mail, X), so only the URL gets shared. Wrapping `UIActivityViewController` with `[String, URL]` in `activityItems` forwards both: iMessage shows the text plus the URL preview, Mail uses the text as body. Used by About → Share the App.
 
-## Android (placeholder)
+## Build, Install, Launch (Android)
 
-`android/` exists as an empty folder with a `.gitkeep`. The Kotlin + Jetpack Compose client has not been scaffolded yet. When it is, this file grows a parallel "Build, Install, Launch (Android)", "Tests (Android)", and "Architecture (Android)" set of sections.
+Kotlin + Jetpack Compose client. Target device is Apoorv's iQOO Z9 5G on OriginOS 6 (Android 15). Min SDK 26 (bumped from 24 for Health Connect).
+
+```bash
+# From /Users/ApoorvDarshan/fud-ai/android
+export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+
+# Build
+./gradlew :app:assembleDebug
+
+# Install
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+
+# Launch
+adb shell am start -n com.apoorvdarshan.calorietracker/.MainActivity
+
+# Launch with onboarding reset (equivalent to iOS --reset-onboarding)
+adb shell am start -n com.apoorvdarshan.calorietracker/.MainActivity --ez reset_onboarding true
+
+# Tail logs
+adb logcat -s FudAI:* AndroidRuntime:E
+```
+
+OriginOS quirks: USB debugging needs **two** toggles enabled (USB debugging + USB debugging Security settings under Developer options). After first install, whitelist Fud AI in battery optimization so alarm-based reminders survive.
+
+## Tests (Android)
+
+No automated tests yet — matches iOS policy. Validate by hand on device. `calorietrackerTests`-equivalent scaffolding lives at `android/app/src/androidTest/` and `src/test/` but only contains Android Studio boilerplate.
+
+## Architecture (Android)
+
+### Package layout
+
+```
+android/app/src/main/java/com/apoorvdarshan/calorietracker/
+├── MainActivity.kt              ← entry point, checks onboarding flag, wires NavHost
+├── FudAIApp.kt                  ← Application class + AppContainer (manual DI)
+├── models/                      ← data classes: UserProfile, FoodEntry, WeightEntry,
+│                                   ChatMessage, AIProvider, SpeechProvider, WidgetSnapshot,
+│                                   Gender/ActivityLevel/WeightGoal/MealType/FoodSource/AutoBalanceMacro
+├── data/                        ← PreferencesStore (DataStore), KeyStore (EncryptedSharedPreferences),
+│                                   FoodRepository, WeightRepository, ProfileRepository, ChatRepository
+├── services/
+│   ├── ai/                      ← AiError, RetryPolicy, GeminiClient, AnthropicClient,
+│   │                              OpenAICompatibleClient, FoodAnalysisService, ChatService,
+│   │                              FoodAnalysis (+ NutritionLabelAnalysis + FoodJsonParser)
+│   ├── speech/                  ← NativeSpeechRecognizer, AudioRecorder, SpeechService,
+│   │                              WhisperClient, DeepgramClient, AssemblyAIClient
+│   ├── health/HealthConnectManager.kt   ← Health Connect I/O (replaces iOS HealthKit)
+│   ├── FoodImageStore.kt        ← filesDir/fudai-food-images/
+│   ├── NotificationService.kt   ← 3 channels, AlarmManager scheduling, ReminderReceiver
+│   └── WeightAnalysisService.kt ← pure forecast math (linear regression + energy balance)
+└── ui/
+    ├── theme/                   ← AppColors (iOS pink/red), FudAITheme, Typography
+    ├── navigation/              ← FudAINavHost, FudAIBottomNavBar, FudAIRoutes
+    ├── onboarding/              ← OnboardingScreen + OnboardingViewModel (10-step flow)
+    ├── home/                    ← HomeScreen + HomeViewModel
+    ├── progress/                ← ProgressScreen + ProgressViewModel (Canvas line chart)
+    ├── coach/                   ← CoachScreen + CoachViewModel
+    ├── settings/                ← SettingsScreen + SettingsViewModel (sheet-driven pickers)
+    └── about/                   ← AboutScreen
+```
+
+### State / DI
+
+Manual DI via `FudAIApp.container` (an `AppContainer` singleton). No Hilt — repositories and services are instantiated once in `FudAIApp.onCreate()` and handed to ViewModels via a `ViewModelProvider.Factory` pattern. Screens pull ViewModels with `viewModel(factory = ...)`.
+
+Reactive reads go through `Flow<T>`. Each ViewModel exposes a `StateFlow<UiState>` that screens collect via `collectAsState()`. Matches iOS `@Observable` + `.environment()` in spirit.
+
+### AI routing (13 providers, 3 API formats)
+
+Matches iOS semantically:
+- **Gemini** → `GeminiClient` (POST `/models/{model}:generateContent`, `X-goog-api-key` header).
+- **Anthropic Messages** → `AnthropicClient` (POST `/messages`, `x-api-key` + `anthropic-version: 2023-06-01`).
+- **OpenAI-compatible** → `OpenAICompatibleClient` — covers OpenAI, xAI, OpenRouter, Together AI, Groq, Hugging Face, Fireworks, DeepInfra, Mistral, Ollama, and Custom.
+
+`FoodAnalysisService` and `ChatService` both dispatch by `AIProvider.apiFormat`. `RetryPolicy` does 1s/2s/4s exponential backoff on 503/429/529. Error copy surfaces friendly messages ("provider is overloaded", "API key rejected") instead of raw HTTP codes.
+
+### Speech-to-text
+
+- Native: `android.speech.SpeechRecognizer` wrapped as a cold `Flow<SttEvent>` with streaming partials.
+- Remote (Whisper / Groq / Deepgram / AssemblyAI): `AudioRecorder` writes 16 kHz mono AAC to cache, then the per-provider client uploads + parses.
+
+### Health Connect (replaces HealthKit)
+
+Single boundary in `HealthConnectManager`. Weight + Nutrition read/write with `Metadata.manualEntry(clientRecordId = "fudai_<uuid>")` for dedup. Change-token loop for external weight imports (Samsung Health, Withings, Fitbit via Health Connect). Requires **Min SDK 26** — that's why `minSdk = 26` in `app/build.gradle.kts` (Android Studio default was 24).
+
+### Persistence
+
+| iOS | Android |
+|---|---|
+| UserDefaults JSON blobs | DataStore Preferences + kotlinx.serialization |
+| iOS Keychain | EncryptedSharedPreferences (AES-256) |
+| Application Support/ | `context.filesDir/fudai-food-images/` |
+| App Group shared UserDefaults | Widget reads same DataStore (widget runs in same process on Android by default) |
+
+### UI
+
+5-tab bottom navigation (Home / Progress / Coach / Settings / About) mirroring iOS `ContentView`. NavHost hides the bar on the onboarding route. Design system matches iOS — pink `#FF375F → #FF6B8A` gradient, cream/dark semantic backgrounds, rounded typography via `FontFamily.Default` (Nunito can be swapped in if desired).
+
+### Known post-v1 TODOs (not yet ported from iOS)
+
+- Voice input UI (service layer done; stub in Home tab)
+- Jetpack Glance widgets (3 sizes)
+- Saved Meals sheet (Recents / Frequent / Favorites)
+- CameraX live preview (currently uses system `PickVisualMedia`)
+- String extraction + 14 non-English translations (currently English hardcoded)
+- Health Connect change-token observer wired into scene-resume
+- Custom spin-wheel picker for height/weight/body fat (currently text input)
+- Goal speed + body fat optional onboarding steps (deferred to Settings)
 
 ## Website (`web/`)
 
