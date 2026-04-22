@@ -81,8 +81,6 @@ import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.MealType
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
-import com.apoorvdarshan.calorietracker.ui.theme.IOSColors
-import com.apoorvdarshan.calorietracker.ui.theme.IOSFont
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
@@ -238,7 +236,7 @@ fun HomeScreen(container: AppContainer) {
                             Text(
                                 "No foods logged",
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = IOSColors.secondaryLabel()
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
                             )
                         }
                     }
@@ -336,7 +334,7 @@ private fun WeekStripSection(selectedDate: LocalDate, onSelect: (LocalDate) -> U
                     shortDay(date.dayOfWeek),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
-                    color = if (isSel) AppColors.Calorie else IOSColors.secondaryLabel()
+                    color = if (isSel) AppColors.Calorie else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
                 Spacer(Modifier.height(6.dp))
                 Box(
@@ -410,7 +408,7 @@ private fun CalorieHero(current: Int, goal: Int) {
             "of $goal kcal",
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
-            color = IOSColors.tertiaryLabel()
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.45f)
         )
 
         Spacer(Modifier.height(16.dp))
@@ -442,7 +440,7 @@ private fun CalorieHero(current: Int, goal: Int) {
             "$remaining left",
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
-            color = IOSColors.secondaryLabel()
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
         )
     }
 }
@@ -474,7 +472,7 @@ private fun MacroCard(label: String, current: Int, goal: Int, modifier: Modifier
                 "/${goal}g",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
-                color = IOSColors.secondaryLabel(),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
                 modifier = Modifier.padding(start = 2.dp, bottom = 4.dp)
             )
         }
@@ -503,12 +501,12 @@ private fun MacroCard(label: String, current: Int, goal: Int, modifier: Modifier
             label,
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
-            color = IOSColors.secondaryLabel()
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
         )
         Text(
             "${left}g left",
             fontSize = 11.sp,
-            color = IOSColors.tertiaryLabel()
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
         )
     }
 }
@@ -545,7 +543,7 @@ private fun SectionHeader(title: String) {
         title.uppercase(),
         fontSize = 12.sp,
         fontWeight = FontWeight.SemiBold,
-        color = IOSColors.secondaryLabel(),
+        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
         letterSpacing = 0.8.sp,
         modifier = Modifier.padding(start = 32.dp, top = 16.dp, bottom = 6.dp)
     )
@@ -560,7 +558,7 @@ private fun MealSectionHeader(meal: MealType) {
         Icon(
             mealIcon(meal),
             contentDescription = null,
-            tint = IOSColors.secondaryLabel(),
+            tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
             modifier = Modifier.size(14.dp)
         )
         Spacer(Modifier.width(6.dp))
@@ -568,7 +566,7 @@ private fun MealSectionHeader(meal: MealType) {
             meal.displayName.uppercase(),
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = IOSColors.secondaryLabel(),
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
             letterSpacing = 0.8.sp
         )
     }
@@ -638,14 +636,14 @@ private fun FoodRow(entry: FoodEntry, onDelete: () -> Unit) {
             Text(
                 "${entry.calories} kcal · P${entry.protein} · C${entry.carbs} · F${entry.fat}",
                 fontSize = 12.sp,
-                color = IOSColors.secondaryLabel(),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                 maxLines = 1
             )
         }
         Text(
             timeFmt.format(entry.timestamp).lowercase(),
             fontSize = 12.sp,
-            color = IOSColors.tertiaryLabel()
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
         )
     }
 }
@@ -701,7 +699,7 @@ private fun AnalysisResultDialog(
                 Text(
                     "Serving: ~${analysis.servingSizeGrams.toInt()}g",
                     fontSize = 12.sp,
-                    color = IOSColors.secondaryLabel()
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
                 )
             }
         },
