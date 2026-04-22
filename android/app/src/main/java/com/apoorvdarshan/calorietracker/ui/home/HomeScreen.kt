@@ -119,13 +119,10 @@ fun HomeScreen(container: AppContainer) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
+            // iOS HomeView has .navigationTitle("") + .navigationBarTitleDisplayMode(.inline),
+            // so the title is intentionally empty — only the + Menu sits in the toolbar.
             TopAppBar(
-                title = {
-                    Text(
-                        if (isToday) "Today" else today.format(DateTimeFormatter.ofPattern("EEE, MMM d", Locale.US)),
-                        fontWeight = FontWeight.SemiBold
-                    )
-                },
+                title = {},
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 ),
