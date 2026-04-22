@@ -208,41 +208,81 @@ private fun MessageBubble(msg: ChatMessage) {
     }
 }
 
+/**
+ * Verbatim port of MessageBubble.bubble in
+ * ios/calorietracker/Views/ChatView.swift.
+ *
+ * Per-piece mapping:
+ *   .font(.system(.body, design: .rounded))                -> 17sp normal
+ *   .padding(.horizontal, 16).padding(.vertical, 11)        -> same dp
+ *   .background(LinearGradient OR ultraThinMaterial+Calorie*0.035)
+ *   .overlay(bubbleStroke = LinearGradient white 0.45->0.05 user
+ *                                          / 0.22->0.04 assistant)
+ *   .overlay(alignment: .top) if user { white 0.35 -> 0 highlight }
+ *   .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+ *   .shadow(color: user ? Calorie*0.28 : black*0.12,
+ *           radius: user ? 10 : 6, y: user ? 6 : 3)
+ */
 @Composable
 private fun Bubble(content: String, isUser: Boolean) {
     val shape = RoundedCornerShape(20.dp)
-    val bg: Brush = if (isUser) {
-        AppColors.CalorieGradient
-    } else {
-        Brush.linearGradient(listOf(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surface))
-    }
-    val border: Brush = Brush.linearGradient(
+    val borderBrush = Brush.linearGradient(
         listOf(
             Color.White.copy(alpha = if (isUser) 0.45f else 0.22f),
-            Color.White.copy(alpha = 0.05f)
+            Color.White.copy(alpha = if (isUser) 0.05f else 0.04f)
         )
     )
     val textColor = if (isUser) Color.White else MaterialTheme.colorScheme.onSurface
+    val shadowElevation = if (isUser) 10.dp else 6.dp
+    val shadowColor = if (isUser) AppColors.Calorie.copy(alpha = 0.28f) else Color.Black.copy(alpha = 0.12f)
 
     Box(
         modifier = Modifier
             .widthIn(max = 320.dp)
             .shadow(
-                elevation = if (isUser) 8.dp else 3.dp,
+                elevation = shadowElevation,
                 shape = shape,
-                ambientColor = if (isUser) AppColors.Calorie else Color.Black,
-                spotColor = if (isUser) AppColors.Calorie else Color.Black
+                ambientColor = shadowColor,
+                spotColor = shadowColor
             )
             .clip(shape)
-            .background(bg)
-            .border(0.8.dp, border, shape)
-            .padding(horizontal = 16.dp, vertical = 11.dp)
+            // bubbleBackground: gradient for user, surface (ultraThinMaterial-equivalent) +
+            // Calorie 3.5% tint for assistant.
+            .then(
+                if (isUser) {
+                    Modifier.background(AppColors.CalorieGradient)
+                } else {
+                    Modifier
+                        .background(MaterialTheme.colorScheme.surface)
+                        .background(AppColors.Calorie.copy(alpha = 0.035f))
+                }
+            )
+            .border(0.8.dp, borderBrush, shape)
     ) {
+        // Glassy top highlight on user bubbles — fakes SwiftUI's
+        // .blendMode(.plusLighter) gradient by stacking a semi-translucent
+        // white box clipped to the top half of the bubble.
+        if (isUser) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(28.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = 0.35f),
+                                Color.Transparent
+                            )
+                        )
+                    )
+            )
+        }
         Text(
             content,
-            fontSize = 15.sp,
+            fontSize = 17.sp,
             color = textColor,
-            lineHeight = 20.sp,
+            lineHeight = 22.sp,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 11.dp),
             style = TextStyle(fontWeight = FontWeight.Normal)
         )
     }
