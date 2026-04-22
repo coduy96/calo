@@ -68,6 +68,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -385,12 +386,44 @@ private fun shortDay(dow: DayOfWeek): String = when (dow) {
 
 // ── Calorie hero ─────────────────────────────────────────────────────
 
+/**
+ * Verbatim port of the calorie hero block in HomeView.body
+ * (ios/calorietracker/ContentView.swift, lines ~322–362):
+ *
+ *   VStack(spacing: 20) {
+ *     VStack(spacing: 4) {
+ *       Text("\(selectedCalories)")
+ *         .font(.system(size: 72, weight: .bold, design: .rounded))
+ *         .foregroundStyle(LinearGradient(colors: AppColors.calorieGradient,
+ *                                         startPoint: .topLeading,
+ *                                         endPoint: .bottomTrailing))
+ *         .contentTransition(.numericText())
+ *         .animation(.snappy, value: selectedCalories)
+ *       Text("of \(calorieGoal) kcal")
+ *         .font(.system(.callout, design: .rounded, weight: .medium))
+ *         .foregroundStyle(.tertiary)
+ *     }
+ *     GeometryReader { geo in
+ *       ZStack(alignment: .leading) {
+ *         Capsule().fill(AppColors.calorie.opacity(0.10)).frame(height: 10)
+ *         Capsule().fill(LinearGradient(.leading, .trailing))
+ *                  .frame(width: max(10, geo.size.width * progress), height: 10)
+ *                  .shadow(color: AppColors.calorie.opacity(0.35), radius: 8, y: 3)
+ *                  .animation(.spring(response: 0.8, dampingFraction: 0.75), value: selectedCalories)
+ *       }
+ *     }.frame(height: 10).padding(.horizontal, 24)
+ *     Text("\(caloriesRemaining) left")
+ *       .font(.system(.footnote, design: .rounded, weight: .medium))
+ *       .foregroundStyle(.secondary)
+ *   }
+ *   .padding(.vertical, 20)
+ */
 @Composable
 private fun CalorieHero(current: Int, goal: Int) {
     val ratio = if (goal > 0) (current.toFloat() / goal).coerceIn(0f, 1f) else 0f
     val animatedRatio by animateFloatAsState(
         targetValue = ratio,
-        animationSpec = spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow),
+        animationSpec = spring(dampingRatio = 0.75f, stiffness = 60f), // response 0.8 ≈ stiffness 60
         label = "calorieProgress"
     )
     val remaining = maxOf(0, goal - current)
@@ -400,31 +433,43 @@ private fun CalorieHero(current: Int, goal: Int) {
             .fillMaxWidth()
             .padding(vertical = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(20.dp) // outer VStack(spacing: 20)
     ) {
-        Text(
-            "$current",
-            style = TextStyle(
-                brush = Brush.linearGradient(listOf(AppColors.CalorieStart, AppColors.CalorieEnd)),
-                fontSize = 72.sp,
-                fontWeight = FontWeight.Bold
+        // Inner VStack(spacing: 4)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            // 72pt bold rounded with linear gradient .topLeading -> .bottomTrailing
+            Text(
+                "$current",
+                style = TextStyle(
+                    brush = Brush.linearGradient(
+                        colors = listOf(AppColors.CalorieStart, AppColors.CalorieEnd)
+                        // Compose's default linearGradient is top-left to bottom-right which matches iOS's .topLeading/.bottomTrailing.
+                    ),
+                    fontSize = 72.sp,
+                    fontWeight = FontWeight.Bold
+                )
             )
-        )
-        Text(
-            "of $goal kcal",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.45f)
-        )
+            // "of N kcal" .font(.callout) = 16sp .foregroundStyle(.tertiary) = ~0.3 alpha
+            Text(
+                "of $goal kcal",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+            )
+        }
 
-        Spacer(Modifier.height(16.dp))
+        // Progress capsule 10dp tall, padding(.horizontal, 24)
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 40.dp)
+                .padding(horizontal = 24.dp)
                 .height(10.dp)
         ) {
             val w = maxWidth
+            // Track Capsule.fill(Calorie.opacity(0.10))
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -432,21 +477,29 @@ private fun CalorieHero(current: Int, goal: Int) {
                     .clip(CircleShape)
                     .background(AppColors.Calorie.copy(alpha = 0.10f))
             )
+            // Foreground Capsule with shadow Calorie*0.35, r=8, y=3
+            val barWidth = (w * animatedRatio).coerceAtLeast(10.dp)
             Box(
                 Modifier
-                    .width(w * animatedRatio)
+                    .width(barWidth)
                     .height(10.dp)
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = CircleShape,
+                        ambientColor = AppColors.Calorie.copy(alpha = 0.35f),
+                        spotColor = AppColors.Calorie.copy(alpha = 0.35f)
+                    )
                     .clip(CircleShape)
                     .background(AppColors.CalorieGradient)
             )
         }
 
-        Spacer(Modifier.height(8.dp))
+        // "N left" .font(.footnote) = 13sp .foregroundStyle(.secondary) = ~0.6 alpha
         Text(
             "$remaining left",
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         )
     }
 }
