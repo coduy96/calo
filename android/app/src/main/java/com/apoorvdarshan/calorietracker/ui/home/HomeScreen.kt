@@ -1,9 +1,14 @@
 package com.apoorvdarshan.calorietracker.ui.home
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import java.io.File
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -39,6 +44,7 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Nightlight
 import androidx.compose.material.icons.filled.Note
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.AlertDialog
@@ -103,13 +109,46 @@ fun HomeScreen(container: AppContainer) {
     var showSaved by remember { mutableStateOf(false) }
     var showAddMenu by remember { mutableStateOf(false) }
 
-    val picker = rememberLauncherForActivityResult(
+    // Holds the file the next camera capture will write to. We need this outside
+    // the lambda because TakePicture only gives us a Boolean, not the bytes.
+    var pendingCaptureFile by remember { mutableStateOf<File?>(null) }
+
+    val photoPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         if (uri != null) {
             val bytes = ctx.contentResolver.openInputStream(uri)?.use { it.readBytes() }
             if (bytes != null) vm.analyzePhoto(bytes)
         }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { saved: Boolean ->
+        val file = pendingCaptureFile
+        pendingCaptureFile = null
+        if (saved && file != null && file.exists()) {
+            val bytes = file.readBytes()
+            if (bytes.isNotEmpty()) vm.analyzePhoto(bytes)
+        }
+    }
+
+    fun launchCamera() {
+        val dir = File(ctx.cacheDir, "capture").apply { mkdirs() }
+        val file = File(dir, "shot-${System.currentTimeMillis()}.jpg")
+        val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", file)
+        pendingCaptureFile = file
+        cameraLauncher.launch(uri)
+    }
+
+    val cameraPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted -> if (granted) launchCamera() }
+
+    fun openCamera() {
+        if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) ==
+            PackageManager.PERMISSION_GRANTED
+        ) launchCamera() else cameraPermission.launch(Manifest.permission.CAMERA)
     }
 
     val today = LocalDate.now()
@@ -127,53 +166,88 @@ fun HomeScreen(container: AppContainer) {
                     containerColor = MaterialTheme.colorScheme.background
                 ),
                 actions = {
-                    Box {
-                        IconButton(onClick = { showAddMenu = true }) {
-                            Icon(Icons.Filled.Add, contentDescription = "Add food", tint = AppColors.Calorie)
+                    Box(modifier = Modifier.padding(end = 8.dp)) {
+                        // Liquid Glass-style + button — translucent fill + soft pink edge.
+                        // Compose can't do real refraction blur the way iOS 26 does, but
+                        // the white-tinted disc with a pink hairline border + soft shadow
+                        // reads as a frosted glass affordance.
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .shadow(
+                                    elevation = 4.dp,
+                                    shape = CircleShape,
+                                    ambientColor = AppColors.Calorie.copy(alpha = 0.25f),
+                                    spotColor = AppColors.Calorie.copy(alpha = 0.25f)
+                                )
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(
+                                            Color.White.copy(alpha = 0.18f),
+                                            Color.White.copy(alpha = 0.08f)
+                                        )
+                                    )
+                                )
+                                .border(0.8.dp, AppColors.Calorie.copy(alpha = 0.45f), CircleShape)
+                                .clickable { showAddMenu = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Filled.Add,
+                                contentDescription = "Add food",
+                                tint = AppColors.Calorie,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                         DropdownMenu(
                             expanded = showAddMenu,
-                            onDismissRequest = { showAddMenu = false }
+                            onDismissRequest = { showAddMenu = false },
+                            shape = RoundedCornerShape(14.dp),
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            shadowElevation = 12.dp,
+                            modifier = Modifier
+                                .border(
+                                    0.5.dp,
+                                    Color.White.copy(alpha = 0.12f),
+                                    RoundedCornerShape(14.dp)
+                                )
                         ) {
-                            DropdownMenuItem(
-                                text = { Text("Camera") },
-                                leadingIcon = { Icon(Icons.Filled.CameraAlt, null) },
-                                onClick = {
-                                    showAddMenu = false
-                                    picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Camera + Note") },
-                                leadingIcon = { Icon(Icons.Filled.Note, null) },
-                                onClick = {
-                                    showAddMenu = false
-                                    picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Nutrition label") },
-                                leadingIcon = { Icon(Icons.Filled.QrCodeScanner, null) },
-                                onClick = {
-                                    showAddMenu = false
-                                    picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Text input") },
-                                leadingIcon = { Icon(Icons.Filled.Edit, null) },
-                                onClick = { showAddMenu = false; showText = true }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Voice") },
-                                leadingIcon = { Icon(Icons.Filled.Mic, null) },
-                                onClick = { showAddMenu = false; showVoice = true }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Saved meals") },
-                                leadingIcon = { Icon(Icons.Filled.Bookmark, null) },
-                                onClick = { showAddMenu = false; showSaved = true }
-                            )
+                            // Mirrors iOS HomeView toolbar Menu, in the same order:
+                            // Camera, Camera + Note, Nutrition Label, From Photos,
+                            // Text Input, Voice, Saved Meals.
+                            // Each leadingIcon is tinted pink to match iOS .tint(AppColors.calorie).
+                            MenuRow(
+                                label = "Camera",
+                                icon = Icons.Filled.CameraAlt
+                            ) { showAddMenu = false; openCamera() }
+                            MenuRow(
+                                label = "Camera + Note",
+                                icon = Icons.Filled.Note
+                            ) { showAddMenu = false; openCamera() }
+                            MenuRow(
+                                label = "Nutrition label",
+                                icon = Icons.Filled.QrCodeScanner
+                            ) { showAddMenu = false; openCamera() }
+                            MenuRow(
+                                label = "From Photos",
+                                icon = Icons.Filled.PhotoLibrary
+                            ) {
+                                showAddMenu = false
+                                photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                            }
+                            MenuRow(
+                                label = "Text input",
+                                icon = Icons.Filled.Edit
+                            ) { showAddMenu = false; showText = true }
+                            MenuRow(
+                                label = "Voice",
+                                icon = Icons.Filled.Mic
+                            ) { showAddMenu = false; showVoice = true }
+                            MenuRow(
+                                label = "Saved meals",
+                                icon = Icons.Filled.Bookmark
+                            ) { showAddMenu = false; showSaved = true }
                         }
                     }
                 }
@@ -505,6 +579,30 @@ private fun CalorieHero(current: Int, goal: Int) {
 
 // MacroCard moved to ui/components/MacroCard.kt as a verbatim port of
 // HomeComponents.swift's struct MacroCard. Imported above.
+
+/**
+ * iOS-styled menu row used inside the + DropdownMenu. Pink leading icon,
+ * 17sp body label, slightly larger row height than Material default to
+ * match iOS Menu touch targets.
+ */
+@Composable
+private fun MenuRow(label: String, icon: ImageVector, onClick: () -> Unit) {
+    DropdownMenuItem(
+        text = {
+            Text(
+                label,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        },
+        leadingIcon = {
+            Icon(icon, contentDescription = null, tint = AppColors.Calorie, modifier = Modifier.size(20.dp))
+        },
+        onClick = onClick,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 4.dp)
+    )
+}
 
 @Composable
 private fun ViewMoreButton() {
