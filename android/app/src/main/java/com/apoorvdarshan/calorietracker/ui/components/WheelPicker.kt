@@ -61,14 +61,12 @@ fun <T> WheelPicker(
         derivedStateOf { listState.firstVisibleItemIndex }
     }
 
-    LaunchedEffect(listState) {
-        snapshotFlow { listState.firstVisibleItemIndex to listState.isScrollInProgress }
+    LaunchedEffect(listState, items) {
+        snapshotFlow { listState.firstVisibleItemIndex }
             .distinctUntilChanged()
-            .collect { (idx, scrolling) ->
-                if (!scrolling) {
-                    val snapped = items.getOrNull(idx) ?: return@collect
-                    if (snapped != selected) onSelect(snapped)
-                }
+            .collect { idx ->
+                val snapped = items.getOrNull(idx) ?: return@collect
+                if (snapped != selected) onSelect(snapped)
             }
     }
 
