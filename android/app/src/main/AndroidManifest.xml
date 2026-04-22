@@ -60,6 +60,10 @@
                 <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
             </intent-filter>
         </activity-alias>
+
+        <receiver
+            android:name=".services.ReminderReceiver"
+            android:exported="false" />
     </application>
 
 </manifest>
