@@ -82,33 +82,40 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
-    fun saveAnalysis() {
+    fun saveAnalysis(
+        name: String? = null,
+        servingGrams: Double? = null,
+        scale: Double = 1.0,
+        mealType: MealType = MealType.currentMeal
+    ) {
         val analysis = _ui.value.pendingAnalysis ?: return
         viewModelScope.launch {
             val imageBytes = _ui.value.pendingImageBytes
             val id = UUID.randomUUID()
             val filename = imageBytes?.let { container.imageStore.storeBytes(it, id) }
+            fun s(v: Int) = (v * scale).toInt()
+            fun s(v: Double?) = v?.let { it * scale }
             val entry = FoodEntry(
                 id = id,
-                name = analysis.name,
-                calories = analysis.calories,
-                protein = analysis.protein,
-                carbs = analysis.carbs,
-                fat = analysis.fat,
+                name = name?.takeIf { it.isNotBlank() } ?: analysis.name,
+                calories = s(analysis.calories),
+                protein = s(analysis.protein),
+                carbs = s(analysis.carbs),
+                fat = s(analysis.fat),
                 timestamp = Instant.now(),
                 imageFilename = filename,
                 emoji = analysis.emoji,
                 source = if (imageBytes != null) FoodSource.SNAP_FOOD else FoodSource.TEXT_INPUT,
-                mealType = MealType.currentMeal,
-                sugar = analysis.sugar,
-                fiber = analysis.fiber,
-                saturatedFat = analysis.saturatedFat,
-                monounsaturatedFat = analysis.monounsaturatedFat,
-                polyunsaturatedFat = analysis.polyunsaturatedFat,
-                cholesterol = analysis.cholesterol,
-                sodium = analysis.sodium,
-                potassium = analysis.potassium,
-                servingSizeGrams = analysis.servingSizeGrams
+                mealType = mealType,
+                sugar = s(analysis.sugar),
+                fiber = s(analysis.fiber),
+                saturatedFat = s(analysis.saturatedFat),
+                monounsaturatedFat = s(analysis.monounsaturatedFat),
+                polyunsaturatedFat = s(analysis.polyunsaturatedFat),
+                cholesterol = s(analysis.cholesterol),
+                sodium = s(analysis.sodium),
+                potassium = s(analysis.potassium),
+                servingSizeGrams = servingGrams ?: analysis.servingSizeGrams
             )
             container.foodRepository.addEntry(entry)
             _ui.value = _ui.value.copy(pendingAnalysis = null, pendingImageBytes = null)

@@ -399,9 +399,11 @@ fun HomeScreen(container: AppContainer) {
     if (ui.analyzing) AnalyzingOverlay()
 
     ui.pendingAnalysis?.let { analysis ->
-        AnalysisResultDialog(
+        FoodResultSheet(
             analysis = analysis,
-            onSave = { vm.saveAnalysis() },
+            onSave = { name, grams, scale, mealType ->
+                vm.saveAnalysis(name = name, servingGrams = grams, scale = scale, mealType = mealType)
+            },
             onDismiss = { vm.dismissPending() }
         )
     }
