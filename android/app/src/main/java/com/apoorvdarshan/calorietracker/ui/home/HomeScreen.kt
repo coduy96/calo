@@ -111,6 +111,7 @@ fun HomeScreen(container: AppContainer) {
     var showSaved by remember { mutableStateOf(false) }
     var showAddMenu by remember { mutableStateOf(false) }
     var editingEntry by remember { mutableStateOf<FoodEntry?>(null) }
+    var showNutritionDetail by remember { mutableStateOf(false) }
 
     // Holds the file the next camera capture will write to. We need this outside
     // the lambda because TakePicture only gives us a Boolean, not the bytes.
@@ -336,7 +337,9 @@ fun HomeScreen(container: AppContainer) {
                         .padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    ViewMoreButton()
+                    Box(modifier = Modifier.clickable { showNutritionDetail = true }) {
+                        ViewMoreButton()
+                    }
                 }
             }
 
@@ -409,6 +412,14 @@ fun HomeScreen(container: AppContainer) {
                 editingEntry = null
             },
             onDismiss = { editingEntry = null }
+        )
+    }
+
+    if (showNutritionDetail) {
+        NutritionDetailSheet(
+            entries = ui.todayEntries,
+            profile = ui.profile,
+            onDismiss = { showNutritionDetail = false }
         )
     }
 
