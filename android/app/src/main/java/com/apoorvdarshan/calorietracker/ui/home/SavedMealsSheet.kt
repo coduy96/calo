@@ -51,6 +51,8 @@ import com.apoorvdarshan.calorietracker.data.FrequentFoodGroup
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.MealType
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
+import com.apoorvdarshan.calorietracker.ui.theme.IOSColors
+import com.apoorvdarshan.calorietracker.ui.theme.IOSFont
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -204,11 +206,11 @@ private fun RecentsList(
                         Icon(
                             if (isFavorite(entry)) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                             contentDescription = if (isFavorite(entry)) "Unfavorite" else "Favorite",
-                            tint = if (isFavorite(entry)) AppColors.Calorie else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            tint = if (isFavorite(entry)) AppColors.Calorie else IOSColors.tertiaryLabel()
                         )
                     }
                     IconButton(onClick = { onDelete(entry) }) {
-                        Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                        Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = IOSColors.tertiaryLabel())
                     }
                 }
             )
@@ -242,7 +244,7 @@ private fun FrequentList(
                         Icon(
                             if (isFavorite(group)) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                             contentDescription = null,
-                            tint = if (isFavorite(group)) AppColors.Calorie else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            tint = if (isFavorite(group)) AppColors.Calorie else IOSColors.tertiaryLabel()
                         )
                     }
                 }
@@ -311,7 +313,7 @@ private fun MealRow(
                 Text(
                     subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    color = IOSColors.secondaryLabel(),
                     maxLines = 1
                 )
             }
@@ -331,7 +333,7 @@ private fun EmptyState(text: String) {
         Text(
             text,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+            color = IOSColors.secondaryLabel()
         )
     }
 }

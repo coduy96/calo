@@ -54,6 +54,8 @@ import com.apoorvdarshan.calorietracker.services.speech.AudioRecorder
 import com.apoorvdarshan.calorietracker.services.speech.NativeSpeechRecognizer
 import com.apoorvdarshan.calorietracker.services.speech.SttEvent
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
+import com.apoorvdarshan.calorietracker.ui.theme.IOSColors
+import com.apoorvdarshan.calorietracker.ui.theme.IOSFont
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -122,7 +124,7 @@ fun VoiceInputSheet(
             Text(
                 "Using ${provider.displayName}",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                color = IOSColors.secondaryLabel()
             )
             Spacer(Modifier.height(20.dp))
 
@@ -206,7 +208,7 @@ fun VoiceInputSheet(
                     VoicePhase.REVIEWING -> "Review your transcript"
                 },
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                color = IOSColors.secondaryLabel(),
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )

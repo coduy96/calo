@@ -67,6 +67,8 @@ import com.apoorvdarshan.calorietracker.ui.components.NumericWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.SplitDecimalWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.UnitToggle
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
+import com.apoorvdarshan.calorietracker.ui.theme.IOSColors
+import com.apoorvdarshan.calorietracker.ui.theme.IOSFont
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import java.util.Locale
@@ -193,11 +195,11 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
 
             SectionCard(title = "Danger zone") {
                 TextButton(onClick = { showClearFoodDialog = true }, modifier = Modifier.fillMaxWidth().padding(4.dp)) {
-                    Text("Clear food log", color = Color(0xFFD32F2F))
+                    Text("Clear food log", color = IOSColors.systemRed())
                 }
                 HorizontalDivider()
                 TextButton(onClick = { showDeleteDialog = true }, modifier = Modifier.fillMaxWidth().padding(4.dp)) {
-                    Text("Delete all local data", color = Color(0xFFD32F2F))
+                    Text("Delete all local data", color = IOSColors.systemRed())
                 }
             }
 
@@ -221,7 +223,7 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
             text = { Text("Wipes all food entries and photos. Profile, weights, and settings stay.") },
             confirmButton = {
                 TextButton(onClick = { vm.clearFoodLog(); showClearFoodDialog = false }) {
-                    Text("Clear", color = Color(0xFFD32F2F))
+                    Text("Clear", color = IOSColors.systemRed())
                 }
             },
             dismissButton = { TextButton(onClick = { showClearFoodDialog = false }) { Text("Cancel") } }
@@ -235,7 +237,7 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
             text = { Text("Wipes profile, food log, weight history, chat, and API keys. Health Connect data stays intact.") },
             confirmButton = {
                 TextButton(onClick = { vm.deleteAllData(); showDeleteDialog = false }) {
-                    Text("Delete", color = Color(0xFFD32F2F))
+                    Text("Delete", color = IOSColors.systemRed())
                 }
             },
             dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") } }
@@ -425,7 +427,7 @@ private fun <T> ListSheet(
     if (customField != null) {
         footer?.let {
             Spacer(Modifier.height(8.dp))
-            Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+            Text(it, style = MaterialTheme.typography.bodySmall, color = IOSColors.secondaryLabel())
         }
         var custom by remember { mutableStateOf("") }
         Spacer(Modifier.height(8.dp))
@@ -587,7 +589,7 @@ private fun MacrosSheet(
     Text(
         "Pin up to 2 macros to exact grams. Unpinned ones auto-balance from remaining calories.",
         style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        color = IOSColors.secondaryLabel()
     )
     Spacer(Modifier.height(12.dp))
     MacroField("Calories", caloriesText, { caloriesText = it }, "kcal") {
@@ -655,7 +657,7 @@ private fun SectionCard(title: String, content: @Composable () -> Unit) {
         Text(
             title.uppercase(),
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
+            color = IOSColors.secondaryLabel(),
             modifier = Modifier.padding(start = 4.dp, bottom = 6.dp)
         )
         Card(
@@ -677,8 +679,8 @@ private fun SettingRow(label: String, value: String, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-        Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-        Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+        Text(value, style = MaterialTheme.typography.bodyMedium, color = IOSColors.secondaryLabel())
+        Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = IOSColors.tertiaryLabel())
     }
 }
 

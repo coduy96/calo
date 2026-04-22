@@ -57,6 +57,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.models.ChatMessage
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
+import com.apoorvdarshan.calorietracker.ui.theme.IOSColors
+import com.apoorvdarshan.calorietracker.ui.theme.IOSFont
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,7 +107,7 @@ fun CoachScreen(container: AppContainer) {
                     Text(
                         "I can see your profile, weights, food log, and forecast — and answer in plain English.",
                         fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        color = IOSColors.secondaryLabel(),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     Spacer(Modifier.height(24.dp))
@@ -138,7 +140,7 @@ fun CoachScreen(container: AppContainer) {
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(Modifier.width(6.dp))
-                                Text("Thinking…", fontSize = 13.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
+                                Text("Thinking…", fontSize = 13.sp, color = IOSColors.secondaryLabel())
                             }
                         }
                     }

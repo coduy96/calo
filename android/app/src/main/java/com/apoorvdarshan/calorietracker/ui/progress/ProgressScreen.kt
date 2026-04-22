@@ -59,6 +59,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.models.WeightEntry
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
+import com.apoorvdarshan.calorietracker.ui.theme.IOSColors
+import com.apoorvdarshan.calorietracker.ui.theme.IOSFont
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -173,7 +175,7 @@ private fun WeightSection(
             Text(
                 "Log your first weight to see trends",
                 fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                color = IOSColors.secondaryLabel()
             )
         } else {
             val sorted = entries.sortedBy { it.date }
@@ -191,7 +193,7 @@ private fun WeightSection(
 private fun StatBadge(label: String, value: String) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(value, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-        Text(label, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+        Text(label, fontSize = 11.sp, color = IOSColors.secondaryLabel())
     }
 }
 
@@ -206,6 +208,8 @@ private fun WeightChartCanvas(entries: List<WeightEntry>, goalKg: Double?, useMe
     val tStart = entries.first().date.toEpochMilli()
     val tEnd = entries.last().date.toEpochMilli()
     val tRange = maxOf(1L, tEnd - tStart)
+    // Hoist Composable-scope colors out so the DrawScope body can use them.
+    val goalLineColor = IOSColors.systemGreen().copy(alpha = 0.7f)
 
     Canvas(Modifier.fillMaxWidth().height(180.dp)) {
         val w = size.width
@@ -216,7 +220,7 @@ private fun WeightChartCanvas(entries: List<WeightEntry>, goalKg: Double?, useMe
             val y = h - (((it - yMin) / (yMax - yMin)).toFloat() * h)
             val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(18f, 12f))
             drawLine(
-                color = Color(0xFF34C759).copy(alpha = 0.7f),
+                color = goalLineColor,
                 start = Offset(0f, y),
                 end = Offset(w, y),
                 strokeWidth = 3f,
@@ -248,11 +252,11 @@ private fun StatsSection(streak: Int, bestStreak: Int, daysOnTarget: Int, totalE
         Text("Streaks & Stats", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
             StatTile(icon = Icons.Filled.LocalFireDepartment, label = "Current Streak", value = "$streak days", color = AppColors.Calorie, modifier = Modifier.weight(1f))
-            StatTile(icon = Icons.Filled.EmojiEvents, label = "Best Streak", value = "$bestStreak days", color = Color(0xFFFF9500), modifier = Modifier.weight(1f))
+            StatTile(icon = Icons.Filled.EmojiEvents, label = "Best Streak", value = "$bestStreak days", color = IOSColors.systemOrange(), modifier = Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-            StatTile(icon = Icons.Filled.TrackChanges, label = "Days on Target", value = "$daysOnTarget", color = Color(0xFF007AFF), modifier = Modifier.weight(1f))
-            StatTile(icon = Icons.Filled.Restaurant, label = "Total Entries", value = "$totalEntries", color = Color(0xFF34C759), modifier = Modifier.weight(1f))
+            StatTile(icon = Icons.Filled.TrackChanges, label = "Days on Target", value = "$daysOnTarget", color = IOSColors.systemBlue(), modifier = Modifier.weight(1f))
+            StatTile(icon = Icons.Filled.Restaurant, label = "Total Entries", value = "$totalEntries", color = IOSColors.systemGreen(), modifier = Modifier.weight(1f))
         }
     }
 }
@@ -269,7 +273,7 @@ private fun StatTile(icon: ImageVector, label: String, value: String, color: Col
     ) {
         Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
         Text(value, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-        Text(label, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+        Text(label, fontSize = 12.sp, color = IOSColors.secondaryLabel())
     }
 }
 
@@ -278,17 +282,17 @@ private fun HistorySection(entries: List<WeightEntry>, useMetric: Boolean, onDel
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("History", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
         if (entries.isEmpty()) {
-            Text("No weight entries yet.", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f))
+            Text("No weight entries yet.", fontSize = 13.sp, color = IOSColors.secondaryLabel())
         } else {
             val fmt = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US).withZone(ZoneId.systemDefault())
             entries.sortedByDescending { it.date }.forEach { entry ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(formatWeight(entry.weightKg, useMetric), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                        Text(fmt.format(entry.date), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f))
+                        Text(fmt.format(entry.date), fontSize = 12.sp, color = IOSColors.secondaryLabel())
                     }
                     IconButton(onClick = { onDelete(entry.id) }) {
-                        Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), modifier = Modifier.size(18.dp))
+                        Icon(Icons.Filled.Delete, null, tint = IOSColors.tertiaryLabel(), modifier = Modifier.size(18.dp))
                     }
                 }
             }

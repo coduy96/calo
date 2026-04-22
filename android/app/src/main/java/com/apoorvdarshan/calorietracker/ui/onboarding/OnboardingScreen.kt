@@ -58,6 +58,8 @@ import com.apoorvdarshan.calorietracker.ui.components.FeetInchesWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.NumericWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.UnitToggle
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
+import com.apoorvdarshan.calorietracker.ui.theme.IOSColors
+import com.apoorvdarshan.calorietracker.ui.theme.IOSFont
 import java.time.LocalDate
 import java.time.Period
 import java.util.Locale
@@ -190,12 +192,12 @@ private fun WelcomeStep() {
         Text(
             "Snap a photo, speak, or type.",
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            color = IOSColors.secondaryLabel()
         )
         Text(
             "AI handles the rest.",
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            color = IOSColors.secondaryLabel()
         )
         Spacer(Modifier.height(20.dp))
         Text(
@@ -220,7 +222,7 @@ private fun StepHeader(title: String, subtitle: String? = null) {
             Text(
                 it,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                color = IOSColors.secondaryLabel()
             )
         }
         Spacer(Modifier.height(32.dp))
@@ -253,7 +255,7 @@ private fun BirthdayStep(current: LocalDate, onChange: (LocalDate) -> Unit) {
         Spacer(Modifier.height(20.dp))
         Text(
             "Age: $age",
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+            color = IOSColors.secondaryLabel(),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.fillMaxWidth(),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -464,7 +466,7 @@ private fun NotificationsStep(enabled: Boolean, onToggle: (Boolean) -> Unit) {
         Text(
             "You can change this anytime in Settings.",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+            color = IOSColors.secondaryLabel()
         )
     }
 }
@@ -504,7 +506,7 @@ private fun HealthConnectStep(container: AppContainer, enabled: Boolean, onToggl
         Text(
             "Everything stays on-device unless you enable Health Connect's own cloud sync.",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+            color = IOSColors.secondaryLabel()
         )
     }
 }
@@ -528,7 +530,7 @@ private fun ToggleCard(label: String, subtitle: String, enabled: Boolean, onTogg
                 Text(
                     subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+                    color = IOSColors.secondaryLabel()
                 )
             }
             Switch(checked = enabled, onCheckedChange = onToggle)
@@ -583,7 +585,7 @@ private fun ProviderStep(
         Text(
             "Optional — you can skip and paste later in Settings.",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+            color = IOSColors.secondaryLabel()
         )
     }
 }
@@ -623,7 +625,7 @@ private fun BuildingPlanStep(state: OnboardingState) {
         Text(
             "BMR formula: $bmrFormula · TDEE ${profile.tdee.toInt()} kcal",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+            color = IOSColors.secondaryLabel()
         )
         if (state.goal != WeightGoal.MAINTAIN) {
             val sign = if (state.goal == WeightGoal.LOSE) "-" else "+"
@@ -632,7 +634,7 @@ private fun BuildingPlanStep(state: OnboardingState) {
             Text(
                 "Target pace: $weeklyLabel",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+                color = IOSColors.secondaryLabel()
             )
         }
     }
@@ -645,7 +647,7 @@ private fun MacroTile(label: String, value: String) {
         Text(
             label,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            color = IOSColors.secondaryLabel()
         )
     }
 }
@@ -676,7 +678,7 @@ private fun ReviewRow(label: String, value: String) {
             label,
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            color = IOSColors.secondaryLabel()
         )
         Text(
             value,
@@ -737,7 +739,7 @@ private fun ChoiceRow(label: String, subtitle: String? = null, selected: Boolean
                     Text(
                         it,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+                        color = IOSColors.secondaryLabel()
                     )
                 }
             }

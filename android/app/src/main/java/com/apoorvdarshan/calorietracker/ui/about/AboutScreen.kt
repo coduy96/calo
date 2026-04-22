@@ -46,6 +46,8 @@ import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
+import com.apoorvdarshan.calorietracker.ui.theme.IOSColors
+import com.apoorvdarshan.calorietracker.ui.theme.IOSFont
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,7 +88,7 @@ fun AboutScreen(container: AppContainer) {
                 Text(
                     "Version 1.0",
                     fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+                    color = IOSColors.secondaryLabel()
                 )
                 Spacer(Modifier.height(10.dp))
                 Text(
@@ -115,7 +117,7 @@ fun AboutScreen(container: AppContainer) {
                 RowDivider()
                 AboutRow(
                     icon = Icons.Filled.Star,
-                    tint = Color(0xFFFF9500),
+                    tint = IOSColors.systemOrange(),
                     label = "Rate on Play Store"
                 ) {
                     val uri = Uri.parse("market://details?id=${ctx.packageName}")
@@ -130,7 +132,7 @@ fun AboutScreen(container: AppContainer) {
                 RowDivider()
                 AboutRow(
                     icon = Icons.Filled.Code,
-                    tint = Color(0xFF5856D6),
+                    tint = IOSColors.systemIndigo(),
                     label = "Source on GitHub"
                 ) { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/apoorvdarshan/fud-ai"))) }
             }
@@ -138,7 +140,7 @@ fun AboutScreen(container: AppContainer) {
             SectionCard {
                 AboutRow(
                     icon = Icons.Filled.Mail,
-                    tint = Color(0xFF007AFF),
+                    tint = IOSColors.systemBlue(),
                     label = "Contact"
                 ) {
                     ctx.startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:apoorv@fud-ai.app")))
