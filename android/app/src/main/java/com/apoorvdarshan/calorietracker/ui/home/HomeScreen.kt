@@ -187,7 +187,7 @@ fun HomeScreen(container: AppContainer) {
                         )
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(40.dp)
                                 .graphicsLayer {
                                     scaleX = scale; scaleY = scale
                                 }
@@ -229,7 +229,7 @@ fun HomeScreen(container: AppContainer) {
                                 Icons.Filled.Add,
                                 contentDescription = "Add food",
                                 tint = Color.White,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(26.dp)
                             )
                         }
                         androidx.compose.runtime.LaunchedEffect(pressed.value) {
