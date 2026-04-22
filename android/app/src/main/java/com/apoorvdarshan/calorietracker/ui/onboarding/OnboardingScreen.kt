@@ -26,6 +26,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +49,7 @@ import com.apoorvdarshan.calorietracker.models.Gender
 import com.apoorvdarshan.calorietracker.models.WeightGoal
 import com.apoorvdarshan.calorietracker.ui.components.DateWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.DecimalWheelPicker
+import com.apoorvdarshan.calorietracker.ui.components.SplitDecimalWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.FeetInchesWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.NumericWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.UnitToggle
@@ -229,13 +231,19 @@ private fun GenderStep(selected: Gender, onSelect: (Gender) -> Unit) {
 
 @Composable
 private fun BirthdayStep(current: LocalDate, onChange: (LocalDate) -> Unit) {
+    // Reading all 3 LocalDate fields here ensures Compose tracks every change
+    // so the Age label recomputes live as the user scrolls any wheel.
+    val age = remember(current.year, current.monthValue, current.dayOfMonth) {
+        val years = Period.between(current, LocalDate.now()).years
+        maxOf(0, years)
+    }
     Column {
         StepHeader("Your birthday?", subtitle = "We use this for BMR math.")
         Spacer(Modifier.height(8.dp))
         DateWheelPicker(selected = current, onSelect = onChange)
         Spacer(Modifier.height(20.dp))
         Text(
-            "Age: ${Period.between(current, LocalDate.now()).years}",
+            "Age: $age",
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.fillMaxWidth(),
@@ -277,21 +285,19 @@ private fun WeightStep(kg: Double, useMetric: Boolean, onChange: (Double) -> Uni
         )
         Spacer(Modifier.height(24.dp))
         if (useMetric) {
-            DecimalWheelPicker(
+            SplitDecimalWheelPicker(
                 value = kg,
                 onValueChange = onChange,
-                min = 30.0,
-                max = 250.0,
-                step = 0.1,
+                min = 30,
+                max = 250,
                 unit = "kg"
             )
         } else {
-            DecimalWheelPicker(
+            SplitDecimalWheelPicker(
                 value = kg * 2.20462,
                 onValueChange = { lbs -> onChange(lbs / 2.20462) },
-                min = 66.0,
-                max = 551.0,
-                step = 0.1,
+                min = 66,
+                max = 551,
                 unit = "lbs"
             )
         }
@@ -337,21 +343,19 @@ private fun GoalWeightStep(current: Double, goal: WeightGoal, useMetric: Boolean
             )
             Spacer(Modifier.height(24.dp))
             if (useMetric) {
-                DecimalWheelPicker(
+                SplitDecimalWheelPicker(
                     value = current,
                     onValueChange = onChange,
-                    min = 30.0,
-                    max = 250.0,
-                    step = 0.1,
+                    min = 30,
+                    max = 250,
                     unit = "kg"
                 )
             } else {
-                DecimalWheelPicker(
+                SplitDecimalWheelPicker(
                     value = current * 2.20462,
                     onValueChange = { lbs -> onChange(lbs / 2.20462) },
-                    min = 66.0,
-                    max = 551.0,
-                    step = 0.1,
+                    min = 66,
+                    max = 551,
                     unit = "lbs"
                 )
             }

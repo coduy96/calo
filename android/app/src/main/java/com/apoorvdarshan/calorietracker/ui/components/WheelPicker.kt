@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 private val ITEM_HEIGHT = 44.dp
 private const val VISIBLE_ITEMS = 5
@@ -218,7 +219,9 @@ fun FeetInchesWheelPicker(
     onValueChange: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val totalInches = (cm / 2.54).toInt().coerceIn(36, 95) // 3'0" to 7'11"
+    // Use round-trip-safe math: round() for both directions so 5'7" -> 170cm -> 5'7" instead
+    // of truncating to 5'6".
+    val totalInches = (cm / 2.54).roundToInt().coerceIn(36, 95) // 3'0" to 7'11"
     val feet = totalInches / 12
     val inches = totalInches % 12
 
@@ -232,7 +235,7 @@ fun FeetInchesWheelPicker(
             selected = feet,
             onSelect = { f ->
                 val newTotal = f * 12 + inches
-                onValueChange((newTotal * 2.54).toInt())
+                onValueChange((newTotal * 2.54).roundToInt())
             },
             label = { "$it ft" },
             modifier = Modifier.weight(1f)
@@ -242,11 +245,65 @@ fun FeetInchesWheelPicker(
             selected = inches,
             onSelect = { i ->
                 val newTotal = feet * 12 + i
-                onValueChange((newTotal * 2.54).toInt())
+                onValueChange((newTotal * 2.54).roundToInt())
             },
             label = { "$it in" },
             modifier = Modifier.weight(1f)
         )
+    }
+}
+
+/**
+ * iOS-style split decimal picker — integer wheel + tenths wheel + unit label.
+ * e.g. 72 . 4 kg. Much nicer than a single 2000-row DecimalWheelPicker for weight.
+ */
+@Composable
+fun SplitDecimalWheelPicker(
+    value: Double,
+    onValueChange: (Double) -> Unit,
+    min: Int,
+    max: Int,
+    unit: String? = null,
+    modifier: Modifier = Modifier
+) {
+    val clampedValue = value.coerceIn(min.toDouble(), max.toDouble())
+    val intPart = clampedValue.toInt().coerceIn(min, max)
+    val tenthsPart = ((clampedValue - intPart) * 10).toInt().coerceIn(0, 9)
+    val ints = remember(min, max) { (min..max).toList() }
+    val tenths = remember { (0..9).toList() }
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        WheelPicker(
+            items = ints,
+            selected = intPart,
+            onSelect = { newInt -> onValueChange(newInt + tenthsPart / 10.0) },
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            ".",
+            style = MaterialTheme.typography.displaySmall,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
+        WheelPicker(
+            items = tenths,
+            selected = tenthsPart,
+            onSelect = { newTenth -> onValueChange(intPart + newTenth / 10.0) },
+            modifier = Modifier.weight(0.6f)
+        )
+        if (unit != null) {
+            Spacer(Modifier.size(8.dp))
+            Text(
+                unit,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                modifier = Modifier.width(48.dp).padding(start = 4.dp)
+            )
+        }
     }
 }
 
