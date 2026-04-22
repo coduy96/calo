@@ -6,6 +6,7 @@ import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.MealType as HCMealType
 import androidx.health.connect.client.records.NutritionRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.metadata.Metadata
@@ -187,11 +188,11 @@ class HealthConnectManager(private val context: Context) {
     private fun tag(id: UUID): String = "$CLIENT_PREFIX${id}"
 
     private fun mealTypeFor(meal: com.apoorvdarshan.calorietracker.models.MealType): Int = when (meal) {
-        com.apoorvdarshan.calorietracker.models.MealType.BREAKFAST -> NutritionRecord.MEAL_TYPE_BREAKFAST
-        com.apoorvdarshan.calorietracker.models.MealType.LUNCH -> NutritionRecord.MEAL_TYPE_LUNCH
-        com.apoorvdarshan.calorietracker.models.MealType.DINNER -> NutritionRecord.MEAL_TYPE_DINNER
-        com.apoorvdarshan.calorietracker.models.MealType.SNACK -> NutritionRecord.MEAL_TYPE_SNACK
-        com.apoorvdarshan.calorietracker.models.MealType.OTHER -> NutritionRecord.MEAL_TYPE_UNKNOWN
+        com.apoorvdarshan.calorietracker.models.MealType.BREAKFAST -> HCMealType.MEAL_TYPE_BREAKFAST
+        com.apoorvdarshan.calorietracker.models.MealType.LUNCH -> HCMealType.MEAL_TYPE_LUNCH
+        com.apoorvdarshan.calorietracker.models.MealType.DINNER -> HCMealType.MEAL_TYPE_DINNER
+        com.apoorvdarshan.calorietracker.models.MealType.SNACK -> HCMealType.MEAL_TYPE_SNACK
+        com.apoorvdarshan.calorietracker.models.MealType.OTHER -> HCMealType.MEAL_TYPE_UNKNOWN
     }
 
     companion object {
