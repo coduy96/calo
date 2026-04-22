@@ -26,7 +26,7 @@ data class SettingsUiState(
     val apiKeyMasked: String = ""
 )
 
-class SettingsViewModel(private val container: AppContainer) : ViewModel() {
+class SettingsViewModel(val container: AppContainer) : ViewModel() {
     private val _ui = MutableStateFlow(SettingsUiState())
     val ui: StateFlow<SettingsUiState> = _ui.asStateFlow()
 
@@ -110,6 +110,36 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
             container.prefs.clearAll()
             container.keyStore.clearAll()
             container.imageStore.clearAll()
+        }
+    }
+
+    fun clearFoodLog() {
+        viewModelScope.launch {
+            container.foodRepository.clear()
+            container.imageStore.clearAll()
+        }
+    }
+
+    fun recalculateGoals() {
+        viewModelScope.launch {
+            val current = container.profileRepository.current() ?: return@launch
+            container.profileRepository.save(current.recalculatedFromFormulas())
+            _ui.value = _ui.value.copy(profile = current.recalculatedFromFormulas())
+        }
+    }
+
+    fun updateProfile(update: (com.apoorvdarshan.calorietracker.models.UserProfile) -> com.apoorvdarshan.calorietracker.models.UserProfile) {
+        viewModelScope.launch {
+            val current = container.profileRepository.current() ?: return@launch
+            val next = update(current)
+            container.profileRepository.save(next)
+            _ui.value = _ui.value.copy(profile = next)
+        }
+    }
+
+    fun setCustomBaseUrl(provider: AIProvider, url: String) {
+        viewModelScope.launch {
+            container.prefs.setCustomBaseUrl(provider, url.takeIf { it.isNotBlank() })
         }
     }
 
