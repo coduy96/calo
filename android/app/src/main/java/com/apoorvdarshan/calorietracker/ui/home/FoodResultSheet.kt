@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -34,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -62,9 +64,13 @@ import kotlin.math.roundToInt
 @Composable
 fun FoodResultSheet(
     analysis: FoodAnalysis,
+    imageBytes: ByteArray? = null,
     onSave: (name: String, servingGrams: Double, scale: Double, mealType: MealType) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val bitmap = remember(imageBytes) {
+        imageBytes?.let { android.graphics.BitmapFactory.decodeByteArray(it, 0, it.size) }
+    }
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var name by remember { mutableStateOf(analysis.name) }
     var servingGramsText by remember { mutableStateOf(formatGrams(analysis.servingSizeGrams)) }
@@ -85,10 +91,22 @@ fun FoodResultSheet(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // 80sp emoji hero (image variant skipped — added later when we wire imageBytes through)
+            // Image hero (when we have captured photo bytes) OR 72sp emoji fallback —
+            // matches iOS FoodResultView header section.
             item {
                 Box(Modifier.fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
-                    Text(analysis.emoji ?: "🍽", fontSize = 72.sp)
+                    if (bitmap != null) {
+                        androidx.compose.foundation.Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = null,
+                            contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                            modifier = Modifier
+                                .heightIn(max = 200.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                        )
+                    } else {
+                        Text(analysis.emoji ?: "🍽", fontSize = 72.sp)
+                    }
                 }
             }
 

@@ -78,6 +78,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -416,6 +417,7 @@ fun HomeScreen(container: AppContainer) {
     ui.pendingAnalysis?.let { analysis ->
         FoodResultSheet(
             analysis = analysis,
+            imageBytes = ui.pendingImageBytes,
             onSave = { name, grams, scale, mealType ->
                 vm.saveAnalysis(name = name, servingGrams = grams, scale = scale, mealType = mealType)
             },
@@ -760,19 +762,36 @@ private fun Divider() {
 @Composable
 private fun FoodRow(entry: FoodEntry, onDelete: () -> Unit) {
     val timeFmt = DateTimeFormatter.ofPattern("h:mma", Locale.US).withZone(ZoneId.systemDefault())
+    val ctx = LocalContext.current
+    val container = (ctx.applicationContext as com.apoorvdarshan.calorietracker.FudAIApp).container
+    val bitmap = remember(entry.imageFilename) {
+        entry.imageFilename?.let { container.imageStore.load(it) }
+    }
     Row(
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            Modifier
-                .size(38.dp)
-                .clip(CircleShape)
-                .background(AppColors.Calorie.copy(alpha = 0.14f)),
-            contentAlignment = Alignment.Center
-        ) { Text(entry.emoji ?: "🍽", fontSize = 18.sp) }
+        // Image thumbnail when present, otherwise emoji-on-tint disc.
+        if (bitmap != null) {
+            androidx.compose.foundation.Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = entry.name,
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(10.dp))
+            )
+        } else {
+            Box(
+                Modifier
+                    .size(38.dp)
+                    .clip(CircleShape)
+                    .background(AppColors.Calorie.copy(alpha = 0.14f)),
+                contentAlignment = Alignment.Center
+            ) { Text(entry.emoji ?: "🍽", fontSize = 18.sp) }
+        }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(
