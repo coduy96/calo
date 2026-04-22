@@ -46,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -105,6 +106,22 @@ fun ProgressScreen(container: AppContainer) {
                         daysOnTarget = 0,
                         totalEntries = 0
                     )
+                }
+            }
+            // Macro Averages — verbatim port of MacroAveragesSection in
+            // ios/calorietracker/Views/ProgressComponents.swift.
+            ui.profile?.let { p ->
+                item {
+                    CardSection {
+                        MacroAveragesSection(
+                            avgProtein = 0, // TODO compute 7-day average via ViewModel
+                            avgCarbs = 0,
+                            avgFat = 0,
+                            proteinGoal = p.effectiveProtein,
+                            carbsGoal = p.effectiveCarbs,
+                            fatGoal = p.effectiveFat
+                        )
+                    }
                 }
             }
             item {
@@ -270,6 +287,72 @@ private fun StatTile(icon: ImageVector, label: String, value: String, color: Col
         Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
         Text(value, fontSize = 17.sp, fontWeight = FontWeight.Bold)
         Text(label, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+    }
+}
+
+/**
+ * Verbatim port of MacroAveragesSection + MacroProgressRow in
+ * ios/calorietracker/Views/ProgressComponents.swift.
+ */
+@Composable
+private fun MacroAveragesSection(
+    avgProtein: Int,
+    avgCarbs: Int,
+    avgFat: Int,
+    proteinGoal: Int,
+    carbsGoal: Int,
+    fatGoal: Int
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Macro Averages", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+        MacroProgressRow("Protein", avgProtein, proteinGoal)
+        MacroProgressRow("Carbs", avgCarbs, carbsGoal)
+        MacroProgressRow("Fat", avgFat, fatGoal)
+    }
+}
+
+@Composable
+private fun MacroProgressRow(label: String, current: Int, goal: Int) {
+    val progress = if (goal > 0) (current.toFloat() / goal).coerceIn(0f, 1f) else 0f
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(label, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+            Spacer(Modifier.weight(1f))
+            Text(
+                "${current}g / ${goal}g",
+                fontSize = 15.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        }
+        // GeometryReader { ZStack(.leading) { Capsule.fill(color*0.12); Capsule.fill(gradient).frame(max(6,...)).shadow(color*0.3, r=4, y=2) } }.frame(height: 8)
+        androidx.compose.foundation.layout.BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+        ) {
+            val w = maxWidth
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(CircleShape)
+                    .background(AppColors.Calorie.copy(alpha = 0.12f))
+            )
+            val barWidth = (w * progress).coerceAtLeast(6.dp)
+            Box(
+                Modifier
+                    .width(barWidth)
+                    .height(8.dp)
+                    .shadow(
+                        elevation = 4.dp,
+                        shape = CircleShape,
+                        ambientColor = AppColors.Calorie.copy(alpha = 0.3f),
+                        spotColor = AppColors.Calorie.copy(alpha = 0.3f)
+                    )
+                    .clip(CircleShape)
+                    .background(AppColors.CalorieGradient)
+            )
+        }
     }
 }
 
