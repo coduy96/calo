@@ -23,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,12 +63,19 @@ fun <T> WheelPicker(
         derivedStateOf { listState.firstVisibleItemIndex }
     }
 
+    // rememberUpdatedState forwards the latest onSelect / selected into the
+    // LaunchedEffect without restarting it. Without this, the effect captures
+    // the first-composition closure and fires stale state when sibling wheels
+    // (e.g. year + day in a date picker) move independently.
+    val currentOnSelect by rememberUpdatedState(onSelect)
+    val currentSelected by rememberUpdatedState(selected)
+
     LaunchedEffect(listState, items) {
         snapshotFlow { listState.firstVisibleItemIndex }
             .distinctUntilChanged()
             .collect { idx ->
                 val snapped = items.getOrNull(idx) ?: return@collect
-                if (snapped != selected) onSelect(snapped)
+                if (snapped != currentSelected) currentOnSelect(snapped)
             }
     }
 
