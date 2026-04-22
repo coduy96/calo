@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.AlertDialog
@@ -79,6 +80,8 @@ fun HomeScreen(container: AppContainer) {
     val ctx = LocalContext.current
 
     var showText by remember { mutableStateOf(false) }
+    var showVoice by remember { mutableStateOf(false) }
+    var showSaved by remember { mutableStateOf(false) }
 
     val picker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
@@ -111,7 +114,7 @@ fun HomeScreen(container: AppContainer) {
                     Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     QuickPill(
                         icon = Icons.Filled.CameraAlt,
@@ -129,7 +132,12 @@ fun HomeScreen(container: AppContainer) {
                         icon = Icons.Filled.Mic,
                         label = "Voice",
                         modifier = Modifier.weight(1f)
-                    ) { /* Voice flow coming soon */ }
+                    ) { showVoice = true }
+                    QuickPill(
+                        icon = Icons.Filled.Bookmark,
+                        label = "Saved",
+                        modifier = Modifier.weight(1f)
+                    ) { showSaved = true }
                 }
             }
             item { Spacer(Modifier.height(24.dp)) }
@@ -185,6 +193,25 @@ fun HomeScreen(container: AppContainer) {
                 showText = false
                 vm.analyzeText(it)
             }
+        )
+    }
+
+    if (showVoice) {
+        VoiceInputSheet(
+            container = container,
+            onDismiss = { showVoice = false },
+            onSubmit = {
+                showVoice = false
+                vm.analyzeText(it)
+            }
+        )
+    }
+
+    if (showSaved) {
+        SavedMealsSheet(
+            container = container,
+            onDismiss = { showSaved = false },
+            onRelogEntry = { vm.relogMeal(it) }
         )
     }
 

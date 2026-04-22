@@ -125,6 +125,13 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    /** Re-log a saved meal (from Saved Meals sheet) as a new entry timestamped now. */
+    fun relogMeal(template: FoodEntry) {
+        viewModelScope.launch {
+            container.foodRepository.addEntry(template.duplicatedForLogging(Instant.now()))
+        }
+    }
+
     class Factory(private val container: AppContainer) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
