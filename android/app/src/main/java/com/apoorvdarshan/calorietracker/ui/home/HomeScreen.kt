@@ -80,6 +80,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.MealType
+import com.apoorvdarshan.calorietracker.ui.components.MacroCard
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -447,69 +448,8 @@ private fun CalorieHero(current: Int, goal: Int) {
 
 // ── Macro card (iOS port) ────────────────────────────────────────────
 
-@Composable
-private fun MacroCard(label: String, current: Int, goal: Int, modifier: Modifier = Modifier) {
-    val ratio = if (goal > 0) (current.toFloat() / goal).coerceIn(0f, 1f) else 0f
-    val animated by animateFloatAsState(
-        targetValue = ratio,
-        animationSpec = spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow),
-        label = "macroProgress"
-    )
-    val left = maxOf(0, goal - current)
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(
-                "$current",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = AppColors.Calorie
-            )
-            Text(
-                "/${goal}g",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
-                modifier = Modifier.padding(start = 2.dp, bottom = 4.dp)
-            )
-        }
-        BoxWithConstraints(
-            Modifier
-                .fillMaxWidth()
-                .height(6.dp)
-        ) {
-            val w = maxWidth
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(CircleShape)
-                    .background(AppColors.Calorie.copy(alpha = 0.12f))
-            )
-            Box(
-                Modifier
-                    .width(w * animated)
-                    .height(6.dp)
-                    .clip(CircleShape)
-                    .background(AppColors.CalorieGradient)
-            )
-        }
-        Text(
-            label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-        )
-        Text(
-            "${left}g left",
-            fontSize = 11.sp,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
-        )
-    }
-}
+// MacroCard moved to ui/components/MacroCard.kt as a verbatim port of
+// HomeComponents.swift's struct MacroCard. Imported above.
 
 @Composable
 private fun ViewMoreButton() {
