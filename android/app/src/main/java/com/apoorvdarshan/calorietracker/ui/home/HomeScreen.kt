@@ -81,6 +81,7 @@ import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.MealType
 import com.apoorvdarshan.calorietracker.ui.components.MacroCard
+import com.apoorvdarshan.calorietracker.ui.components.WeekEnergyStrip
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -111,7 +112,8 @@ fun HomeScreen(container: AppContainer) {
     }
 
     val today = LocalDate.now()
-    val isToday = true // single-date for now; week-strip switching is follow-up
+    var selectedDate by remember { mutableStateOf(today) }
+    val isToday = selectedDate == today
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -186,12 +188,15 @@ fun HomeScreen(container: AppContainer) {
                 .padding(padding),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 32.dp)
         ) {
-            // Week strip
+            // Week strip — verbatim port of WeekEnergyStrip in HomeComponents.swift,
+            // with horizontal pagination across 53 weeks of history.
             item {
-                WeekStripSection(
-                    selectedDate = today,
-                    onSelect = { /* date switching wip */ }
-                )
+                Box(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                    WeekEnergyStrip(
+                        selectedDate = selectedDate,
+                        onSelect = { selectedDate = it }
+                    )
+                }
             }
 
             // Calorie hero
