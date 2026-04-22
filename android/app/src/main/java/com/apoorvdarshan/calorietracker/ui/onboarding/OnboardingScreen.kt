@@ -101,7 +101,11 @@ fun OnboardingScreen(container: AppContainer, onComplete: () -> Unit) {
                 )
                 OnboardingStep.BODY_FAT -> BodyFatStep(
                     bodyFat = ui.bodyFatPercentage,
-                    onChange = vm::setBodyFat
+                    onChange = vm::setBodyFat,
+                    onSkip = {
+                        vm.setBodyFat(null)
+                        vm.next()
+                    }
                 )
                 OnboardingStep.ACTIVITY -> ActivityStep(selected = ui.activity, onSelect = vm::setActivity)
                 OnboardingStep.GOAL -> GoalStep(selected = ui.goal, onSelect = vm::setGoal)
@@ -364,7 +368,7 @@ private fun GoalWeightStep(current: Double, goal: WeightGoal, useMetric: Boolean
 }
 
 @Composable
-private fun BodyFatStep(bodyFat: Double?, onChange: (Double?) -> Unit) {
+private fun BodyFatStep(bodyFat: Double?, onChange: (Double?) -> Unit, onSkip: () -> Unit) {
     Column {
         StepHeader(
             "Body fat % (optional)",
@@ -379,14 +383,21 @@ private fun BodyFatStep(bodyFat: Double?, onChange: (Double?) -> Unit) {
             step = 0.5,
             unit = "%"
         )
-        Spacer(Modifier.height(20.dp))
-        TextButton(
-            onClick = { onChange(null) },
-            modifier = Modifier.fillMaxWidth()
+        Spacer(Modifier.height(28.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(AppColors.Calorie.copy(alpha = 0.12f))
+                .clickable(onClick = onSkip)
+                .padding(horizontal = 18.dp, vertical = 16.dp),
+            contentAlignment = Alignment.Center
         ) {
             Text(
-                if (bodyFat == null) "Skipped — not used in BMR" else "Skip / clear",
-                color = if (bodyFat == null) AppColors.Calorie else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                "Skip — I don't know my body fat %",
+                color = AppColors.Calorie,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
