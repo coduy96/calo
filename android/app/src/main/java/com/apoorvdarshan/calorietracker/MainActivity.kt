@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +19,11 @@ import kotlinx.coroutines.runBlocking
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Must run before super.onCreate so the system swaps the splash theme
+        // back to Theme.FudAI before the first frame, preventing a white flash
+        // on cold start. The splash itself shows the launcher icon on the
+        // app's cream/dark background (see values/themes.xml).
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
