@@ -30,22 +30,27 @@ class TestDataSeeder(private val container: AppContainer) {
     private val json = Json { ignoreUnknownKeys = true }
 
     suspend fun seedYear() {
-        val backup = SeedBackup(
-            entriesJson = json.encodeToString(
-                ListSerializer(FoodEntry.serializer()),
-                container.foodRepository.entries.first()
-            ),
-            weightsJson = json.encodeToString(
-                ListSerializer(WeightEntry.serializer()),
-                container.weightRepository.entries.first()
-            ),
-            profileJson = container.profileRepository.profile.first()?.let {
-                json.encodeToString(UserProfile.serializer(), it)
-            },
-            healthConnectEnabled = container.prefs.healthConnectEnabled.first(),
-            onboarded = container.prefs.hasCompletedOnboarding.first()
-        )
-        container.prefs.setTestSeedBackupJson(json.encodeToString(SeedBackup.serializer(), backup))
+        // Only snapshot the user's real data on the first seed run. Subsequent
+        // re-seeds (e.g. tweaking the synthetic dataset) must not overwrite the
+        // original backup — otherwise restore would put seed data back, not real.
+        if (container.prefs.testSeedBackupJson.first() == null) {
+            val backup = SeedBackup(
+                entriesJson = json.encodeToString(
+                    ListSerializer(FoodEntry.serializer()),
+                    container.foodRepository.entries.first()
+                ),
+                weightsJson = json.encodeToString(
+                    ListSerializer(WeightEntry.serializer()),
+                    container.weightRepository.entries.first()
+                ),
+                profileJson = container.profileRepository.profile.first()?.let {
+                    json.encodeToString(UserProfile.serializer(), it)
+                },
+                healthConnectEnabled = container.prefs.healthConnectEnabled.first(),
+                onboarded = container.prefs.hasCompletedOnboarding.first()
+            )
+            container.prefs.setTestSeedBackupJson(json.encodeToString(SeedBackup.serializer(), backup))
+        }
 
         container.prefs.setHealthConnectEnabled(false)
 
@@ -151,15 +156,19 @@ class TestDataSeeder(private val container: AppContainer) {
         val rng = Random(seed = 0xC0FFEE)
         val startKg = 78.0
         val endKg = 73.5
-        val totalWeeks = 53
+        val totalDays = 365
 
         val out = mutableListOf<WeightEntry>()
-        for (weeksAgo in (totalWeeks - 1) downTo 0) {
-            val day = today.minusWeeks(weeksAgo.toLong())
-            val progress = (totalWeeks - 1 - weeksAgo).toDouble() / (totalWeeks - 1)
+        for (daysAgo in (totalDays - 1) downTo 0) {
+            // Skip ~30% of days for realism — most users don't weigh in every day.
+            // Always log today + yesterday so the 1W view always has fresh points.
+            if (daysAgo > 1 && rng.nextInt(10) < 3) continue
+            val day = today.minusDays(daysAgo.toLong())
+            val progress = (totalDays - 1 - daysAgo).toDouble() / (totalDays - 1)
             val baseline = startKg - (startKg - endKg) * progress
-            val noise = rng.nextDouble(-0.4, 0.4)
-            val ts = day.atTime(8, 0).atZone(zone).toInstant()
+            // Larger day-to-day noise (water weight, time of day, etc.)
+            val noise = rng.nextDouble(-0.6, 0.6)
+            val ts = day.atTime(8, rng.nextInt(0, 30)).atZone(zone).toInstant()
             out.add(WeightEntry(date = ts, weightKg = baseline + noise))
         }
         return out
