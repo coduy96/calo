@@ -153,9 +153,10 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
 
     /**
      * Settings → Weight save: writes a WeightEntry (so the chart, Coach forecast,
-     * and Health Connect sync see the change) and clears goalWeightKg if the
-     * new current weight makes the goal direction impossible. Mirrors iOS
-     * ContentView.swift `case .editWeight`.
+     * and Health Connect sync see the change), clears goalWeightKg if the new
+     * current weight makes the goal direction impossible, and recomputes calories
+     * + macros from formulas (since BMR/TDEE depend on weight). Mirrors iOS
+     * ContentView.swift `case .editWeight` which also calls resetCustomGoalsAndSave.
      */
     fun saveCurrentWeight(newKg: Double) {
         viewModelScope.launch {
@@ -165,9 +166,14 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 (current.goal == WeightGoal.LOSE && gw >= newKg) ||
                 (current.goal == WeightGoal.GAIN && gw <= newKg)
             )
-            if (mismatch) container.profileRepository.save(current.copy(goalWeightKg = null))
+            // WeightRepository.addEntry syncs profile.weightKg to the new value internally.
             container.weightRepository.addEntry(WeightEntry(weightKg = newKg))
-            _ui.value = _ui.value.copy(profile = container.profileRepository.current())
+            val refreshed = container.profileRepository.current() ?: return@launch
+            val next = refreshed.copy(
+                goalWeightKg = if (mismatch) null else refreshed.goalWeightKg
+            ).recalculatedFromFormulas()
+            container.profileRepository.save(next)
+            _ui.value = _ui.value.copy(profile = next)
         }
     }
 
@@ -175,6 +181,20 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             val current = container.profileRepository.current() ?: return@launch
             val next = update(current)
+            container.profileRepository.save(next)
+            _ui.value = _ui.value.copy(profile = next)
+        }
+    }
+
+    /**
+     * Like [updateProfile] but also resets custom calories + macros to formula defaults.
+     * Use this for changes to inputs that feed BMR/TDEE/protein formulas (gender, height,
+     * body fat, activity level, goal, weekly change). Mirrors iOS resetCustomGoalsAndSave.
+     */
+    fun updateProfileAndRecompute(update: (com.apoorvdarshan.calorietracker.models.UserProfile) -> com.apoorvdarshan.calorietracker.models.UserProfile) {
+        viewModelScope.launch {
+            val current = container.profileRepository.current() ?: return@launch
+            val next = update(current).recalculatedFromFormulas()
             container.profileRepository.save(next)
             _ui.value = _ui.value.copy(profile = next)
         }

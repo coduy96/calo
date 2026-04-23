@@ -497,7 +497,7 @@ private fun SettingsSheets(
                     items = Gender.values().toList(),
                     label = { it.displayName },
                     selected = { it == ui.profile?.gender },
-                    onSelect = { g -> vm.updateProfile { it.copy(gender = g) }; onDismiss() },
+                    onSelect = { g -> vm.updateProfileAndRecompute { it.copy(gender = g) }; onDismiss() },
                     icon = { genderIcon(it) }
                 )
                 SettingsSheet.HEIGHT -> {
@@ -505,7 +505,7 @@ private fun SettingsSheets(
                     HeightSheet(
                         current = cm,
                         useMetric = ui.useMetric,
-                        onSave = { newCm -> vm.updateProfile { it.copy(heightCm = newCm.toDouble()) }; onDismiss() }
+                        onSave = { newCm -> vm.updateProfileAndRecompute { it.copy(heightCm = newCm.toDouble()) }; onDismiss() }
                     )
                 }
                 SettingsSheet.WEIGHT -> {
@@ -519,7 +519,7 @@ private fun SettingsSheets(
                 }
                 SettingsSheet.BODY_FAT -> BodyFatSheet(
                     current = ui.profile?.bodyFatPercentage,
-                    onSave = { bf -> vm.updateProfile { it.copy(bodyFatPercentage = bf) }; onDismiss() }
+                    onSave = { bf -> vm.updateProfileAndRecompute { it.copy(bodyFatPercentage = bf) }; onDismiss() }
                 )
                 SettingsSheet.ACTIVITY -> ListSheet(
                     title = "Activity level",
@@ -527,7 +527,7 @@ private fun SettingsSheets(
                     label = { it.displayName },
                     subtitle = { it.subtitle },
                     selected = { it == ui.profile?.activityLevel },
-                    onSelect = { a -> vm.updateProfile { it.copy(activityLevel = a) }; onDismiss() },
+                    onSelect = { a -> vm.updateProfileAndRecompute { it.copy(activityLevel = a) }; onDismiss() },
                     icon = { activityIcon(it) }
                 )
                 SettingsSheet.GOAL -> ListSheet(
@@ -541,7 +541,8 @@ private fun SettingsSheets(
                         //   - Switching to MAINTAIN clears weeklyChangeKg + goalWeightKg.
                         //   - Switching to LOSE/GAIN seeds weeklyChangeKg if missing and
                         //     clears goalWeightKg if it now contradicts the new direction.
-                        vm.updateProfile { p ->
+                        // Then recompute calories+macros from the new goal.
+                        vm.updateProfileAndRecompute { p ->
                             when (g) {
                                 WeightGoal.MAINTAIN ->
                                     p.copy(goal = g, weeklyChangeKg = null, goalWeightKg = null)
@@ -597,7 +598,7 @@ private fun SettingsSheets(
                     current = ui.profile?.weeklyChangeKg ?: 0.5,
                     goal = ui.profile?.goal ?: WeightGoal.MAINTAIN,
                     useMetric = ui.useMetric,
-                    onSave = { kg -> vm.updateProfile { it.copy(weeklyChangeKg = kg) }; onDismiss() }
+                    onSave = { kg -> vm.updateProfileAndRecompute { it.copy(weeklyChangeKg = kg) }; onDismiss() }
                 )
                 SettingsSheet.BIRTHDAY -> BirthdaySheet(
                     current = ui.profile?.birthday ?: Instant.now(),
