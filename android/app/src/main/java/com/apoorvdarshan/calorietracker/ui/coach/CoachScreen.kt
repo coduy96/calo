@@ -34,7 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Forum
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -55,6 +55,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
@@ -119,7 +120,7 @@ fun CoachScreen(container: AppContainer) {
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            Icons.Filled.Refresh,
+                            Icons.Filled.Replay,
                             contentDescription = "Reset chat",
                             tint = if (canReset)
                                 MaterialTheme.colorScheme.onBackground
@@ -328,13 +329,16 @@ private fun TypingIndicator() {
                 animationSpec = tween(durationMillis = 350),
                 label = "typingAlpha"
             )
+            // iOS uses `.opacity(phase == i ? 1 : 0.3)` which dims the *whole* dot.
+            // Use Modifier.alpha so the gradient fades uniformly instead of getting
+            // a white overlay (the previous attempt actually brightened inactive dots).
             Box(
                 Modifier
                     .size(7.dp)
                     .scale(scale)
+                    .alpha(alpha)
                     .clip(CircleShape)
                     .background(AppColors.CalorieGradient)
-                    .background(Color.White.copy(alpha = 1f - alpha)) // dim non-active
             )
         }
     }
