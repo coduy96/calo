@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -322,9 +321,12 @@ private fun MealRow(
 
 @Composable
 private fun EmptyState(text: String) {
+    // fillMaxWidth (not fillMaxSize) so the sheet keeps the same half-height as
+    // the populated Recents/Frequent lists — fillMaxSize propagates up and makes
+    // the ModalBottomSheet expand to full height when the list is empty.
     Box(
         Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .heightConstraint(),
         contentAlignment = Alignment.Center
     ) {
