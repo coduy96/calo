@@ -56,18 +56,25 @@ val BottomTabs = listOf(
     BottomTab(FudAIRoutes.ABOUT, Icons.Filled.Info, "About")
 )
 
+private val BarHeight = 72.dp
+private val BarCorner = 36.dp
+private val PillCorner = 26.dp
+private val PillInsetH = 8.dp
+private val PillInsetV = 6.dp
+
 /**
- * Floating Liquid Glass tab bar — capsule with translucent backdrop, hairline
- * border, soft shadow, and a spring-animated pill highlight that slides
+ * Floating Liquid Glass tab bar — capsule with translucent backdrop, glassy
+ * sheen, hairline border, soft shadow, and a spring-animated bright pill
  * behind the active tab.
  *
  * Approximates iOS 26 Liquid Glass via:
- *   - dark / light translucent surface (works against any background)
- *   - top-light → bottom-dark vertical sheen overlay (glass refraction stand-in)
+ *   - dark / light translucent surface that floats over the underlying content
+ *   - vertical white sheen overlay (top-bright → bottom-clear)
  *   - hairline white-gradient border
- *   - 18dp ambient + spot shadow for floating depth
- *   - spring-animated translateX on the active-tab pill highlight
- *   - subtle scale bump on the selected icon
+ *   - 22dp ambient + spot shadow for depth
+ *   - active-tab pill: bright white-glass disc layered over the bar (the
+ *     "glass-on-glass" effect) — clearly visible, with its own sheen + border
+ *   - subtle 1.08x scale bump on the selected icon
  */
 @Composable
 fun FudAIBottomNavBar(
@@ -79,27 +86,24 @@ fun FudAIBottomNavBar(
         (it.red + it.green + it.blue) / 3f < 0.5f
     }
 
-    val barShape = RoundedCornerShape(34.dp)
+    val barShape = RoundedCornerShape(BarCorner)
 
-    val backdropColor = if (isDark) Color(0xFF1A1A1C).copy(alpha = 0.92f)
-                        else Color(0xFFFFFFFF).copy(alpha = 0.92f)
+    val backdropColor = if (isDark) Color(0xFF15151A).copy(alpha = 0.86f)
+                        else Color(0xFFFFFFFF).copy(alpha = 0.90f)
 
-    val sheenBrush = Brush.verticalGradient(
+    val barSheen = Brush.verticalGradient(
         colors = if (isDark)
-            listOf(Color.White.copy(alpha = 0.10f), Color.White.copy(alpha = 0.0f))
+            listOf(Color.White.copy(alpha = 0.14f), Color.White.copy(alpha = 0.0f))
         else
-            listOf(Color.White.copy(alpha = 0.55f), Color.White.copy(alpha = 0.15f))
+            listOf(Color.White.copy(alpha = 0.55f), Color.White.copy(alpha = 0.10f))
     )
 
-    val borderBrush = Brush.linearGradient(
+    val barBorder = Brush.linearGradient(
         listOf(
-            Color.White.copy(alpha = if (isDark) 0.22f else 0.65f),
-            Color.White.copy(alpha = if (isDark) 0.04f else 0.18f)
+            Color.White.copy(alpha = if (isDark) 0.28f else 0.65f),
+            Color.White.copy(alpha = if (isDark) 0.06f else 0.18f)
         )
     )
-
-    val highlightColor = if (isDark) Color.White.copy(alpha = 0.10f)
-                         else AppColors.Calorie.copy(alpha = 0.12f)
 
     Box(
         modifier = modifier
@@ -109,17 +113,17 @@ fun FudAIBottomNavBar(
         BoxWithConstraints(
             Modifier
                 .fillMaxWidth()
-                .height(68.dp)
+                .height(BarHeight)
                 .shadow(
-                    elevation = 18.dp,
+                    elevation = 22.dp,
                     shape = barShape,
-                    ambientColor = Color.Black.copy(alpha = 0.30f),
-                    spotColor = Color.Black.copy(alpha = 0.30f)
+                    ambientColor = Color.Black.copy(alpha = 0.35f),
+                    spotColor = Color.Black.copy(alpha = 0.35f)
                 )
                 .clip(barShape)
                 .background(backdropColor)
-                .background(sheenBrush)
-                .border(0.8.dp, borderBrush, barShape)
+                .background(barSheen)
+                .border(0.8.dp, barBorder, barShape)
         ) {
             val barWidthDp = maxWidth
             val tabCount = BottomTabs.size
@@ -136,15 +140,11 @@ fun FudAIBottomNavBar(
                 label = "tabHighlightOffset"
             )
 
-            // Active-tab pill highlight — slides with spring animation.
-            Box(
-                Modifier
-                    .offset(x = highlightOffset)
-                    .width(tabWidthDp)
-                    .fillMaxHeight()
-                    .padding(horizontal = 6.dp, vertical = 8.dp)
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(highlightColor)
+            // Active-tab pill — the bright glass disc.
+            ActivePill(
+                tabWidth = tabWidthDp,
+                isDark = isDark,
+                modifier = Modifier.offset(x = highlightOffset)
             )
 
             Row(
@@ -166,6 +166,43 @@ fun FudAIBottomNavBar(
     }
 }
 
+/**
+ * Bright "glass-on-glass" pill highlighting the active tab. Layered on top of
+ * the bar so it reads like a brighter slab of glass within the larger one.
+ */
+@Composable
+private fun ActivePill(tabWidth: androidx.compose.ui.unit.Dp, isDark: Boolean, modifier: Modifier = Modifier) {
+    val pillShape = RoundedCornerShape(PillCorner)
+
+    val fill = if (isDark) Color.White.copy(alpha = 0.16f)
+               else AppColors.Calorie.copy(alpha = 0.14f)
+
+    val sheen = Brush.verticalGradient(
+        colors = if (isDark)
+            listOf(Color.White.copy(alpha = 0.20f), Color.White.copy(alpha = 0.0f))
+        else
+            listOf(Color.White.copy(alpha = 0.55f), Color.White.copy(alpha = 0.10f))
+    )
+
+    val border = Brush.linearGradient(
+        listOf(
+            Color.White.copy(alpha = if (isDark) 0.32f else 0.75f),
+            Color.White.copy(alpha = if (isDark) 0.06f else 0.18f)
+        )
+    )
+
+    Box(
+        modifier
+            .width(tabWidth)
+            .fillMaxHeight()
+            .padding(horizontal = PillInsetH, vertical = PillInsetV)
+            .clip(pillShape)
+            .background(fill)
+            .background(sheen)
+            .border(0.7.dp, border, pillShape)
+    )
+}
+
 @Composable
 private fun TabItem(
     tab: BottomTab,
@@ -175,12 +212,12 @@ private fun TabItem(
     onClick: () -> Unit
 ) {
     val activeColor = AppColors.Calorie
-    val inactiveColor = if (isDark) Color.White.copy(alpha = 0.55f)
+    val inactiveColor = if (isDark) Color.White.copy(alpha = 0.62f)
                         else Color.Black.copy(alpha = 0.55f)
     val tint = if (selected) activeColor else inactiveColor
 
     val iconScale by animateFloatAsState(
-        targetValue = if (selected) 1.06f else 1.0f,
+        targetValue = if (selected) 1.08f else 1.0f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = 380f
@@ -201,13 +238,13 @@ private fun TabItem(
             tab.icon,
             contentDescription = tab.label,
             tint = tint,
-            modifier = Modifier.size(24.dp).scale(iconScale)
+            modifier = Modifier.size(if (selected) 26.dp else 24.dp).scale(iconScale)
         )
         Spacer(Modifier.height(3.dp))
         Text(
             tab.label,
             color = tint,
-            fontSize = 10.5.sp,
+            fontSize = 11.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
         )
     }
