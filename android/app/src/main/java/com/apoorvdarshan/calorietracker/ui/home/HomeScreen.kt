@@ -157,7 +157,7 @@ fun HomeScreen(container: AppContainer) {
     }
 
     val today = LocalDate.now()
-    var selectedDate by remember { mutableStateOf(today) }
+    val selectedDate = ui.date
     val isToday = selectedDate == today
 
     Scaffold(
@@ -308,7 +308,7 @@ fun HomeScreen(container: AppContainer) {
                 Box(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
                     WeekEnergyStrip(
                         selectedDate = selectedDate,
-                        onSelect = { selectedDate = it },
+                        onSelect = { vm.setSelectedDate(it) },
                         weekStartsOnMonday = weekStartsOnMonday
                     )
                 }

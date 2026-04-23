@@ -40,18 +40,26 @@ data class HomeUiState(
 class HomeViewModel(private val container: AppContainer) : ViewModel() {
     private val _ui = MutableStateFlow(HomeUiState())
     val ui: StateFlow<HomeUiState> = _ui.asStateFlow()
+    private val _selectedDate = MutableStateFlow(LocalDate.now())
 
     init {
-        combine(container.profileRepository.profile, container.foodRepository.entries) { p, entries ->
-            val today = LocalDate.now()
+        combine(
+            container.profileRepository.profile,
+            container.foodRepository.entries,
+            _selectedDate
+        ) { p, entries, day ->
             val zone = ZoneId.systemDefault()
-            val todayEntries = entries
-                .filter { it.timestamp.atZone(zone).toLocalDate() == today }
+            val dayEntries = entries
+                .filter { it.timestamp.atZone(zone).toLocalDate() == day }
                 .sortedByDescending { it.timestamp }
-            _ui.value.copy(profile = p, todayEntries = todayEntries)
+            _ui.value.copy(profile = p, date = day, todayEntries = dayEntries)
         }
             .onEach { _ui.value = it }
             .launchIn(viewModelScope)
+    }
+
+    fun setSelectedDate(date: LocalDate) {
+        _selectedDate.value = date
     }
 
     fun analyzeText(description: String) {
@@ -102,7 +110,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
                 protein = s(analysis.protein),
                 carbs = s(analysis.carbs),
                 fat = s(analysis.fat),
-                timestamp = Instant.now(),
+                timestamp = timestampForSelectedDay(),
                 imageFilename = filename,
                 emoji = analysis.emoji,
                 source = if (imageBytes != null) FoodSource.SNAP_FOOD else FoodSource.TEXT_INPUT,
@@ -138,11 +146,25 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
-    /** Re-log a saved meal (from Saved Meals sheet) as a new entry timestamped now. */
+    /** Re-log a saved meal (from Saved Meals sheet) as a new entry timestamped to the selected day. */
     fun relogMeal(template: FoodEntry) {
         viewModelScope.launch {
-            container.foodRepository.addEntry(template.duplicatedForLogging(Instant.now()))
+            container.foodRepository.addEntry(template.duplicatedForLogging(timestampForSelectedDay()))
         }
+    }
+
+    /**
+     * Mirrors iOS `logDate: selectedDate` behavior. When viewing today, returns now.
+     * When viewing a past or future day, combines that day with the current wall-clock
+     * time so the entry shows a sensible time and lands on the correct calendar day.
+     */
+    private fun timestampForSelectedDay(): Instant {
+        val day = _selectedDate.value
+        val today = LocalDate.now()
+        if (day == today) return Instant.now()
+        val zone = ZoneId.systemDefault()
+        val nowTime = java.time.LocalTime.now()
+        return day.atTime(nowTime).atZone(zone).toInstant()
     }
 
     class Factory(private val container: AppContainer) : ViewModelProvider.Factory {
