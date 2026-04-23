@@ -22,6 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.Accessibility
+import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.Man
 import androidx.compose.material.icons.outlined.Person
@@ -144,11 +146,7 @@ fun OnboardingScreen(container: AppContainer, onComplete: () -> Unit) {
                 )
                 OnboardingStep.BODY_FAT -> BodyFatStep(
                     bodyFat = ui.bodyFatPercentage,
-                    onChange = vm::setBodyFat,
-                    onSkip = {
-                        vm.setBodyFat(null)
-                        vm.next()
-                    }
+                    onChange = vm::setBodyFat
                 )
                 OnboardingStep.ACTIVITY -> ActivityStep(selected = ui.activity, onSelect = vm::setActivity)
                 OnboardingStep.GOAL -> GoalStep(selected = ui.goal, onSelect = vm::setGoal)
@@ -532,37 +530,65 @@ private fun GoalWeightStep(current: Double, goal: WeightGoal, useMetric: Boolean
 }
 
 @Composable
-private fun BodyFatStep(bodyFat: Double?, onChange: (Double?) -> Unit, onSkip: () -> Unit) {
-    Column {
+private fun BodyFatStep(bodyFat: Double?, onChange: (Double?) -> Unit) {
+    // Mirrors iOS: Yes/No SelectionCards. "No" reveals a small explanatory
+    // ƒ(x) message; "Yes" reveals a body-fat % wheel picker.
+    val knows = bodyFat != null
+    Column(Modifier.fillMaxSize()) {
         StepHeader(
-            "Body fat % (optional)",
-            subtitle = "If set, BMR uses Katch-McArdle instead of Mifflin-St Jeor — a bit more accurate."
+            "Do you know your\nbody fat %?",
+            subtitle = "Helps us calculate your metabolism more accurately"
         )
-        val current = bodyFat ?: 0.20
-        DecimalWheelPicker(
-            value = current * 100,
-            onValueChange = { onChange(it / 100.0) },
-            min = 5.0,
-            max = 60.0,
-            step = 0.5,
-            unit = "%"
+        SelectionCard(
+            icon = Icons.Outlined.CheckCircle,
+            title = "Yes",
+            selected = knows,
+            onClick = { if (!knows) onChange(0.20) }
         )
-        Spacer(Modifier.height(28.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(AppColors.Calorie.copy(alpha = 0.12f))
-                .clickable(onClick = onSkip)
-                .padding(horizontal = 18.dp, vertical = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                "Skip — I don't know my body fat %",
-                color = AppColors.Calorie,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold
+        Spacer(Modifier.height(12.dp))
+        SelectionCard(
+            icon = Icons.Outlined.Cancel,
+            title = "No",
+            selected = !knows,
+            onClick = { if (knows) onChange(null) }
+        )
+        Spacer(Modifier.height(20.dp))
+        if (knows) {
+            DecimalWheelPicker(
+                value = (bodyFat ?: 0.20) * 100,
+                onValueChange = { onChange(it / 100.0) },
+                min = 3.0,
+                max = 60.0,
+                step = 0.5,
+                unit = "%"
             )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Common ranges: Men 10–25%, Women 18–35%",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        } else {
+            Spacer(Modifier.height(12.dp))
+            Column(
+                Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "ƒ(x)",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "No worries! We'll use a standard formula\nbased on your height, weight, and age.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
         }
     }
 }
