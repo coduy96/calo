@@ -406,7 +406,28 @@ private fun SettingsSheets(
                     label = { it.displayName },
                     selected = { it == ui.profile?.goal },
                     onSelect = { g ->
-                        vm.updateProfile { it.copy(goal = g) }
+                        // Mirrors iOS ContentView.swift profile.goal onChange:
+                        //   - Switching to MAINTAIN clears weeklyChangeKg + goalWeightKg.
+                        //   - Switching to LOSE/GAIN seeds weeklyChangeKg if missing and
+                        //     clears goalWeightKg if it now contradicts the new direction.
+                        vm.updateProfile { p ->
+                            when (g) {
+                                WeightGoal.MAINTAIN ->
+                                    p.copy(goal = g, weeklyChangeKg = null, goalWeightKg = null)
+                                else -> {
+                                    val gw = p.goalWeightKg
+                                    val mismatched = gw != null && (
+                                        (g == WeightGoal.LOSE && gw >= p.weightKg) ||
+                                        (g == WeightGoal.GAIN && gw <= p.weightKg)
+                                    )
+                                    p.copy(
+                                        goal = g,
+                                        weeklyChangeKg = p.weeklyChangeKg ?: 0.5,
+                                        goalWeightKg = if (mismatched) null else p.goalWeightKg
+                                    )
+                                }
+                            }
+                        }
                         onDismiss()
                     }
                 )
