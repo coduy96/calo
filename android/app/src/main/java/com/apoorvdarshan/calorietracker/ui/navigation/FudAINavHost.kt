@@ -36,7 +36,15 @@ fun FudAINavHost(
                 FudAIBottomNavBar(
                     currentRoute = currentRoute,
                     onTap = { target ->
-                        if (target != currentRoute) {
+                        if (target == currentRoute) return@FudAIBottomNavBar
+                        // Tapping HOME (the start destination) needs popBackStack
+                        // — `navigate(HOME) { popUpTo(HOME); launchSingleTop = true }`
+                        // is a no-op because NavController sees HOME at the top of
+                        // the stack and skips re-emitting currentBackStackEntry, so
+                        // the bar stays selected on the previous tab.
+                        if (target == FudAIRoutes.HOME) {
+                            nav.popBackStack(FudAIRoutes.HOME, inclusive = false)
+                        } else {
                             nav.navigate(target) {
                                 popUpTo(FudAIRoutes.HOME) { saveState = true }
                                 launchSingleTop = true

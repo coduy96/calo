@@ -6,10 +6,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.awaitHorizontalTouchSlopOrCancellation
-import androidx.compose.foundation.gestures.horizontalDrag
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -53,16 +52,9 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.onClick
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -212,107 +204,72 @@ fun FudAIBottomNavBar(
                     }
             )
 
-            // Visual tabs. Tap + drag are both handled by the overlay below;
-            // the row exists for layout + a11y semantics only.
+            // Shared drag handlers used by every TabItem. clickable on the
+            // tab handles the tap (proven reliable); a sibling pointerInput
+            // with detectHorizontalDragGestures handles the drag — both can
+            // listen on the same pointer stream because clickable claims on
+            // release-without-slop and the drag detector claims on slop.
+            fun startDrag() {
+                isDragging = true
+                dragOffsetPx = pillAnim.value
+                hoverIndex = selectedIndex
+            }
+            fun endDrag() {
+                val landed = hoverIndex
+                scope.launch {
+                    pillAnim.snapTo(dragOffsetPx)
+                    isDragging = false
+                    pillAnim.animateTo(
+                        landed * tabWidthPx,
+                        spring(
+                            dampingRatio = Spring.DampingRatioLowBouncy,
+                            stiffness = 320f
+                        )
+                    )
+                }
+                if (BottomTabs[landed].route != currentRoute) {
+                    onTap(BottomTabs[landed].route)
+                }
+            }
+            fun onDragDelta(delta: Float) {
+                dragOffsetPx = (dragOffsetPx + delta).coerceIn(0f, maxOffsetPx)
+                val newHover = ((dragOffsetPx + tabWidthPx / 2f) / tabWidthPx)
+                    .toInt().coerceIn(0, tabCount - 1)
+                if (newHover != hoverIndex) {
+                    hoverIndex = newHover
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                }
+            }
+
             Row(
                 Modifier.fillMaxWidth().fillMaxHeight(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                for ((idx, tab) in BottomTabs.withIndex()) {
-                    val isSelected = tab.route == currentRoute
+                for (tab in BottomTabs) {
+                    val selected = tab.route == currentRoute
                     TabItem(
                         tab = tab,
-                        selected = isSelected,
+                        selected = selected,
                         isDark = isDark,
                         modifier = Modifier
                             .width(tabWidthDp)
                             .fillMaxHeight()
-                            .semantics {
-                                role = Role.Tab
-                                selected = isSelected
-                                contentDescription = tab.label
-                                onClick {
-                                    if (BottomTabs[idx].route != currentRoute) {
-                                        onTap(BottomTabs[idx].route)
+                            .pointerInput(tabWidthPx, tabCount) {
+                                if (tabWidthPx <= 0f) return@pointerInput
+                                detectHorizontalDragGestures(
+                                    onDragStart = { startDrag() },
+                                    onDragEnd = { endDrag() },
+                                    onDragCancel = { endDrag() },
+                                    onHorizontalDrag = { change, dragAmount ->
+                                        onDragDelta(dragAmount)
+                                        change.consume()
                                     }
-                                    true
-                                }
-                            }
-                    )
-                }
-            }
-
-            // Single gesture overlay that owns BOTH tap and horizontal drag.
-            // A previous version kept clickable on TabItem and put only drag
-            // on the overlay, but the overlay sits on top in z-order and
-            // intercepts the down event, so the tab's click never fired.
-            Box(
-                Modifier
-                    .matchParentSize()
-                    .pointerInput(tabWidthPx, tabCount) {
-                        if (tabWidthPx <= 0f) return@pointerInput
-                        awaitEachGesture {
-                            val down = awaitFirstDown(requireUnconsumed = false)
-                            val dragChange = awaitHorizontalTouchSlopOrCancellation(down.id) { change, _ ->
-                                change.consume()
-                            }
-
-                            if (dragChange == null) {
-                                // No horizontal slop reached → treat as a tap
-                                // on whichever tab the down landed in.
-                                val tappedIdx = (down.position.x / tabWidthPx)
-                                    .toInt().coerceIn(0, tabCount - 1)
-                                if (BottomTabs[tappedIdx].route != currentRoute) {
-                                    onTap(BottomTabs[tappedIdx].route)
-                                }
-                                return@awaitEachGesture
-                            }
-
-                            // Horizontal drag claimed — start dragging the pill
-                            // from its current animated position. Anchor so the
-                            // pill follows the finger 1:1 (delta from down).
-                            isDragging = true
-                            val startPillPx = pillAnim.value
-                            val deltaSinceDown = dragChange.position.x - down.position.x
-                            dragOffsetPx = (startPillPx + deltaSinceDown)
-                                .coerceIn(0f, maxOffsetPx)
-                            hoverIndex = ((dragOffsetPx + tabWidthPx / 2f) / tabWidthPx)
-                                .toInt().coerceIn(0, tabCount - 1)
-
-                            horizontalDrag(dragChange.id) { change ->
-                                dragOffsetPx = (dragOffsetPx + change.positionChange().x)
-                                    .coerceIn(0f, maxOffsetPx)
-                                val newHover = ((dragOffsetPx + tabWidthPx / 2f) / tabWidthPx)
-                                    .toInt().coerceIn(0, tabCount - 1)
-                                if (newHover != hoverIndex) {
-                                    hoverIndex = newHover
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                }
-                                change.consume()
-                            }
-
-                            // Released — snap pillAnim to the live drag value
-                            // so the spring can resume from there, then settle
-                            // to the chosen tab and fire the route change.
-                            val landed = hoverIndex
-                            scope.launch {
-                                pillAnim.snapTo(dragOffsetPx)
-                                isDragging = false
-                                pillAnim.animateTo(
-                                    landed * tabWidthPx,
-                                    spring(
-                                        dampingRatio = Spring.DampingRatioLowBouncy,
-                                        stiffness = 320f
-                                    )
                                 )
                             }
-                            if (BottomTabs[landed].route != currentRoute) {
-                                onTap(BottomTabs[landed].route)
-                            }
-                        }
-                    }
-            )
+                    ) { onTap(tab.route) }
+                }
+            }
         }
     }
 }
@@ -359,7 +316,8 @@ private fun TabItem(
     tab: BottomTab,
     selected: Boolean,
     isDark: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
 ) {
     val activeColor = AppColors.Calorie
     val inactiveColor = if (isDark) Color.White.copy(alpha = 0.62f)
@@ -376,7 +334,11 @@ private fun TabItem(
     )
 
     Column(
-        modifier = modifier,
+        modifier = modifier.clickable(
+            interactionSource = MutableInteractionSource(),
+            indication = null,
+            onClick = onClick
+        ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
