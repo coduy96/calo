@@ -658,9 +658,10 @@ private fun CalorieHero(current: Int, goal: Int) {
             )
         }
 
-        // "N left" .font(.footnote) = 13sp .foregroundStyle(.secondary) = ~0.6 alpha
+        // "N left" .font(.footnote) = 13sp .foregroundStyle(.secondary) = ~0.6 alpha.
+        // iOS Text("\(Int)") groups thousands by locale; format explicitly so 2452 → "2,452".
         Text(
-            "$remaining left",
+            "${String.format(java.util.Locale.getDefault(), "%,d", remaining)} left",
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
