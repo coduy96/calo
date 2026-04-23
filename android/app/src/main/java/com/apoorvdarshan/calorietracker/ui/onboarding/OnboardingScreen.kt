@@ -55,9 +55,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -107,7 +113,7 @@ fun OnboardingScreen(container: AppContainer, onComplete: () -> Unit) {
     ) {
         // iOS shows a chevron-left back button + a thin Capsule progress bar at
         // the top, only on steps 1..N-2 (hidden on Welcome and Review).
-        if (ui.step != OnboardingStep.WELCOME && ui.step != OnboardingStep.REVIEW) {
+        if (ui.step != OnboardingStep.WELCOME && ui.step != OnboardingStep.BUILDING_PLAN && ui.step != OnboardingStep.REVIEW) {
             Spacer(Modifier.height(12.dp))
             Row(
                 Modifier
@@ -196,62 +202,108 @@ fun OnboardingScreen(container: AppContainer, onComplete: () -> Unit) {
                     onProviderChange = vm::setAiProvider,
                     onKeyChange = vm::setApiKey
                 )
-                OnboardingStep.BUILDING_PLAN -> BuildingPlanStep(state = ui)
-                OnboardingStep.REVIEW -> ReviewStep(state = ui)
+                OnboardingStep.BUILDING_PLAN -> BuildingPlanStep(onComplete = vm::next)
+                OnboardingStep.PLAN_READY -> PlanReadyStep(state = ui)
+                OnboardingStep.REVIEW -> ReviewStep()
             }
         }
 
-        if (ui.step == OnboardingStep.WELCOME) {
-            // iOS Welcome shows a single full-width pink-gradient "Get Started"
-            // capsule with no Back button.
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 36.dp)
-            ) {
+        when (ui.step) {
+            OnboardingStep.WELCOME -> {
+                // iOS Welcome: full-width pink-gradient "Get Started" capsule.
                 Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 36.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(AppColors.CalorieStart, AppColors.CalorieEnd)
+                                )
+                            )
+                            .clickable { vm.next() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "Get Started",
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+            OnboardingStep.BUILDING_PLAN -> {
+                // Auto-advancing animation; no CTA. Reserve the same footer
+                // height so layout doesn't jump when we land on this step.
+                Spacer(Modifier.height(54.dp + 36.dp + 24.dp))
+            }
+            OnboardingStep.REVIEW -> {
+                // iOS review step: pink-gradient "Rate fud" primary + "Maybe Later"
+                // secondary text button.
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(top = 24.dp, bottom = 36.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(AppColors.CalorieStart, AppColors.CalorieEnd)
+                                )
+                            )
+                            .clickable { vm.complete(onComplete) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "Rate fud",
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    TextButton(onClick = { vm.complete(onComplete) }) {
+                        Text(
+                            "Maybe Later",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+                        )
+                    }
+                }
+            }
+            else -> {
+                // iOS continueButton: full-width inverse-coloured capsule.
+                Button(
+                    onClick = { vm.next() },
+                    shape = RoundedCornerShape(28.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.onBackground,
+                        contentColor = MaterialTheme.colorScheme.background
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(
-                            androidx.compose.ui.graphics.Brush.horizontalGradient(
-                                listOf(AppColors.CalorieStart, AppColors.CalorieEnd)
-                            )
-                        )
-                        .clickable { vm.next() },
-                    contentAlignment = Alignment.Center
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 36.dp)
+                        .height(54.dp)
                 ) {
                     Text(
-                        "Get Started",
-                        color = Color.White,
+                        "Continue",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
-            }
-        } else {
-            // iOS continueButton: full-width primary-coloured Capsule, height 54,
-            // with inverse text. In dark mode that's a white pill with black text;
-            // in light mode it's a black pill with white text.
-            Button(
-                onClick = { if (ui.isLastStep) vm.complete(onComplete) else vm.next() },
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.onBackground,
-                    contentColor = MaterialTheme.colorScheme.background
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 36.dp)
-                    .height(54.dp)
-            ) {
-                Text(
-                    if (ui.isLastStep) "Finish" else "Continue",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
             }
         }
     }
@@ -1112,100 +1164,303 @@ private fun AiSetupRow(number: String, text: String) {
     }
 }
 
+/**
+ * iOS BuildingPlanStepView: animated percentage counter, gradient progress bar,
+ * and a five-item checklist that ticks off over ~4 seconds, then auto-advances.
+ */
 @Composable
-private fun BuildingPlanStep(state: OnboardingState) {
-    val profile = state.buildProfile()
-    Column {
-        StepHeader("Your plan is ready")
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = AppColors.Calorie.copy(alpha = 0.1f)),
-            modifier = Modifier.fillMaxWidth()
+private fun BuildingPlanStep(onComplete: () -> Unit) {
+    val items = remember {
+        listOf(
+            "Calories" to Icons.Outlined.LocalFireDepartment,
+            "Carbs" to Icons.Outlined.Restaurant,
+            "Protein" to Icons.Outlined.FitnessCenter,
+            "Fats" to Icons.Outlined.Bolt,
+            "Health Score" to Icons.Filled.Favorite
+        )
+    }
+    var checkedCount by remember { mutableIntStateOf(0) }
+    var percent by remember { mutableIntStateOf(0) }
+    val targetProgress = checkedCount / items.size.toFloat()
+    val animatedProgress by animateFloatAsState(
+        targetValue = targetProgress,
+        animationSpec = tween(durationMillis = 400),
+        label = "plan_progress"
+    )
+
+    LaunchedEffect(Unit) {
+        val percentSteps = listOf(20, 40, 60, 80, 100)
+        for (i in 0 until items.size) {
+            kotlinx.coroutines.delay(700)
+            checkedCount = i + 1
+            percent = percentSteps[i]
+        }
+        kotlinx.coroutines.delay(400)
+        onComplete()
+    }
+
+    Column(
+        Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            "$percent%",
+            fontSize = 56.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "We're setting everything\nup for you",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        Spacer(Modifier.height(28.dp))
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .height(10.dp)
+                .clip(RoundedCornerShape(5.dp))
+                .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.08f))
         ) {
-            Column(Modifier.padding(20.dp)) {
-                Text(
-                    "Daily calories",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = AppColors.Calorie,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    "${profile.effectiveCalories} kcal",
-                    style = MaterialTheme.typography.displaySmall,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                    MacroTile("Protein", "${profile.effectiveProtein}g")
-                    MacroTile("Carbs", "${profile.effectiveCarbs}g")
-                    MacroTile("Fat", "${profile.effectiveFat}g")
+            Box(
+                Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(animatedProgress)
+                    .clip(RoundedCornerShape(5.dp))
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(AppColors.CalorieStart, AppColors.CalorieEnd, Color(0xFF4A90E2))
+                        )
+                    )
+            )
+        }
+        Spacer(Modifier.height(18.dp))
+        Text(
+            "Finalizing results...",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+        )
+        Spacer(Modifier.height(28.dp))
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Text(
+                "Daily recommendation for",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            items.forEachIndexed { index, (label, _) ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "•",
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(label, style = MaterialTheme.typography.bodyLarge)
+                    Spacer(Modifier.weight(1f))
+                    if (index < checkedCount) {
+                        Icon(
+                            imageVector = Icons.Filled.CheckCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }
-        Spacer(Modifier.height(14.dp))
-        val bmrFormula = if (profile.bodyFatPercentage != null) "Katch-McArdle (body fat-aware)" else "Mifflin-St Jeor"
-        Text(
-            "BMR formula: $bmrFormula · TDEE ${profile.tdee.toInt()} kcal",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
-        )
-        if (state.goal != WeightGoal.MAINTAIN) {
-            val sign = if (state.goal == WeightGoal.LOSE) "-" else "+"
-            val weeklyLabel = if (state.useMetric) String.format(Locale.US, "%s%.2f kg/week", sign, state.weeklyChangeKg)
-                              else String.format(Locale.US, "%s%.2f lbs/week", sign, state.weeklyChangeKg * 2.20462)
+    }
+}
+
+/**
+ * iOS planReadyStep: large gradient-filled calorie number with "daily calories"
+ * caption, and three macro cards (Protein, Carbs, Fat) below. The full editable
+ * tap-to-edit picker behavior is deferred to Settings on Android.
+ */
+@Composable
+private fun PlanReadyStep(state: OnboardingState) {
+    val profile = state.buildProfile()
+    Column(Modifier.fillMaxSize()) {
+        StepHeader("Your Plan", subtitle = "Edit any value later in Settings")
+        Spacer(Modifier.height(20.dp))
+        Column(
+            Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
-                "Target pace: $weeklyLabel",
-                style = MaterialTheme.typography.bodySmall,
+                "${profile.effectiveCalories}",
+                fontSize = 64.sp,
+                fontWeight = FontWeight.Bold,
+                style = LocalTextStyle.current.copy(
+                    brush = Brush.linearGradient(
+                        listOf(AppColors.CalorieStart, AppColors.CalorieEnd)
+                    )
+                )
+            )
+            Text(
+                "daily calories",
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
             )
         }
-    }
-}
-
-@Composable
-private fun MacroTile(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-        Text(
-            label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-        )
-    }
-}
-
-@Composable
-private fun ReviewStep(state: OnboardingState) {
-    Column {
-        StepHeader("Looks good?")
-        ReviewRow("Gender", state.gender.displayName)
-        ReviewRow("Age", "${Period.between(state.birthday, LocalDate.now()).years}")
-        ReviewRow("Height", "${state.heightCm} cm")
-        ReviewRow("Weight", String.format(Locale.US, "%.1f kg", state.weightKg))
-        ReviewRow("Activity", state.activity.displayName)
-        ReviewRow("Goal", state.goal.displayName)
-        if (state.goal != WeightGoal.MAINTAIN) {
-            ReviewRow("Target", String.format(Locale.US, "%.1f kg", state.goalWeightKg))
+        Spacer(Modifier.height(28.dp))
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            val macroGradient = listOf(AppColors.CalorieStart, AppColors.CalorieEnd)
+            MacroCard(
+                label = "Protein",
+                value = profile.effectiveProtein,
+                gradient = macroGradient,
+                modifier = Modifier.weight(1f)
+            )
+            MacroCard(
+                label = "Carbs",
+                value = profile.effectiveCarbs,
+                gradient = macroGradient,
+                modifier = Modifier.weight(1f)
+            )
+            MacroCard(
+                label = "Fat",
+                value = profile.effectiveFat,
+                gradient = macroGradient,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        if (profile.effectiveCalories < 1200) {
+            Spacer(Modifier.height(20.dp))
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFFF9500).copy(alpha = 0.12f)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Bolt,
+                        contentDescription = null,
+                        tint = Color(0xFFFF9500),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            "Please consult with a doctor",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            "The minimum recommendation is 1,200 calories per day.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun ReviewRow(label: String, value: String) {
-    Row(
-        Modifier.fillMaxWidth().padding(vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+private fun MacroCard(
+    label: String,
+    value: Int,
+    gradient: List<Color>,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(vertical = 14.dp),
+        contentAlignment = Alignment.Center
     ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    "$value",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    style = LocalTextStyle.current.copy(
+                        brush = Brush.linearGradient(gradient)
+                    )
+                )
+                Spacer(Modifier.width(2.dp))
+                Text(
+                    "g",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+    }
+}
+
+/**
+ * iOS reviewStep: pink-tinted star inside a circle, "Enjoying fud so far?" hero
+ * title, and a two-line subtitle. The Rate fud / Maybe Later CTA is rendered
+ * by the screen's footer — same as iOS where the buttons sit outside the body.
+ */
+@Composable
+private fun ReviewStep() {
+    Column(
+        Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            Modifier
+                .size(160.dp)
+                .clip(CircleShape)
+                .background(
+                    Brush.linearGradient(
+                        listOf(
+                            AppColors.CalorieStart.copy(alpha = 0.10f),
+                            Color(0xFFFFCC00).copy(alpha = 0.10f)
+                        )
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Star,
+                contentDescription = null,
+                tint = AppColors.Calorie,
+                modifier = Modifier.size(64.dp)
+            )
+        }
+        Spacer(Modifier.height(24.dp))
         Text(
-            label,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            "Enjoying fud so far?",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
+        Spacer(Modifier.height(8.dp))
         Text(
-            value,
+            "A quick rating helps us grow\nand build more features for you!",
             style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.SemiBold
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
     }
 }
