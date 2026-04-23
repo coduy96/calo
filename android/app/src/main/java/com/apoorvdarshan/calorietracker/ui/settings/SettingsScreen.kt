@@ -23,7 +23,21 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
+import androidx.compose.material.icons.outlined.FitnessCenter
+import androidx.compose.material.icons.outlined.LocalDining
+import androidx.compose.material.icons.outlined.SelfImprovement
+import androidx.compose.material.icons.outlined.SportsMartialArts
+import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.SettingsBrightness
+import androidx.compose.material.icons.outlined.Wc
+import androidx.compose.material.icons.outlined.Female
+import androidx.compose.material.icons.outlined.Male
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingFlat
 import androidx.compose.material.icons.outlined.Brightness6
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Cake
@@ -436,7 +450,8 @@ private fun SettingsSheets(
                     items = Gender.values().toList(),
                     label = { it.displayName },
                     selected = { it == ui.profile?.gender },
-                    onSelect = { g -> vm.updateProfile { it.copy(gender = g) }; onDismiss() }
+                    onSelect = { g -> vm.updateProfile { it.copy(gender = g) }; onDismiss() },
+                    icon = { genderIcon(it) }
                 )
                 SettingsSheet.HEIGHT -> {
                     val cm = ui.profile?.heightCm?.toInt() ?: 175
@@ -462,15 +477,18 @@ private fun SettingsSheets(
                 SettingsSheet.ACTIVITY -> ListSheet(
                     title = "Activity level",
                     items = ActivityLevel.values().toList(),
-                    label = { "${it.displayName} · ${it.subtitle}" },
+                    label = { it.displayName },
+                    subtitle = { it.subtitle },
                     selected = { it == ui.profile?.activityLevel },
-                    onSelect = { a -> vm.updateProfile { it.copy(activityLevel = a) }; onDismiss() }
+                    onSelect = { a -> vm.updateProfile { it.copy(activityLevel = a) }; onDismiss() },
+                    icon = { activityIcon(it) }
                 )
                 SettingsSheet.GOAL -> ListSheet(
                     title = "Goal",
                     items = WeightGoal.values().toList(),
                     label = { it.displayName },
                     selected = { it == ui.profile?.goal },
+                    icon = { goalIcon(it) },
                     onSelect = { g ->
                         // Mirrors iOS ContentView.swift profile.goal onChange:
                         //   - Switching to MAINTAIN clears weeklyChangeKg + goalWeightKg.
@@ -545,7 +563,8 @@ private fun SettingsSheets(
                     items = listOf("system" to "System", "light" to "Light", "dark" to "Dark"),
                     label = { it.second },
                     selected = { it.first == ui.appearanceMode },
-                    onSelect = { vm.setAppearanceMode(it.first); onDismiss() }
+                    onSelect = { vm.setAppearanceMode(it.first); onDismiss() },
+                    icon = { appearanceIcon(it.first) }
                 )
                 SettingsSheet.WEEK_START -> ListSheet(
                     title = "Week Starts On",
@@ -589,23 +608,54 @@ private fun <T> ListSheet(
     label: (T) -> String,
     selected: (T) -> Boolean,
     onSelect: (T) -> Unit,
+    icon: ((T) -> ImageVector?)? = null,
+    subtitle: ((T) -> String?)? = null,
     footer: String? = null,
     customField: ((String) -> Unit)? = null
 ) {
     Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-    Spacer(Modifier.height(10.dp))
-    LazyColumn(Modifier.fillMaxWidth().heightIn(max = 360.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Spacer(Modifier.height(12.dp))
+    LazyColumn(Modifier.fillMaxWidth().heightIn(max = 420.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         items(items) { item ->
             val isSel = selected(item)
-            Box(
+            val rowIcon = icon?.invoke(item)
+            val sub = subtitle?.invoke(item)
+            Row(
                 Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(if (isSel) AppColors.Calorie.copy(alpha = 0.15f) else Color.Transparent)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
                     .clickable { onSelect(item) }
-                    .padding(horizontal = 14.dp, vertical = 14.dp)
+                    .padding(horizontal = 14.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(label(item), style = MaterialTheme.typography.bodyLarge)
+                if (rowIcon != null) {
+                    Icon(rowIcon, contentDescription = null, tint = AppColors.Calorie, modifier = Modifier.size(22.dp))
+                    Spacer(Modifier.width(14.dp))
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        label(item),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+                    if (!sub.isNullOrBlank()) {
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            sub,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+                if (isSel) {
+                    Icon(
+                        Icons.Filled.Check,
+                        contentDescription = "Selected",
+                        tint = AppColors.Calorie,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }
@@ -963,4 +1013,32 @@ private fun BirthdaySheet(current: Instant, onSave: (Instant) -> Unit) {
         colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie),
         modifier = Modifier.fillMaxWidth()
     ) { Text("Save", color = Color.White) }
+}
+
+// Closest Material mappings for the iOS SF Symbols used in picker rows.
+private fun genderIcon(g: Gender): ImageVector = when (g) {
+    Gender.MALE -> Icons.Outlined.Male
+    Gender.FEMALE -> Icons.Outlined.Female
+    Gender.OTHER -> Icons.Outlined.Wc
+}
+
+private fun activityIcon(a: ActivityLevel): ImageVector = when (a) {
+    ActivityLevel.SEDENTARY -> Icons.Outlined.SelfImprovement
+    ActivityLevel.LIGHT -> Icons.AutoMirrored.Outlined.DirectionsWalk
+    ActivityLevel.MODERATE -> Icons.AutoMirrored.Outlined.DirectionsRun
+    ActivityLevel.ACTIVE -> Icons.Outlined.LocalDining
+    ActivityLevel.VERY_ACTIVE -> Icons.Outlined.FitnessCenter
+    ActivityLevel.EXTRA_ACTIVE -> Icons.Outlined.SportsMartialArts
+}
+
+private fun goalIcon(g: WeightGoal): ImageVector = when (g) {
+    WeightGoal.LOSE -> Icons.AutoMirrored.Filled.TrendingDown
+    WeightGoal.MAINTAIN -> Icons.AutoMirrored.Filled.TrendingFlat
+    WeightGoal.GAIN -> Icons.AutoMirrored.Outlined.TrendingUp
+}
+
+private fun appearanceIcon(key: String): ImageVector = when (key) {
+    "light" -> Icons.Outlined.LightMode
+    "dark" -> Icons.Outlined.DarkMode
+    else -> Icons.Outlined.SettingsBrightness
 }
