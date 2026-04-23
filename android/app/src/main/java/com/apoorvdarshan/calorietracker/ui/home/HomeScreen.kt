@@ -36,6 +36,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Coffee
@@ -118,6 +119,7 @@ fun HomeScreen(container: AppContainer) {
 
     var showText by remember { mutableStateOf(false) }
     var showVoice by remember { mutableStateOf(false) }
+    var showManual by remember { mutableStateOf(false) }
     var showSaved by remember { mutableStateOf(false) }
     var showAddMenu by remember { mutableStateOf(false) }
     var editingEntry by remember { mutableStateOf<FoodEntry?>(null) }
@@ -296,6 +298,10 @@ fun HomeScreen(container: AppContainer) {
                                 icon = Icons.Filled.Mic
                             ) { showAddMenu = false; showVoice = true }
                             MenuRow(
+                                label = "Manual Entry",
+                                icon = Icons.Filled.Calculate
+                            ) { showAddMenu = false; showManual = true }
+                            MenuRow(
                                 label = "Saved Meals",
                                 icon = Icons.Filled.Bookmark
                             ) { showAddMenu = false; showSaved = true }
@@ -412,6 +418,16 @@ fun HomeScreen(container: AppContainer) {
             container = container,
             onDismiss = { showVoice = false },
             onSubmit = { showVoice = false; vm.analyzeText(it) }
+        )
+    }
+
+    if (showManual) {
+        ManualEntryDialog(
+            onDismiss = { showManual = false },
+            onSave = { name, kcal, p, c, f ->
+                showManual = false
+                vm.saveManualEntry(name, kcal, p, c, f)
+            }
         )
     }
 
@@ -1114,4 +1130,87 @@ private fun TextInputDialog(onDismiss: () -> Unit, onSubmit: (String) -> Unit) {
             }
         }
     }
+}
+
+@Composable
+private fun ManualEntryDialog(
+    onDismiss: () -> Unit,
+    onSave: (name: String, calories: Int, protein: Int, carbs: Int, fat: Int) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var calories by remember { mutableStateOf("") }
+    var protein by remember { mutableStateOf("") }
+    var carbs by remember { mutableStateOf("") }
+    var fat by remember { mutableStateOf("") }
+
+    val canSave = name.isNotBlank() && calories.toIntOrNull() != null
+
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            Modifier
+                .padding(horizontal = 20.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(horizontal = 20.dp, vertical = 20.dp)
+        ) {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Text("Manual Entry", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    placeholder = { Text("e.g. Homemade salad", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    NumberField("Calories", calories, { calories = it.filter(Char::isDigit) }, Modifier.weight(1f))
+                    NumberField("Protein (g)", protein, { protein = it.filter(Char::isDigit) }, Modifier.weight(1f))
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    NumberField("Carbs (g)", carbs, { carbs = it.filter(Char::isDigit) }, Modifier.weight(1f))
+                    NumberField("Fat (g)", fat, { fat = it.filter(Char::isDigit) }, Modifier.weight(1f))
+                }
+
+                Button(
+                    onClick = {
+                        onSave(
+                            name.trim(),
+                            calories.toIntOrNull() ?: 0,
+                            protein.toIntOrNull() ?: 0,
+                            carbs.toIntOrNull() ?: 0,
+                            fat.toIntOrNull() ?: 0
+                        )
+                    },
+                    enabled = canSave,
+                    colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie),
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                ) {
+                    Text("Save", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                }
+                TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NumberField(label: String, value: String, onValueChange: (String) -> Unit, modifier: Modifier = Modifier) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        placeholder = { Text("0", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)) },
+        singleLine = true,
+        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+        modifier = modifier
+    )
 }

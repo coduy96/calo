@@ -4,6 +4,7 @@ enum FoodSource: String, Codable {
     case snapFood
     case nutritionLabel
     case textInput
+    case manual
 }
 
 enum MealType: String, Codable, CaseIterable {

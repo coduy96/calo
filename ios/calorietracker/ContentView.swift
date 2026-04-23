@@ -266,6 +266,7 @@ struct HomeView: View {
     @State private var selectedDate: Date = .now
     @State private var showVoicePopover = false
     @State private var showTextPopover = false
+    @State private var showManualPopover = false
     @State private var showRecentSheet = false
     @State private var pendingContextImage: UIImage?
     @State private var contextDescription: String = ""
@@ -477,7 +478,13 @@ struct HomeView: View {
                                 Label("Voice", systemImage: "mic.fill")
                             }
                             Button(action: {
-                                
+
+                                showManualPopover = true
+                            }) {
+                                Label("Manual Entry", systemImage: "square.and.pencil")
+                            }
+                            Button(action: {
+
                                 showRecentSheet = true
                             }) {
                                 Label("Saved Meals", systemImage: "bookmark.fill")
@@ -537,6 +544,17 @@ struct HomeView: View {
                                             showError = true
                                         }
                                     }
+                                }
+                            )
+                            .presentationCompactAdaptation(.popover)
+                        }
+                        .popover(isPresented: $showManualPopover) {
+                            ManualEntryView(
+                                logDate: selectedDate,
+                                onCancel: { showManualPopover = false },
+                                onSave: { entry in
+                                    showManualPopover = false
+                                    foodStore.addEntry(entry)
                                 }
                             )
                             .presentationCompactAdaptation(.popover)

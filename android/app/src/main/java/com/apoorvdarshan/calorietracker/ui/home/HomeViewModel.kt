@@ -167,6 +167,24 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    /** Save a user-typed entry with no AI involvement (manual macro input from issue #15). */
+    fun saveManualEntry(name: String, calories: Int, protein: Int, carbs: Int, fat: Int) {
+        viewModelScope.launch {
+            container.foodRepository.addEntry(
+                FoodEntry(
+                    name = name,
+                    calories = calories,
+                    protein = protein,
+                    carbs = carbs,
+                    fat = fat,
+                    timestamp = timestampForSelectedDay(),
+                    source = FoodSource.MANUAL,
+                    mealType = MealType.currentMeal
+                )
+            )
+        }
+    }
+
     /**
      * Mirrors iOS `logDate: selectedDate` behavior. When viewing today, returns now.
      * When viewing a past or future day, combines that day with the current wall-clock
