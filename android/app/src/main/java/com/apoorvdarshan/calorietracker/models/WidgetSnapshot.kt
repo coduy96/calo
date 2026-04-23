@@ -24,6 +24,9 @@ data class WidgetSnapshot(
     val fatGoal: Int
 ) {
     val caloriesRemaining: Int get() = maxOf(0, calorieGoal - calories)
+    val proteinRemaining: Int get() = maxOf(0, proteinGoal - protein)
+    val carbsRemaining: Int get() = maxOf(0, carbsGoal - carbs)
+    val fatRemaining: Int get() = maxOf(0, fatGoal - fat)
     val calorieProgress: Double get() = if (calorieGoal > 0) minOf(1.0, calories.toDouble() / calorieGoal) else 0.0
     val proteinProgress: Double get() = if (proteinGoal > 0) minOf(1.0, protein.toDouble() / proteinGoal) else 0.0
     val carbsProgress: Double get() = if (carbsGoal > 0) minOf(1.0, carbs.toDouble() / carbsGoal) else 0.0

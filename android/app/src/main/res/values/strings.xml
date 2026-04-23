@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Fud AI</string>
+    <string name="widget_calorie_label">Fud AI Calories</string>
+    <string name="widget_calorie_description">See today\'s calories and macros at a glance.</string>
+    <string name="widget_protein_label">Fud AI Protein</string>
+    <string name="widget_protein_description">See today\'s protein progress at a glance.</string>
 </resources>

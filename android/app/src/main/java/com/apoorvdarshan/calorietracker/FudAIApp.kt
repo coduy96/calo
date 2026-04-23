@@ -9,10 +9,15 @@ import com.apoorvdarshan.calorietracker.data.ProfileRepository
 import com.apoorvdarshan.calorietracker.data.WeightRepository
 import com.apoorvdarshan.calorietracker.services.FoodImageStore
 import com.apoorvdarshan.calorietracker.services.NotificationService
+import com.apoorvdarshan.calorietracker.services.WidgetSnapshotWriter
 import com.apoorvdarshan.calorietracker.services.ai.ChatService
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysisService
 import com.apoorvdarshan.calorietracker.services.health.HealthConnectManager
 import com.apoorvdarshan.calorietracker.services.speech.SpeechService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.launchIn
 
 /**
  * Application-scoped singleton wiring. Manual DI (no Hilt) — repositories and
@@ -23,10 +28,13 @@ class FudAIApp : Application() {
     lateinit var container: AppContainer
         private set
 
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
         container.notifications.createChannels()
+        container.widgetSnapshotWriter.observe().launchIn(appScope)
     }
 }
 
@@ -45,4 +53,6 @@ class AppContainer(app: FudAIApp) {
     val foodAnalysis = FoodAnalysisService(prefs, keyStore)
     val chatService = ChatService(prefs, keyStore)
     val speechService = SpeechService(prefs, keyStore)
+
+    val widgetSnapshotWriter = WidgetSnapshotWriter(app, prefs, foodRepository, profileRepository)
 }
