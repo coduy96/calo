@@ -319,7 +319,7 @@ private fun FavoritesReorderableList(
             ) {
                 SwipeToDismissBox(
                     state = swipeState,
-                    backgroundContent = { FavoriteRemoveBackground() },
+                    backgroundContent = { FavoriteRemoveBackground(swipeState.dismissDirection) },
                     enableDismissFromStartToEnd = false,
                     enableDismissFromEndToStart = true,
                     modifier = Modifier.fillMaxWidth()
@@ -358,15 +358,21 @@ private fun FavoritesReorderableList(
 }
 
 @Composable
-private fun FavoriteRemoveBackground() {
+private fun FavoriteRemoveBackground(direction: SwipeToDismissBoxValue) {
+    // Only paint red while the user is actively swiping. The row's surface
+    // is semi-transparent (alpha 0.45) so an always-red background bleeds
+    // through and tints every favorite row red at rest.
+    val active = direction == SwipeToDismissBoxValue.EndToStart
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color(0xFFD32F2F))
+            .background(if (active) Color(0xFFD32F2F) else Color.Transparent)
             .padding(horizontal = 24.dp),
         contentAlignment = Alignment.CenterEnd
     ) {
-        Icon(Icons.Filled.Delete, contentDescription = "Remove favorite", tint = Color.White)
+        if (active) {
+            Icon(Icons.Filled.Delete, contentDescription = "Remove favorite", tint = Color.White)
+        }
     }
 }
 
