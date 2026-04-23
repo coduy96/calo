@@ -82,6 +82,14 @@ class PreferencesStore(private val context: Context) {
     val useMetric: Flow<Boolean> = ds.data.map { it[Keys.USE_METRIC] ?: true }
     suspend fun setUseMetric(v: Boolean) { ds.edit { it[Keys.USE_METRIC] = v } }
 
+    /** "system" | "light" | "dark". Mirrors iOS @AppStorage("appearanceMode"). */
+    val appearanceMode: Flow<String> = ds.data.map { it[Keys.APPEARANCE_MODE] ?: "system" }
+    suspend fun setAppearanceMode(v: String) { ds.edit { it[Keys.APPEARANCE_MODE] = v } }
+
+    /** false = Sunday, true = Monday. Mirrors iOS @AppStorage("weekStartsOnMonday"). */
+    val weekStartsOnMonday: Flow<Boolean> = ds.data.map { it[Keys.WEEK_STARTS_MONDAY] ?: false }
+    suspend fun setWeekStartsOnMonday(v: Boolean) { ds.edit { it[Keys.WEEK_STARTS_MONDAY] = v } }
+
     // -- AI Provider selection --------------------------------------------
     val selectedAIProvider: Flow<AIProvider> = ds.data.map {
         val raw = it[Keys.SELECTED_AI_PROVIDER]
@@ -192,6 +200,8 @@ class PreferencesStore(private val context: Context) {
         val HEALTH_CONNECT_ENABLED = booleanPreferencesKey("healthConnectEnabled")
         val HEALTH_TYPES_VERSION = intPreferencesKey("healthTypesVersion")
         val USE_METRIC = booleanPreferencesKey("useMetric")
+        val APPEARANCE_MODE = stringPreferencesKey("appearanceMode")
+        val WEEK_STARTS_MONDAY = booleanPreferencesKey("weekStartsOnMonday")
         val SELECTED_AI_PROVIDER = stringPreferencesKey("selectedAIProvider")
         val SELECTED_AI_MODEL = stringPreferencesKey("selectedAIModel")
         val SELECTED_SPEECH_PROVIDER = stringPreferencesKey("selectedSpeechProvider")

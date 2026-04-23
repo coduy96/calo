@@ -23,7 +23,9 @@ data class SettingsUiState(
     val profile: UserProfile? = null,
     val notificationsEnabled: Boolean = false,
     val healthConnectEnabled: Boolean = false,
-    val apiKeyMasked: String = ""
+    val apiKeyMasked: String = "",
+    val appearanceMode: String = "system",
+    val weekStartsOnMonday: Boolean = false
 )
 
 class SettingsViewModel(val container: AppContainer) : ViewModel() {
@@ -40,6 +42,8 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             val notif = container.prefs.notificationsEnabled.first()
             val hc = container.prefs.healthConnectEnabled.first()
             val masked = maskKey(container.keyStore.apiKey(provider))
+            val appearance = container.prefs.appearanceMode.first()
+            val weekMon = container.prefs.weekStartsOnMonday.first()
             _ui.value = SettingsUiState(
                 selectedAI = provider,
                 selectedModel = model,
@@ -48,8 +52,24 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 profile = profile,
                 notificationsEnabled = notif,
                 healthConnectEnabled = hc,
-                apiKeyMasked = masked
+                apiKeyMasked = masked,
+                appearanceMode = appearance,
+                weekStartsOnMonday = weekMon
             )
+        }
+    }
+
+    fun setAppearanceMode(mode: String) {
+        viewModelScope.launch {
+            container.prefs.setAppearanceMode(mode)
+            _ui.value = _ui.value.copy(appearanceMode = mode)
+        }
+    }
+
+    fun setWeekStartsOnMonday(monday: Boolean) {
+        viewModelScope.launch {
+            container.prefs.setWeekStartsOnMonday(monday)
+            _ui.value = _ui.value.copy(weekStartsOnMonday = monday)
         }
     }
 

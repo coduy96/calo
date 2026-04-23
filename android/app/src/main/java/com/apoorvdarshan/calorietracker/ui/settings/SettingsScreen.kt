@@ -26,8 +26,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -52,6 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.apoorvdarshan.calorietracker.AppContainer
@@ -60,7 +64,12 @@ import com.apoorvdarshan.calorietracker.models.AIProvider
 import com.apoorvdarshan.calorietracker.models.AutoBalanceMacro
 import com.apoorvdarshan.calorietracker.models.Gender
 import com.apoorvdarshan.calorietracker.models.SpeechProvider
+import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.WeightGoal
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import com.apoorvdarshan.calorietracker.ui.components.DecimalWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.FeetInchesWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.NumericWheelPicker
@@ -73,7 +82,8 @@ import java.util.Locale
 
 private enum class SettingsSheet {
     AI_PROVIDER, AI_MODEL, API_KEY, CUSTOM_BASE_URL, SPEECH_PROVIDER, SPEECH_KEY,
-    GENDER, HEIGHT, WEIGHT, BODY_FAT, ACTIVITY, GOAL, GOAL_WEIGHT, GOAL_SPEED, MACROS
+    GENDER, BIRTHDAY, HEIGHT, WEIGHT, BODY_FAT, ACTIVITY, GOAL, GOAL_WEIGHT, GOAL_SPEED, MACROS,
+    APPEARANCE, WEEK_START
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -97,9 +107,12 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            SectionCard(title = "You") {
+            // Section 1 — Personal Info (matches iOS Section "Personal Info")
+            SectionCard(title = "Personal Info") {
                 profile?.let { p ->
                     SettingRow("Gender", p.gender.displayName) { sheet = SettingsSheet.GENDER }
+                    HorizontalDivider()
+                    SettingRow("Birthday", birthdayDisplay(p)) { sheet = SettingsSheet.BIRTHDAY }
                     HorizontalDivider()
                     SettingRow(
                         "Height",
@@ -114,36 +127,37 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                     ) { sheet = SettingsSheet.WEIGHT }
                     HorizontalDivider()
                     SettingRow(
-                        "Body fat",
+                        "Body Fat",
                         p.bodyFatPercentage?.let { "${(it * 100).toInt()}%" } ?: "Not set"
                     ) { sheet = SettingsSheet.BODY_FAT }
+                }
+            }
+
+            // Section 2 — Goals & Nutrition (matches iOS Section "Goals & Nutrition")
+            SectionCard(title = "Goals & Nutrition") {
+                profile?.let { p ->
+                    SettingRow("Weight Goal", p.goal.displayName) { sheet = SettingsSheet.GOAL }
                     HorizontalDivider()
-                    SettingRow("Activity", p.activityLevel.displayName) { sheet = SettingsSheet.ACTIVITY }
-                    HorizontalDivider()
-                    SettingRow("Goal", p.goal.displayName) { sheet = SettingsSheet.GOAL }
+                    SettingRow("Activity Level", p.activityLevel.displayName) { sheet = SettingsSheet.ACTIVITY }
                     if (p.goal != WeightGoal.MAINTAIN) {
                         HorizontalDivider()
                         SettingRow(
-                            "Target weight",
-                            p.goalWeightKg?.let {
-                                if (ui.useMetric) String.format(Locale.US, "%.1f kg", it)
-                                else String.format(Locale.US, "%.1f lbs", it * 2.20462)
-                            } ?: "Not set"
-                        ) { sheet = SettingsSheet.GOAL_WEIGHT }
-                        HorizontalDivider()
-                        SettingRow(
-                            "Goal speed",
+                            "Weekly Change",
                             p.weeklyChangeKg?.let {
                                 if (ui.useMetric) String.format(Locale.US, "%.2f kg/wk", it)
                                 else String.format(Locale.US, "%.2f lbs/wk", it * 2.20462)
                             } ?: "0.50 kg/wk"
                         ) { sheet = SettingsSheet.GOAL_SPEED }
+                        HorizontalDivider()
+                        SettingRow(
+                            "Goal Weight",
+                            p.goalWeightKg?.let {
+                                if (ui.useMetric) String.format(Locale.US, "%.1f kg", it)
+                                else String.format(Locale.US, "%.1f lbs", it * 2.20462)
+                            } ?: "Not set"
+                        ) { sheet = SettingsSheet.GOAL_WEIGHT }
                     }
-                }
-            }
-
-            SectionCard(title = "Goals") {
-                profile?.let { p ->
+                    HorizontalDivider()
                     SettingRow("Calories", "${p.effectiveCalories} kcal") { sheet = SettingsSheet.MACROS }
                     HorizontalDivider()
                     SettingRow("Protein", "${p.effectiveProtein} g") { sheet = SettingsSheet.MACROS }
@@ -155,49 +169,75 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                     TextButton(
                         onClick = { showRecalcDialog = true },
                         modifier = Modifier.fillMaxWidth().padding(4.dp)
-                    ) { Text("Recalculate goals from formula", color = AppColors.Calorie) }
+                    ) { Text("Recalculate Goals", color = AppColors.Calorie) }
                 }
             }
 
+            // Section 3 — App Settings (matches iOS Section "App Settings")
+            SectionCard(title = "App Settings") {
+                SettingRow(
+                    "Appearance",
+                    when (ui.appearanceMode) {
+                        "light" -> "Light"
+                        "dark" -> "Dark"
+                        else -> "System"
+                    }
+                ) { sheet = SettingsSheet.APPEARANCE }
+                HorizontalDivider()
+                ToggleRow("Metric Units", ui.useMetric, vm::setUseMetric)
+                HorizontalDivider()
+                SettingRow(
+                    "Week Starts On",
+                    if (ui.weekStartsOnMonday) "Monday" else "Sunday"
+                ) { sheet = SettingsSheet.WEEK_START }
+                HorizontalDivider()
+                ToggleRow("Notifications", ui.notificationsEnabled, vm::setNotificationsEnabled)
+            }
+
+            // Section 4 — AI Provider (matches iOS Section "AI Provider")
             SectionCard(title = "AI Provider") {
                 SettingRow("Provider", ui.selectedAI.displayName) { sheet = SettingsSheet.AI_PROVIDER }
                 HorizontalDivider()
-                if (ui.selectedAI.requiresCustomEndpoint) {
-                    SettingRow("Base URL", "Tap to edit") { sheet = SettingsSheet.CUSTOM_BASE_URL }
-                    HorizontalDivider()
-                }
                 SettingRow("Model", ui.selectedModel.ifEmpty { "(set one below)" }) { sheet = SettingsSheet.AI_MODEL }
-                HorizontalDivider()
-                SettingRow("API Key", ui.apiKeyMasked.ifEmpty { "Not set" }) { sheet = SettingsSheet.API_KEY }
+                if (ui.selectedAI.requiresApiKey) {
+                    HorizontalDivider()
+                    SettingRow("API Key", ui.apiKeyMasked.ifEmpty { "Not set" }) { sheet = SettingsSheet.API_KEY }
+                }
+                if (ui.selectedAI.requiresCustomEndpoint || ui.selectedAI == AIProvider.OLLAMA) {
+                    HorizontalDivider()
+                    SettingRow(
+                        if (ui.selectedAI.requiresCustomEndpoint) "Base URL" else "Server URL",
+                        "Tap to edit"
+                    ) { sheet = SettingsSheet.CUSTOM_BASE_URL }
+                }
             }
 
-            SectionCard(title = "Speech") {
-                SettingRow("STT Engine", ui.selectedSpeech.displayName) { sheet = SettingsSheet.SPEECH_PROVIDER }
+            // Section 5 — Speech-to-Text (matches iOS Section "Speech-to-Text")
+            SectionCard(title = "Speech-to-Text") {
+                SettingRow("Provider", ui.selectedSpeech.displayName) { sheet = SettingsSheet.SPEECH_PROVIDER }
+                HorizontalDivider()
+                Text(
+                    ui.selectedSpeech.description,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                )
                 if (ui.selectedSpeech.requiresApiKey) {
                     HorizontalDivider()
                     SettingRow("API Key", "Tap to edit") { sheet = SettingsSheet.SPEECH_KEY }
                 }
             }
 
-            SectionCard(title = "Units") {
-                ToggleRow("Use metric (kg / cm)", ui.useMetric, vm::setUseMetric)
-            }
-
-            SectionCard(title = "Notifications") {
-                ToggleRow("Enable reminders", ui.notificationsEnabled, vm::setNotificationsEnabled)
-            }
-
-            SectionCard(title = "Health Connect") {
-                ToggleRow("Sync to Health Connect", ui.healthConnectEnabled, vm::setHealthConnectEnabled)
-            }
-
-            SectionCard(title = "Danger zone") {
+            // Section 6 — Health & Data (matches iOS Section "Health & Data")
+            SectionCard(title = "Health & Data") {
+                ToggleRow("Health Connect", ui.healthConnectEnabled, vm::setHealthConnectEnabled)
+                HorizontalDivider()
                 TextButton(onClick = { showClearFoodDialog = true }, modifier = Modifier.fillMaxWidth().padding(4.dp)) {
-                    Text("Clear food log", color = Color(0xFFD32F2F))
+                    Text("Clear Food Log", color = Color(0xFFFF9500))
                 }
                 HorizontalDivider()
                 TextButton(onClick = { showDeleteDialog = true }, modifier = Modifier.fillMaxWidth().padding(4.dp)) {
-                    Text("Delete all local data", color = Color(0xFFD32F2F))
+                    Text("Delete All Data", color = Color(0xFFFF3B30))
                 }
             }
 
@@ -366,6 +406,27 @@ private fun SettingsSheets(sheet: SettingsSheet, ui: SettingsUiState, vm: Settin
                     current = ui.profile?.weeklyChangeKg ?: 0.5,
                     useMetric = ui.useMetric,
                     onSave = { kg -> vm.updateProfile { it.copy(weeklyChangeKg = kg) }; onDismiss() }
+                )
+                SettingsSheet.BIRTHDAY -> BirthdaySheet(
+                    current = ui.profile?.birthday ?: Instant.now(),
+                    onSave = { newInstant ->
+                        vm.updateProfile { it.copy(birthday = newInstant) }
+                        onDismiss()
+                    }
+                )
+                SettingsSheet.APPEARANCE -> ListSheet(
+                    title = "Appearance",
+                    items = listOf("system" to "System", "light" to "Light", "dark" to "Dark"),
+                    label = { it.second },
+                    selected = { it.first == ui.appearanceMode },
+                    onSelect = { vm.setAppearanceMode(it.first); onDismiss() }
+                )
+                SettingsSheet.WEEK_START -> ListSheet(
+                    title = "Week Starts On",
+                    items = listOf(false to "Sunday", true to "Monday"),
+                    label = { it.second },
+                    selected = { it.first == ui.weekStartsOnMonday },
+                    onSelect = { vm.setWeekStartsOnMonday(it.first); onDismiss() }
                 )
                 SettingsSheet.MACROS -> MacrosSheet(
                     profile = ui.profile,
@@ -698,4 +759,44 @@ private fun feetInchesLabel(cm: Int): String {
     val feet = totalInches / 12
     val inches = totalInches % 12
     return "$feet' $inches\""
+}
+
+private val birthdayFormatter: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US)
+
+private fun birthdayDisplay(profile: UserProfile): String {
+    val date = profile.birthday.atZone(ZoneId.systemDefault()).toLocalDate()
+    return "${date.format(birthdayFormatter)} (age ${profile.age})"
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BirthdaySheet(current: Instant, onSave: (Instant) -> Unit) {
+    val initialMillis = current.toEpochMilli()
+    val state = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
+    Text("Birthday", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Spacer(Modifier.height(8.dp))
+    DatePicker(
+        state = state,
+        title = null,
+        headline = null,
+        showModeToggle = false,
+        colors = DatePickerDefaults.colors(
+            selectedDayContainerColor = AppColors.Calorie,
+            todayDateBorderColor = AppColors.Calorie,
+            currentYearContentColor = AppColors.Calorie,
+            selectedYearContainerColor = AppColors.Calorie
+        )
+    )
+    Spacer(Modifier.height(12.dp))
+    Button(
+        onClick = {
+            val millis = state.selectedDateMillis ?: return@Button
+            val newDate = LocalDate.ofEpochDay(millis / 86_400_000L)
+            val newInstant = newDate.atStartOfDay(ZoneId.systemDefault()).toInstant()
+            onSave(newInstant)
+        },
+        colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie),
+        modifier = Modifier.fillMaxWidth()
+    ) { Text("Save", color = Color.White) }
 }

@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -13,9 +13,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.apoorvdarshan.calorietracker.ui.navigation.FudAINavHost
 import com.apoorvdarshan.calorietracker.ui.theme.FudAITheme
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,7 +30,14 @@ class MainActivity : ComponentActivity() {
         val startOnboarding = runBlocking { !container.prefs.hasCompletedOnboarding.first() }
 
         setContent {
-            FudAITheme {
+            val appearance by container.prefs.appearanceMode.collectAsState(initial = "system")
+            val systemDark = isSystemInDarkTheme()
+            val darkTheme = when (appearance) {
+                "light" -> false
+                "dark" -> true
+                else -> systemDark
+            }
+            FudAITheme(darkTheme = darkTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
