@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
@@ -309,7 +310,7 @@ private fun WeightSection(
                 latest?.let { StatBadge("Current", formatWeight(it.weightKg, useMetric)) }
                 goalKg?.let { StatBadge("Goal", formatWeight(it, useMetric)) }
             }
-            WeightChartCanvas(entries = entries, goalKg = goalKg)
+            WeightChartCanvas(entries = entries, goalKg = goalKg, useMetric = useMetric)
         }
     }
 }
@@ -323,10 +324,12 @@ private fun StatBadge(label: String, value: String) {
 }
 
 @Composable
-private fun WeightChartCanvas(entries: List<WeightEntry>, goalKg: Double?) {
-    val weights = entries.map { it.weightKg } + listOfNotNull(goalKg)
-    val minW = weights.min()
-    val maxW = weights.max()
+private fun WeightChartCanvas(entries: List<WeightEntry>, goalKg: Double?, useMetric: Boolean) {
+    val displayKg = { kg: Double -> if (useMetric) kg else kg * 2.20462 }
+    val unitLabel = if (useMetric) "" else ""
+    val displayWeights = entries.map { displayKg(it.weightKg) } + listOfNotNull(goalKg?.let(displayKg))
+    val minW = displayWeights.min()
+    val maxW = displayWeights.max()
     val pad = maxOf((maxW - minW) * 0.15, 2.0)
     val yMin = minW - pad
     val yMax = maxW + pad
@@ -334,39 +337,121 @@ private fun WeightChartCanvas(entries: List<WeightEntry>, goalKg: Double?) {
     val tEnd = entries.last().date.toEpochMilli()
     val singleEntry = entries.size == 1
     val tRange = maxOf(1L, tEnd - tStart)
-    val goalLineColor = Color(0xFF34C759).copy(alpha = 0.7f) // iOS systemGreen at 0.7
+    val goalLineColor = Color(0xFF34C759).copy(alpha = 0.7f)
+    val gridColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+    val secondaryColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+    val ticks = niceAxisTicks(yMin, yMax, count = 5)
+    val zone = ZoneId.systemDefault()
+    val xLabelFmt = DateTimeFormatter.ofPattern("MMM d", Locale.US).withZone(zone)
 
-    Canvas(Modifier.fillMaxWidth().height(180.dp)) {
-        val w = size.width; val h = size.height
-        goalKg?.let {
-            val y = h - (((it - yMin) / (yMax - yMin)).toFloat() * h)
-            drawLine(
-                color = goalLineColor,
-                start = Offset(0f, y), end = Offset(w, y),
-                strokeWidth = 3f,
-                pathEffect = PathEffect.dashPathEffect(floatArrayOf(18f, 12f))
+    Row(Modifier.fillMaxWidth().height(180.dp)) {
+        Canvas(Modifier.weight(1f).fillMaxSize()) {
+            val w = size.width; val h = size.height
+            // Horizontal grid + tick marks
+            ticks.forEach { tick ->
+                val y = h - (((tick - yMin) / (yMax - yMin)).toFloat() * h)
+                drawLine(
+                    color = gridColor,
+                    start = Offset(0f, y), end = Offset(w, y),
+                    strokeWidth = 1f
+                )
+            }
+            // Vertical grid (4 columns) — faint dashed
+            for (i in 0..4) {
+                val x = (i.toFloat() / 4f) * w
+                drawLine(
+                    color = gridColor,
+                    start = Offset(x, 0f), end = Offset(x, h),
+                    strokeWidth = 1f,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 6f))
+                )
+            }
+            goalKg?.let { gk ->
+                val gv = displayKg(gk)
+                val y = h - (((gv - yMin) / (yMax - yMin)).toFloat() * h)
+                drawLine(
+                    color = goalLineColor,
+                    start = Offset(0f, y), end = Offset(w, y),
+                    strokeWidth = 3f,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(18f, 12f))
+                )
+            }
+            val xFor: (com.apoorvdarshan.calorietracker.models.WeightEntry) -> Float = { e ->
+                if (singleEntry) w / 2f
+                else ((e.date.toEpochMilli() - tStart).toDouble() / tRange * w).toFloat()
+            }
+            val path = Path()
+            entries.forEachIndexed { i, e ->
+                val x = xFor(e)
+                val y = h - (((displayKg(e.weightKg) - yMin) / (yMax - yMin)).toFloat() * h)
+                if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+            }
+            drawPath(path, AppColors.Calorie, style = Stroke(width = 5f))
+            entries.forEach { e ->
+                val x = xFor(e)
+                val y = h - (((displayKg(e.weightKg) - yMin) / (yMax - yMin)).toFloat() * h)
+                drawCircle(AppColors.Calorie, radius = 5.5f, center = Offset(x, y))
+            }
+        }
+        // Y-axis labels on the right
+        Column(
+            Modifier.width(36.dp).fillMaxSize().padding(start = 4.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            ticks.reversed().forEach { tick ->
+                Text(
+                    formatTick(tick),
+                    fontSize = 11.sp,
+                    color = secondaryColor
+                )
+            }
+        }
+    }
+    // X-axis date labels
+    Row(Modifier.fillMaxWidth().padding(top = 4.dp, end = 36.dp)) {
+        Text(
+            xLabelFmt.format(entries.first().date),
+            fontSize = 11.sp,
+            color = secondaryColor
+        )
+        Spacer(Modifier.weight(1f))
+        if (!singleEntry) {
+            Text(
+                xLabelFmt.format(entries.last().date),
+                fontSize = 11.sp,
+                color = secondaryColor
             )
-        }
-        // Center the lone marker when there's only one weight entry — otherwise
-        // it would render at x=0 (left edge), looking misplaced.
-        val xFor: (com.apoorvdarshan.calorietracker.models.WeightEntry) -> Float = { e ->
-            if (singleEntry) w / 2f
-            else ((e.date.toEpochMilli() - tStart).toDouble() / tRange * w).toFloat()
-        }
-        val path = Path()
-        entries.forEachIndexed { i, e ->
-            val x = xFor(e)
-            val y = h - (((e.weightKg - yMin) / (yMax - yMin)).toFloat() * h)
-            if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
-        }
-        drawPath(path, AppColors.Calorie, style = Stroke(width = 5f))
-        entries.forEach { e ->
-            val x = xFor(e)
-            val y = h - (((e.weightKg - yMin) / (yMax - yMin)).toFloat() * h)
-            drawCircle(AppColors.Calorie, radius = 5.5f, center = Offset(x, y))
         }
     }
 }
+
+/** Compute "nice" axis tick values across [min, max] with approx [count] divisions. */
+private fun niceAxisTicks(min: Double, max: Double, count: Int): List<Double> {
+    val range = max - min
+    if (range <= 0) return listOf(min)
+    val rawStep = range / (count - 1)
+    val mag = Math.pow(10.0, Math.floor(Math.log10(rawStep)))
+    val normalized = rawStep / mag
+    val niceStep = when {
+        normalized < 1.5 -> 1.0
+        normalized < 3.0 -> 2.0
+        normalized < 7.0 -> 5.0
+        else -> 10.0
+    } * mag
+    val firstTick = Math.ceil(min / niceStep) * niceStep
+    val out = mutableListOf<Double>()
+    var v = firstTick
+    while (v <= max + 1e-9) {
+        out.add(v)
+        v += niceStep
+    }
+    return out
+}
+
+private fun formatTick(value: Double): String =
+    if (value >= 1000) String.format(Locale.US, "%,d", value.toInt())
+    else if (value == value.toInt().toDouble()) value.toInt().toString()
+    else String.format(Locale.US, "%.1f", value)
 
 @Composable
 private fun WeightHistoryLink(count: Int, onClick: () -> Unit) {
@@ -379,15 +464,27 @@ private fun WeightHistoryLink(count: Int, onClick: () -> Unit) {
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("Weight History", fontSize = 15.sp, fontWeight = FontWeight.Medium)
-        Spacer(Modifier.weight(1f))
-        Text(
-            "$count entries",
-            fontSize = 13.sp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        Icon(
+            Icons.AutoMirrored.Filled.ListAlt,
+            null,
+            tint = AppColors.Calorie,
+            modifier = Modifier.size(28.dp)
         )
-        Spacer(Modifier.width(6.dp))
-        Icon(Icons.Filled.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text("Weight History", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+            Text(
+                "$count entries · tap to view or delete",
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        }
+        Icon(
+            Icons.Filled.ChevronRight,
+            null,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 
@@ -423,47 +520,92 @@ private fun CalorieSection(dailyCalories: List<Pair<LocalDate, Int>>, calorieGoa
 
 @Composable
 private fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: Int) {
-    val maxValue = (dailyCalories.maxOf { it.second }.coerceAtLeast(goal)).toFloat()
+    val maxValue = dailyCalories.maxOf { it.second }.coerceAtLeast(goal).toDouble()
     val gradientStart = AppColors.CalorieStart
     val gradientEnd = AppColors.CalorieEnd
     val goalColor = AppColors.Calorie.copy(alpha = 0.4f)
+    val gridColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+    val secondaryColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
     val density = androidx.compose.ui.platform.LocalDensity.current
-    Canvas(Modifier.fillMaxWidth().height(180.dp)) {
-        val pxW = size.width; val pxH = size.height
-        val n = dailyCalories.size
-        val gap = 4f
-        // Cap bar width to ~28dp so a single-day chart doesn't render as one
-        // giant block spanning the full width.
-        val maxBarPx = with(density) { 28.dp.toPx() }
-        val rawWidth = (pxW - gap * (n - 1)) / n
-        val barWidth = rawWidth.coerceIn(2f, maxBarPx)
-        // Center the bar group horizontally when capped (otherwise left-aligned).
-        val totalGroupW = barWidth * n + gap * (n - 1)
-        val startX = ((pxW - totalGroupW) / 2f).coerceAtLeast(0f)
+    val ticks = niceAxisTicks(0.0, maxValue, count = 5)
+    val yTop = ticks.last().coerceAtLeast(maxValue)
+    val xLabelFmt = DateTimeFormatter.ofPattern("MMM d", Locale.US)
 
-        // Goal line
-        val goalY = pxH - ((goal / maxValue) * pxH).coerceAtMost(pxH)
-        drawLine(
-            color = goalColor,
-            start = Offset(0f, goalY), end = Offset(pxW, goalY),
-            strokeWidth = 2f,
-            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 6f))
-        )
-        dailyCalories.forEachIndexed { i, (_, cals) ->
-            val barH = ((cals / maxValue) * pxH)
-            val x = startX + i * (barWidth + gap)
-            val y = pxH - barH
-            drawRoundRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(gradientEnd, gradientStart),
-                    startY = y, endY = pxH
-                ),
-                topLeft = Offset(x, y),
-                size = Size(barWidth, barH),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(4f, 4f)
+    Row(Modifier.fillMaxWidth().height(180.dp)) {
+        Canvas(Modifier.weight(1f).fillMaxSize()) {
+            val pxW = size.width; val pxH = size.height
+            // Horizontal grid lines for tick values
+            ticks.forEach { tick ->
+                val y = pxH - ((tick / yTop).toFloat() * pxH)
+                drawLine(gridColor, Offset(0f, y), Offset(pxW, y), strokeWidth = 1f)
+            }
+            // Vertical grid lines, one per data point — faint dashed
+            val n = dailyCalories.size
+            val gap = 4f
+            val maxBarPx = with(density) { 28.dp.toPx() }
+            val rawWidth = (pxW - gap * (n - 1)) / n
+            val barWidth = rawWidth.coerceIn(2f, maxBarPx)
+            val totalGroupW = barWidth * n + gap * (n - 1)
+            val startX = ((pxW - totalGroupW) / 2f).coerceAtLeast(0f)
+            for (i in 0 until n) {
+                val cx = startX + i * (barWidth + gap) + barWidth / 2f
+                drawLine(
+                    color = gridColor,
+                    start = Offset(cx, 0f), end = Offset(cx, pxH),
+                    strokeWidth = 1f,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 6f))
+                )
+            }
+            // Goal line
+            val goalY = pxH - ((goal / yTop).toFloat() * pxH)
+            drawLine(
+                color = goalColor,
+                start = Offset(0f, goalY), end = Offset(pxW, goalY),
+                strokeWidth = 2f,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 6f))
             )
+            // Bars
+            dailyCalories.forEachIndexed { i, (_, cals) ->
+                val barH = ((cals / yTop).toFloat() * pxH)
+                val x = startX + i * (barWidth + gap)
+                val y = pxH - barH
+                drawRoundRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(gradientEnd, gradientStart),
+                        startY = y, endY = pxH
+                    ),
+                    topLeft = Offset(x, y),
+                    size = Size(barWidth, barH),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(4f, 4f)
+                )
+            }
+        }
+        Column(
+            Modifier.width(44.dp).fillMaxSize().padding(start = 4.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            ticks.reversed().forEach { tick ->
+                Text(formatTick(tick), fontSize = 11.sp, color = secondaryColor)
+            }
         }
     }
+    // X-axis date labels — show first/last and a few in between only when small
+    val labels = pickXLabels(dailyCalories.map { it.first })
+    Row(Modifier.fillMaxWidth().padding(top = 4.dp, end = 44.dp)) {
+        labels.forEachIndexed { i, label ->
+            Text(label?.let { xLabelFmt.format(it) } ?: "", fontSize = 11.sp, color = secondaryColor)
+            if (i < labels.size - 1) Spacer(Modifier.weight(1f))
+        }
+    }
+}
+
+/** Pick at most ~7 evenly-spaced date labels from the chart's x-axis. */
+private fun pickXLabels(dates: List<LocalDate>): List<LocalDate?> {
+    if (dates.isEmpty()) return emptyList()
+    if (dates.size <= 7) return dates
+    val maxLabels = 7
+    val step = (dates.size - 1).toFloat() / (maxLabels - 1)
+    return (0 until maxLabels).map { i -> dates[(i * step).toInt().coerceIn(0, dates.size - 1)] }
 }
 
 @Composable
