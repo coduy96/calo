@@ -15,11 +15,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -65,6 +67,7 @@ import kotlin.math.roundToInt
 fun EditFoodEntrySheet(
     entry: FoodEntry,
     onSave: (FoodEntry) -> Unit,
+    onDelete: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -75,6 +78,7 @@ fun EditFoodEntrySheet(
     val scale = if (baseServing > 0) servingGrams / baseServing else 1.0
     var mealType by remember { mutableStateOf(entry.mealType) }
     var showMore by remember { mutableStateOf(false) }
+    var confirmDelete by remember { mutableStateOf(false) }
 
     fun s(v: Int) = (v * scale).roundToInt()
     fun s(v: Double?) = v?.let { ((it * scale) * 10).roundToInt() / 10.0 }
@@ -297,9 +301,34 @@ fun EditFoodEntrySheet(
                 ) {
                     Text("Save", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                 }
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = { confirmDelete = true },
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                ) {
+                    Text("Delete", color = AppColors.Calorie, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                }
                 TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text("Cancel") }
             }
         }
+    }
+
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text("Delete this entry?") },
+            text = { Text("This removes ${entry.name} from your log.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDelete = false
+                    onDelete()
+                }) { Text("Delete", color = AppColors.Calorie, fontWeight = FontWeight.SemiBold) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDelete = false }) { Text("Cancel") }
+            }
+        )
     }
 }
 

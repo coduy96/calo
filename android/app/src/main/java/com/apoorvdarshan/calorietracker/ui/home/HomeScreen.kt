@@ -372,8 +372,10 @@ fun HomeScreen(container: AppContainer) {
                         val index = entries.indexOf(entry)
                         SectionCardWrapper(isFirst = index == 0, isLast = index == entries.lastIndex) {
                             // Tap row -> open EditFoodEntrySheet (matches iOS .onTapGesture).
+                            // Delete is offered inside the sheet (matches iOS .swipeActions on the row,
+                            // but Android Compose has no built-in swipe-to-delete on rows).
                             Box(modifier = Modifier.clickable { editingEntry = entry }) {
-                                FoodRow(entry = entry, onDelete = { vm.deleteEntry(entry.id) })
+                                FoodRow(entry = entry)
                             }
                             if (index != entries.lastIndex) Divider()
                         }
@@ -411,6 +413,10 @@ fun HomeScreen(container: AppContainer) {
             entry = entry,
             onSave = { updated ->
                 vm.updateEntry(updated)
+                editingEntry = null
+            },
+            onDelete = {
+                vm.deleteEntry(entry.id)
                 editingEntry = null
             },
             onDismiss = { editingEntry = null }
@@ -773,7 +779,7 @@ private fun Divider() {
 }
 
 @Composable
-private fun FoodRow(entry: FoodEntry, onDelete: () -> Unit) {
+private fun FoodRow(entry: FoodEntry) {
     val timeFmt = DateTimeFormatter.ofPattern("h:mma", Locale.US).withZone(ZoneId.systemDefault())
     val ctx = LocalContext.current
     val container = (ctx.applicationContext as com.apoorvdarshan.calorietracker.FudAIApp).container
