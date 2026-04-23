@@ -134,20 +134,28 @@ fun FoodResultSheet(
                 }
             }
 
+            // iOS inline TextField: plain, trailing-aligned, no box. Use BasicTextField
+            // styled with underline color on focus to match SwiftUI's List row feel.
             item { SectionHeader("Food Details") }
             item {
                 Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("Name", fontSize = 17.sp, modifier = Modifier.padding(end = 8.dp))
                     Spacer(Modifier.weight(1f))
-                    OutlinedTextField(
+                    androidx.compose.foundation.text.BasicTextField(
                         value = name,
                         onValueChange = { name = it },
                         singleLine = true,
+                        textStyle = androidx.compose.ui.text.TextStyle(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 17.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.End
+                        ),
+                        cursorBrush = androidx.compose.ui.graphics.SolidColor(AppColors.Calorie),
                         modifier = Modifier.weight(2f)
                     )
                 }
@@ -158,20 +166,31 @@ fun FoodResultSheet(
                 Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("Quantity", fontSize = 17.sp, modifier = Modifier.padding(end = 8.dp))
                     Spacer(Modifier.weight(1f))
-                    OutlinedTextField(
+                    androidx.compose.foundation.text.BasicTextField(
                         value = servingGramsText,
                         onValueChange = { servingGramsText = it },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.width(96.dp)
+                        textStyle = androidx.compose.ui.text.TextStyle(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 17.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.End
+                        ),
+                        cursorBrush = androidx.compose.ui.graphics.SolidColor(AppColors.Calorie),
+                        modifier = Modifier.width(80.dp)
                     )
                     Spacer(Modifier.width(6.dp))
-                    Text("g", fontSize = 17.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                    Text(
+                        "g",
+                        fontSize = 17.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        modifier = Modifier.width(36.dp)
+                    )
                 }
             }
 
@@ -182,7 +201,8 @@ fun FoodResultSheet(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                 ) {
-                    NutritionRow("Calories", "${scaledInt(analysis.calories)}", "kcal", isHero = true)
+                    // iOS treats all four macros uniformly (NutritionDisplayRow).
+                    NutritionRow("Calories", "${scaledInt(analysis.calories)}", "kcal")
                     Hairline()
                     NutritionRow("Protein", "${scaledInt(analysis.protein)}", "g")
                     Hairline()

@@ -998,8 +998,12 @@ private fun AnalyzingOverlay(imageBytes: ByteArray? = null) {
                 strokeWidth = 4.dp,
                 modifier = Modifier.size(40.dp)
             )
+            // iOS uses two different copies depending on the input mode — photo flows
+            // say "Analyzing your food..." while text/voice flows say
+            // "Looking up nutrition..." (see ContentView.swift cases .analyzing /
+            // .analyzingText). pendingImageBytes is the discriminator.
             Text(
-                "Analyzing your food...",
+                if (bitmap != null) "Analyzing your food..." else "Looking up nutrition...",
                 fontSize = 17.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = AppColors.Calorie

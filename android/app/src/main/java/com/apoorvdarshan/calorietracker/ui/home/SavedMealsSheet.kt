@@ -1,6 +1,7 @@
 package com.apoorvdarshan.calorietracker.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,14 +18,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -42,20 +43,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.data.FrequentFoodGroup
 import com.apoorvdarshan.calorietracker.models.FoodEntry
-import com.apoorvdarshan.calorietracker.models.MealType
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.time.Instant
 
 enum class SavedTab { RECENTS, FREQUENT, FAVORITES }
 
+/**
+ * Verbatim port of `RecentsView` in
+ * ios/calorietracker/Views/RecentsView.swift.
+ *
+ * Layout:
+ *   - "Saved Meals" navigationTitle (Title Case, inline)
+ *   - segmented Picker: Recents / Frequent / Favorites (pink-tinted selection)
+ *   - per segment: List of `SavedMealRow` (56dp thumb · name + heart · pink kcal +
+ *     optional subtitle · 3 macro tag pills · trailing plus.circle.fill log button)
+ *   - per-segment empty state: 32sp pink-tinted icon + secondary message text
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedMealsSheet(
@@ -78,8 +89,7 @@ fun SavedMealsSheet(
             SavedTab.FREQUENT -> frequent = container.foodRepository.frequent()
             SavedTab.FAVORITES -> {
                 val all = container.foodRepository.entries.first()
-                val keys = favKeys
-                favorites = all.filter { it.favoriteKey in keys }.distinctBy { it.favoriteKey }
+                favorites = all.filter { it.favoriteKey in favKeys }.distinctBy { it.favoriteKey }
             }
         }
     }
@@ -90,75 +100,102 @@ fun SavedMealsSheet(
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         containerColor = MaterialTheme.colorScheme.surface
     ) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 16.dp)) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp)
+        ) {
+            // iOS: navigationTitle "Saved Meals", inline display.
             Text(
-                "Saved meals",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                "Saved Meals",
+                fontSize = 17.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp, bottom = 12.dp),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
-            Spacer(Modifier.height(14.dp))
-            SegmentedTabs(
-                selected = tab,
-                onSelect = { tab = it }
-            )
+            SegmentedTabs(selected = tab, onSelect = { tab = it })
             Spacer(Modifier.height(16.dp))
 
             when (tab) {
-                SavedTab.RECENTS -> RecentsList(
-                    entries = recents,
-                    onSelect = { onRelogEntry(it); onDismiss() },
-                    onToggleFavorite = {
-                        scope.launch { container.foodRepository.toggleFavorite(it) }
-                    },
-                    onDelete = { entry ->
-                        scope.launch {
-                            container.foodRepository.deleteEntry(entry.id)
-                            recents = container.foodRepository.recent(50)
+                SavedTab.RECENTS -> {
+                    if (recents.isEmpty()) {
+                        EmptyState(icon = Icons.Outlined.Schedule, text = "No foods logged yet")
+                    } else {
+                        SavedList(items = recents) { entry ->
+                            SavedMealRow(
+                                entry = entry,
+                                isFavorite = entry.favoriteKey in favKeys,
+                                subtitle = null,
+                                onClick = { onRelogEntry(entry); onDismiss() }
+                            )
                         }
-                    },
-                    isFavorite = { it.favoriteKey in favKeys }
-                )
-                SavedTab.FREQUENT -> FrequentList(
-                    groups = frequent,
-                    onSelect = { onRelogEntry(it.template); onDismiss() },
-                    onToggleFavorite = {
-                        scope.launch { container.foodRepository.toggleFavorite(it.template) }
-                    },
-                    isFavorite = { it.template.favoriteKey in favKeys }
-                )
-                SavedTab.FAVORITES -> FavoritesList(
-                    entries = favorites,
-                    onSelect = { onRelogEntry(it); onDismiss() },
-                    onUnfavorite = {
-                        scope.launch { container.foodRepository.toggleFavorite(it) }
                     }
-                )
+                }
+                SavedTab.FREQUENT -> {
+                    if (frequent.isEmpty()) {
+                        EmptyState(icon = Icons.Outlined.Refresh, text = "No foods logged yet")
+                    } else {
+                        SavedList(items = frequent) { group ->
+                            SavedMealRow(
+                                entry = group.template,
+                                isFavorite = group.template.favoriteKey in favKeys,
+                                subtitle = "${group.count}× logged",
+                                onClick = { onRelogEntry(group.template); onDismiss() }
+                            )
+                        }
+                    }
+                }
+                SavedTab.FAVORITES -> {
+                    if (favorites.isEmpty()) {
+                        EmptyState(
+                            icon = Icons.Outlined.Favorite,
+                            text = "No favorites yet\nSwipe left on any food to add it"
+                        )
+                    } else {
+                        SavedList(items = favorites) { entry ->
+                            SavedMealRow(
+                                entry = entry,
+                                isFavorite = true,
+                                subtitle = null,
+                                onClick = { onRelogEntry(entry); onDismiss() }
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 }
 
+/**
+ * iOS `.pickerStyle(.segmented)` rendered as a 3-segment pill. Selected segment
+ * uses the calorie pink gradient with white text; others stay transparent on a
+ * gray track.
+ */
 @Composable
 private fun SegmentedTabs(selected: SavedTab, onSelect: (SavedTab) -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-            .padding(4.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f))
+            .padding(2.dp)
     ) {
         for (t in SavedTab.values()) {
             val isSel = t == selected
             Box(
                 Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(14.dp))
+                    .clip(RoundedCornerShape(8.dp))
                     .background(
                         if (isSel) Brush.linearGradient(listOf(AppColors.CalorieStart, AppColors.CalorieEnd))
                         else Brush.linearGradient(listOf(Color.Transparent, Color.Transparent))
                     )
                     .clickable { onSelect(t) }
-                    .padding(vertical = 10.dp),
+                    .padding(vertical = 7.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -168,8 +205,8 @@ private fun SegmentedTabs(selected: SavedTab, onSelect: (SavedTab) -> Unit) {
                         SavedTab.FAVORITES -> "Favorites"
                     },
                     color = if (isSel) Color.White else MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
@@ -177,167 +214,169 @@ private fun SegmentedTabs(selected: SavedTab, onSelect: (SavedTab) -> Unit) {
 }
 
 @Composable
-private fun RecentsList(
-    entries: List<FoodEntry>,
-    onSelect: (FoodEntry) -> Unit,
-    onToggleFavorite: (FoodEntry) -> Unit,
-    onDelete: (FoodEntry) -> Unit,
-    isFavorite: (FoodEntry) -> Boolean
-) {
-    if (entries.isEmpty()) {
-        EmptyState("No recent meals — log a meal to see it here.")
-        return
-    }
+private fun <T> SavedList(items: List<T>, row: @Composable (T) -> Unit) {
     LazyColumn(
         Modifier.fillMaxWidth().heightConstraint(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(entries, key = { it.id }) { entry ->
-            MealRow(
-                title = entry.name,
-                subtitle = "${entry.calories} kcal · P ${entry.protein} · C ${entry.carbs} · F ${entry.fat}",
-                emoji = entry.emoji ?: "🍽",
-                onClick = { onSelect(entry) },
-                trailing = {
-                    IconButton(onClick = { onToggleFavorite(entry) }) {
-                        Icon(
-                            if (isFavorite(entry)) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                            contentDescription = if (isFavorite(entry)) "Unfavorite" else "Favorite",
-                            tint = if (isFavorite(entry)) AppColors.Calorie else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                        )
-                    }
-                    IconButton(onClick = { onDelete(entry) }) {
-                        Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
-                    }
-                }
-            )
-        }
+        items(items) { row(it) }
     }
 }
 
+/**
+ * Verbatim port of `private struct SavedMealRow` in RecentsView.swift.
+ *
+ *   HStack(spacing: 12) {
+ *     56x56 thumbnail (image -> emoji -> fork.knife fallback, RoundedRectangle 12)
+ *     VStack(spacing: 3) {
+ *       HStack { name (body rounded medium) ; heart.fill if favorite }
+ *       HStack { "{cal} kcal" subhead semibold PINK ; optional "· {subtitle}" }
+ *       HStack(spacing: 8) { MacroTag P / C / F }
+ *     }
+ *     Spacer
+ *     plus.circle.fill PINK title3 (Log button)
+ *   }
+ */
 @Composable
-private fun FrequentList(
-    groups: List<FrequentFoodGroup>,
-    onSelect: (FrequentFoodGroup) -> Unit,
-    onToggleFavorite: (FrequentFoodGroup) -> Unit,
-    isFavorite: (FrequentFoodGroup) -> Boolean
+private fun SavedMealRow(
+    entry: FoodEntry,
+    isFavorite: Boolean,
+    subtitle: String?,
+    onClick: () -> Unit
 ) {
-    if (groups.isEmpty()) {
-        EmptyState("Nothing frequent yet — keep logging and your go-tos show up here.")
-        return
-    }
-    LazyColumn(
-        Modifier.fillMaxWidth().heightConstraint(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(groups, key = { it.id }) { group ->
-            MealRow(
-                title = group.name,
-                subtitle = "${group.count}× logged · ${group.calories} kcal",
-                emoji = group.template.emoji ?: "🍽",
-                onClick = { onSelect(group) },
-                trailing = {
-                    IconButton(onClick = { onToggleFavorite(group) }) {
-                        Icon(
-                            if (isFavorite(group)) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                            contentDescription = null,
-                            tint = if (isFavorite(group)) AppColors.Calorie else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                        )
-                    }
-                }
-            )
-        }
-    }
-}
-
-@Composable
-private fun FavoritesList(
-    entries: List<FoodEntry>,
-    onSelect: (FoodEntry) -> Unit,
-    onUnfavorite: (FoodEntry) -> Unit
-) {
-    if (entries.isEmpty()) {
-        EmptyState("No favorites yet — tap the heart on any meal to save it here.")
-        return
-    }
-    LazyColumn(
-        Modifier.fillMaxWidth().heightConstraint(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(entries, key = { it.favoriteKey }) { entry ->
-            MealRow(
-                title = entry.name,
-                subtitle = "${entry.calories} kcal · P ${entry.protein} · C ${entry.carbs} · F ${entry.fat}",
-                emoji = entry.emoji ?: "⭐",
-                onClick = { onSelect(entry) },
-                trailing = {
-                    IconButton(onClick = { onUnfavorite(entry) }) {
-                        Icon(Icons.Filled.Favorite, contentDescription = "Unfavorite", tint = AppColors.Calorie)
-                    }
-                }
-            )
-        }
-    }
-}
-
-@Composable
-private fun MealRow(
-    title: String,
-    subtitle: String,
-    emoji: String,
-    onClick: () -> Unit,
-    trailing: @Composable () -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(AppColors.Calorie.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) { Text(emoji, fontSize = 20.sp) }
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                Text(
-                    subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    maxLines = 1
-                )
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) { trailing() }
-        }
-    }
-}
-
-@Composable
-private fun EmptyState(text: String) {
-    // fillMaxWidth (not fillMaxSize) so the sheet keeps the same half-height as
-    // the populated Recents/Frequent lists — fillMaxSize propagates up and makes
-    // the ModalBottomSheet expand to full height when the list is empty.
-    Box(
-        Modifier
+    Row(
+        modifier = Modifier
             .fillMaxWidth()
-            .heightConstraint(),
-        contentAlignment = Alignment.Center
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+        Thumbnail(emoji = entry.emoji)
+
+        Column(verticalArrangement = Arrangement.spacedBy(3.dp), modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    entry.name,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 2
+                )
+                if (isFavorite) {
+                    Icon(
+                        Icons.Filled.Favorite,
+                        contentDescription = null,
+                        tint = AppColors.Calorie,
+                        modifier = Modifier.size(11.dp)
+                    )
+                }
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    "${entry.calories} kcal",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = AppColors.Calorie
+                )
+                if (subtitle != null) {
+                    Text("·", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                    Text(
+                        subtitle,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                MacroTag("P", entry.protein.toInt())
+                MacroTag("C", entry.carbs.toInt())
+                MacroTag("F", entry.fat.toInt())
+            }
+        }
+
+        Icon(
+            Icons.Filled.AddCircle,
+            contentDescription = "Log",
+            tint = AppColors.Calorie,
+            modifier = Modifier.size(22.dp)
         )
     }
 }
 
-/** Give the sheet's lazy list a stable bounded height so it's scrollable but not huge. */
+@Composable
+private fun Thumbnail(emoji: String?) {
+    val shape = RoundedCornerShape(12.dp)
+    Box(
+        Modifier
+            .size(56.dp)
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
+            .border(1.dp, AppColors.Calorie.copy(alpha = 0.15f), shape),
+        contentAlignment = Alignment.Center
+    ) {
+        if (emoji != null) {
+            Text(emoji, fontSize = 28.sp)
+        } else {
+            Icon(
+                Icons.Filled.Restaurant,
+                contentDescription = null,
+                tint = AppColors.Calorie,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+    }
+}
+
+/** iOS `private struct MacroTag` — pink-tinted capsule. */
+@Composable
+private fun MacroTag(label: String, value: Int) {
+    Box(
+        Modifier
+            .clip(CircleShape)
+            .background(AppColors.Calorie.copy(alpha = 0.08f))
+            .padding(horizontal = 6.dp, vertical = 2.dp)
+    ) {
+        Text(
+            "$label ${value}g",
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
+    }
+}
+
+/** iOS `emptySection` — 32sp pink-tinted icon above the message text. */
+@Composable
+private fun EmptyState(icon: ImageVector, text: String) {
+    Box(
+        Modifier.fillMaxWidth().heightConstraint(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = AppColors.Calorie.copy(alpha = 0.4f),
+                modifier = Modifier.size(32.dp)
+            )
+            Text(
+                text,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
+    }
+}
+
+/** Bounded height so the sheet stays half-screen, matching the iOS list height. */
 @Composable
 private fun Modifier.heightConstraint(): Modifier = this.height(420.dp)
