@@ -130,7 +130,8 @@ import java.util.Locale
 
 private enum class SettingsSheet {
     AI_PROVIDER, AI_MODEL, API_KEY, CUSTOM_BASE_URL, SPEECH_PROVIDER, SPEECH_KEY,
-    GENDER, BIRTHDAY, HEIGHT, WEIGHT, BODY_FAT, ACTIVITY, GOAL, GOAL_WEIGHT, GOAL_SPEED, MACROS,
+    GENDER, BIRTHDAY, HEIGHT, WEIGHT, BODY_FAT, ACTIVITY, GOAL, GOAL_WEIGHT, GOAL_SPEED,
+    CALORIES, PROTEIN, CARBS, FAT,
     APPEARANCE, WEEK_START
 }
 
@@ -146,6 +147,7 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
     var showClearFoodDialog by remember { mutableStateOf(false) }
     var showRecalcDialog by remember { mutableStateOf(false) }
     var invalidGoalWeightMessage by remember { mutableStateOf<String?>(null) }
+    var showMaxPinnedAlert by remember { mutableStateOf(false) }
 
     // iOS Settings: bare List, no NavigationBar visible. Match that — no TopAppBar.
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
@@ -214,29 +216,36 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                     }
                     HorizontalDivider()
                     // iOS shows "2452 kcal" with no chevron suffix on the Calories row.
-                    SettingRow("Calories", "${p.effectiveCalories} kcal", icon = Icons.Outlined.LocalFireDepartment) { sheet = SettingsSheet.MACROS }
+                    SettingRow("Calories", "${p.effectiveCalories} kcal", icon = Icons.Outlined.LocalFireDepartment) { sheet = SettingsSheet.CALORIES }
                     HorizontalDivider()
                     // Per-macro rows mirror iOS macroRow(): "{value}g · auto" suffix when
                     // unpinned, "{value}g" when pinned, plus lock.fill / lock.open icon.
+                    // Max-2-pinned guard: tapping an unpinned macro when 2 are already
+                    // pinned shows the alert instead of opening the picker.
+                    val openMacro = { macro: AutoBalanceMacro, target: SettingsSheet ->
+                        val isPinned = p.isPinned(macro)
+                        if (!isPinned && p.pinnedCount >= 2) showMaxPinnedAlert = true
+                        else sheet = target
+                    }
                     MacroSettingRow(
                         label = "Protein",
                         value = p.effectiveProtein,
                         pinned = p.isPinned(AutoBalanceMacro.PROTEIN),
-                        onClick = { sheet = SettingsSheet.MACROS }
+                        onClick = { openMacro(AutoBalanceMacro.PROTEIN, SettingsSheet.PROTEIN) }
                     )
                     HorizontalDivider()
                     MacroSettingRow(
                         label = "Carbs",
                         value = p.effectiveCarbs,
                         pinned = p.isPinned(AutoBalanceMacro.CARBS),
-                        onClick = { sheet = SettingsSheet.MACROS }
+                        onClick = { openMacro(AutoBalanceMacro.CARBS, SettingsSheet.CARBS) }
                     )
                     HorizontalDivider()
                     MacroSettingRow(
                         label = "Fat",
                         value = p.effectiveFat,
                         pinned = p.isPinned(AutoBalanceMacro.FAT),
-                        onClick = { sheet = SettingsSheet.MACROS }
+                        onClick = { openMacro(AutoBalanceMacro.FAT, SettingsSheet.FAT) }
                     )
                     HorizontalDivider()
                     Row(
@@ -390,6 +399,15 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                 }
             },
             dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") } }
+        )
+    }
+
+    if (showMaxPinnedAlert) {
+        AlertDialog(
+            onDismissRequest = { showMaxPinnedAlert = false },
+            title = { Text("Max 2 Pinned") },
+            text = { Text("At most 2 macros can be pinned at a time. Unpin another macro first by opening it and tapping Reset to Auto-balance.") },
+            confirmButton = { TextButton(onClick = { showMaxPinnedAlert = false }) { Text("OK") } }
         )
     }
 
@@ -603,27 +621,59 @@ private fun SettingsSheets(
                     selected = { it.first == ui.weekStartsOnMonday },
                     onSelect = { vm.setWeekStartsOnMonday(it.first); onDismiss() }
                 )
-                SettingsSheet.MACROS -> MacrosSheet(
-                    profile = ui.profile,
-                    onSaveCalories = { cal -> vm.updateProfile { it.copy(customCalories = cal) } },
-                    onSaveMacro = { macro, grams ->
-                        vm.updateProfile {
-                            when (macro) {
-                                AutoBalanceMacro.PROTEIN -> it.copy(customProtein = grams)
-                                AutoBalanceMacro.CARBS -> it.copy(customCarbs = grams)
-                                AutoBalanceMacro.FAT -> it.copy(customFat = grams)
-                            }
-                        }
-                    },
-                    onClearPin = { macro ->
-                        vm.updateProfile {
-                            when (macro) {
-                                AutoBalanceMacro.PROTEIN -> it.copy(customProtein = null)
-                                AutoBalanceMacro.CARBS -> it.copy(customCarbs = null)
-                                AutoBalanceMacro.FAT -> it.copy(customFat = null)
-                            }
-                        }
+                SettingsSheet.CALORIES -> NutritionPickerSheet(
+                    label = "Calories", unit = "kcal",
+                    currentValue = ui.profile?.effectiveCalories ?: 2000,
+                    range = 800..6000, step = 50,
+                    onSave = { v ->
+                        vm.updateProfile { it.copy(customCalories = v) }
+                        onDismiss()
                     }
+                )
+                SettingsSheet.PROTEIN -> NutritionPickerSheet(
+                    label = "Protein", unit = "g",
+                    currentValue = ui.profile?.effectiveProtein ?: 0,
+                    range = 10..500, step = 5,
+                    onSave = { v ->
+                        vm.updateProfile { it.copy(customProtein = v) }
+                        onDismiss()
+                    },
+                    onResetToAuto = if (ui.profile?.isPinned(AutoBalanceMacro.PROTEIN) == true) {
+                        {
+                            vm.updateProfile { it.copy(customProtein = null) }
+                            onDismiss()
+                        }
+                    } else null
+                )
+                SettingsSheet.CARBS -> NutritionPickerSheet(
+                    label = "Carbs", unit = "g",
+                    currentValue = ui.profile?.effectiveCarbs ?: 0,
+                    range = 0..800, step = 5,
+                    onSave = { v ->
+                        vm.updateProfile { it.copy(customCarbs = v) }
+                        onDismiss()
+                    },
+                    onResetToAuto = if (ui.profile?.isPinned(AutoBalanceMacro.CARBS) == true) {
+                        {
+                            vm.updateProfile { it.copy(customCarbs = null) }
+                            onDismiss()
+                        }
+                    } else null
+                )
+                SettingsSheet.FAT -> NutritionPickerSheet(
+                    label = "Fat", unit = "g",
+                    currentValue = ui.profile?.effectiveFat ?: 0,
+                    range = 10..300, step = 5,
+                    onSave = { v ->
+                        vm.updateProfile { it.copy(customFat = v) }
+                        onDismiss()
+                    },
+                    onResetToAuto = if (ui.profile?.isPinned(AutoBalanceMacro.FAT) == true) {
+                        {
+                            vm.updateProfile { it.copy(customFat = null) }
+                            onDismiss()
+                        }
+                    } else null
                 )
             }
             Spacer(Modifier.height(14.dp))
@@ -841,6 +891,80 @@ private fun GoalSpeedSheet(current: Double, goal: WeightGoal, useMetric: Boolean
                     )
                 }
             }
+        }
+    }
+    Spacer(Modifier.height(8.dp))
+}
+
+/**
+ * Wheel-picker sheet for a single macro / calorie target. Mirrors iOS
+ * NutritionPickerSheet exactly: title, wheel picker stepped at the requested
+ * step, gradient Save button, optional "Reset to Auto-balance" link when the
+ * macro is currently pinned.
+ */
+@Composable
+private fun NutritionPickerSheet(
+    label: String,
+    unit: String,
+    currentValue: Int,
+    range: IntRange,
+    step: Int,
+    onSave: (Int) -> Unit,
+    onResetToAuto: (() -> Unit)? = null
+) {
+    val items = remember(range, step) { (range.first..range.last step step).toList() }
+    val snapped = (currentValue / step) * step
+    val initial = snapped.coerceIn(range.first, range.last).let { v ->
+        items.minByOrNull { kotlin.math.abs(it - v) } ?: items.first()
+    }
+    var selected by remember(initial) { mutableStateOf(initial) }
+    Text(label, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Spacer(Modifier.height(12.dp))
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        com.apoorvdarshan.calorietracker.ui.components.WheelPicker(
+            items = items,
+            selected = selected,
+            onSelect = { selected = it },
+            modifier = Modifier.width(120.dp)
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            unit,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
+    }
+    Spacer(Modifier.height(16.dp))
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(54.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(AppColors.CalorieGradient)
+            .clickable { onSave(selected) },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            "Save",
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.titleMedium
+        )
+    }
+    if (onResetToAuto != null) {
+        Spacer(Modifier.height(4.dp))
+        TextButton(
+            onClick = onResetToAuto,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                "Reset to Auto-balance",
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
         }
     }
     Spacer(Modifier.height(8.dp))
