@@ -44,7 +44,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -100,22 +100,31 @@ fun CoachScreen(container: AppContainer) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
+            // iOS Coach: centered "Coach" title, with a small circular dark
+            // chip on the right wrapping a counterclockwise arrow reset icon.
+            CenterAlignedTopAppBar(
                 title = { Text("Coach", fontWeight = FontWeight.SemiBold) },
-                colors = TopAppBarDefaults.topAppBarColors(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 ),
                 actions = {
-                    IconButton(
-                        onClick = { if (ui.messages.isNotEmpty()) showResetConfirm = true },
-                        enabled = ui.messages.isNotEmpty()
+                    val canReset = ui.messages.isNotEmpty()
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 12.dp)
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.10f))
+                            .clickable(enabled = canReset) { showResetConfirm = true },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Filled.Refresh,
                             contentDescription = "Reset chat",
-                            tint = if (ui.messages.isEmpty())
-                                MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
-                            else AppColors.Calorie
+                            tint = if (canReset)
+                                MaterialTheme.colorScheme.onBackground
+                            else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
