@@ -3,8 +3,6 @@ package com.apoorvdarshan.calorietracker.ui.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,8 +24,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Refresh
@@ -46,7 +45,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -57,11 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.changedToUp
-import androidx.compose.ui.input.pointer.positionChange
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -73,7 +67,6 @@ import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.services.FoodImageStore
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 enum class SavedTab { RECENTS, FREQUENT, FAVORITES }
 
@@ -266,14 +259,15 @@ private fun <T> SavedList(items: List<T>, row: @Composable (T) -> Unit) {
 }
 
 /**
- * Favorites-only list with swipe-left-to-remove and long-press-drag reorder.
- * Uses a plain Column inside a verticalScroll (not LazyColumn) so the drag
- * handler can apply graphicsLayer.translationY to a single dragged row
- * without LazyColumn re-keying it mid-drag.
+ * Favorites-only list with swipe-left-to-remove and tap-based ↑/↓ reorder.
  *
- * Reorder works by tracking a per-drag dragOffsetPx, and on release converts
- * the cumulative Y delta into an integer index delta using a fixed row pitch
- * — favorites lists are short (typically < 20) so the approximation is fine.
+ * The original drag-to-reorder using long-press + pointerInput was unreliable
+ * because the favorites list lives inside a ModalBottomSheet (vertical drag
+ * to dismiss) AND a verticalScroll Column — both compete for vertical pointer
+ * events and would intermittently steal the drag. The native Android pattern
+ * for manual list ordering (used by system Settings for default-app priority,
+ * accessibility shortcut order, etc.) is per-row up/down arrow buttons; we
+ * use that here.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -284,13 +278,6 @@ private fun FavoritesReorderableList(
     onRemove: (FoodEntry) -> Unit,
     onMove: (Int, Int) -> Unit
 ) {
-    val density = LocalDensity.current
-    // Approximate row height + 8dp gap = ~88dp. Used for drag → index delta.
-    val rowPitchPx = with(density) { 88.dp.toPx() }
-
-    var draggingIndex by remember { mutableStateOf<Int?>(null) }
-    var dragOffsetPx by remember { mutableFloatStateOf(0f) }
-
     Column(
         Modifier
             .fillMaxWidth()
@@ -299,8 +286,6 @@ private fun FavoritesReorderableList(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         favorites.forEachIndexed { idx, entry ->
-            val isDragged = draggingIndex == idx
-            val translation = if (isDragged) dragOffsetPx else 0f
             val swipeState = rememberSwipeToDismissBoxState(
                 confirmValueChange = { value ->
                     if (value == SwipeToDismissBoxValue.EndToStart) {
@@ -309,54 +294,81 @@ private fun FavoritesReorderableList(
                 }
             )
 
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .graphicsLayer {
-                        translationY = translation
-                        if (isDragged) {
-                            shadowElevation = 18f
-                            scaleX = 1.02f
-                            scaleY = 1.02f
-                        }
-                    }
+            SwipeToDismissBox(
+                state = swipeState,
+                backgroundContent = { FavoriteRemoveBackground(swipeState) },
+                enableDismissFromStartToEnd = false,
+                enableDismissFromEndToStart = true,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                SwipeToDismissBox(
-                    state = swipeState,
-                    backgroundContent = { FavoriteRemoveBackground(swipeState) },
-                    enableDismissFromStartToEnd = false,
-                    enableDismissFromEndToStart = true,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    SavedMealRow(
-                        entry = entry,
-                        isFavorite = true,
-                        subtitle = null,
-                        imageStore = imageStore,
-                        onClick = { onTap(entry) },
-                        trailing = {
-                            DragHandle(
-                                onDragStart = {
-                                    draggingIndex = idx
-                                    dragOffsetPx = 0f
-                                },
-                                onDrag = { dy -> dragOffsetPx += dy },
-                                onDragEnd = {
-                                    val delta = (dragOffsetPx / rowPitchPx).roundToInt()
-                                    val target = (idx + delta).coerceIn(0, favorites.size - 1)
-                                    if (target != idx) onMove(idx, target)
-                                    draggingIndex = null
-                                    dragOffsetPx = 0f
-                                },
-                                onDragCancel = {
-                                    draggingIndex = null
-                                    dragOffsetPx = 0f
-                                }
-                            )
-                        }
-                    )
-                }
+                SavedMealRow(
+                    entry = entry,
+                    isFavorite = true,
+                    subtitle = null,
+                    imageStore = imageStore,
+                    onClick = { onTap(entry) },
+                    trailing = {
+                        MoveButtons(
+                            canMoveUp = idx > 0,
+                            canMoveDown = idx < favorites.size - 1,
+                            onMoveUp = { onMove(idx, idx - 1) },
+                            onMoveDown = { onMove(idx, idx + 1) }
+                        )
+                    }
+                )
             }
+        }
+    }
+}
+
+/**
+ * Native Android pattern for manual list reorder — small ↑/↓ arrow buttons
+ * stacked vertically. The arrow at the boundary (top row's ↑, bottom row's ↓)
+ * is dimmed and non-clickable.
+ */
+@Composable
+private fun MoveButtons(
+    canMoveUp: Boolean,
+    canMoveDown: Boolean,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Box(
+            Modifier
+                .size(width = 32.dp, height = 28.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(
+                    if (canMoveUp) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+                    else Color.Transparent
+                )
+                .clickable(enabled = canMoveUp, onClick = onMoveUp),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Filled.KeyboardArrowUp,
+                contentDescription = "Move up",
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (canMoveUp) 0.75f else 0.18f),
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Box(
+            Modifier
+                .size(width = 32.dp, height = 28.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(
+                    if (canMoveDown) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+                    else Color.Transparent
+                )
+                .clickable(enabled = canMoveDown, onClick = onMoveDown),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Filled.KeyboardArrowDown,
+                contentDescription = "Move down",
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (canMoveDown) 0.75f else 0.18f),
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
@@ -391,61 +403,6 @@ private fun FavoriteRemoveBackground(state: SwipeToDismissBoxState) {
                 Icon(Icons.Filled.Delete, contentDescription = "Remove favorite", tint = Color.White)
             }
         }
-    }
-}
-
-/**
- * Larger touch target than the bare icon (44dp) so taps reliably hit, and
- * uses an immediate-claim gesture loop (consumes the down event so the
- * parent ModalBottomSheet's vertical-drag-to-dismiss can't steal the drag).
- * No long-press requirement — touch-and-drag the handle to reorder.
- */
-@Composable
-private fun DragHandle(
-    onDragStart: () -> Unit,
-    onDrag: (Float) -> Unit,
-    onDragEnd: () -> Unit,
-    onDragCancel: () -> Unit
-) {
-    Box(
-        Modifier
-            .size(44.dp)
-            .pointerInput(Unit) {
-                awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
-                    // Claim the gesture immediately so the bottom sheet's
-                    // drag-to-dismiss + the parent verticalScroll don't grab
-                    // our vertical motion.
-                    down.consume()
-                    onDragStart()
-                    var cancelled = false
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        val change = event.changes.firstOrNull { it.id == down.id }
-                        if (change == null) {
-                            if (!cancelled) onDragCancel()
-                            break
-                        }
-                        if (change.changedToUp()) {
-                            onDragEnd()
-                            break
-                        }
-                        val dy = change.positionChange().y
-                        if (dy != 0f) {
-                            change.consume()
-                            onDrag(dy)
-                        }
-                    }
-                }
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            Icons.Filled.DragHandle,
-            contentDescription = "Reorder",
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
-            modifier = Modifier.size(28.dp)
-        )
     }
 }
 
