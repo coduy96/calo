@@ -3,7 +3,11 @@ package com.apoorvdarshan.calorietracker.ui.home
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,6 +15,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,7 +24,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Headphones
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MicNone
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -48,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.services.speech.AudioRecorder
@@ -112,24 +123,89 @@ fun VoiceInputSheet(
         Column(
             Modifier
                 .fillMaxWidth()
-                .padding(24.dp)
+                .padding(horizontal = 20.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                "Voice log",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                "Using ${provider.displayName}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
-            )
+            // Provider pill — pink capsule with a bolt + provider name (mirrors iOS).
+            Row(
+                Modifier
+                    .clip(CircleShape)
+                    .background(AppColors.Calorie.copy(alpha = 0.12f))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Filled.GraphicEq,
+                    contentDescription = null,
+                    tint = AppColors.Calorie,
+                    modifier = Modifier.size(13.dp)
+                )
+                Spacer(Modifier.size(6.dp))
+                Text(
+                    provider.displayName,
+                    color = AppColors.Calorie,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
             Spacer(Modifier.height(20.dp))
+
+            // Always-visible transcript box (gray rounded surface). Shows placeholder
+            // when empty, "Transcribing…" while remote upload is running, or the live
+            // transcript otherwise.
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 100.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
+                    .padding(horizontal = 14.dp, vertical = 12.dp)
+            ) {
+                when {
+                    phase == VoicePhase.TRANSCRIBING -> {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.material3.CircularProgressIndicator(
+                                color = AppColors.Calorie,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(Modifier.size(10.dp))
+                            Text(
+                                "Transcribing via ${provider.displayName}…",
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                    transcript.isNotEmpty() -> {
+                        // Editable in REVIEW phase, read-only otherwise (live partial).
+                        if (phase == VoicePhase.REVIEWING) {
+                            OutlinedTextField(
+                                value = transcript,
+                                onValueChange = { transcript = it },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        } else {
+                            Text(transcript, fontSize = 16.sp)
+                        }
+                    }
+                    else -> {
+                        Text(
+                            if (phase == VoicePhase.RECORDING) "Listening…" else "Tap the mic to start",
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
 
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .height(180.dp),
+                    .height(110.dp),
                 contentAlignment = Alignment.Center
             ) {
                 MicButton(
@@ -196,43 +272,20 @@ fun VoiceInputSheet(
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
-
-            Text(
-                when (phase) {
-                    VoicePhase.IDLE -> "Tap to start recording"
-                    VoicePhase.RECORDING -> "Listening… tap to stop"
-                    VoicePhase.TRANSCRIBING -> "Transcribing…"
-                    VoicePhase.REVIEWING -> "Review your transcript"
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-
-            if (transcript.isNotEmpty() || phase == VoicePhase.REVIEWING) {
-                Spacer(Modifier.height(20.dp))
-                OutlinedTextField(
-                    value = transcript,
-                    onValueChange = { transcript = it },
-                    placeholder = { Text("Your transcription will appear here") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(14.dp))
-                Button(
-                    onClick = {
-                        if (transcript.isNotBlank()) {
-                            onSubmit(transcript.trim())
-                        }
-                    },
-                    enabled = transcript.isNotBlank(),
-                    colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie),
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
-                ) {
-                    Text("Analyze", color = Color.White, fontWeight = FontWeight.SemiBold)
-                }
+            // Analyze / Cancel — iOS match: borderedProminent pink capsule, then a
+            // secondary Cancel text button. Shown whenever we have a transcript
+            // ready to submit OR we're in review phase, in line with iOS's one-tap
+            // native / two-tap remote flow.
+            val canAnalyze = transcript.trim().isNotEmpty() && phase != VoicePhase.TRANSCRIBING
+            Spacer(Modifier.height(20.dp))
+            Button(
+                onClick = { if (canAnalyze) onSubmit(transcript.trim()) },
+                enabled = canAnalyze,
+                colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie),
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.fillMaxWidth().height(52.dp)
+            ) {
+                Text("Analyze", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
             }
 
             error?.let {
@@ -240,13 +293,13 @@ fun VoiceInputSheet(
                 Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
             TextButton(onClick = {
                 nativeJob?.cancel()
                 recorder.cancel()
                 onDismiss()
             }, modifier = Modifier.fillMaxWidth()) {
-                Text("Cancel")
+                Text("Cancel", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
             }
         }
     }
@@ -255,17 +308,32 @@ fun VoiceInputSheet(
 @Composable
 private fun MicButton(phase: VoicePhase, onToggle: () -> Unit) {
     val recording = phase == VoicePhase.RECORDING
+    // iOS has a slow 0.8s ease-in-out pulse to 1.15x while recording.
+    val infinite = rememberInfiniteTransition(label = "micPulse")
+    val pulse by infinite.animateFloat(
+        initialValue = 1f,
+        targetValue = if (recording) 1.15f else 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseScale"
+    )
     val scale by animateFloatAsState(
-        targetValue = if (recording) 1.12f else 1f,
-        animationSpec = tween(250),
+        targetValue = if (recording) pulse else 1f,
+        animationSpec = tween(200),
         label = "micScale"
     )
+    val bgBrush = if (recording)
+        Brush.linearGradient(listOf(Color(0xFFFF3B30), Color(0xFFFF6B60))) // iOS red.fill
+    else
+        Brush.linearGradient(listOf(AppColors.CalorieStart, AppColors.CalorieEnd))
     val interactionSource = remember { MutableInteractionSource() }
     Box(
         Modifier
-            .size((110 * scale).dp)
+            .size((80 * scale).dp)
             .clip(CircleShape)
-            .background(Brush.linearGradient(listOf(AppColors.CalorieStart, AppColors.CalorieEnd)))
+            .background(bgBrush)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -274,10 +342,10 @@ private fun MicButton(phase: VoicePhase, onToggle: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            imageVector = if (recording) Icons.Filled.Stop else Icons.Filled.Mic,
+            imageVector = if (recording) Icons.Filled.Mic else Icons.Filled.MicNone,
             contentDescription = if (recording) "Stop" else "Record",
             tint = Color.White,
-            modifier = Modifier.size(44.dp)
+            modifier = Modifier.size(32.dp)
         )
     }
 }
