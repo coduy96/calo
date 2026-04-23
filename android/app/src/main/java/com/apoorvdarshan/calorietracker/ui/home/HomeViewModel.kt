@@ -98,6 +98,25 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    /**
+     * "Camera + Note" flow — analyze a photo with extra textual context the
+     * user typed in (e.g. "extra cheese", "no oil"). Mirrors iOS
+     * `cameraMode == .snapFoodWithContext` → `GeminiService.analyzeFood(image, description:)`.
+     */
+    fun analyzePhotoWithNote(bytes: ByteArray, note: String) {
+        viewModelScope.launch {
+            _ui.value = _ui.value.copy(analyzing = true, error = null, pendingAnalysis = null, pendingImageBytes = bytes)
+            try {
+                val analysis = container.foodAnalysis.analyzeFood(bytes, note.takeIf { it.isNotBlank() })
+                _ui.value = _ui.value.copy(analyzing = false, pendingAnalysis = analysis)
+            } catch (e: AiError) {
+                _ui.value = _ui.value.copy(analyzing = false, error = e.message)
+            } catch (e: Throwable) {
+                _ui.value = _ui.value.copy(analyzing = false, error = e.localizedMessage ?: "Analysis failed")
+            }
+        }
+    }
+
     fun saveAnalysis(
         name: String? = null,
         servingGrams: Double? = null,

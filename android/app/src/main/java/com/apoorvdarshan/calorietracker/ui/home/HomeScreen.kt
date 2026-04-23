@@ -128,6 +128,12 @@ fun HomeScreen(container: AppContainer) {
     // Holds the file the next camera capture will write to. We need this outside
     // the lambda because TakePicture only gives us a Boolean, not the bytes.
     var pendingCaptureFile by remember { mutableStateOf<File?>(null) }
+    // True when the next capture should open the Camera + Note sheet instead
+    // of analyzing immediately. Reset after each capture so the plain Camera
+    // option keeps its one-shot behavior.
+    var pendingCaptureWantsNote by remember { mutableStateOf(false) }
+    // Holds the just-captured bytes while the Camera + Note sheet is shown.
+    var pendingNoteImageBytes by remember { mutableStateOf<ByteArray?>(null) }
 
     val photoPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
@@ -142,29 +148,48 @@ fun HomeScreen(container: AppContainer) {
         ActivityResultContracts.TakePicture()
     ) { saved: Boolean ->
         val file = pendingCaptureFile
+        val wantsNote = pendingCaptureWantsNote
         pendingCaptureFile = null
+        pendingCaptureWantsNote = false
         if (saved && file != null && file.exists()) {
             val bytes = file.readBytes()
-            if (bytes.isNotEmpty()) vm.analyzePhoto(bytes)
+            if (bytes.isNotEmpty()) {
+                if (wantsNote) {
+                    pendingNoteImageBytes = bytes
+                } else {
+                    vm.analyzePhoto(bytes)
+                }
+            }
         }
     }
 
-    fun launchCamera() {
+    fun launchCamera(withNote: Boolean = false) {
         val dir = File(ctx.cacheDir, "capture").apply { mkdirs() }
         val file = File(dir, "shot-${System.currentTimeMillis()}.jpg")
         val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", file)
         pendingCaptureFile = file
+        pendingCaptureWantsNote = withNote
         cameraLauncher.launch(uri)
     }
 
+    // Tracks whether the next permission grant should also show the note sheet.
+    var permissionWantsNote by remember { mutableStateOf(false) }
     val cameraPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { granted -> if (granted) launchCamera() }
+    ) { granted ->
+        if (granted) launchCamera(withNote = permissionWantsNote)
+        permissionWantsNote = false
+    }
 
-    fun openCamera() {
+    fun openCamera(withNote: Boolean = false) {
         if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) ==
             PackageManager.PERMISSION_GRANTED
-        ) launchCamera() else cameraPermission.launch(Manifest.permission.CAMERA)
+        ) {
+            launchCamera(withNote = withNote)
+        } else {
+            permissionWantsNote = withNote
+            cameraPermission.launch(Manifest.permission.CAMERA)
+        }
     }
 
     val today = LocalDate.now()
@@ -277,7 +302,7 @@ fun HomeScreen(container: AppContainer) {
                             MenuRow(
                                 label = "Camera + Note",
                                 icon = Icons.Filled.Note
-                            ) { showAddMenu = false; openCamera() }
+                            ) { showAddMenu = false; openCamera(withNote = true) }
                             MenuRow(
                                 label = "Nutrition Label",
                                 icon = Icons.Filled.QrCodeScanner
@@ -455,6 +480,18 @@ fun HomeScreen(container: AppContainer) {
             entries = ui.todayEntries,
             profile = ui.profile,
             onDismiss = { showNutritionDetail = false }
+        )
+    }
+
+    // Camera + Note: photo captured → user adds context → analyze.
+    pendingNoteImageBytes?.let { bytes ->
+        ContextNoteSheet(
+            imageBytes = bytes,
+            onAnalyze = { note ->
+                pendingNoteImageBytes = null
+                vm.analyzePhotoWithNote(bytes, note)
+            },
+            onDismiss = { pendingNoteImageBytes = null }
         )
     }
 
