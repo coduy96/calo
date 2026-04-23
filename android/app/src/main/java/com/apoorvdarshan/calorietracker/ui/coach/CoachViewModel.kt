@@ -39,18 +39,21 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
         val suggestions = when (profile?.goal) {
             WeightGoal.LOSE -> listOf(
                 "What's my expected weight in 30 days?",
-                "Am I in a deficit this week?",
-                "How do I hit protein without feeling full?"
+                "How do I lose weight faster safely?",
+                "Am I eating too much?",
+                "What should I eat for dinner?"
             )
             WeightGoal.GAIN -> listOf(
                 "What's my expected weight in 30 days?",
-                "Am I eating enough calories to gain?",
-                "Easy high-calorie meals I can add?"
+                "How do I gain weight healthily?",
+                "Am I eating enough?",
+                "High-protein foods I can add?"
             )
             WeightGoal.MAINTAIN -> listOf(
-                "Am I hitting my calorie target this week?",
-                "How's my protein intake?",
-                "Any micronutrients I'm low on?"
+                "Am I holding my weight?",
+                "What's my average intake?",
+                "Macro suggestions?",
+                "How's my trend?"
             )
             else -> listOf(
                 "How am I doing this week?",
