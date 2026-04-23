@@ -212,44 +212,50 @@ fun FoodResultSheet(
 
             item { SheetSectionHeader("Meal") }
             item {
-                Box {
-                    SheetPillRow(onClick = { mealMenuExpanded = true }) {
-                        Text("Meal Type", fontSize = 17.sp, modifier = Modifier.weight(1f))
-                        Icon(
-                            sheetMealIcon(mealType),
-                            contentDescription = null,
-                            tint = AppColors.Calorie,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            mealType.displayName,
-                            fontSize = 17.sp,
-                            color = AppColors.Calorie,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Icon(
-                            Icons.Filled.UnfoldMore,
-                            contentDescription = null,
-                            tint = AppColors.Calorie
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = mealMenuExpanded,
-                        onDismissRequest = { mealMenuExpanded = false }
-                    ) {
-                        for (m in MealType.values()) {
-                            DropdownMenuItem(
-                                leadingIcon = {
-                                    Icon(sheetMealIcon(m), contentDescription = null, tint = AppColors.Calorie)
-                                },
-                                text = { Text(m.displayName) },
-                                onClick = {
-                                    mealType = m
-                                    mealMenuExpanded = false
-                                }
+                SheetPillRow(onClick = { mealMenuExpanded = true }) {
+                    Text("Meal Type", fontSize = 17.sp, modifier = Modifier.weight(1f))
+                    // Anchor the DropdownMenu inside the right-side cluster so
+                    // it pops open under the value, not the row's left edge.
+                    Box {
+                        androidx.compose.foundation.layout.Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                sheetMealIcon(mealType),
+                                contentDescription = null,
+                                tint = AppColors.Calorie,
+                                modifier = Modifier.size(20.dp)
                             )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                mealType.displayName,
+                                fontSize = 17.sp,
+                                color = AppColors.Calorie,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Icon(
+                                Icons.Filled.UnfoldMore,
+                                contentDescription = null,
+                                tint = AppColors.Calorie
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = mealMenuExpanded,
+                            onDismissRequest = { mealMenuExpanded = false }
+                        ) {
+                            for (m in MealType.values()) {
+                                DropdownMenuItem(
+                                    leadingIcon = {
+                                        Icon(sheetMealIcon(m), contentDescription = null, tint = AppColors.Calorie)
+                                    },
+                                    text = { Text(m.displayName) },
+                                    onClick = {
+                                        mealType = m
+                                        mealMenuExpanded = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }
