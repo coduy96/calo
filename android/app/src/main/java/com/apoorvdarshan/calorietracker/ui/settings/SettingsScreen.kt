@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.LocalDining
@@ -51,6 +52,8 @@ import androidx.compose.material.icons.outlined.Height
 import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.MonitorWeight
@@ -156,7 +159,7 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
             // Section 1 — Personal Info (matches iOS Section "Personal Info")
             SectionCard(title = "Personal Info") {
                 profile?.let { p ->
-                    SettingRow("Gender", p.gender.displayName, icon = Icons.Outlined.Person) { sheet = SettingsSheet.GENDER }
+                    SettingRow("Gender", p.gender.displayName, icon = Icons.Outlined.Person, inlineMenu = true) { sheet = SettingsSheet.GENDER }
                     HorizontalDivider()
                     SettingRow("Birthday", birthdayDisplay(p), icon = Icons.Outlined.Cake) { sheet = SettingsSheet.BIRTHDAY }
                     HorizontalDivider()
@@ -185,9 +188,9 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
             // Section 2 — Goals & Nutrition (matches iOS Section "Goals & Nutrition")
             SectionCard(title = "Goals & Nutrition") {
                 profile?.let { p ->
-                    SettingRow("Weight Goal", p.goal.displayName, icon = Icons.Outlined.Equalizer) { sheet = SettingsSheet.GOAL }
+                    SettingRow("Weight Goal", p.goal.displayName, icon = Icons.Outlined.Equalizer, inlineMenu = true) { sheet = SettingsSheet.GOAL }
                     HorizontalDivider()
-                    SettingRow("Activity Level", p.activityLevel.displayName, icon = Icons.AutoMirrored.Outlined.DirectionsRun) { sheet = SettingsSheet.ACTIVITY }
+                    SettingRow("Activity Level", p.activityLevel.displayName, icon = Icons.AutoMirrored.Outlined.DirectionsRun, inlineMenu = true) { sheet = SettingsSheet.ACTIVITY }
                     if (p.goal != WeightGoal.MAINTAIN) {
                         HorizontalDivider()
                         SettingRow(
@@ -209,13 +212,31 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                         ) { sheet = SettingsSheet.GOAL_WEIGHT }
                     }
                     HorizontalDivider()
+                    // iOS shows "2452 kcal" with no chevron suffix on the Calories row.
                     SettingRow("Calories", "${p.effectiveCalories} kcal", icon = Icons.Outlined.LocalFireDepartment) { sheet = SettingsSheet.MACROS }
                     HorizontalDivider()
-                    SettingRow("Protein", "${p.effectiveProtein} g", icon = Icons.Outlined.DataUsage) { sheet = SettingsSheet.MACROS }
+                    // Per-macro rows mirror iOS macroRow(): "{value}g · auto" suffix when
+                    // unpinned, "{value}g" when pinned, plus lock.fill / lock.open icon.
+                    MacroSettingRow(
+                        label = "Protein",
+                        value = p.effectiveProtein,
+                        pinned = p.isPinned(AutoBalanceMacro.PROTEIN),
+                        onClick = { sheet = SettingsSheet.MACROS }
+                    )
                     HorizontalDivider()
-                    SettingRow("Carbs", "${p.effectiveCarbs} g", icon = Icons.Outlined.DataUsage) { sheet = SettingsSheet.MACROS }
+                    MacroSettingRow(
+                        label = "Carbs",
+                        value = p.effectiveCarbs,
+                        pinned = p.isPinned(AutoBalanceMacro.CARBS),
+                        onClick = { sheet = SettingsSheet.MACROS }
+                    )
                     HorizontalDivider()
-                    SettingRow("Fat", "${p.effectiveFat} g", icon = Icons.Outlined.DataUsage) { sheet = SettingsSheet.MACROS }
+                    MacroSettingRow(
+                        label = "Fat",
+                        value = p.effectiveFat,
+                        pinned = p.isPinned(AutoBalanceMacro.FAT),
+                        onClick = { sheet = SettingsSheet.MACROS }
+                    )
                     HorizontalDivider()
                     Row(
                         Modifier
@@ -921,6 +942,10 @@ private fun SettingRow(
     label: String,
     value: String,
     icon: ImageVector? = null,
+    // iOS `.menu` Picker rows render a `chevron.up.chevron.down` instead of a
+    // right-chevron to signal the inline dropdown affordance. Pass inlineMenu=true
+    // for Gender, Weight Goal, and Activity Level.
+    inlineMenu: Boolean = false,
     onClick: () -> Unit
 ) {
     Row(
@@ -941,7 +966,59 @@ private fun SettingRow(
         }
         Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-        Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+        Icon(
+            if (inlineMenu) Icons.Filled.UnfoldMore else Icons.Filled.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+            modifier = if (inlineMenu) Modifier.size(18.dp) else Modifier
+        )
+    }
+}
+
+/**
+ * Verbatim port of iOS `macroRow(label:icon:macro:value:sheet:)` in
+ * ContentView.swift's ProfileView. Uses the DataUsage circle icon (matches
+ * iOS circle.dotted) on the left, the macro label, and on the right
+ *   "{value}g"             when pinned (custom value)
+ *   "{value}g · auto"      when auto-balanced
+ * followed by a lock icon — Filled.Lock (pink) when pinned, Outlined.LockOpen
+ * (gray) when not.
+ */
+@Composable
+private fun MacroSettingRow(
+    label: String,
+    value: Int,
+    pinned: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Outlined.DataUsage,
+            contentDescription = null,
+            tint = AppColors.Calorie,
+            modifier = Modifier.size(22.dp)
+        )
+        Spacer(Modifier.width(14.dp))
+        Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+        Text(
+            if (pinned) "${value}g" else "${value}g · auto",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
+        Spacer(Modifier.width(8.dp))
+        Icon(
+            if (pinned) Icons.Filled.Lock else Icons.Outlined.LockOpen,
+            contentDescription = if (pinned) "Pinned" else "Auto",
+            tint = if (pinned) AppColors.Calorie
+                   else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+            modifier = Modifier.size(16.dp)
+        )
     }
 }
 
