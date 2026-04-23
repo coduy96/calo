@@ -917,9 +917,12 @@ private fun SwipeBackground(direction: SwipeToDismissBoxValue, isFavorite: Boole
             Alignment.Center
         )
     }
+    // fillMaxSize ensures the colored slab matches the row's full height —
+    // without it the Box wraps to its icon's height and only paints a thin
+    // strip behind the row.
     Box(
         Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .background(bg)
             .padding(horizontal = 24.dp),
         contentAlignment = alignment
