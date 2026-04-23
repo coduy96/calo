@@ -538,7 +538,11 @@ private fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: Int
                 val barAreaWidthPx = with(density) { maxWidth.toPx() }
                 val n = dailyCalories.size
                 val gap = 4f
-                val maxBarPx = with(density) { 28.dp.toPx() }
+                // Cap bar width so single-day / very-sparse charts don't render as
+                // one giant block, but keep the cap generous enough that a 1W view
+                // fills the card width and leaves each bar a slot wide enough to
+                // hold its "Apr 18" label underneath.
+                val maxBarPx = with(density) { 60.dp.toPx() }
                 val rawWidth = (barAreaWidthPx - gap * (n - 1)) / n
                 val barWidth = rawWidth.coerceIn(2f, maxBarPx)
                 val totalGroupW = barWidth * n + gap * (n - 1)
@@ -595,43 +599,48 @@ private fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: Int
         // Label box = slot width (barWidth + gap) capped at 52dp so dense 1W charts
         // don't overlap labels. For ranges with many bars, pickXLabelIndices has
         // already downsampled to ~7 labels.
-        BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 4.dp, end = 44.dp)) {
-            val areaWidthDp = maxWidth
-            val areaWidthPx = with(density) { areaWidthDp.toPx() }
-            val n = dailyCalories.size
-            val gap = 4f
-            val maxBarPx = with(density) { 28.dp.toPx() }
-            val rawWidth = (areaWidthPx - gap * (n - 1)) / n
-            val barWidth = rawWidth.coerceIn(2f, maxBarPx)
-            val totalGroupW = barWidth * n + gap * (n - 1)
-            val startX = ((areaWidthPx - totalGroupW) / 2f).coerceAtLeast(0f)
-            val labelBoxWidth = 56.dp
-            val labelBoxPx = with(density) { labelBoxWidth.toPx() }
-            val slotPx = barWidth + gap
-            // Space picked labels by at least enough slots so boxes don't overlap.
-            val slotStep = maxOf(1, Math.ceil((labelBoxPx / slotPx).toDouble()).toInt())
-            val pickedIndices = buildList {
-                var i = 0
-                while (i < n) { add(i); i += slotStep }
-                if (last() != n - 1) add(n - 1)
-            }.distinct()
-            pickedIndices.forEach { i ->
-                val cxPx = startX + i * (barWidth + gap) + barWidth / 2f
-                val cxDp = with(density) { cxPx.toDp() }
-                Box(
-                    Modifier
-                        .width(labelBoxWidth)
-                        .offset(x = cxDp - labelBoxWidth / 2),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        xLabelFmt.format(dailyCalories[i].first),
-                        fontSize = 11.sp,
-                        color = secondaryColor,
-                        maxLines = 1
-                    )
+        Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+            BoxWithConstraints(Modifier.weight(1f)) {
+                val areaWidthDp = maxWidth
+                val areaWidthPx = with(density) { areaWidthDp.toPx() }
+                val n = dailyCalories.size
+                val gap = 4f
+                val maxBarPx = with(density) { 60.dp.toPx() }
+                val rawWidth = (areaWidthPx - gap * (n - 1)) / n
+                val barWidth = rawWidth.coerceIn(2f, maxBarPx)
+                val totalGroupW = barWidth * n + gap * (n - 1)
+                val startX = ((areaWidthPx - totalGroupW) / 2f).coerceAtLeast(0f)
+                val slotPx = barWidth + gap
+                val slotDp = with(density) { slotPx.toDp() }
+                // "Apr 18" at 11sp is ~38dp wide; add tiny breathing room.
+                val minLabelDp = 40.dp
+                val slotStep = if (slotDp >= minLabelDp) 1
+                    else Math.ceil((minLabelDp.value / slotDp.value).toDouble()).toInt().coerceAtLeast(1)
+                val pickedIndices = buildList {
+                    var i = 0
+                    while (i < n) { add(i); i += slotStep }
+                    if (last() != n - 1) add(n - 1)
+                }.distinct()
+                val labelBoxWidth = if (slotStep == 1) slotDp else minLabelDp.coerceAtLeast(slotDp)
+                pickedIndices.forEach { i ->
+                    val cxPx = startX + i * (barWidth + gap) + barWidth / 2f
+                    val cxDp = with(density) { cxPx.toDp() }
+                    Box(
+                        Modifier
+                            .width(labelBoxWidth)
+                            .offset(x = cxDp - labelBoxWidth / 2),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            xLabelFmt.format(dailyCalories[i].first),
+                            fontSize = 11.sp,
+                            color = secondaryColor,
+                            maxLines = 1
+                        )
+                    }
                 }
             }
+            Spacer(Modifier.width(44.dp))
         }
     }
 }
