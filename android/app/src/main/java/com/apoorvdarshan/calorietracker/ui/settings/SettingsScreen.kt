@@ -101,6 +101,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -373,12 +374,18 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
     }
 
     if (showDeleteDialog) {
+        val context = LocalContext.current
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Delete all local data?") },
-            text = { Text("Wipes profile, food log, weight history, chat, and API keys. Health Connect data stays intact.") },
+            text = { Text("Wipes profile, food log, weight history, chat, and API keys, then takes you back to onboarding. Health Connect data stays intact.") },
             confirmButton = {
-                TextButton(onClick = { vm.deleteAllData(); showDeleteDialog = false }) {
+                TextButton(onClick = {
+                    vm.deleteAllData {
+                        showDeleteDialog = false
+                        (context as? android.app.Activity)?.recreate()
+                    }
+                }) {
                     Text("Delete", color = Color(0xFFD32F2F))
                 }
             },

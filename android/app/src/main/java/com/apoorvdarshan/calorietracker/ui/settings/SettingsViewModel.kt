@@ -127,11 +127,12 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
         }
     }
 
-    fun deleteAllData() {
+    fun deleteAllData(onComplete: () -> Unit = {}) {
         viewModelScope.launch {
             container.prefs.clearAll()
             container.keyStore.clearAll()
             container.imageStore.clearAll()
+            onComplete()
         }
     }
 
