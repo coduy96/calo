@@ -1,13 +1,15 @@
 package com.apoorvdarshan.calorietracker.ui.navigation
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitHorizontalTouchSlopOrCancellation
+import androidx.compose.foundation.gestures.horizontalDrag
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -32,7 +34,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,11 +49,26 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
+import kotlinx.coroutines.launch
 
 data class BottomTab(val route: String, val icon: ImageVector, val label: String)
 
@@ -67,14 +91,11 @@ private val PillInsetV = 6.dp
  * sheen, hairline border, soft shadow, and a spring-animated bright pill
  * behind the active tab.
  *
- * Approximates iOS 26 Liquid Glass via:
- *   - dark / light translucent surface that floats over the underlying content
- *   - vertical white sheen overlay (top-bright → bottom-clear)
- *   - hairline white-gradient border
- *   - 22dp ambient + spot shadow for depth
- *   - active-tab pill: bright white-glass disc layered over the bar (the
- *     "glass-on-glass" effect) — clearly visible, with its own sheen + border
- *   - subtle 1.08x scale bump on the selected icon
+ * The pill is **draggable**: place a finger anywhere on the bar and slide
+ * horizontally to drag it across tabs. Taps still work normally (drag is
+ * only claimed after horizontal touch slop). On release the pill snaps to
+ * the nearest tab; haptic ticks fire each time the pill crosses a boundary
+ * during the drag, mirroring the iOS 26 Liquid Glass tab-bar feel.
  */
 @Composable
 fun FudAIBottomNavBar(
@@ -125,43 +146,173 @@ fun FudAIBottomNavBar(
                 .background(barSheen)
                 .border(0.8.dp, barBorder, barShape)
         ) {
+            val density = LocalDensity.current
+            val haptic = LocalHapticFeedback.current
+            val scope = rememberCoroutineScope()
+
             val barWidthDp = maxWidth
             val tabCount = BottomTabs.size
             val tabWidthDp = barWidthDp / tabCount
+            val tabWidthPx = with(density) { tabWidthDp.toPx() }
+            val maxOffsetPx = tabWidthPx * (tabCount - 1)
+
             val selectedIndex = BottomTabs.indexOfFirst { it.route == currentRoute }
                 .coerceAtLeast(0)
 
-            val highlightOffset by animateDpAsState(
-                targetValue = tabWidthDp * selectedIndex,
+            // Spring animator drives the pill when it's NOT being dragged
+            // (initial mount, external route changes, settle-after-release).
+            val pillAnim = remember { Animatable(0f) }
+            var isDragging by remember { mutableStateOf(false) }
+            var dragOffsetPx by remember { mutableFloatStateOf(0f) }
+            var hoverIndex by remember { mutableIntStateOf(selectedIndex) }
+
+            // Sync pill position once the bar's width has been measured, and on
+            // any later external selectedIndex change. Skip while dragging so a
+            // mid-drag recomposition doesn't yank the pill back to a snapped
+            // position.
+            LaunchedEffect(selectedIndex, tabWidthPx) {
+                if (!isDragging) {
+                    val target = selectedIndex * tabWidthPx
+                    if (pillAnim.value == 0f && selectedIndex > 0) {
+                        pillAnim.snapTo(target)
+                    } else {
+                        pillAnim.animateTo(
+                            target,
+                            spring(
+                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                stiffness = 320f
+                            )
+                        )
+                    }
+                }
+            }
+
+            val pillPx = if (isDragging) dragOffsetPx else pillAnim.value
+            val pillOffsetDp = with(density) { pillPx.toDp() }
+
+            val pillScale by animateFloatAsState(
+                targetValue = if (isDragging) 1.06f else 1f,
                 animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioLowBouncy,
-                    stiffness = 320f
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = 380f
                 ),
-                label = "tabHighlightOffset"
+                label = "pillDragScale"
             )
 
             // Active-tab pill — the bright glass disc.
             ActivePill(
                 tabWidth = tabWidthDp,
                 isDark = isDark,
-                modifier = Modifier.offset(x = highlightOffset)
+                modifier = Modifier
+                    .offset(x = pillOffsetDp)
+                    .graphicsLayer {
+                        scaleX = pillScale
+                        scaleY = pillScale
+                        transformOrigin = TransformOrigin(0.5f, 0.5f)
+                    }
             )
 
+            // Visual tabs. Tap + drag are both handled by the overlay below;
+            // the row exists for layout + a11y semantics only.
             Row(
                 Modifier.fillMaxWidth().fillMaxHeight(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                for (tab in BottomTabs) {
-                    val selected = tab.route == currentRoute
+                for ((idx, tab) in BottomTabs.withIndex()) {
+                    val isSelected = tab.route == currentRoute
                     TabItem(
                         tab = tab,
-                        selected = selected,
+                        selected = isSelected,
                         isDark = isDark,
-                        modifier = Modifier.width(tabWidthDp).fillMaxHeight()
-                    ) { onTap(tab.route) }
+                        modifier = Modifier
+                            .width(tabWidthDp)
+                            .fillMaxHeight()
+                            .semantics {
+                                role = Role.Tab
+                                selected = isSelected
+                                contentDescription = tab.label
+                                onClick {
+                                    if (BottomTabs[idx].route != currentRoute) {
+                                        onTap(BottomTabs[idx].route)
+                                    }
+                                    true
+                                }
+                            }
+                    )
                 }
             }
+
+            // Single gesture overlay that owns BOTH tap and horizontal drag.
+            // A previous version kept clickable on TabItem and put only drag
+            // on the overlay, but the overlay sits on top in z-order and
+            // intercepts the down event, so the tab's click never fired.
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .pointerInput(tabWidthPx, tabCount) {
+                        if (tabWidthPx <= 0f) return@pointerInput
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            val dragChange = awaitHorizontalTouchSlopOrCancellation(down.id) { change, _ ->
+                                change.consume()
+                            }
+
+                            if (dragChange == null) {
+                                // No horizontal slop reached → treat as a tap
+                                // on whichever tab the down landed in.
+                                val tappedIdx = (down.position.x / tabWidthPx)
+                                    .toInt().coerceIn(0, tabCount - 1)
+                                if (BottomTabs[tappedIdx].route != currentRoute) {
+                                    onTap(BottomTabs[tappedIdx].route)
+                                }
+                                return@awaitEachGesture
+                            }
+
+                            // Horizontal drag claimed — start dragging the pill
+                            // from its current animated position. Anchor so the
+                            // pill follows the finger 1:1 (delta from down).
+                            isDragging = true
+                            val startPillPx = pillAnim.value
+                            val deltaSinceDown = dragChange.position.x - down.position.x
+                            dragOffsetPx = (startPillPx + deltaSinceDown)
+                                .coerceIn(0f, maxOffsetPx)
+                            hoverIndex = ((dragOffsetPx + tabWidthPx / 2f) / tabWidthPx)
+                                .toInt().coerceIn(0, tabCount - 1)
+
+                            horizontalDrag(dragChange.id) { change ->
+                                dragOffsetPx = (dragOffsetPx + change.positionChange().x)
+                                    .coerceIn(0f, maxOffsetPx)
+                                val newHover = ((dragOffsetPx + tabWidthPx / 2f) / tabWidthPx)
+                                    .toInt().coerceIn(0, tabCount - 1)
+                                if (newHover != hoverIndex) {
+                                    hoverIndex = newHover
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                }
+                                change.consume()
+                            }
+
+                            // Released — snap pillAnim to the live drag value
+                            // so the spring can resume from there, then settle
+                            // to the chosen tab and fire the route change.
+                            val landed = hoverIndex
+                            scope.launch {
+                                pillAnim.snapTo(dragOffsetPx)
+                                isDragging = false
+                                pillAnim.animateTo(
+                                    landed * tabWidthPx,
+                                    spring(
+                                        dampingRatio = Spring.DampingRatioLowBouncy,
+                                        stiffness = 320f
+                                    )
+                                )
+                            }
+                            if (BottomTabs[landed].route != currentRoute) {
+                                onTap(BottomTabs[landed].route)
+                            }
+                        }
+                    }
+            )
         }
     }
 }
@@ -171,7 +322,7 @@ fun FudAIBottomNavBar(
  * the bar so it reads like a brighter slab of glass within the larger one.
  */
 @Composable
-private fun ActivePill(tabWidth: androidx.compose.ui.unit.Dp, isDark: Boolean, modifier: Modifier = Modifier) {
+private fun ActivePill(tabWidth: Dp, isDark: Boolean, modifier: Modifier = Modifier) {
     val pillShape = RoundedCornerShape(PillCorner)
 
     val fill = if (isDark) Color.White.copy(alpha = 0.16f)
@@ -208,8 +359,7 @@ private fun TabItem(
     tab: BottomTab,
     selected: Boolean,
     isDark: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
+    modifier: Modifier = Modifier
 ) {
     val activeColor = AppColors.Calorie
     val inactiveColor = if (isDark) Color.White.copy(alpha = 0.62f)
@@ -226,11 +376,7 @@ private fun TabItem(
     )
 
     Column(
-        modifier = modifier.clickable(
-            interactionSource = MutableInteractionSource(),
-            indication = null,
-            onClick = onClick
-        ),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
