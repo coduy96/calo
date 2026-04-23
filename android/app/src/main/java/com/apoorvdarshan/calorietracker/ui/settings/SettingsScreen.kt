@@ -63,6 +63,7 @@ import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -548,6 +549,7 @@ private fun SettingsSheets(
                 }
                 SettingsSheet.GOAL_SPEED -> GoalSpeedSheet(
                     current = ui.profile?.weeklyChangeKg ?: 0.5,
+                    goal = ui.profile?.goal ?: WeightGoal.MAINTAIN,
                     useMetric = ui.useMetric,
                     onSave = { kg -> vm.updateProfile { it.copy(weeklyChangeKg = kg) }; onDismiss() }
                 )
@@ -736,11 +738,8 @@ private fun HeightSheet(current: Int, useMetric: Boolean, onSave: (Int) -> Unit)
     if (metric) NumericWheelPicker(cm, { cm = it }, 100, 250, "cm")
     else FeetInchesWheelPicker(cm, { cm = it })
     Spacer(Modifier.height(16.dp))
-    Button(
-        onClick = { onSave(cm) },
-        colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie),
-        modifier = Modifier.fillMaxWidth()
-    ) { Text("Save", color = Color.White) }
+    GradientSaveButton { onSave(cm) }
+    Spacer(Modifier.height(8.dp))
 }
 
 @Composable
@@ -757,11 +756,8 @@ private fun WeightSheet(titleText: String, current: Double, useMetric: Boolean, 
         SplitDecimalWheelPicker(kg * 2.20462, { lbs -> kg = lbs / 2.20462 }, 66, 551, "lbs")
     }
     Spacer(Modifier.height(16.dp))
-    Button(
-        onClick = { onSave(kg) },
-        colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie),
-        modifier = Modifier.fillMaxWidth()
-    ) { Text("Save", color = Color.White) }
+    GradientSaveButton { onSave(kg) }
+    Spacer(Modifier.height(8.dp))
 }
 
 @Composable
@@ -771,41 +767,55 @@ private fun BodyFatSheet(current: Double?, onSave: (Double?) -> Unit) {
     Spacer(Modifier.height(12.dp))
     DecimalWheelPicker(pct, { pct = it }, 5.0, 60.0, 0.5, "%")
     Spacer(Modifier.height(12.dp))
-    Row {
-        Button(
-            onClick = { onSave(pct / 100.0) },
-            colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie),
-            modifier = Modifier.weight(1f)
-        ) { Text("Save", color = Color.White) }
-        Spacer(Modifier.height(8.dp))
-        TextButton(
-            onClick = { onSave(null) },
-            modifier = Modifier.weight(1f)
-        ) { Text("Clear") }
-    }
+    GradientSaveButton { onSave(pct / 100.0) }
+    Spacer(Modifier.height(4.dp))
+    TextButton(onClick = { onSave(null) }, modifier = Modifier.fillMaxWidth()) { Text("Clear") }
+    Spacer(Modifier.height(8.dp))
 }
 
 @Composable
-private fun GoalSpeedSheet(current: Double, useMetric: Boolean, onSave: (Double) -> Unit) {
-    Text("Goal speed", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-    Spacer(Modifier.height(8.dp))
-    val options = listOf(0.25 to "Slow & steady", 0.5 to "Moderate", 1.0 to "Fast")
-    for ((kg, label) in options) {
-        val isSel = kotlin.math.abs(kg - current) < 0.01
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(if (isSel) AppColors.Calorie.copy(alpha = 0.15f) else Color.Transparent)
-                .clickable { onSave(kg) }
-                .padding(horizontal = 16.dp, vertical = 14.dp)
-        ) {
-            val display = if (useMetric) String.format(Locale.US, "%.2f kg/week", kg)
-                          else String.format(Locale.US, "%.2f lbs/week", kg * 2.20462)
-            Text("$label · $display", fontWeight = FontWeight.SemiBold)
+private fun GoalSpeedSheet(current: Double, goal: WeightGoal, useMetric: Boolean, onSave: (Double) -> Unit) {
+    Text("Weekly Change", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Spacer(Modifier.height(12.dp))
+    val unit = if (goal == WeightGoal.LOSE) "loss" else "gain"
+    val options = listOf(
+        Triple(0.25, "Slow", "0.25 ${if (useMetric) "kg" else "lbs"}/week $unit"),
+        Triple(0.5, "Recommended", "0.5 ${if (useMetric) "kg" else "lbs"}/week $unit"),
+        Triple(1.0, "Fast", "1.0 ${if (useMetric) "kg" else "lbs"}/week $unit")
+    )
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        for ((kg, title, subtitle) in options) {
+            val isSel = kotlin.math.abs(kg - current) < 0.01
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+                    .clickable { onSave(kg) }
+                    .padding(horizontal = 14.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
+                if (isSel) {
+                    Icon(
+                        Icons.Filled.Check,
+                        contentDescription = "Selected",
+                        tint = AppColors.Calorie,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
         }
     }
+    Spacer(Modifier.height(8.dp))
 }
 
 @Composable
@@ -1000,19 +1010,16 @@ private fun BirthdaySheet(current: Instant, onSave: (Instant) -> Unit) {
         )
     )
     Spacer(Modifier.height(12.dp))
-    Button(
-        onClick = {
-            val millis = state.selectedDateMillis ?: return@Button
-            // Picker millis is UTC-midnight of the selected calendar day —
-            // pull the LocalDate via UTC, then convert to local-zone Instant.
-            val newDate = Instant.ofEpochMilli(millis)
-                .atZone(java.time.ZoneOffset.UTC).toLocalDate()
-            val newInstant = newDate.atStartOfDay(ZoneId.systemDefault()).toInstant()
-            onSave(newInstant)
-        },
-        colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie),
-        modifier = Modifier.fillMaxWidth()
-    ) { Text("Save", color = Color.White) }
+    GradientSaveButton {
+        val millis = state.selectedDateMillis ?: return@GradientSaveButton
+        // Picker millis is UTC-midnight of the selected calendar day —
+        // pull the LocalDate via UTC, then convert to local-zone Instant.
+        val newDate = Instant.ofEpochMilli(millis)
+            .atZone(java.time.ZoneOffset.UTC).toLocalDate()
+        val newInstant = newDate.atStartOfDay(ZoneId.systemDefault()).toInstant()
+        onSave(newInstant)
+    }
+    Spacer(Modifier.height(8.dp))
 }
 
 // Closest Material mappings for the iOS SF Symbols used in picker rows.
@@ -1041,4 +1048,30 @@ private fun appearanceIcon(key: String): ImageVector = when (key) {
     "light" -> Icons.Outlined.LightMode
     "dark" -> Icons.Outlined.DarkMode
     else -> Icons.Outlined.SettingsBrightness
+}
+
+/**
+ * Pink-gradient capsule "Save" button matching the iOS picker sheets
+ * (`LinearGradient(colors: AppColors.calorieGradient)` over a 14dp rounded
+ * rectangle, white semibold label).
+ */
+@Composable
+private fun GradientSaveButton(
+    text: String = "Save",
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    val brush = Brush.linearGradient(listOf(AppColors.CalorieStart, AppColors.CalorieEnd))
+    Box(
+        modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (enabled) brush else Brush.linearGradient(listOf(AppColors.Calorie.copy(alpha = 0.4f), AppColors.Calorie.copy(alpha = 0.4f))))
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(vertical = 14.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+    }
 }
