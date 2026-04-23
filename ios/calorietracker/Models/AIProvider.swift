@@ -62,9 +62,12 @@ enum AIProvider: String, CaseIterable, Codable, Identifiable {
     var models: [String] {
         switch self {
         case .gemini: [
-            "gemini-2.5-flash",          // vision, fastest
-            "gemini-2.5-pro",            // vision, highest quality
-            "gemini-2.0-flash",          // vision, legacy fallback
+            "gemini-3.1-flash-lite-preview", // vision, newest, cheapest
+            "gemini-3.1-pro-preview",        // vision, newest flagship
+            "gemini-3-flash-preview",        // vision, newest fast
+            "gemini-2.5-flash",              // vision, prior fast
+            "gemini-2.5-pro",                // vision, prior flagship
+            "gemini-2.0-flash",              // vision, legacy fallback
         ]
         case .openai: [
             "gpt-5",                     // vision, current flagship
