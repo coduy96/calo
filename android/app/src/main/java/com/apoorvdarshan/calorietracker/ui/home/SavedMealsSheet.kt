@@ -3,7 +3,8 @@ package com.apoorvdarshan.calorietracker.ui.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -57,6 +59,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.changedToUp
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -319,7 +323,7 @@ private fun FavoritesReorderableList(
             ) {
                 SwipeToDismissBox(
                     state = swipeState,
-                    backgroundContent = { FavoriteRemoveBackground(swipeState.dismissDirection) },
+                    backgroundContent = { FavoriteRemoveBackground(swipeState) },
                     enableDismissFromStartToEnd = false,
                     enableDismissFromEndToStart = true,
                     modifier = Modifier.fillMaxWidth()
@@ -357,25 +361,45 @@ private fun FavoritesReorderableList(
     }
 }
 
+/**
+ * iOS Mail-style trailing reveal: the red Delete panel is pinned to the
+ * right edge and its width tracks the swipe distance, so only the area
+ * that's been "revealed" by the foreground sliding left turns red — the
+ * still-visible portion of the row stays its normal color.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FavoriteRemoveBackground(direction: SwipeToDismissBoxValue) {
-    // Only paint red while the user is actively swiping. The row's surface
-    // is semi-transparent (alpha 0.45) so an always-red background bleeds
-    // through and tints every favorite row red at rest.
-    val active = direction == SwipeToDismissBoxValue.EndToStart
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(if (active) Color(0xFFD32F2F) else Color.Transparent)
-            .padding(horizontal = 24.dp),
-        contentAlignment = Alignment.CenterEnd
-    ) {
-        if (active) {
-            Icon(Icons.Filled.Delete, contentDescription = "Remove favorite", tint = Color.White)
+private fun FavoriteRemoveBackground(state: SwipeToDismissBoxState) {
+    val active = state.dismissDirection == SwipeToDismissBoxValue.EndToStart
+    val rawOffset = runCatching { state.requireOffset() }.getOrDefault(0f)
+    // For EndToStart the offset is negative — its absolute value is the
+    // amount the foreground has moved left, which is exactly how wide the
+    // red reveal panel should be.
+    val revealWidthPx = if (active) (-rawOffset).coerceAtLeast(0f) else 0f
+    val revealWidthDp = with(LocalDensity.current) { revealWidthPx.toDp() }
+
+    Box(Modifier.fillMaxSize()) {
+        Box(
+            Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .width(revealWidthDp)
+                .background(Color(0xFFD32F2F)),
+            contentAlignment = Alignment.Center
+        ) {
+            if (active && revealWidthPx > 24f) {
+                Icon(Icons.Filled.Delete, contentDescription = "Remove favorite", tint = Color.White)
+            }
         }
     }
 }
 
+/**
+ * Larger touch target than the bare icon (44dp) so taps reliably hit, and
+ * uses an immediate-claim gesture loop (consumes the down event so the
+ * parent ModalBottomSheet's vertical-drag-to-dismiss can't steal the drag).
+ * No long-press requirement — touch-and-drag the handle to reorder.
+ */
 @Composable
 private fun DragHandle(
     onDragStart: () -> Unit,
@@ -383,24 +407,46 @@ private fun DragHandle(
     onDragEnd: () -> Unit,
     onDragCancel: () -> Unit
 ) {
-    Icon(
-        Icons.Filled.DragHandle,
-        contentDescription = "Reorder",
-        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
-        modifier = Modifier
-            .size(28.dp)
+    Box(
+        Modifier
+            .size(44.dp)
             .pointerInput(Unit) {
-                detectDragGesturesAfterLongPress(
-                    onDragStart = { onDragStart() },
-                    onDragEnd = { onDragEnd() },
-                    onDragCancel = { onDragCancel() },
-                    onDrag = { change, dragAmount ->
-                        change.consume()
-                        onDrag(dragAmount.y)
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    // Claim the gesture immediately so the bottom sheet's
+                    // drag-to-dismiss + the parent verticalScroll don't grab
+                    // our vertical motion.
+                    down.consume()
+                    onDragStart()
+                    var cancelled = false
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        val change = event.changes.firstOrNull { it.id == down.id }
+                        if (change == null) {
+                            if (!cancelled) onDragCancel()
+                            break
+                        }
+                        if (change.changedToUp()) {
+                            onDragEnd()
+                            break
+                        }
+                        val dy = change.positionChange().y
+                        if (dy != 0f) {
+                            change.consume()
+                            onDrag(dy)
+                        }
                     }
-                )
-            }
-    )
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            Icons.Filled.DragHandle,
+            contentDescription = "Reorder",
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+            modifier = Modifier.size(28.dp)
+        )
+    }
 }
 
 /**

@@ -29,6 +29,13 @@ data class HomeUiState(
     val favoriteKeys: Set<String> = emptySet(),
     val pendingAnalysis: FoodAnalysis? = null,
     val pendingImageBytes: ByteArray? = null,
+    /**
+     * Set when the pendingAnalysis came from a Saved Meals tap (Recents /
+     * Frequent / Favorites) instead of a fresh AI analysis. We keep the
+     * original entry so saveAnalysis can reuse its imageFilename instead of
+     * re-storing the image bytes as a new file on disk.
+     */
+    val pendingReviewSource: FoodEntry? = null,
     val analyzing: Boolean = false,
     val error: String? = null
 ) {
@@ -133,10 +140,16 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
         mealType: MealType = MealType.currentMeal
     ) {
         val analysis = _ui.value.pendingAnalysis ?: return
+        val reviewSource = _ui.value.pendingReviewSource
         viewModelScope.launch {
             val imageBytes = _ui.value.pendingImageBytes
             val id = UUID.randomUUID()
-            val filename = imageBytes?.let { container.imageStore.storeBytes(it, id) }
+            // If this analysis came from a Saved Meals review, reuse the
+            // template's existing on-disk image so we don't duplicate the
+            // JPEG. Otherwise (fresh AI analysis), persist the in-memory
+            // bytes as a new file under the new entry id.
+            val filename = reviewSource?.imageFilename
+                ?: imageBytes?.let { container.imageStore.storeBytes(it, id) }
             fun s(v: Int) = (v * scale).toInt()
             fun s(v: Double?) = v?.let { it * scale }
             val entry = FoodEntry(
@@ -149,7 +162,8 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
                 timestamp = timestampForSelectedDay(),
                 imageFilename = filename,
                 emoji = analysis.emoji,
-                source = if (imageBytes != null) FoodSource.SNAP_FOOD else FoodSource.TEXT_INPUT,
+                source = reviewSource?.source
+                    ?: if (imageBytes != null) FoodSource.SNAP_FOOD else FoodSource.TEXT_INPUT,
                 mealType = mealType,
                 sugar = s(analysis.sugar),
                 fiber = s(analysis.fiber),
@@ -162,12 +176,40 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
                 servingSizeGrams = servingGrams ?: analysis.servingSizeGrams
             )
             container.foodRepository.addEntry(entry)
-            _ui.value = _ui.value.copy(pendingAnalysis = null, pendingImageBytes = null)
+            _ui.value = _ui.value.copy(
+                pendingAnalysis = null,
+                pendingImageBytes = null,
+                pendingReviewSource = null
+            )
         }
     }
 
     fun dismissPending() {
-        _ui.value = _ui.value.copy(pendingAnalysis = null, pendingImageBytes = null, error = null)
+        _ui.value = _ui.value.copy(
+            pendingAnalysis = null,
+            pendingImageBytes = null,
+            pendingReviewSource = null,
+            error = null
+        )
+    }
+
+    /**
+     * Tap a row in Saved Meals (Recents / Frequent / Favorites) → open the
+     * FoodResultSheet for review instead of logging immediately. The user
+     * can edit name / serving / meal type, then tap "Log" to commit. Mirrors
+     * iOS RecentsView's `onReview` callback path.
+     */
+    fun reviewSavedMeal(template: FoodEntry) {
+        val analysis = template.toAnalysis()
+        val bytes = template.imageFilename?.let {
+            runCatching { container.imageStore.file(it).readBytes() }.getOrNull()
+        }
+        _ui.value = _ui.value.copy(
+            pendingAnalysis = analysis,
+            pendingImageBytes = bytes,
+            pendingReviewSource = template,
+            error = null
+        )
     }
 
     fun deleteEntry(id: UUID) {
@@ -233,3 +275,28 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
             HomeViewModel(container) as T
     }
 }
+
+/**
+ * Map a logged FoodEntry back into a FoodAnalysis so the FoodResultSheet
+ * (which only knows how to render a FoodAnalysis) can review a saved meal
+ * before re-logging. The serving size defaults to 100g if the original entry
+ * didn't record one — same fallback as EditFoodEntrySheet.
+ */
+private fun FoodEntry.toAnalysis(): FoodAnalysis = FoodAnalysis(
+    name = name,
+    calories = calories,
+    protein = protein,
+    carbs = carbs,
+    fat = fat,
+    servingSizeGrams = servingSizeGrams ?: 100.0,
+    emoji = emoji,
+    sugar = sugar,
+    addedSugar = addedSugar,
+    fiber = fiber,
+    saturatedFat = saturatedFat,
+    monounsaturatedFat = monounsaturatedFat,
+    polyunsaturatedFat = polyunsaturatedFat,
+    cholesterol = cholesterol,
+    sodium = sodium,
+    potassium = potassium
+)

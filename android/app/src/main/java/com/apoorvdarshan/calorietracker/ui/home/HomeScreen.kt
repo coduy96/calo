@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -462,7 +463,9 @@ fun HomeScreen(container: AppContainer) {
         SavedMealsSheet(
             container = container,
             onDismiss = { showSaved = false },
-            onRelogEntry = { vm.relogMeal(it) }
+            // Tapping a Saved Meals row opens the FoodResultSheet for review
+            // instead of logging immediately — same UX as the photo flow.
+            onRelogEntry = { vm.reviewSavedMeal(it) }
         )
     }
 
@@ -903,7 +906,7 @@ private fun SwipeableFoodRow(
     }
     SwipeToDismissBox(
         state = state,
-        backgroundContent = { SwipeBackground(state.dismissDirection, isFavorite) },
+        backgroundContent = { SwipeBackground(state, isFavorite) },
         enableDismissFromStartToEnd = true,
         enableDismissFromEndToStart = true,
         modifier = Modifier.fillMaxWidth()
@@ -915,39 +918,43 @@ private fun SwipeableFoodRow(
 }
 
 @Composable
-private fun SwipeBackground(direction: SwipeToDismissBoxValue, isFavorite: Boolean) {
-    val (bg, icon, label, alignment) = when (direction) {
-        SwipeToDismissBoxValue.EndToStart -> Quad(
+private fun SwipeBackground(state: androidx.compose.material3.SwipeToDismissBoxState, isFavorite: Boolean) {
+    val direction = state.dismissDirection
+    if (direction == SwipeToDismissBoxValue.Settled) {
+        Box(Modifier.fillMaxSize())
+        return
+    }
+    val (bg, icon, label) = when (direction) {
+        SwipeToDismissBoxValue.EndToStart -> Triple(
             Color(0xFFD32F2F),
             Icons.Filled.Delete,
-            "Delete",
-            Alignment.CenterEnd
+            "Delete"
         )
-        SwipeToDismissBoxValue.StartToEnd -> Quad(
+        SwipeToDismissBoxValue.StartToEnd -> Triple(
             AppColors.Calorie,
             if (isFavorite) Icons.Filled.FavoriteBorder else Icons.Filled.Favorite,
-            if (isFavorite) "Unfavorite" else "Favorite",
-            Alignment.CenterStart
+            if (isFavorite) "Unfavorite" else "Favorite"
         )
-        SwipeToDismissBoxValue.Settled -> Quad(
-            Color.Transparent,
-            Icons.Filled.Favorite,
-            "",
-            Alignment.Center
-        )
+        else -> return
     }
-    // fillMaxSize ensures the colored slab matches the row's full height —
-    // without it the Box wraps to its icon's height and only paints a thin
-    // strip behind the row.
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(bg)
-            .padding(horizontal = 24.dp),
-        contentAlignment = alignment
-    ) {
-        if (direction != SwipeToDismissBoxValue.Settled) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+    // iOS Mail-style trailing reveal: paint only the area the foreground has
+    // moved out of, pinned to the matching edge. Width = absolute offset.
+    val offset = runCatching { state.requireOffset() }.getOrDefault(0f)
+    val widthPx = kotlin.math.abs(offset)
+    val widthDp = with(LocalDensity.current) { widthPx.toDp() }
+    val alignment = if (direction == SwipeToDismissBoxValue.EndToStart)
+        Alignment.CenterEnd else Alignment.CenterStart
+
+    Box(Modifier.fillMaxSize()) {
+        Box(
+            Modifier
+                .align(alignment)
+                .fillMaxHeight()
+                .width(widthDp)
+                .background(bg),
+            contentAlignment = Alignment.Center
+        ) {
+            if (widthPx > 24f) {
                 Icon(icon, contentDescription = label, tint = Color.White)
             }
         }
