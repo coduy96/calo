@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,7 +22,34 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.outlined.Brightness6
+import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.Cake
+import androidx.compose.material.icons.outlined.DataUsage
+import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material.icons.outlined.Equalizer
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.GraphicEq
+import androidx.compose.material.icons.outlined.Height
+import androidx.compose.material.icons.outlined.Key
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.LocalFireDepartment
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.MonitorWeight
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Percent
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.SmartToy
+import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.Straighten
+import androidx.compose.material.icons.automirrored.outlined.TrendingUp
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -99,7 +128,8 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
     var showRecalcDialog by remember { mutableStateOf(false) }
     var invalidGoalWeightMessage by remember { mutableStateOf<String?>(null) }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) }) { padding ->
+    // iOS Settings: bare List, no NavigationBar visible. Match that — no TopAppBar.
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
             Modifier
                 .fillMaxSize()
@@ -111,25 +141,28 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
             // Section 1 — Personal Info (matches iOS Section "Personal Info")
             SectionCard(title = "Personal Info") {
                 profile?.let { p ->
-                    SettingRow("Gender", p.gender.displayName) { sheet = SettingsSheet.GENDER }
+                    SettingRow("Gender", p.gender.displayName, icon = Icons.Outlined.Person) { sheet = SettingsSheet.GENDER }
                     HorizontalDivider()
-                    SettingRow("Birthday", birthdayDisplay(p)) { sheet = SettingsSheet.BIRTHDAY }
+                    SettingRow("Birthday", birthdayDisplay(p), icon = Icons.Outlined.Cake) { sheet = SettingsSheet.BIRTHDAY }
                     HorizontalDivider()
                     SettingRow(
                         "Height",
                         if (ui.useMetric) "${p.heightCm.toInt()} cm"
-                        else feetInchesLabel(p.heightCm.toInt())
+                        else feetInchesLabel(p.heightCm.toInt()),
+                        icon = Icons.Outlined.Height
                     ) { sheet = SettingsSheet.HEIGHT }
                     HorizontalDivider()
                     SettingRow(
                         "Weight",
                         if (ui.useMetric) String.format(Locale.US, "%.1f kg", p.weightKg)
-                        else String.format(Locale.US, "%.1f lbs", p.weightKg * 2.20462)
+                        else String.format(Locale.US, "%.1f lbs", p.weightKg * 2.20462),
+                        icon = Icons.Outlined.MonitorWeight
                     ) { sheet = SettingsSheet.WEIGHT }
                     HorizontalDivider()
                     SettingRow(
                         "Body Fat",
-                        p.bodyFatPercentage?.let { "${(it * 100).toInt()}%" } ?: "Not set"
+                        p.bodyFatPercentage?.let { "${(it * 100).toInt()}%" } ?: "Not set",
+                        icon = Icons.Outlined.Percent
                     ) { sheet = SettingsSheet.BODY_FAT }
                 }
             }
@@ -137,9 +170,9 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
             // Section 2 — Goals & Nutrition (matches iOS Section "Goals & Nutrition")
             SectionCard(title = "Goals & Nutrition") {
                 profile?.let { p ->
-                    SettingRow("Weight Goal", p.goal.displayName) { sheet = SettingsSheet.GOAL }
+                    SettingRow("Weight Goal", p.goal.displayName, icon = Icons.Outlined.Equalizer) { sheet = SettingsSheet.GOAL }
                     HorizontalDivider()
-                    SettingRow("Activity Level", p.activityLevel.displayName) { sheet = SettingsSheet.ACTIVITY }
+                    SettingRow("Activity Level", p.activityLevel.displayName, icon = Icons.AutoMirrored.Outlined.DirectionsRun) { sheet = SettingsSheet.ACTIVITY }
                     if (p.goal != WeightGoal.MAINTAIN) {
                         HorizontalDivider()
                         SettingRow(
@@ -147,7 +180,8 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                             p.weeklyChangeKg?.let {
                                 if (ui.useMetric) String.format(Locale.US, "%.2f kg/wk", it)
                                 else String.format(Locale.US, "%.2f lbs/wk", it * 2.20462)
-                            } ?: "0.50 kg/wk"
+                            } ?: "0.50 kg/wk",
+                            icon = Icons.Outlined.Speed
                         ) { sheet = SettingsSheet.GOAL_SPEED }
                         HorizontalDivider()
                         SettingRow(
@@ -155,22 +189,35 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                             p.goalWeightKg?.let {
                                 if (ui.useMetric) String.format(Locale.US, "%.1f kg", it)
                                 else String.format(Locale.US, "%.1f lbs", it * 2.20462)
-                            } ?: "Not set"
+                            } ?: "Not set",
+                            icon = Icons.AutoMirrored.Outlined.TrendingUp
                         ) { sheet = SettingsSheet.GOAL_WEIGHT }
                     }
                     HorizontalDivider()
-                    SettingRow("Calories", "${p.effectiveCalories} kcal") { sheet = SettingsSheet.MACROS }
+                    SettingRow("Calories", "${p.effectiveCalories} kcal", icon = Icons.Outlined.LocalFireDepartment) { sheet = SettingsSheet.MACROS }
                     HorizontalDivider()
-                    SettingRow("Protein", "${p.effectiveProtein} g") { sheet = SettingsSheet.MACROS }
+                    SettingRow("Protein", "${p.effectiveProtein} g", icon = Icons.Outlined.DataUsage) { sheet = SettingsSheet.MACROS }
                     HorizontalDivider()
-                    SettingRow("Carbs", "${p.effectiveCarbs} g") { sheet = SettingsSheet.MACROS }
+                    SettingRow("Carbs", "${p.effectiveCarbs} g", icon = Icons.Outlined.DataUsage) { sheet = SettingsSheet.MACROS }
                     HorizontalDivider()
-                    SettingRow("Fat", "${p.effectiveFat} g") { sheet = SettingsSheet.MACROS }
+                    SettingRow("Fat", "${p.effectiveFat} g", icon = Icons.Outlined.DataUsage) { sheet = SettingsSheet.MACROS }
                     HorizontalDivider()
-                    TextButton(
-                        onClick = { showRecalcDialog = true },
-                        modifier = Modifier.fillMaxWidth().padding(4.dp)
-                    ) { Text("Recalculate Goals", color = AppColors.Calorie) }
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { showRecalcDialog = true }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Outlined.Refresh,
+                            contentDescription = null,
+                            tint = AppColors.Calorie,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(Modifier.width(14.dp))
+                        Text("Recalculate Goals", color = AppColors.Calorie, style = MaterialTheme.typography.bodyLarge)
+                    }
                 }
             }
 
@@ -182,40 +229,43 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                         "light" -> "Light"
                         "dark" -> "Dark"
                         else -> "System"
-                    }
+                    },
+                    icon = Icons.Outlined.Brightness6
                 ) { sheet = SettingsSheet.APPEARANCE }
                 HorizontalDivider()
-                ToggleRow("Metric Units", ui.useMetric, vm::setUseMetric)
+                ToggleRow("Metric Units", ui.useMetric, icon = Icons.Outlined.Straighten, onChange = vm::setUseMetric)
                 HorizontalDivider()
                 SettingRow(
                     "Week Starts On",
-                    if (ui.weekStartsOnMonday) "Monday" else "Sunday"
+                    if (ui.weekStartsOnMonday) "Monday" else "Sunday",
+                    icon = Icons.Outlined.CalendarToday
                 ) { sheet = SettingsSheet.WEEK_START }
                 HorizontalDivider()
-                ToggleRow("Notifications", ui.notificationsEnabled, vm::setNotificationsEnabled)
+                ToggleRow("Notifications", ui.notificationsEnabled, icon = Icons.Outlined.Notifications, onChange = vm::setNotificationsEnabled)
             }
 
             // Section 4 — AI Provider (matches iOS Section "AI Provider")
             SectionCard(title = "AI Provider") {
-                SettingRow("Provider", ui.selectedAI.displayName) { sheet = SettingsSheet.AI_PROVIDER }
+                SettingRow("Provider", ui.selectedAI.displayName, icon = Icons.Outlined.SmartToy) { sheet = SettingsSheet.AI_PROVIDER }
                 HorizontalDivider()
-                SettingRow("Model", ui.selectedModel.ifEmpty { "(set one below)" }) { sheet = SettingsSheet.AI_MODEL }
+                SettingRow("Model", ui.selectedModel.ifEmpty { "(set one below)" }, icon = Icons.Outlined.Tune) { sheet = SettingsSheet.AI_MODEL }
                 if (ui.selectedAI.requiresApiKey) {
                     HorizontalDivider()
-                    SettingRow("API Key", ui.apiKeyMasked.ifEmpty { "Not set" }) { sheet = SettingsSheet.API_KEY }
+                    SettingRow("API Key", ui.apiKeyMasked.ifEmpty { "Not set" }, icon = Icons.Outlined.Key) { sheet = SettingsSheet.API_KEY }
                 }
                 if (ui.selectedAI.requiresCustomEndpoint || ui.selectedAI == AIProvider.OLLAMA) {
                     HorizontalDivider()
                     SettingRow(
                         if (ui.selectedAI.requiresCustomEndpoint) "Base URL" else "Server URL",
-                        "Tap to edit"
+                        "Tap to edit",
+                        icon = Icons.Outlined.Link
                     ) { sheet = SettingsSheet.CUSTOM_BASE_URL }
                 }
             }
 
             // Section 5 — Speech-to-Text (matches iOS Section "Speech-to-Text")
             SectionCard(title = "Speech-to-Text") {
-                SettingRow("Provider", ui.selectedSpeech.displayName) { sheet = SettingsSheet.SPEECH_PROVIDER }
+                SettingRow("Provider", ui.selectedSpeech.displayName, icon = Icons.Outlined.Mic) { sheet = SettingsSheet.SPEECH_PROVIDER }
                 HorizontalDivider()
                 Text(
                     ui.selectedSpeech.description,
@@ -225,20 +275,36 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                 )
                 if (ui.selectedSpeech.requiresApiKey) {
                     HorizontalDivider()
-                    SettingRow("API Key", "Tap to edit") { sheet = SettingsSheet.SPEECH_KEY }
+                    SettingRow("API Key", "Tap to edit", icon = Icons.Outlined.Key) { sheet = SettingsSheet.SPEECH_KEY }
                 }
             }
 
             // Section 6 — Health & Data (matches iOS Section "Health & Data")
             SectionCard(title = "Health & Data") {
-                ToggleRow("Health Connect", ui.healthConnectEnabled, vm::setHealthConnectEnabled)
+                ToggleRow("Health Connect", ui.healthConnectEnabled, icon = Icons.Outlined.Favorite, onChange = vm::setHealthConnectEnabled)
                 HorizontalDivider()
-                TextButton(onClick = { showClearFoodDialog = true }, modifier = Modifier.fillMaxWidth().padding(4.dp)) {
-                    Text("Clear Food Log", color = Color(0xFFFF9500))
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { showClearFoodDialog = true }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Outlined.DeleteSweep, contentDescription = null, tint = Color(0xFFFF9500), modifier = Modifier.size(22.dp))
+                    Spacer(Modifier.width(14.dp))
+                    Text("Clear Food Log", color = Color(0xFFFF9500), style = MaterialTheme.typography.bodyLarge)
                 }
                 HorizontalDivider()
-                TextButton(onClick = { showDeleteDialog = true }, modifier = Modifier.fillMaxWidth().padding(4.dp)) {
-                    Text("Delete All Data", color = Color(0xFFFF3B30))
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { showDeleteDialog = true }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Outlined.DeleteForever, contentDescription = null, tint = Color(0xFFFF3B30), modifier = Modifier.size(22.dp))
+                    Spacer(Modifier.width(14.dp))
+                    Text("Delete All Data", color = Color(0xFFFF3B30), style = MaterialTheme.typography.bodyLarge)
                 }
             }
 
@@ -772,10 +838,12 @@ private fun MacroField(
 
 @Composable
 private fun SectionCard(title: String, content: @Composable () -> Unit) {
+    // iOS uses sentence-case section titles ("Personal Info", "Goals & Nutrition")
+    // in a small grey caption. Match that — no uppercase transform.
     Column {
         Text(
-            title.uppercase(),
-            style = MaterialTheme.typography.labelSmall,
+            title,
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
             modifier = Modifier.padding(start = 4.dp, bottom = 6.dp)
         )
@@ -789,7 +857,12 @@ private fun SectionCard(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun SettingRow(label: String, value: String, onClick: () -> Unit) {
+private fun SettingRow(
+    label: String,
+    value: String,
+    icon: ImageVector? = null,
+    onClick: () -> Unit
+) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -797,6 +870,15 @@ private fun SettingRow(label: String, value: String, onClick: () -> Unit) {
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (icon != null) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = AppColors.Calorie,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(Modifier.width(14.dp))
+        }
         Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
         Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
@@ -804,11 +886,25 @@ private fun SettingRow(label: String, value: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ToggleRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+private fun ToggleRow(
+    label: String,
+    checked: Boolean,
+    icon: ImageVector? = null,
+    onChange: (Boolean) -> Unit
+) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (icon != null) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = AppColors.Calorie,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(Modifier.width(14.dp))
+        }
         Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         Switch(checked = checked, onCheckedChange = onChange)
     }
