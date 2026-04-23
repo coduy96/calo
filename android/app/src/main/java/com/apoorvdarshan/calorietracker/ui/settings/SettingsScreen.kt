@@ -97,6 +97,7 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showClearFoodDialog by remember { mutableStateOf(false) }
     var showRecalcDialog by remember { mutableStateOf(false) }
+    var invalidGoalWeightMessage by remember { mutableStateOf<String?>(null) }
 
     Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) }) { padding ->
         Column(
@@ -250,7 +251,8 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
             sheet = s,
             ui = ui,
             vm = vm,
-            onDismiss = { sheet = null }
+            onDismiss = { sheet = null },
+            onInvalidGoalWeight = { invalidGoalWeightMessage = it }
         )
     }
 
@@ -291,11 +293,26 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
             dismissButton = { TextButton(onClick = { showRecalcDialog = false }) { Text("Cancel") } }
         )
     }
+
+    invalidGoalWeightMessage?.let { msg ->
+        AlertDialog(
+            onDismissRequest = { invalidGoalWeightMessage = null },
+            title = { Text("Goal weight doesn't match your goal") },
+            text = { Text(msg) },
+            confirmButton = { TextButton(onClick = { invalidGoalWeightMessage = null }) { Text("OK") } }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SettingsSheets(sheet: SettingsSheet, ui: SettingsUiState, vm: SettingsViewModel, onDismiss: () -> Unit) {
+private fun SettingsSheets(
+    sheet: SettingsSheet,
+    ui: SettingsUiState,
+    vm: SettingsViewModel,
+    onDismiss: () -> Unit,
+    onInvalidGoalWeight: (String) -> Unit
+) {
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = state, shape = RoundedCornerShape(28.dp)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)) {
@@ -399,7 +416,29 @@ private fun SettingsSheets(sheet: SettingsSheet, ui: SettingsUiState, vm: Settin
                         titleText = "Target weight",
                         current = kg,
                         useMetric = ui.useMetric,
-                        onSave = { newKg -> vm.updateProfile { it.copy(goalWeightKg = newKg) }; onDismiss() }
+                        onSave = { newKg ->
+                            // Mirrors iOS ContentView.swift case .editGoalWeight: a Lose goal
+                            // requires target < current weight; a Gain goal requires target >
+                            // current weight. Reject mismatched targets with an alert instead
+                            // of silently saving an unreachable goal.
+                            val p = ui.profile
+                            val current = p?.weightKg
+                            val invalid = p != null && current != null && (
+                                (p.goal == WeightGoal.LOSE && newKg >= current) ||
+                                (p.goal == WeightGoal.GAIN && newKg <= current)
+                            )
+                            if (invalid) {
+                                onInvalidGoalWeight(
+                                    if (p!!.goal == WeightGoal.LOSE)
+                                        "A Lose goal needs a target below your current weight."
+                                    else
+                                        "A Gain goal needs a target above your current weight."
+                                )
+                            } else {
+                                vm.updateProfile { it.copy(goalWeightKg = newKg) }
+                                onDismiss()
+                            }
+                        }
                     )
                 }
                 SettingsSheet.GOAL_SPEED -> GoalSpeedSheet(
