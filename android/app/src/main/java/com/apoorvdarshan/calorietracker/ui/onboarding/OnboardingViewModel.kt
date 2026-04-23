@@ -42,7 +42,12 @@ data class OnboardingState(
     val healthConnectEnabled: Boolean = false,
     val aiProvider: AIProvider = AIProvider.GEMINI,
     val apiKey: String = "",
-    val submitting: Boolean = false
+    val submitting: Boolean = false,
+    /** Manual overrides applied on the Plan Ready step. Null = use formula default. */
+    val customCalories: Int? = null,
+    val customProtein: Int? = null,
+    val customCarbs: Int? = null,
+    val customFat: Int? = null
 ) {
     val isLastStep: Boolean get() = step == OnboardingStep.REVIEW
 
@@ -55,7 +60,11 @@ data class OnboardingState(
         goal = goal,
         bodyFatPercentage = bodyFatPercentage,
         weeklyChangeKg = if (goal == WeightGoal.MAINTAIN) null else weeklyChangeKg,
-        goalWeightKg = if (goal == WeightGoal.MAINTAIN) null else goalWeightKg
+        goalWeightKg = if (goal == WeightGoal.MAINTAIN) null else goalWeightKg,
+        customCalories = customCalories,
+        customProtein = customProtein,
+        customCarbs = customCarbs,
+        customFat = customFat
     )
 }
 
@@ -102,6 +111,11 @@ class OnboardingViewModel(private val container: AppContainer) : ViewModel() {
         _ui.value = _ui.value.copy(useMetric = v)
         viewModelScope.launch { container.prefs.setUseMetric(v) }
     }
+
+    fun setCustomCalories(v: Int?) { _ui.value = _ui.value.copy(customCalories = v) }
+    fun setCustomProtein(v: Int?) { _ui.value = _ui.value.copy(customProtein = v) }
+    fun setCustomCarbs(v: Int?) { _ui.value = _ui.value.copy(customCarbs = v) }
+    fun setCustomFat(v: Int?) { _ui.value = _ui.value.copy(customFat = v) }
 
     fun next() {
         val nextStep = OnboardingStep.values().getOrNull(_ui.value.step.ordinal + 1) ?: return

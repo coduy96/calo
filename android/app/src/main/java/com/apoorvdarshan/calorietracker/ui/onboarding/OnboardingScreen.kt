@@ -53,6 +53,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -203,7 +204,7 @@ fun OnboardingScreen(container: AppContainer, onComplete: () -> Unit) {
                     onKeyChange = vm::setApiKey
                 )
                 OnboardingStep.BUILDING_PLAN -> BuildingPlanStep(onComplete = vm::next)
-                OnboardingStep.PLAN_READY -> PlanReadyStep(state = ui)
+                OnboardingStep.PLAN_READY -> PlanReadyStep(state = ui, vm = vm)
                 OnboardingStep.REVIEW -> ReviewStep()
             }
         }
@@ -1280,17 +1281,23 @@ private fun BuildingPlanStep(onComplete: () -> Unit) {
 
 /**
  * iOS planReadyStep: large gradient-filled calorie number with "daily calories"
- * caption, and three macro cards (Protein, Carbs, Fat) below. The full editable
- * tap-to-edit picker behavior is deferred to Settings on Android.
+ * caption, and three macro cards (Protein, Carbs, Fat) below. Each value is tappable —
+ * opens an edit dialog whose value lands in customCalories/customProtein/customCarbs/customFat
+ * on the profile that ProfileRepository persists at the end of onboarding.
  */
 @Composable
-private fun PlanReadyStep(state: OnboardingState) {
+private fun PlanReadyStep(state: OnboardingState, vm: OnboardingViewModel) {
     val profile = state.buildProfile()
+    var editing by remember { mutableStateOf<PlanField?>(null) }
     Column(Modifier.fillMaxSize()) {
-        StepHeader("Your Plan", subtitle = "Edit any value later in Settings")
+        StepHeader("Your Plan", subtitle = "Tap any value to edit")
         Spacer(Modifier.height(20.dp))
         Column(
-            Modifier.fillMaxWidth(),
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { editing = PlanField.CALORIES }
+                .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -1319,19 +1326,57 @@ private fun PlanReadyStep(state: OnboardingState) {
                 label = "Protein",
                 value = profile.effectiveProtein,
                 gradient = macroGradient,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).clickable { editing = PlanField.PROTEIN }
             )
             MacroCard(
                 label = "Carbs",
                 value = profile.effectiveCarbs,
                 gradient = macroGradient,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).clickable { editing = PlanField.CARBS }
             )
             MacroCard(
                 label = "Fat",
                 value = profile.effectiveFat,
                 gradient = macroGradient,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).clickable { editing = PlanField.FAT }
+            )
+        }
+        editing?.let { field ->
+            PlanEditDialog(
+                field = field,
+                currentValue = when (field) {
+                    PlanField.CALORIES -> profile.effectiveCalories
+                    PlanField.PROTEIN -> profile.effectiveProtein
+                    PlanField.CARBS -> profile.effectiveCarbs
+                    PlanField.FAT -> profile.effectiveFat
+                },
+                onDismiss = { editing = null },
+                onSave = { newValue ->
+                    when (field) {
+                        PlanField.CALORIES -> vm.setCustomCalories(newValue)
+                        PlanField.PROTEIN -> vm.setCustomProtein(newValue)
+                        PlanField.CARBS -> vm.setCustomCarbs(newValue)
+                        PlanField.FAT -> vm.setCustomFat(newValue)
+                    }
+                    editing = null
+                },
+                onReset = if (when (field) {
+                        PlanField.CALORIES -> state.customCalories != null
+                        PlanField.PROTEIN -> state.customProtein != null
+                        PlanField.CARBS -> state.customCarbs != null
+                        PlanField.FAT -> state.customFat != null
+                    }
+                ) {
+                    {
+                        when (field) {
+                            PlanField.CALORIES -> vm.setCustomCalories(null)
+                            PlanField.PROTEIN -> vm.setCustomProtein(null)
+                            PlanField.CARBS -> vm.setCustomCarbs(null)
+                            PlanField.FAT -> vm.setCustomFat(null)
+                        }
+                        editing = null
+                    }
+                } else null
             )
         }
         if (profile.effectiveCalories < 1200) {
@@ -1579,4 +1624,52 @@ private fun ChoiceRow(label: String, subtitle: String? = null, selected: Boolean
             }
         }
     }
+}
+
+private enum class PlanField(val title: String, val unit: String) {
+    CALORIES("Daily calories", "kcal"),
+    PROTEIN("Protein", "g"),
+    CARBS("Carbs", "g"),
+    FAT("Fat", "g")
+}
+
+@Composable
+private fun PlanEditDialog(
+    field: PlanField,
+    currentValue: Int,
+    onDismiss: () -> Unit,
+    onSave: (Int) -> Unit,
+    onReset: (() -> Unit)?
+) {
+    var text by remember(currentValue) { mutableStateOf(currentValue.toString()) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(field.title) },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { new -> text = new.filter(Char::isDigit).take(5) },
+                singleLine = true,
+                suffix = { Text(field.unit) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { text.toIntOrNull()?.let { onSave(it) } },
+                enabled = text.toIntOrNull() != null && (text.toIntOrNull() ?: 0) > 0
+            ) {
+                Text("Save", color = AppColors.Calorie)
+            }
+        },
+        dismissButton = {
+            Row {
+                if (onReset != null) {
+                    TextButton(onClick = onReset) { Text("Reset") }
+                }
+                TextButton(onClick = onDismiss) { Text("Cancel") }
+            }
+        }
+    )
 }
