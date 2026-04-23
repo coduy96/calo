@@ -369,7 +369,7 @@ private fun SettingsSheets(sheet: SettingsSheet, ui: SettingsUiState, vm: Settin
                         titleText = "Weight",
                         current = kg,
                         useMetric = ui.useMetric,
-                        onSave = { newKg -> vm.updateProfile { it.copy(weightKg = newKg) }; onDismiss() }
+                        onSave = { newKg -> vm.saveCurrentWeight(newKg); onDismiss() }
                     )
                 }
                 SettingsSheet.BODY_FAT -> BodyFatSheet(

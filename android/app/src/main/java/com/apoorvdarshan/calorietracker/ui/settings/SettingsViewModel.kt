@@ -7,6 +7,8 @@ import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.models.AIProvider
 import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.models.UserProfile
+import com.apoorvdarshan.calorietracker.models.WeightEntry
+import com.apoorvdarshan.calorietracker.models.WeightGoal
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -145,6 +147,26 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             val current = container.profileRepository.current() ?: return@launch
             container.profileRepository.save(current.recalculatedFromFormulas())
             _ui.value = _ui.value.copy(profile = current.recalculatedFromFormulas())
+        }
+    }
+
+    /**
+     * Settings → Weight save: writes a WeightEntry (so the chart, Coach forecast,
+     * and Health Connect sync see the change) and clears goalWeightKg if the
+     * new current weight makes the goal direction impossible. Mirrors iOS
+     * ContentView.swift `case .editWeight`.
+     */
+    fun saveCurrentWeight(newKg: Double) {
+        viewModelScope.launch {
+            val current = container.profileRepository.current() ?: return@launch
+            val gw = current.goalWeightKg
+            val mismatch = gw != null && (
+                (current.goal == WeightGoal.LOSE && gw >= newKg) ||
+                (current.goal == WeightGoal.GAIN && gw <= newKg)
+            )
+            if (mismatch) container.profileRepository.save(current.copy(goalWeightKg = null))
+            container.weightRepository.addEntry(WeightEntry(weightKg = newKg))
+            _ui.value = _ui.value.copy(profile = container.profileRepository.current())
         }
     }
 
