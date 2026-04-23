@@ -68,6 +68,9 @@ struct WidgetSnapshot: Codable, Equatable {
     }
 
     var caloriesRemaining: Int { max(0, calorieGoal - calories) }
+    var proteinRemaining: Int { max(0, proteinGoal - protein) }
+    var carbsRemaining: Int { max(0, carbsGoal - carbs) }
+    var fatRemaining: Int { max(0, fatGoal - fat) }
     var calorieProgress: Double {
         guard calorieGoal > 0 else { return 0 }
         return min(1.0, Double(calories) / Double(calorieGoal))
