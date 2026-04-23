@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -531,81 +532,116 @@ private fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: Int
     val yTop = ticks.last().coerceAtLeast(maxValue)
     val xLabelFmt = DateTimeFormatter.ofPattern("MMM d", Locale.US)
 
-    Row(Modifier.fillMaxWidth().height(180.dp)) {
-        Canvas(Modifier.weight(1f).fillMaxSize()) {
-            val pxW = size.width; val pxH = size.height
-            // Horizontal grid lines for tick values
-            ticks.forEach { tick ->
-                val y = pxH - ((tick / yTop).toFloat() * pxH)
-                drawLine(gridColor, Offset(0f, y), Offset(pxW, y), strokeWidth = 1f)
+    Column {
+        Row(Modifier.fillMaxWidth().height(180.dp)) {
+            BoxWithConstraints(Modifier.weight(1f).fillMaxSize()) {
+                val barAreaWidthPx = with(density) { maxWidth.toPx() }
+                val n = dailyCalories.size
+                val gap = 4f
+                val maxBarPx = with(density) { 28.dp.toPx() }
+                val rawWidth = (barAreaWidthPx - gap * (n - 1)) / n
+                val barWidth = rawWidth.coerceIn(2f, maxBarPx)
+                val totalGroupW = barWidth * n + gap * (n - 1)
+                val startX = ((barAreaWidthPx - totalGroupW) / 2f).coerceAtLeast(0f)
+
+                Canvas(Modifier.fillMaxSize()) {
+                    val pxW = size.width; val pxH = size.height
+                    ticks.forEach { tick ->
+                        val y = pxH - ((tick / yTop).toFloat() * pxH)
+                        drawLine(gridColor, Offset(0f, y), Offset(pxW, y), strokeWidth = 1f)
+                    }
+                    for (i in 0 until n) {
+                        val cx = startX + i * (barWidth + gap) + barWidth / 2f
+                        drawLine(
+                            color = gridColor,
+                            start = Offset(cx, 0f), end = Offset(cx, pxH),
+                            strokeWidth = 1f,
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 6f))
+                        )
+                    }
+                    val goalY = pxH - ((goal / yTop).toFloat() * pxH)
+                    drawLine(
+                        color = goalColor,
+                        start = Offset(0f, goalY), end = Offset(pxW, goalY),
+                        strokeWidth = 2f,
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 6f))
+                    )
+                    dailyCalories.forEachIndexed { i, (_, cals) ->
+                        val barH = ((cals / yTop).toFloat() * pxH)
+                        val x = startX + i * (barWidth + gap)
+                        val y = pxH - barH
+                        drawRoundRect(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(gradientEnd, gradientStart),
+                                startY = y, endY = pxH
+                            ),
+                            topLeft = Offset(x, y),
+                            size = Size(barWidth, barH),
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(4f, 4f)
+                        )
+                    }
+                }
             }
-            // Vertical grid lines, one per data point — faint dashed
+            Column(
+                Modifier.width(44.dp).fillMaxSize().padding(start = 4.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                ticks.reversed().forEach { tick ->
+                    Text(formatTick(tick), fontSize = 11.sp, color = secondaryColor)
+                }
+            }
+        }
+        // X-axis date labels — anchored to each bar's center using the same geometry.
+        // Label box = slot width (barWidth + gap) capped at 52dp so dense 1W charts
+        // don't overlap labels. For ranges with many bars, pickXLabelIndices has
+        // already downsampled to ~7 labels.
+        BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 4.dp, end = 44.dp)) {
+            val areaWidthDp = maxWidth
+            val areaWidthPx = with(density) { areaWidthDp.toPx() }
             val n = dailyCalories.size
             val gap = 4f
             val maxBarPx = with(density) { 28.dp.toPx() }
-            val rawWidth = (pxW - gap * (n - 1)) / n
+            val rawWidth = (areaWidthPx - gap * (n - 1)) / n
             val barWidth = rawWidth.coerceIn(2f, maxBarPx)
             val totalGroupW = barWidth * n + gap * (n - 1)
-            val startX = ((pxW - totalGroupW) / 2f).coerceAtLeast(0f)
-            for (i in 0 until n) {
-                val cx = startX + i * (barWidth + gap) + barWidth / 2f
-                drawLine(
-                    color = gridColor,
-                    start = Offset(cx, 0f), end = Offset(cx, pxH),
-                    strokeWidth = 1f,
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 6f))
-                )
+            val startX = ((areaWidthPx - totalGroupW) / 2f).coerceAtLeast(0f)
+            val labelBoxWidth = 56.dp
+            val labelBoxPx = with(density) { labelBoxWidth.toPx() }
+            val slotPx = barWidth + gap
+            // Space picked labels by at least enough slots so boxes don't overlap.
+            val slotStep = maxOf(1, Math.ceil((labelBoxPx / slotPx).toDouble()).toInt())
+            val pickedIndices = buildList {
+                var i = 0
+                while (i < n) { add(i); i += slotStep }
+                if (last() != n - 1) add(n - 1)
+            }.distinct()
+            pickedIndices.forEach { i ->
+                val cxPx = startX + i * (barWidth + gap) + barWidth / 2f
+                val cxDp = with(density) { cxPx.toDp() }
+                Box(
+                    Modifier
+                        .width(labelBoxWidth)
+                        .offset(x = cxDp - labelBoxWidth / 2),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        xLabelFmt.format(dailyCalories[i].first),
+                        fontSize = 11.sp,
+                        color = secondaryColor,
+                        maxLines = 1
+                    )
+                }
             }
-            // Goal line
-            val goalY = pxH - ((goal / yTop).toFloat() * pxH)
-            drawLine(
-                color = goalColor,
-                start = Offset(0f, goalY), end = Offset(pxW, goalY),
-                strokeWidth = 2f,
-                pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 6f))
-            )
-            // Bars
-            dailyCalories.forEachIndexed { i, (_, cals) ->
-                val barH = ((cals / yTop).toFloat() * pxH)
-                val x = startX + i * (barWidth + gap)
-                val y = pxH - barH
-                drawRoundRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(gradientEnd, gradientStart),
-                        startY = y, endY = pxH
-                    ),
-                    topLeft = Offset(x, y),
-                    size = Size(barWidth, barH),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(4f, 4f)
-                )
-            }
-        }
-        Column(
-            Modifier.width(44.dp).fillMaxSize().padding(start = 4.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            ticks.reversed().forEach { tick ->
-                Text(formatTick(tick), fontSize = 11.sp, color = secondaryColor)
-            }
-        }
-    }
-    // X-axis date labels — show first/last and a few in between only when small
-    val labels = pickXLabels(dailyCalories.map { it.first })
-    Row(Modifier.fillMaxWidth().padding(top = 4.dp, end = 44.dp)) {
-        labels.forEachIndexed { i, label ->
-            Text(label?.let { xLabelFmt.format(it) } ?: "", fontSize = 11.sp, color = secondaryColor)
-            if (i < labels.size - 1) Spacer(Modifier.weight(1f))
         }
     }
 }
 
-/** Pick at most ~7 evenly-spaced date labels from the chart's x-axis. */
-private fun pickXLabels(dates: List<LocalDate>): List<LocalDate?> {
-    if (dates.isEmpty()) return emptyList()
-    if (dates.size <= 7) return dates
-    val maxLabels = 7
-    val step = (dates.size - 1).toFloat() / (maxLabels - 1)
-    return (0 until maxLabels).map { i -> dates[(i * step).toInt().coerceIn(0, dates.size - 1)] }
+/** Pick at most [maxLabels] evenly-spaced bar indices for x-axis labelling. */
+private fun pickXLabelIndices(n: Int, maxLabels: Int = 7): List<Int> {
+    if (n <= 0) return emptyList()
+    if (n <= maxLabels) return (0 until n).toList()
+    val step = (n - 1).toFloat() / (maxLabels - 1)
+    return (0 until maxLabels).map { i -> (i * step).toInt().coerceIn(0, n - 1) }.distinct()
 }
 
 @Composable
