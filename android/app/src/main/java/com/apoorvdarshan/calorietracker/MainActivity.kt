@@ -24,17 +24,22 @@ class MainActivity : ComponentActivity() {
         // Support --reset-onboarding launch flag (parallel to iOS CLAUDE.md convention).
         if (intent?.getBooleanExtra("reset_onboarding", false) == true) {
             runBlocking { (application as FudAIApp).container.prefs.setOnboardingCompleted(false) }
+            intent.removeExtra("reset_onboarding")
         }
 
         val container = (application as FudAIApp).container
         // Dev-only seeders for verifying the Progress tab UI without polluting Health Connect.
         // adb shell am start -n com.apoorvdarshan.calorietracker/.MainActivity --ez seed_test_data true
         // adb shell am start -n com.apoorvdarshan.calorietracker/.MainActivity --ez restore_real_data true
+        // Extras are removed after handling so Activity.recreate() (used by Delete All
+        // Data) doesn't re-fire the same flag on the next onCreate.
         if (intent?.getBooleanExtra("seed_test_data", false) == true) {
             runBlocking { container.testDataSeeder.seedYear() }
+            intent.removeExtra("seed_test_data")
         }
         if (intent?.getBooleanExtra("restore_real_data", false) == true) {
             runBlocking { container.testDataSeeder.restore() }
+            intent.removeExtra("restore_real_data")
         }
         val startOnboarding = runBlocking { !container.prefs.hasCompletedOnboarding.first() }
 
