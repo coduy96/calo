@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.outlined.TrendingDown
 import androidx.compose.material.icons.automirrored.outlined.TrendingFlat
 import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Accessibility
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Cancel
@@ -35,8 +36,11 @@ import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Man
+import androidx.compose.material.icons.outlined.MonitorWeight
+import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
+import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.SportsKabaddi
 import androidx.compose.material.icons.outlined.Woman
 import androidx.compose.material3.Button
@@ -778,32 +782,62 @@ private fun PaceIcon(icon: ImageVector, label: String, selected: Boolean) {
 
 @Composable
 private fun NotificationsStep(enabled: Boolean, onToggle: (Boolean) -> Unit) {
+    // iOS notificationsStep: centered bell.badge.fill in pink + big headline
+    // "Be reminded to\nlog meals" + subtitle + pink CTA.
     val notifLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted -> onToggle(granted) }
-
-    Column {
-        StepHeader(
-            "Daily reminders?",
-            subtitle = "We'll nudge you to log a meal and keep your streak."
+    Column(
+        Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.NotificationsActive,
+            contentDescription = null,
+            tint = AppColors.Calorie,
+            modifier = Modifier.size(56.dp)
         )
-        ToggleCard(
-            label = "Enable reminders",
-            subtitle = "Streak reminder + daily summary.",
-            enabled = enabled,
-            onToggle = { wantEnabled ->
-                if (wantEnabled) {
+        Spacer(Modifier.height(20.dp))
+        Text(
+            "Be reminded to\nlog meals",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        Spacer(Modifier.height(10.dp))
+        Text(
+            "Get gentle reminders at meal times\nso you never forget to track.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        Spacer(Modifier.height(28.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(
+                    Brush.horizontalGradient(listOf(AppColors.CalorieStart, AppColors.CalorieEnd))
+                )
+                .clickable {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     } else {
                         onToggle(true)
                     }
-                } else {
-                    onToggle(false)
-                }
-            }
-        )
-        Spacer(Modifier.height(12.dp))
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                if (enabled) "Reminders enabled" else "Allow Notifications",
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        Spacer(Modifier.height(10.dp))
         Text(
             "You can change this anytime in Settings.",
             style = MaterialTheme.typography.bodySmall,
@@ -814,40 +848,104 @@ private fun NotificationsStep(enabled: Boolean, onToggle: (Boolean) -> Unit) {
 
 @Composable
 private fun HealthConnectStep(container: AppContainer, enabled: Boolean, onToggle: (Boolean) -> Unit) {
+    // iOS appleHealthStep: heart.fill in pink circle, title "Connect to\nApple Health",
+    // feature row list, pink CTA "Connect". Android maps Apple Health → Health Connect.
     val hcLauncher = rememberLauncherForActivityResult(
         container.health.permissionRequestContract()
     ) { granted ->
         onToggle(granted.containsAll(container.health.permissions))
     }
-
-    Column {
-        StepHeader(
-            "Sync with Health Connect?",
-            subtitle = "Mirrors macros + 9 micronutrients + weight to Android's Health Connect so Samsung Health, Fitbit, Withings, etc. see them."
-        )
-        ToggleCard(
-            label = "Use Health Connect",
-            subtitle = if (container.health.isAvailable()) "Grant read/write for Weight + Nutrition."
-                       else "Health Connect not available on this device.",
-            enabled = enabled,
-            onToggle = { wantEnabled ->
-                if (wantEnabled) {
-                    if (container.health.isAvailable()) {
-                        hcLauncher.launch(container.health.permissions)
-                    } else {
-                        // Can't grant — leave it off.
-                        onToggle(false)
-                    }
-                } else {
-                    onToggle(false)
-                }
-            }
-        )
-        Spacer(Modifier.height(12.dp))
+    val available = remember { container.health.isAvailable() }
+    Column(
+        Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            Modifier
+                .size(120.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.06f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Favorite,
+                contentDescription = null,
+                modifier = Modifier.size(56.dp),
+                tint = AppColors.Calorie
+            )
+        }
+        Spacer(Modifier.height(20.dp))
         Text(
-            "Everything stays on-device unless you enable Health Connect's own cloud sync.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+            "Connect to\nHealth Connect",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        Spacer(Modifier.height(10.dp))
+        Text(
+            "Keep your nutrition and body\nmeasurements in sync automatically.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        Spacer(Modifier.height(18.dp))
+        Column(
+            Modifier.padding(horizontal = 40.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            HealthFeatureRow(icon = Icons.Outlined.Restaurant, label = "Nutrition Data")
+            HealthFeatureRow(icon = Icons.Outlined.MonitorWeight, label = "Weight Sync")
+            HealthFeatureRow(icon = Icons.Outlined.Accessibility, label = "Body Measurements")
+        }
+        Spacer(Modifier.height(24.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(
+                    if (available)
+                        Brush.horizontalGradient(listOf(AppColors.CalorieStart, AppColors.CalorieEnd))
+                    else
+                        Brush.horizontalGradient(listOf(
+                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f),
+                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f)
+                        ))
+                )
+                .clickable(enabled = available) {
+                    hcLauncher.launch(container.health.permissions)
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                when {
+                    !available -> "Health Connect unavailable"
+                    enabled -> "Connected"
+                    else -> "Connect"
+                },
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+private fun HealthFeatureRow(icon: ImageVector, label: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+            modifier = Modifier.size(22.dp)
+        )
+        Spacer(Modifier.width(14.dp))
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium
         )
     }
 }
