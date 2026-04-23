@@ -283,7 +283,8 @@ private fun WeightSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Weight", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            // iOS .font(.headline) = 17sp semibold rounded.
+            Text("Weight", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.weight(1f))
             Row(
                 modifier = Modifier.clickable(onClick = onLogWeight),
@@ -295,11 +296,14 @@ private fun WeightSection(
             }
         }
         if (entries.isEmpty()) {
-            Text(
-                "Log your first weight to see trends",
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
-            )
+            // iOS emptyState: centered secondary text inside the card.
+            Box(Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
+                Text(
+                    "Log your first weight to see trends",
+                    fontSize = 15.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                )
+            }
         } else {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 latest?.let { StatBadge("Current", formatWeight(it.weightKg, useMetric)) }
@@ -391,7 +395,7 @@ private fun WeightHistoryLink(count: Int, onClick: () -> Unit) {
 private fun CalorieSection(dailyCalories: List<Pair<LocalDate, Int>>, calorieGoal: Int) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Calories", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text("Calories", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.weight(1f))
             if (dailyCalories.isNotEmpty()) {
                 val avg = dailyCalories.sumOf { it.second } / dailyCalories.size
@@ -404,11 +408,13 @@ private fun CalorieSection(dailyCalories: List<Pair<LocalDate, Int>>, calorieGoa
             }
         }
         if (dailyCalories.isEmpty()) {
-            Text(
-                "No food logged yet",
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
-            )
+            Box(Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
+                Text(
+                    "No food logged yet",
+                    fontSize = 15.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                )
+            }
         } else {
             CalorieBarChart(dailyCalories = dailyCalories, goal = calorieGoal)
         }
@@ -466,7 +472,7 @@ private fun MacroAveragesSection(
     proteinGoal: Int, carbsGoal: Int, fatGoal: Int
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Macro Averages", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Text("Macro Averages", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
         MacroProgressRow("Protein", avgProtein, proteinGoal)
         MacroProgressRow("Carbs", avgCarbs, carbsGoal)
         MacroProgressRow("Fat", avgFat, fatGoal)
