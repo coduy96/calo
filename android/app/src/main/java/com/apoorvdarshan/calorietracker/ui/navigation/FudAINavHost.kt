@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -28,7 +29,11 @@ fun FudAINavHost(
     val nav = rememberNavController()
     val backStack by nav.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
-    val showTabs = currentRoute in FudAIRoutes.bottomTabs
+    // Hide the bar while a food analysis is in flight so the AnalyzingOverlay
+    // is the only thing on screen — matches iOS, where the analyzing sheet
+    // covers the tab bar.
+    val analyzing by container.analyzingFood.collectAsState()
+    val showTabs = currentRoute in FudAIRoutes.bottomTabs && !analyzing
 
     Scaffold(
         bottomBar = {

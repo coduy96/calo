@@ -18,6 +18,7 @@ import com.apoorvdarshan.calorietracker.services.speech.SpeechService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 
 /**
@@ -57,4 +58,12 @@ class AppContainer(app: FudAIApp) {
 
     val widgetSnapshotWriter = WidgetSnapshotWriter(app, prefs, foodRepository, profileRepository)
     val testDataSeeder = TestDataSeeder(this)
+
+    /**
+     * App-scoped flag set by [HomeViewModel] while a food analysis request is
+     * in flight. The bottom nav reads this so the bar can hide during the
+     * AnalyzingOverlay (matches iOS, where the analyzing sheet covers the
+     * tab bar).
+     */
+    val analyzingFood: MutableStateFlow<Boolean> = MutableStateFlow(false)
 }

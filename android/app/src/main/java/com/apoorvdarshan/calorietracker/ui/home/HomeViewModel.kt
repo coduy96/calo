@@ -72,6 +72,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
 
     fun analyzeText(description: String) {
         viewModelScope.launch {
+            container.analyzingFood.value = true
             _ui.value = _ui.value.copy(analyzing = true, error = null, pendingAnalysis = null, pendingImageBytes = null)
             try {
                 val analysis = container.foodAnalysis.analyzeText(description)
@@ -80,12 +81,15 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
                 _ui.value = _ui.value.copy(analyzing = false, error = e.message)
             } catch (e: Throwable) {
                 _ui.value = _ui.value.copy(analyzing = false, error = e.localizedMessage ?: "Analysis failed")
+            } finally {
+                container.analyzingFood.value = false
             }
         }
     }
 
     fun analyzePhoto(bytes: ByteArray) {
         viewModelScope.launch {
+            container.analyzingFood.value = true
             _ui.value = _ui.value.copy(analyzing = true, error = null, pendingAnalysis = null, pendingImageBytes = bytes)
             try {
                 val analysis = container.foodAnalysis.analyzeAuto(bytes)
@@ -94,6 +98,8 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
                 _ui.value = _ui.value.copy(analyzing = false, error = e.message)
             } catch (e: Throwable) {
                 _ui.value = _ui.value.copy(analyzing = false, error = e.localizedMessage ?: "Analysis failed")
+            } finally {
+                container.analyzingFood.value = false
             }
         }
     }
@@ -105,6 +111,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
      */
     fun analyzePhotoWithNote(bytes: ByteArray, note: String) {
         viewModelScope.launch {
+            container.analyzingFood.value = true
             _ui.value = _ui.value.copy(analyzing = true, error = null, pendingAnalysis = null, pendingImageBytes = bytes)
             try {
                 val analysis = container.foodAnalysis.analyzeFood(bytes, note.takeIf { it.isNotBlank() })
@@ -113,6 +120,8 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
                 _ui.value = _ui.value.copy(analyzing = false, error = e.message)
             } catch (e: Throwable) {
                 _ui.value = _ui.value.copy(analyzing = false, error = e.localizedMessage ?: "Analysis failed")
+            } finally {
+                container.analyzingFood.value = false
             }
         }
     }
