@@ -26,6 +26,7 @@ data class SettingsUiState(
     val notificationsEnabled: Boolean = false,
     val healthConnectEnabled: Boolean = false,
     val apiKeyMasked: String = "",
+    val speechApiKeyMasked: String = "",
     val appearanceMode: String = "system",
     val weekStartsOnMonday: Boolean = false
 )
@@ -44,6 +45,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             val notif = container.prefs.notificationsEnabled.first()
             val hc = container.prefs.healthConnectEnabled.first()
             val masked = maskKey(container.keyStore.apiKey(provider))
+            val speechMasked = maskKey(container.keyStore.speechApiKey(speech))
             val appearance = container.prefs.appearanceMode.first()
             val weekMon = container.prefs.weekStartsOnMonday.first()
             _ui.value = SettingsUiState(
@@ -55,6 +57,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 notificationsEnabled = notif,
                 healthConnectEnabled = hc,
                 apiKeyMasked = masked,
+                speechApiKeyMasked = speechMasked,
                 appearanceMode = appearance,
                 weekStartsOnMonday = weekMon
             )
@@ -102,7 +105,18 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
     fun selectSpeech(p: SpeechProvider) {
         viewModelScope.launch {
             container.prefs.setSelectedSpeechProvider(p)
-            _ui.value = _ui.value.copy(selectedSpeech = p)
+            // Re-pull the masked key for the new provider so the API Key row
+            // reflects whether the freshly selected provider has a key saved.
+            val masked = maskKey(container.keyStore.speechApiKey(p))
+            _ui.value = _ui.value.copy(selectedSpeech = p, speechApiKeyMasked = masked)
+        }
+    }
+
+    fun setSpeechApiKey(raw: String) {
+        viewModelScope.launch {
+            val p = _ui.value.selectedSpeech
+            container.keyStore.setSpeechApiKey(p, raw.takeIf { it.isNotBlank() })
+            _ui.value = _ui.value.copy(speechApiKeyMasked = maskKey(raw.takeIf { it.isNotBlank() }))
         }
     }
 

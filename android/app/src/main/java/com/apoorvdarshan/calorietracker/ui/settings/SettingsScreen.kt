@@ -321,7 +321,11 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                 )
                 if (ui.selectedSpeech.requiresApiKey) {
                     HorizontalDivider()
-                    SettingRow("API Key", "Tap to edit", icon = Icons.Outlined.Key) { sheet = SettingsSheet.SPEECH_KEY }
+                    SettingRow(
+                        "API Key",
+                        ui.speechApiKeyMasked.ifEmpty { "Not set" },
+                        icon = Icons.Outlined.Key
+                    ) { sheet = SettingsSheet.SPEECH_KEY }
                 }
             }
 
@@ -487,8 +491,11 @@ private fun SettingsSheets(
                     title = "Speech API Key — ${ui.selectedSpeech.displayName}",
                     placeholder = ui.selectedSpeech.apiKeyPlaceholder,
                     onSave = {
-                        val key = it.takeIf { s -> s.isNotBlank() }
-                        vm.container.keyStore.setSpeechApiKey(ui.selectedSpeech, key)
+                        // Route through the VM so SettingsUiState.speechApiKeyMasked
+                        // updates and the API Key row reflects the new value
+                        // (was bypassing the VM and writing straight to KeyStore,
+                        // which left the UI showing "Tap to edit" forever).
+                        vm.setSpeechApiKey(it)
                         onDismiss()
                     }
                 )
