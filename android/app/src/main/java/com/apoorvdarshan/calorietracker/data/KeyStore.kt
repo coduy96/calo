@@ -2,6 +2,7 @@ package com.apoorvdarshan.calorietracker.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.apoorvdarshan.calorietracker.models.AIProvider
@@ -12,20 +13,7 @@ import com.apoorvdarshan.calorietracker.models.SpeechProvider
  * Backed by EncryptedSharedPreferences (AES-256).
  */
 class KeyStore(context: Context) {
-    private val prefs: SharedPreferences
-
-    init {
-        val masterKey = MasterKey.Builder(context)
-            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-            .build()
-        prefs = EncryptedSharedPreferences.create(
-            context,
-            FILE_NAME,
-            masterKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
-    }
+    private val prefs: SharedPreferences = openOrRecover(context)
 
     fun save(key: String, value: String) {
         prefs.edit().putString(key, value).apply()
@@ -56,8 +44,50 @@ class KeyStore(context: Context) {
     }
 
     companion object {
+        private const val TAG = "FudAIKeyStore"
         private const val FILE_NAME = "fudai_keychain"
         private const val AI_PREFIX = "apikey_"
         private const val STT_PREFIX = "speechApiKey_"
+
+        /**
+         * Open EncryptedSharedPreferences. On Android 14/15 (and occasionally
+         * older), the AndroidKeystore master-key alias survives `pm uninstall`
+         * but the encrypted prefs file does not — so a reinstall (debug build,
+         * Play Store update from a deleted install, etc.) hits an
+         * `AEADBadTagException` on the first read because the surviving alias
+         * can't decrypt a freshly-generated keyset header.
+         *
+         * Recovery path: catch the failure, wipe both the prefs file AND the
+         * AndroidKeystore alias, then rebuild. The user only loses cached API
+         * keys, which they'd re-enter on first run anyway. Without this, the
+         * app crashes on Application.onCreate before showing any UI.
+         */
+        private fun openOrRecover(context: Context): SharedPreferences {
+            return try {
+                build(context)
+            } catch (e: Exception) {
+                Log.w(TAG, "EncryptedSharedPreferences open failed; recovering", e)
+                runCatching { context.deleteSharedPreferences(FILE_NAME) }
+                runCatching {
+                    val ks = java.security.KeyStore.getInstance("AndroidKeyStore")
+                    ks.load(null)
+                    ks.deleteEntry(MasterKey.DEFAULT_MASTER_KEY_ALIAS)
+                }
+                build(context)
+            }
+        }
+
+        private fun build(context: Context): SharedPreferences {
+            val masterKey = MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+            return EncryptedSharedPreferences.create(
+                context,
+                FILE_NAME,
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        }
     }
 }

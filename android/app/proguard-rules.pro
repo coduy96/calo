@@ -1,21 +1,65 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# R8/ProGuard rules for the release build (app/build.gradle.kts:isMinifyEnabled = true).
+# Default rules from proguard-android-optimize.txt are layered in first.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# ─── kotlinx.serialization ────────────────────────────────────────────────────
+# All @Serializable data classes (UserProfile, FoodEntry, WeightEntry,
+# ChatMessage, WidgetSnapshot, FoodAnalysis, etc.) are reflected at runtime to
+# locate their generated KSerializer$$serializer companion. Strip those and the
+# DataStore + widget-snapshot JSON layer breaks at runtime with NoSuchMethodError
+# on `serializer()`.
+-keepattributes *Annotation*, InnerClasses, Signature
+-dontnote kotlinx.serialization.AnnotationsKt
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+-keepclassmembers class kotlinx.serialization.json.** {
+    *** Companion;
+}
+-keepclasseswithmembers class kotlinx.serialization.json.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# All app-package serializable classes + their generated $$serializer.
+-keep,includedescriptorclasses class com.apoorvdarshan.calorietracker.**$$serializer { *; }
+-keepclassmembers class com.apoorvdarshan.calorietracker.** {
+    *** Companion;
+}
+-keepclasseswithmembers class com.apoorvdarshan.calorietracker.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+# Enum @Serializable lookups need their members preserved for KSerializer.
+-keepclassmembers enum com.apoorvdarshan.calorietracker.** { *; }
+
+# ─── Glance widgets ───────────────────────────────────────────────────────────
+# CalorieAppWidget / ProteinAppWidget + their *Receiver classes are loaded by
+# the OS via reflection from AndroidManifest. Default Android rules cover the
+# Receiver subclasses, but Glance also reflects on the GlanceAppWidget subclass
+# itself.
+-keep class com.apoorvdarshan.calorietracker.widget.** { *; }
+-keep class * extends androidx.glance.appwidget.GlanceAppWidget { *; }
+-keep class * extends androidx.glance.appwidget.GlanceAppWidgetReceiver { *; }
+
+# ─── WorkManager + Room (transitive Glance dependency) ───────────────────────
+# Glance widget updates run through WorkManager, which in turn uses Room for its
+# WorkDatabase. R8 strips both unless we keep the @Database class and the Worker
+# subclasses — without these the app crashes on Application.onCreate with
+# "Failed to create an instance of androidx.work.impl.WorkDatabase" the first
+# time AppContainer wires the snapshot writer.
+-keep class * extends androidx.room.RoomDatabase { *; }
+-keep @androidx.room.Database class * { *; }
+-keepclassmembers @androidx.room.Database class * { *; }
+-keep class androidx.work.impl.** { *; }
+-keep class androidx.work.WorkerParameters { *; }
+-keep class * extends androidx.work.Worker { *; }
+-keep class * extends androidx.work.ListenableWorker { *; }
+-dontwarn androidx.work.**
+-dontwarn androidx.room.paging.**
+
+# ─── Health Connect ───────────────────────────────────────────────────────────
+# The androidx.health.connect.client AAR ships consumer rules that should
+# survive R8, but defensively keep WeightRecord / NutritionRecord field access.
+-keep class androidx.health.connect.client.records.** { *; }
+
+# ─── Crash reporting ──────────────────────────────────────────────────────────
+# Keep line numbers so Play Console crash reports stay readable, but rename
+# the original source file name so we don't leak internal file structure.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile

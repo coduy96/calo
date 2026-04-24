@@ -1,7 +1,20 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+}
+
+// Release signing config is read from android/keystore.properties (gitignored).
+// When the file is absent (fresh checkout, CI without secrets), assembleRelease
+// still works but emits an unsigned APK. Generate one with:
+//   keytool -genkey -v -keystore fudai-release.jks -keyalg RSA -keysize 2048 \
+//           -validity 10000 -alias fudai
+// then create keystore.properties with storeFile / storePassword / keyAlias / keyPassword.
+val keystorePropsFile = rootProject.file("keystore.properties")
+val keystoreProps = Properties().apply {
+    if (keystorePropsFile.exists()) load(keystorePropsFile.inputStream())
 }
 
 android {
@@ -17,18 +30,34 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (keystoreProps.isNotEmpty()) {
+            create("release") {
+                storeFile = file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Only attach the signing config if keystore.properties exists. Without
+            // it, gradle emits app-release-unsigned.apk and you sign manually with
+            // apksigner before uploading to the Play Console.
+            signingConfigs.findByName("release")?.let { signingConfig = it }
         }
     }
     compileOptions {
