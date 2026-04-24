@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AlternateEmail
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Description
@@ -126,6 +127,8 @@ fun AboutScreen(container: AppContainer) {
                     AboutRow(Icons.Filled.Email, stringResource(R.string.about_contact), onClick = ::email)
                     Hairline()
                     AboutRow(Icons.Filled.AlternateEmail, stringResource(R.string.about_follow_x)) { open("https://x.com/apoorvdarshan") }
+                    Hairline()
+                    AboutRow(Icons.Filled.Work, stringResource(R.string.about_follow_linkedin)) { open("https://www.linkedin.com/company/fud-ai-app") }
                 }
             }
 

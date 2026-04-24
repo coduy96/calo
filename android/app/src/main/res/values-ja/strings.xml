@@ -582,6 +582,7 @@
     <string name="about_request_feature">機能をリクエスト</string>
     <string name="about_contact">お問い合わせ</string>
     <string name="about_follow_x">Xでフォロー</string>
+    <string name="about_follow_linkedin">LinkedInでフォロー</string>
     <string name="about_privacy">プライバシーポリシー</string>
     <string name="about_terms">利用規約</string>
     <string name="about_made_by">Apoorv Darshan 制作</string>

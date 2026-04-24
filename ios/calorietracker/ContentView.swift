@@ -179,6 +179,17 @@ struct AboutView: View {
                         }
                     }
                     .tint(.primary)
+
+                    // LinkedIn
+                    Link(destination: URL(string: "https://www.linkedin.com/company/fud-ai-app")!) {
+                        Label {
+                            Text("Follow on LinkedIn")
+                        } icon: {
+                            Image(systemName: "briefcase.fill")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .tint(.primary)
                 }
                 .listRowBackground(AppColors.appCard)
 
