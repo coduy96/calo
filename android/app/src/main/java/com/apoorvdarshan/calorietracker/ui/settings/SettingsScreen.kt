@@ -1,5 +1,14 @@
 package com.apoorvdarshan.calorietracker.ui.settings
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -59,6 +68,7 @@ import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.MonitorWeight
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Percent
+import androidx.compose.material.icons.outlined.BatteryAlert
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.SmartToy
@@ -148,6 +158,85 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
     var showRecalcDialog by remember { mutableStateOf(false) }
     var invalidGoalWeightMessage by remember { mutableStateOf<String?>(null) }
     var showMaxPinnedAlert by remember { mutableStateOf(false) }
+    var permissionDeniedMessage by remember { mutableStateOf<String?>(null) }
+    val activityContext = LocalContext.current
+
+    // Notifications: API 33+ requires runtime POST_NOTIFICATIONS. We only flip the
+    // pref to true if the user actually grants. Denial leaves the toggle off so
+    // the UI never lies about whether notifications can fire.
+    val notificationLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) vm.setNotificationsEnabled(true)
+        else permissionDeniedMessage =
+            "Notifications permission denied. Enable it in System Settings → Apps → Fud AI → Notifications to receive reminders."
+    }
+
+    // Health Connect: launches the standard HC permissions screen for the read +
+    // write × (Weight + Nutrition) bundle. Same idea — only flip the pref true
+    // if the user grants the full set.
+    val healthConnectLauncher = rememberLauncherForActivityResult(
+        contract = container.health.permissionRequestContract()
+    ) { granted ->
+        if (granted.containsAll(container.health.permissions)) vm.setHealthConnectEnabled(true)
+        else permissionDeniedMessage =
+            "Health Connect needs read + write for Weight and Nutrition. Re-tap the toggle and grant all four permissions to sync."
+    }
+
+    fun onNotificationsToggle(enabled: Boolean) {
+        if (!enabled) {
+            vm.setNotificationsEnabled(false)
+            return
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            vm.setNotificationsEnabled(true)
+        } else {
+            val granted = ContextCompat.checkSelfPermission(
+                activityContext, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+            if (granted) vm.setNotificationsEnabled(true)
+            else notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    fun onHealthConnectToggle(enabled: Boolean) {
+        if (!enabled) {
+            vm.setHealthConnectEnabled(false)
+            return
+        }
+        if (!container.health.isAvailable()) {
+            permissionDeniedMessage =
+                "Health Connect isn't available on this device. Install it from the Play Store, then re-tap the toggle."
+            return
+        }
+        // Don't pre-check granted state — Health Connect's contract handles the
+        // already-granted case by returning the full set immediately.
+        healthConnectLauncher.launch(container.health.permissions)
+    }
+
+    fun openBatteryOptimizationSettings() {
+        val intents = buildList {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                add(
+                    Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                        .setData(Uri.parse("package:${activityContext.packageName}"))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+                add(
+                    Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            }
+            add(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    .setData(Uri.parse("package:${activityContext.packageName}"))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        }
+        for (intent in intents) {
+            if (runCatching { activityContext.startActivity(intent) }.isSuccess) return
+        }
+    }
 
     // iOS Settings: bare List, no NavigationBar visible. Match that — no TopAppBar.
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
@@ -287,7 +376,15 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                     icon = Icons.Outlined.CalendarToday
                 ) { sheet = SettingsSheet.WEEK_START }
                 HorizontalDivider()
-                ToggleRow("Notifications", ui.notificationsEnabled, icon = Icons.Outlined.Notifications, onChange = vm::setNotificationsEnabled)
+                ToggleRow("Notifications", ui.notificationsEnabled, icon = Icons.Outlined.Notifications, onChange = ::onNotificationsToggle)
+                if (ui.notificationsEnabled) {
+                    HorizontalDivider()
+                    SettingRow(
+                        "Battery Optimization",
+                        "Whitelist Fud AI",
+                        icon = Icons.Outlined.BatteryAlert
+                    ) { openBatteryOptimizationSettings() }
+                }
             }
 
             // Section 4 — AI Provider (matches iOS Section "AI Provider")
@@ -331,7 +428,7 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
 
             // Section 6 — Health & Data (matches iOS Section "Health & Data")
             SectionCard(title = "Health & Data") {
-                ToggleRow("Health Connect", ui.healthConnectEnabled, icon = Icons.Outlined.Favorite, onChange = vm::setHealthConnectEnabled)
+                ToggleRow("Health Connect", ui.healthConnectEnabled, icon = Icons.Outlined.Favorite, onChange = ::onHealthConnectToggle)
                 HorizontalDivider()
                 Row(
                     Modifier
@@ -431,6 +528,15 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
             title = { Text("Goal weight doesn't match your goal") },
             text = { Text(msg) },
             confirmButton = { TextButton(onClick = { invalidGoalWeightMessage = null }) { Text("OK") } }
+        )
+    }
+
+    permissionDeniedMessage?.let { msg ->
+        AlertDialog(
+            onDismissRequest = { permissionDeniedMessage = null },
+            title = { Text("Permission needed") },
+            text = { Text(msg) },
+            confirmButton = { TextButton(onClick = { permissionDeniedMessage = null }) { Text("OK") } }
         )
     }
 }
