@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Fud AI is an open-source calorie tracker. The iOS client (SwiftUI, iOS 17.6+) lives in `ios/`; the Android client will live in `android/` (empty placeholder for now); the marketing website (plain HTML/CSS, deployed to Vercel at https://fud-ai.app) lives in `web/`. Snap/speak/type a meal, an AI provider returns nutrition JSON, the user reviews it, and it lands in `FoodStore` + Apple Health. There's also a "Coach" tab — multi-turn AI chat that sees the user's full profile, weight history, and food log and answers questions like "what's my expected weight in 30 days?". Bring-your-own-key model; all data is local. No subscriptions, no sign-in, no cloud sync.
+Fud AI is an open-source calorie tracker. The iOS client (SwiftUI, iOS 17.6+) lives in `ios/` — shipping on the App Store at v3.1. The Android client (Kotlin + Jetpack Compose, min SDK 26) lives in `android/` — feature-parity port, v1.0.0, ready for Play Store submission. The marketing website (plain HTML/CSS, deployed to Vercel at https://fud-ai.app) lives in `web/`. Both clients work the same way: snap/speak/type a meal, an AI provider returns nutrition JSON, the user reviews it, and it lands in the food store + Apple Health (iOS) or Health Connect (Android). There's also a "Coach" tab — multi-turn AI chat that sees the user's full profile, weight history, and food log and answers questions like "what's my expected weight in 30 days?". Bring-your-own-key model; all data is local. No subscriptions, no sign-in, no cloud sync.
 
 ## Repo Layout
 
@@ -283,16 +283,42 @@ Single boundary in `HealthConnectManager`. Weight + Nutrition read/write with `M
 
 5-tab bottom navigation (Home / Progress / Coach / Settings / About) mirroring iOS `ContentView`. NavHost hides the bar on the onboarding route. Design system matches iOS — pink `#FF375F → #FF6B8A` gradient, cream/dark semantic backgrounds, rounded typography via `FontFamily.Default` (Nunito can be swapped in if desired).
 
-### Known post-v1 TODOs (not yet ported from iOS)
+### Localization (Android)
 
-- Voice input UI (service layer done; stub in Home tab)
-- Jetpack Glance widgets (3 sizes)
-- Saved Meals sheet (Recents / Frequent / Favorites)
-- CameraX live preview (currently uses system `PickVisualMedia`)
-- String extraction + 14 non-English translations (currently English hardcoded)
-- Health Connect change-token observer wired into scene-resume
-- Custom spin-wheel picker for height/weight/body fat (currently text input)
-- Goal speed + body fat optional onboarding steps (deferred to Settings)
+Same 15-language coverage as iOS, but Android resolves via Android resource qualifiers instead of a String Catalog:
+
+- `app/src/main/res/values/strings.xml` — English source (~509 keys)
+- `app/src/main/res/values-{ar,az,de,es,fr,hi,it,ja,ko,nl,pt-rBR,ro,ru,zh-rCN}/strings.xml` — per-locale catalogs
+- Android picks the right file at runtime from `Locale.getDefault()` — no in-app picker, matches iOS
+
+**Enum displayName pattern**: model enums (`Gender`, `ActivityLevel`, `WeightGoal`, `MealType`, `AIProvider`, `SpeechProvider`, `AutoBalanceMacro`) expose `@get:StringRes val displayNameRes: Int` instead of a hardcoded `displayName: String`. Call sites wrap in `stringResource(it.displayNameRes)`. When adding a new enum case, add the matching `<string>` in `values/strings.xml` plus all 14 locale files.
+
+**Composable scope gotcha**: `stringResource(...)` only works inside `@Composable` functions. `LazyColumn { ... }` lambdas have `LazyListScope` (not @Composable), so resolve strings before the LazyColumn and capture them in the closure — the existing `EditFoodEntrySheet.kt` "More Nutrition" block hoists `gUnit`/`mgUnit`/`micros` for exactly this reason.
+
+**Glance widgets** can't use `stringResource` directly; they use `LocalContext.current.getString(R.string.x)` instead.
+
+### Release Build & Signing (Android)
+
+Release config in `app/build.gradle.kts` enables `isMinifyEnabled = true` + `isShrinkResources = true` for production. Without these, the APK is ~29 MB; with R8 it's ~4.4 MB.
+
+**Signing**: `signingConfigs.release` reads from `android/keystore.properties` (gitignored — see `keystore.properties.template`). When the file is absent (fresh checkout, CI without secrets), the build still succeeds and emits an unsigned APK. The keystore itself lives at `~/Documents/fudai-keystore/fudai-release.jks` outside the repo. **Losing the keystore means a 1–2 week recovery flow with Google's Play App Signing reset** — back it up to a password manager + offsite.
+
+Build the AAB Play Console wants:
+```bash
+./gradlew :app:bundleRelease
+# output: app/build/outputs/bundle/release/app-release.aab
+```
+
+**ProGuard/R8 keep rules** (`app/proguard-rules.pro`) — these caught real release-only crashes during prep, don't strip them:
+
+1. **kotlinx.serialization** — every `@Serializable` data class is reflected at runtime to find its generated `$$serializer` companion. Without keep rules, DataStore + widget snapshot decode fails with `NoSuchMethodError: serializer()`.
+2. **WorkManager + Room** — Glance uses WorkManager internally, which uses Room for `WorkDatabase`. R8 strips the `@Database` class without explicit keeps, crashing `Application.onCreate` with `Failed to create an instance of androidx.work.impl.WorkDatabase`.
+3. **Glance widgets** — `CalorieAppWidget` / `ProteinAppWidget` are loaded reflectively from `AndroidManifest.xml`; keep the whole `widget/` package.
+4. **Health Connect** — defensive keep on `androidx.health.connect.client.records.**` even though the AAR ships consumer rules.
+
+If a release build crashes but debug works, R8 stripping is the first suspect — check `app/build/outputs/mapping/release/missing_rules.txt`.
+
+**Verify the release APK before uploading**: `./gradlew :app:assembleRelease` → sign with the keystore (or debug-sign with `apksigner` for sideload testing) → install → exercise the surfaces that hit reflection (food log persistence, widget refresh, KeyStore reads) on device.
 
 ## Website (`web/`)
 
@@ -304,7 +330,17 @@ Plain static HTML + CSS — no build step, no framework. Deployed to Vercel with
 - **SEO**: `web/robots.txt`, `web/sitemap.xml`.
 - **Preview locally**: any static server, e.g. `cd web && python3 -m http.server 8000`.
 
-## Gotchas
+## Gotchas (Android)
+
+- **EncryptedSharedPreferences AEAD recovery**: on Android 14/15 the AndroidKeystore master-key alias survives `pm uninstall` but the encrypted prefs file does not, so a reinstall hits `javax.crypto.AEADBadTagException` on first read and crashes `Application.onCreate` before any UI shows. `KeyStore.openOrRecover()` catches this, deletes the prefs file + the master-key alias, and rebuilds. Don't strip the recovery path — losing it means every Play Store update from a wiped install crashes the user.
+- **Glance bitmap rasterization**: Glance has no `Canvas` / arc primitives. The pink-gradient progress ring on the Calorie/Protein widgets is rendered into a Bitmap (`widget/RingBitmap.kt`) and passed via `ImageProvider(bitmap)`. Computed in `provideGlance` per recomposition — small enough (~100×100×4 bytes) not to matter.
+- **NavController + start destination**: tapping the Home tab while *on* the Home destination is a no-op for `nav.navigate(HOME) { popUpTo(HOME); launchSingleTop = true }`. Use `nav.popBackStack(HOME, inclusive = false)` instead. The bottom-nav code already does this.
+- **OriginOS USB debugging**: needs **two** toggles in Developer options — USB debugging *plus* USB debugging (Security settings). Without the second one, `adb install` works but `adb shell input tap` and `am start --es ...` extras get blocked.
+- **OriginOS battery optimization**: `AlarmManager.setExactAndAllowWhileIdle` reminders get killed unless the app is whitelisted. Settings exposes a deep-link to the per-app whitelist via `Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` (with a fallback chain to `ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS` + `ACTION_APPLICATION_DETAILS_SETTINGS` for OEMs that block the direct intent).
+- **DataStore singleton**: `Context.fudaiDataStore` is a `preferencesDataStore` extension. Both the main app process and widget receivers call `PreferencesStore(context)` and get the same backing DataStore as long as the application context is used — that's how widgets see writes from the app without IPC. Don't reach for a separate widget store.
+- **Drag-to-reorder inside ModalBottomSheet** is fundamentally fragile on Android — the sheet's drag-to-dismiss and any internal vertical scroll compete for the same gesture. Favorites in Saved Meals uses native ↑/↓ buttons (`MoveButtons`) instead. If you reach for drag-to-reorder again, expect to fight it.
+
+## Gotchas (iOS)
 
 - **SourceKit false positives**: editing surfaces "no module 'UIKit'" / "Cannot find type 'FoodEntry' in scope" errors that are not real. Build with `xcodebuild` to verify.
 - **`.buttonStyle(.plain)` kills row tap-highlight** in a `List`. Use `.tint(.primary)` if you want the highlight while keeping primary text color.
@@ -332,6 +368,7 @@ Plain static HTML + CSS — no build step, no framework. Deployed to Vercel with
 
 - Website: https://fud-ai.app
 - App Store: https://apps.apple.com/us/app/fud-ai-calorie-tracker/id6758935726
+- Play Store (after first publish): https://play.google.com/store/apps/details?id=com.apoorvdarshan.calorietracker
 - Email: apoorv@fud-ai.app
 - X: @apoorvdarshan
 - Donations: https://paypal.me/apoorvdarshan

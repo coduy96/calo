@@ -209,9 +209,11 @@ All values can be manually overridden in Settings, with a **Recalculate Goals** 
 
 ```
 fud-ai/
-├── ios/        # SwiftUI iOS app (shipping on App Store)
-├── android/    # Kotlin + Jetpack Compose app (min SDK 26 / Android 8.0)
-├── web/        # Marketing site — https://fud-ai.app (static HTML/CSS, Vercel)
+├── ios/          # SwiftUI iOS app (shipping on App Store, v3.1)
+├── android/      # Kotlin + Jetpack Compose app (min SDK 26 / Android 8.0, v1.0.0)
+├── web/          # Marketing site — https://fud-ai.app (static HTML/CSS, Vercel)
+├── APPSTORE.md   # App Store Connect listing copy (iOS)
+├── PLAYSTORE.md  # Play Console listing copy (Android)
 └── README, LICENSE, CONTRIBUTING, SECURITY, CLAUDE.md, .github/
 ```
 
