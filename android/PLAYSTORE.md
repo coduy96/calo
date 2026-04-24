@@ -1,6 +1,6 @@
-# Play Store Listing (ASO)
+# Play Store Listing
 
-Play Store listing details for Fud AI v1.0.0. Each field is in a code block for easy copy-paste into the Play Console.
+Play Console submission details for Fud AI v1.0.0. Each field is in a code block for easy copy-paste.
 
 ## App Name (30 chars max)
 ```
@@ -142,30 +142,12 @@ If a reviewer questions this, point them at the privacy policy at https://fud-ai
 | COVID-19 contact tracing | No |
 | Content rating questionnaire | Complete in console — answer "No" to all violence/gambling/sexual content questions; expect Everyone / PEGI 3 rating |
 
-## Screenshots (8 required, 1080×2400 portrait)
+## Visual Assets
 
-Capture from device with:
-```
-adb exec-out screencap -p > shot1.png
-```
-
-Recommended order (one screen per shot, captioned in the asset itself):
-1. Home — today's macro rings + recent meals
-2. Snap a photo → AI returns calories
-3. Voice input — live transcription
-4. Coach chat — "What should I eat tonight?"
-5. Progress — weight chart with trend line
-6. Saved Meals — Recents / Frequent / Favorites
-7. Settings — AI Provider picker (showing 13 options)
-8. Widget on home screen — Calorie + Protein
-
-## Feature Graphic (1024×500)
-
-Required by Play Console. Pink-gradient (#FF375F → #FF6B8A) background, app logo center, tagline "AI Calorie Tracker — snap, speak, or type" or similar.
-
-## App Icon
-
-Already in `app/src/main/res/mipmap-*` directories. Play Console pulls it from the AAB; no separate upload needed.
+Prepared and uploaded manually outside this file:
+- Screenshots (Play Console requires at least 2, allows up to 8) — phone screenshots at 1080×2400 or similar portrait aspect
+- Feature graphic — 1024×500
+- App icon — Play Console pulls automatically from the AAB (`app/src/main/res/mipmap-*`)
 
 ## Reviewer Notes (Internal Testing → Production review)
 ```
