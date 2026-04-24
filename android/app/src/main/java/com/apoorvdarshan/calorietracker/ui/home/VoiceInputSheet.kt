@@ -87,37 +87,53 @@ fun VoiceInputSheet(
 
     var phase by remember { mutableStateOf(VoicePhase.IDLE) }
     var transcript by remember { mutableStateOf("") }
+    // Native SpeechRecognizer naturally finalizes after a silence window. To
+    // make recording continuous (no auto-stop), we accumulate every final
+    // segment here and immediately re-arm the recognizer; the displayed
+    // [transcript] is committed + the in-flight partial.
+    var committed by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     val recorder = remember(ctx) { AudioRecorder(ctx) }
     val native = remember(ctx) { NativeSpeechRecognizer(ctx) }
     var recordedFile by remember { mutableStateOf<File?>(null) }
     var nativeJob by remember { mutableStateOf<Job?>(null) }
 
-    // Reusable "start a fresh recording" lambda — called from auto-start on
-    // sheet open, from the mic-tap retry in REVIEWING phase, and (implicitly)
-    // never again until one of those triggers fires.
+    // Internal helper: spin up a fresh native recognizer session, appending
+    // to [committed] on each Final event so a long pause doesn't end the
+    // recording session. Only invoked while phase == RECORDING and provider
+    // == NATIVE.
+    fun launchNativeListenerLoop() {
+        nativeJob?.cancel()
+        nativeJob = scope.launch {
+            native.listen().collectLatest { event ->
+                when (event) {
+                    is SttEvent.Partial -> {
+                        transcript = (committed + " " + event.text).trim()
+                    }
+                    is SttEvent.Final -> {
+                        committed = (committed + " " + event.text).trim()
+                        transcript = committed
+                        // Re-arm so the user can keep speaking — the user
+                        // explicitly stops by tapping the mic again.
+                        if (phase == VoicePhase.RECORDING) launchNativeListenerLoop()
+                    }
+                    is SttEvent.Error -> {
+                        error = event.message
+                        phase = VoicePhase.IDLE
+                    }
+                    else -> Unit
+                }
+            }
+        }
+    }
+
     fun startRecordingNow() {
         transcript = ""
+        committed = ""
         error = null
         if (provider == SpeechProvider.NATIVE) {
             phase = VoicePhase.RECORDING
-            nativeJob?.cancel()
-            nativeJob = scope.launch {
-                native.listen().collectLatest { event ->
-                    when (event) {
-                        is SttEvent.Partial -> transcript = event.text
-                        is SttEvent.Final -> {
-                            transcript = event.text
-                            phase = VoicePhase.REVIEWING
-                        }
-                        is SttEvent.Error -> {
-                            error = event.message
-                            phase = VoicePhase.IDLE
-                        }
-                        else -> Unit
-                    }
-                }
-            }
+            launchNativeListenerLoop()
         } else {
             val file = recorder.start()
             if (file == null) {
@@ -132,15 +148,13 @@ fun VoiceInputSheet(
     val micPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) startRecordingNow()
-        else error = "Microphone permission denied."
+        // Permission is requested on sheet open but we no longer auto-start.
+        // The user opens the sheet → sees an idle mic → taps it to begin.
+        if (!granted) error = "Microphone permission denied."
     }
 
-    // Mirror iOS `onAppear { startRecording() }` — start listening as soon as
-    // the sheet opens, requesting mic permission first if needed.
     LaunchedEffect(Unit) {
-        if (native.hasMicPermission()) startRecordingNow()
-        else micPermission.launch(Manifest.permission.RECORD_AUDIO)
+        if (!native.hasMicPermission()) micPermission.launch(Manifest.permission.RECORD_AUDIO)
     }
 
     DisposableEffect(Unit) {
