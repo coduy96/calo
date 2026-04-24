@@ -6,6 +6,7 @@ struct ManualEntryView: View {
     @State private var protein = ""
     @State private var carbs = ""
     @State private var fat = ""
+    @State private var mealType: MealType = .currentMeal
     @FocusState private var focused: Field?
 
     let logDate: Date
@@ -37,6 +38,29 @@ struct ManualEntryView: View {
                 numberField(label: "Fat (g)", text: $fat, focus: .fat)
             }
 
+            // Meal Type — same .menu picker style used by FoodResultView /
+            // EditFoodEntryView so manual logging assigns to a specific meal
+            // (defaults to whatever currentMeal returns for the time of day).
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Meal")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                HStack {
+                    Text("Meal Type")
+                    Spacer()
+                    Picker("Meal Type", selection: $mealType) {
+                        ForEach(MealType.allCases, id: \.self) { meal in
+                            Label(meal.displayName, systemImage: meal.icon).tag(meal)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .tint(AppColors.calorie)
+                    .labelsHidden()
+                }
+                .padding(10)
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color(.quaternarySystemFill)))
+            }
+
             Button {
                 let entry = FoodEntry(
                     name: name.trimmingCharacters(in: .whitespaces),
@@ -45,7 +69,8 @@ struct ManualEntryView: View {
                     carbs: Int(carbs) ?? 0,
                     fat: Int(fat) ?? 0,
                     timestamp: logDate,
-                    source: .manual
+                    source: .manual,
+                    mealType: mealType
                 )
                 onSave(entry)
             } label: {

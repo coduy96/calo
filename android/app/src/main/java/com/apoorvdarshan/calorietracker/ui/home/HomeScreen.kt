@@ -455,9 +455,9 @@ fun HomeScreen(container: AppContainer) {
     if (showManual) {
         ManualEntryDialog(
             onDismiss = { showManual = false },
-            onSave = { name, kcal, p, c, f ->
+            onSave = { name, kcal, p, c, f, meal ->
                 showManual = false
-                vm.saveManualEntry(name, kcal, p, c, f)
+                vm.saveManualEntry(name, kcal, p, c, f, meal)
             }
         )
     }
@@ -1261,13 +1261,15 @@ private fun TextInputDialog(onDismiss: () -> Unit, onSubmit: (String) -> Unit) {
 @Composable
 private fun ManualEntryDialog(
     onDismiss: () -> Unit,
-    onSave: (name: String, calories: Int, protein: Int, carbs: Int, fat: Int) -> Unit
+    onSave: (name: String, calories: Int, protein: Int, carbs: Int, fat: Int, mealType: MealType) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var calories by remember { mutableStateOf("") }
     var protein by remember { mutableStateOf("") }
     var carbs by remember { mutableStateOf("") }
     var fat by remember { mutableStateOf("") }
+    var mealType by remember { mutableStateOf(MealType.currentMeal) }
+    var mealMenuExpanded by remember { mutableStateOf(false) }
 
     val canSave = name.isNotBlank() && calories.toIntOrNull() != null
 
@@ -1303,6 +1305,55 @@ private fun ManualEntryDialog(
                     NumberField("Fat (g)", fat, { fat = it.filter(Char::isDigit) }, Modifier.weight(1f))
                 }
 
+                // Meal Type — DropdownMenu styled to match the FoodResultSheet /
+                // EditFoodEntrySheet meal pickers (icon + label, pink, anchored
+                // to the right cluster).
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        .clickable { mealMenuExpanded = true }
+                        .padding(horizontal = 14.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Meal Type", fontSize = 16.sp, modifier = Modifier.weight(1f))
+                    Box {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                sheetMealIcon(mealType),
+                                contentDescription = null,
+                                tint = AppColors.Calorie,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                mealType.displayName,
+                                fontSize = 16.sp,
+                                color = AppColors.Calorie,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = mealMenuExpanded,
+                            onDismissRequest = { mealMenuExpanded = false }
+                        ) {
+                            for (m in MealType.values()) {
+                                DropdownMenuItem(
+                                    leadingIcon = {
+                                        Icon(sheetMealIcon(m), contentDescription = null, tint = AppColors.Calorie)
+                                    },
+                                    text = { Text(m.displayName) },
+                                    onClick = {
+                                        mealType = m
+                                        mealMenuExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
                 Button(
                     onClick = {
                         onSave(
@@ -1310,7 +1361,8 @@ private fun ManualEntryDialog(
                             calories.toIntOrNull() ?: 0,
                             protein.toIntOrNull() ?: 0,
                             carbs.toIntOrNull() ?: 0,
-                            fat.toIntOrNull() ?: 0
+                            fat.toIntOrNull() ?: 0,
+                            mealType
                         )
                     },
                     enabled = canSave,

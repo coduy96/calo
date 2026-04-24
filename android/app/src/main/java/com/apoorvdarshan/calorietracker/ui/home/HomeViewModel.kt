@@ -238,7 +238,14 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     /** Save a user-typed entry with no AI involvement (manual macro input from issue #15). */
-    fun saveManualEntry(name: String, calories: Int, protein: Int, carbs: Int, fat: Int) {
+    fun saveManualEntry(
+        name: String,
+        calories: Int,
+        protein: Int,
+        carbs: Int,
+        fat: Int,
+        mealType: MealType = MealType.currentMeal
+    ) {
         viewModelScope.launch {
             container.foodRepository.addEntry(
                 FoodEntry(
@@ -249,7 +256,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
                     fat = fat,
                     timestamp = timestampForSelectedDay(),
                     source = FoodSource.MANUAL,
-                    mealType = MealType.currentMeal
+                    mealType = mealType
                 )
             )
         }
