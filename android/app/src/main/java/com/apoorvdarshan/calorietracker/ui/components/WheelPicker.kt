@@ -216,10 +216,18 @@ fun NumericWheelPicker(
     min: Int,
     max: Int,
     unit: String? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    step: Int = 1
 ) {
-    val items = remember(min, max) { (min..max).toList() }
-    val clamped = value.coerceIn(min, max)
+    val items = remember(min, max, step) { (min..max step step).toList() }
+    // Snap incoming value onto the stepped grid so the wheel always has a
+    // matching item to highlight.
+    val snapped = run {
+        val coerced = value.coerceIn(min, max)
+        val offset = coerced - min
+        min + (offset / step) * step
+    }
+    val clamped = snapped
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,

@@ -84,10 +84,7 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.R
@@ -1721,25 +1718,33 @@ private fun PlanEditDialog(
     onSave: (Int) -> Unit,
     onReset: (() -> Unit)?
 ) {
-    var text by remember(currentValue) { mutableStateOf(currentValue.toString()) }
+    // Match the in-app Settings nutrition pickers: range + step per field, scroll
+    // to a value, no keyboard. Saves on the picker's currently-selected value.
+    val (min, max, step) = when (field) {
+        PlanField.CALORIES -> Triple(800, 6000, 50)
+        PlanField.PROTEIN  -> Triple(10, 500, 5)
+        PlanField.CARBS    -> Triple(0, 800, 5)
+        PlanField.FAT      -> Triple(10, 300, 5)
+    }
+    var picked by remember(currentValue) {
+        mutableStateOf(currentValue.coerceIn(min, max))
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(field.titleRes)) },
         text = {
-            OutlinedTextField(
-                value = text,
-                onValueChange = { new -> text = new.filter(Char::isDigit).take(5) },
-                singleLine = true,
-                suffix = { Text(stringResource(field.unitRes)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            NumericWheelPicker(
+                value = picked,
+                onValueChange = { picked = it },
+                min = min,
+                max = max,
+                unit = stringResource(field.unitRes),
+                step = step,
                 modifier = Modifier.fillMaxWidth()
             )
         },
         confirmButton = {
-            TextButton(
-                onClick = { text.toIntOrNull()?.let { onSave(it) } },
-                enabled = text.toIntOrNull() != null && (text.toIntOrNull() ?: 0) > 0
-            ) {
+            TextButton(onClick = { onSave(picked) }) {
                 Text(stringResource(R.string.action_save), color = AppColors.Calorie)
             }
         },
