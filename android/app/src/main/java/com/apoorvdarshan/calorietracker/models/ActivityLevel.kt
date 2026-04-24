@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.models
 
+import androidx.annotation.StringRes
+import com.apoorvdarshan.calorietracker.R
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -12,22 +14,24 @@ enum class ActivityLevel {
     @SerialName("veryActive") VERY_ACTIVE,
     @SerialName("extraActive") EXTRA_ACTIVE;
 
-    val displayName: String get() = when (this) {
-        SEDENTARY -> "Sedentary"
-        LIGHT -> "Light"
-        MODERATE -> "Moderate"
-        ACTIVE -> "Active"
-        VERY_ACTIVE -> "Very Active"
-        EXTRA_ACTIVE -> "Extra Active"
+    @get:StringRes
+    val displayNameRes: Int get() = when (this) {
+        SEDENTARY -> R.string.activity_sedentary
+        LIGHT -> R.string.activity_light
+        MODERATE -> R.string.activity_moderate
+        ACTIVE -> R.string.activity_active
+        VERY_ACTIVE -> R.string.activity_very_active
+        EXTRA_ACTIVE -> R.string.activity_extra_active
     }
 
-    val subtitle: String get() = when (this) {
-        SEDENTARY -> "Little or no exercise"
-        LIGHT -> "Exercise 1–3 times / week"
-        MODERATE -> "Exercise 4–5 times / week"
-        ACTIVE -> "Daily exercise or intense 3–4x / week"
-        VERY_ACTIVE -> "Intense exercise 6–7 times / week"
-        EXTRA_ACTIVE -> "Very intense daily, or physical job"
+    @get:StringRes
+    val subtitleRes: Int get() = when (this) {
+        SEDENTARY -> R.string.activity_sedentary_subtitle
+        LIGHT -> R.string.activity_light_subtitle
+        MODERATE -> R.string.activity_moderate_subtitle
+        ACTIVE -> R.string.activity_active_subtitle
+        VERY_ACTIVE -> R.string.activity_very_active_subtitle
+        EXTRA_ACTIVE -> R.string.activity_extra_active_subtitle
     }
 
     val multiplier: Double get() = when (this) {

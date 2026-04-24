@@ -32,7 +32,10 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
+import androidx.annotation.StringRes
+import com.apoorvdarshan.calorietracker.R
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -62,14 +65,14 @@ import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import kotlinx.coroutines.launch
 
-data class BottomTab(val route: String, val icon: ImageVector, val label: String)
+data class BottomTab(val route: String, val icon: ImageVector, @StringRes val labelRes: Int)
 
 val BottomTabs = listOf(
-    BottomTab(FudAIRoutes.HOME, Icons.Filled.Home, "Home"),
-    BottomTab(FudAIRoutes.PROGRESS, Icons.Filled.BarChart, "Progress"),
-    BottomTab(FudAIRoutes.COACH, Icons.Filled.Forum, "Coach"),
-    BottomTab(FudAIRoutes.SETTINGS, Icons.Filled.Settings, "Settings"),
-    BottomTab(FudAIRoutes.ABOUT, Icons.Filled.Info, "About")
+    BottomTab(FudAIRoutes.HOME, Icons.Filled.Home, R.string.nav_home),
+    BottomTab(FudAIRoutes.PROGRESS, Icons.Filled.BarChart, R.string.nav_progress),
+    BottomTab(FudAIRoutes.COACH, Icons.Filled.Forum, R.string.nav_coach),
+    BottomTab(FudAIRoutes.SETTINGS, Icons.Filled.Settings, R.string.nav_settings),
+    BottomTab(FudAIRoutes.ABOUT, Icons.Filled.Info, R.string.nav_about)
 )
 
 private val BarHeight = 72.dp
@@ -333,6 +336,7 @@ private fun TabItem(
         label = "tabIconScale"
     )
 
+    val label = stringResource(tab.labelRes)
     Column(
         modifier = modifier.clickable(
             interactionSource = MutableInteractionSource(),
@@ -344,13 +348,13 @@ private fun TabItem(
     ) {
         Icon(
             tab.icon,
-            contentDescription = tab.label,
+            contentDescription = label,
             tint = tint,
             modifier = Modifier.size(if (selected) 26.dp else 24.dp).scale(iconScale)
         )
         Spacer(Modifier.height(3.dp))
         Text(
-            tab.label,
+            label,
             color = tint,
             fontSize = 11.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium

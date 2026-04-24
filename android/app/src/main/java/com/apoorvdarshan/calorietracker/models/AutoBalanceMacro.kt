@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.models
 
+import androidx.annotation.StringRes
+import com.apoorvdarshan.calorietracker.R
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -9,10 +11,11 @@ enum class AutoBalanceMacro {
     @SerialName("carbs") CARBS,
     @SerialName("fat") FAT;
 
-    val label: String get() = when (this) {
-        PROTEIN -> "Protein"
-        CARBS -> "Carbs"
-        FAT -> "Fat"
+    @get:StringRes
+    val labelRes: Int get() = when (this) {
+        PROTEIN -> R.string.autobalance_protein
+        CARBS -> R.string.autobalance_carbs
+        FAT -> R.string.autobalance_fat
     }
 
     val kcalPerGram: Int get() = if (this == FAT) 9 else 4

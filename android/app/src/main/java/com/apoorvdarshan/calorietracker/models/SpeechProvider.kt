@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.models
 
+import androidx.annotation.StringRes
+import com.apoorvdarshan.calorietracker.R
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -11,22 +13,24 @@ enum class SpeechProvider {
     @SerialName("Deepgram") DEEPGRAM,
     @SerialName("AssemblyAI") ASSEMBLY_AI;
 
-    val displayName: String get() = when (this) {
-        NATIVE -> "Native (On-Device)"
-        OPENAI -> "OpenAI Whisper"
-        GROQ -> "Groq (Whisper)"
-        DEEPGRAM -> "Deepgram"
-        ASSEMBLY_AI -> "AssemblyAI"
+    @get:StringRes
+    val displayNameRes: Int get() = when (this) {
+        NATIVE -> R.string.speech_provider_native
+        OPENAI -> R.string.speech_provider_openai
+        GROQ -> R.string.speech_provider_groq
+        DEEPGRAM -> R.string.speech_provider_deepgram
+        ASSEMBLY_AI -> R.string.speech_provider_assemblyai
     }
 
     val requiresApiKey: Boolean get() = this != NATIVE
 
-    val apiKeyPlaceholder: String get() = when (this) {
-        NATIVE -> "Not needed"
-        OPENAI -> "sk-..."
-        GROQ -> "gsk_..."
-        DEEPGRAM -> "Token your-deepgram-key"
-        ASSEMBLY_AI -> "Your AssemblyAI key"
+    @get:StringRes
+    val apiKeyPlaceholderRes: Int get() = when (this) {
+        NATIVE -> R.string.speech_key_placeholder_native
+        OPENAI -> R.string.speech_key_placeholder_openai
+        GROQ -> R.string.speech_key_placeholder_groq
+        DEEPGRAM -> R.string.speech_key_placeholder_deepgram
+        ASSEMBLY_AI -> R.string.speech_key_placeholder_assemblyai
     }
 
     val defaultModel: String get() = when (this) {
@@ -37,11 +41,12 @@ enum class SpeechProvider {
         ASSEMBLY_AI -> "universal"
     }
 
-    val description: String get() = when (this) {
-        NATIVE -> "Android's on-device speech recognition. Free, works offline on most phones, real-time partial results. Recommended default."
-        OPENAI -> "OpenAI Whisper API. High accuracy, 99+ languages, paid per minute."
-        GROQ -> "Groq-hosted Whisper Large v3. Very fast inference, has a free tier."
-        DEEPGRAM -> "Deepgram Nova. Real-time and batch modes, fast and accurate."
-        ASSEMBLY_AI -> "AssemblyAI Universal model. Strong accuracy, free tier available."
+    @get:StringRes
+    val descriptionRes: Int get() = when (this) {
+        NATIVE -> R.string.speech_description_native
+        OPENAI -> R.string.speech_description_openai
+        GROQ -> R.string.speech_description_groq
+        DEEPGRAM -> R.string.speech_description_deepgram
+        ASSEMBLY_AI -> R.string.speech_description_assemblyai
     }
 }

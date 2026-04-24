@@ -41,7 +41,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.apoorvdarshan.calorietracker.R
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.AppContainer
@@ -65,18 +67,19 @@ import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 @Composable
 fun AboutScreen(container: AppContainer) {
     val ctx = LocalContext.current
+    val shareText = stringResource(R.string.about_share_message)
+    val shareChooser = stringResource(R.string.about_share_chooser)
 
     fun open(url: String) =
         ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
 
     fun share() {
-        val text = "I've been tracking my meals with Fud AI — snap a photo, speak it, or type it, and the AI logs the calories. It's free, open source, and your data stays on your device.\n\nDownload: https://fud-ai.app"
         ctx.startActivity(Intent.createChooser(
             Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, text)
+                putExtra(Intent.EXTRA_TEXT, shareText)
             },
-            "Share Fud AI"
+            shareChooser
         ))
     }
 
@@ -107,32 +110,32 @@ fun AboutScreen(container: AppContainer) {
                     // Rate the App — hidden until Fud AI ships on Play Store.
                     // AboutRow(Icons.Filled.Star, "Rate the App", onClick = ::rate)
                     // Hairline()
-                    AboutRow(Icons.Filled.Share, "Share the App", onClick = ::share)
+                    AboutRow(Icons.Filled.Share, stringResource(R.string.about_share), onClick = ::share)
                     Hairline()
-                    AboutRow(Icons.Filled.Code, "Open Source (MIT)") { open("https://github.com/apoorvdarshan/fud-ai") }
+                    AboutRow(Icons.Filled.Code, stringResource(R.string.about_open_source)) { open("https://github.com/apoorvdarshan/fud-ai") }
                     Hairline()
-                    AboutRow(Icons.Filled.StarRate, "Star on GitHub") { open("https://github.com/apoorvdarshan/fud-ai") }
+                    AboutRow(Icons.Filled.StarRate, stringResource(R.string.about_star_github)) { open("https://github.com/apoorvdarshan/fud-ai") }
                     Hairline()
-                    AboutRow(Icons.Filled.ThumbUp, "Vote on Product Hunt") { open("https://www.producthunt.com/products/fud-ai-calorie-tracker") }
+                    AboutRow(Icons.Filled.ThumbUp, stringResource(R.string.about_vote_ph)) { open("https://www.producthunt.com/products/fud-ai-calorie-tracker") }
                     Hairline()
-                    AboutRow(Icons.Filled.Favorite, "Support the Project") { open("https://paypal.me/apoorvdarshan") }
+                    AboutRow(Icons.Filled.Favorite, stringResource(R.string.about_support)) { open("https://paypal.me/apoorvdarshan") }
                     Hairline()
-                    AboutRow(Icons.Filled.BugReport, "Report an Issue") { open("https://github.com/apoorvdarshan/fud-ai/issues/new?labels=bug&title=Bug:%20") }
+                    AboutRow(Icons.Filled.BugReport, stringResource(R.string.about_report_issue)) { open("https://github.com/apoorvdarshan/fud-ai/issues/new?labels=bug&title=Bug:%20") }
                     Hairline()
-                    AboutRow(Icons.Filled.Lightbulb, "Request a Feature") { open("https://github.com/apoorvdarshan/fud-ai/issues/new?labels=enhancement&title=Feature:%20") }
+                    AboutRow(Icons.Filled.Lightbulb, stringResource(R.string.about_request_feature)) { open("https://github.com/apoorvdarshan/fud-ai/issues/new?labels=enhancement&title=Feature:%20") }
                     Hairline()
-                    AboutRow(Icons.Filled.Email, "Contact Us", onClick = ::email)
+                    AboutRow(Icons.Filled.Email, stringResource(R.string.about_contact), onClick = ::email)
                     Hairline()
-                    AboutRow(Icons.Filled.AlternateEmail, "Follow on X") { open("https://x.com/apoorvdarshan") }
+                    AboutRow(Icons.Filled.AlternateEmail, stringResource(R.string.about_follow_x)) { open("https://x.com/apoorvdarshan") }
                 }
             }
 
             // Section 2 — legal
             item {
                 CardSection {
-                    AboutRow(Icons.Filled.Lock, "Privacy Policy") { open("https://fud-ai.app/privacy.html") }
+                    AboutRow(Icons.Filled.Lock, stringResource(R.string.about_privacy)) { open("https://fud-ai.app/privacy.html") }
                     Hairline()
-                    AboutRow(Icons.Filled.Description, "Terms of Service") { open("https://fud-ai.app/terms.html") }
+                    AboutRow(Icons.Filled.Description, stringResource(R.string.about_terms)) { open("https://fud-ai.app/terms.html") }
                 }
             }
 
@@ -144,13 +147,13 @@ fun AboutScreen(container: AppContainer) {
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        "Made by Apoorv Darshan",
+                        stringResource(R.string.about_made_by),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                     )
                     Text(
-                        "with care, for everyone",
+                        stringResource(R.string.about_with_care),
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
                     )

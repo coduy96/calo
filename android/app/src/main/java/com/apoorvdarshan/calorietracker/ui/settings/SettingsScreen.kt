@@ -112,7 +112,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.apoorvdarshan.calorietracker.R
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -164,12 +166,15 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
     // Notifications: API 33+ requires runtime POST_NOTIFICATIONS. We only flip the
     // pref to true if the user actually grants. Denial leaves the toggle off so
     // the UI never lies about whether notifications can fire.
+    val notifDeniedMsg = stringResource(R.string.settings_notifications_denied)
+    val healthDeniedMsg = stringResource(R.string.settings_health_denied)
+    val healthUnavailableMsg = stringResource(R.string.settings_health_unavailable)
+
     val notificationLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) vm.setNotificationsEnabled(true)
-        else permissionDeniedMessage =
-            "Notifications permission denied. Enable it in System Settings → Apps → Fud AI → Notifications to receive reminders."
+        else permissionDeniedMessage = notifDeniedMsg
     }
 
     // Health Connect: launches the standard HC permissions screen for the read +
@@ -179,8 +184,7 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
         contract = container.health.permissionRequestContract()
     ) { granted ->
         if (granted.containsAll(container.health.permissions)) vm.setHealthConnectEnabled(true)
-        else permissionDeniedMessage =
-            "Health Connect needs read + write for Weight and Nutrition. Re-tap the toggle and grant all four permissions to sync."
+        else permissionDeniedMessage = healthDeniedMsg
     }
 
     fun onNotificationsToggle(enabled: Boolean) {
@@ -205,8 +209,7 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
             return
         }
         if (!container.health.isAvailable()) {
-            permissionDeniedMessage =
-                "Health Connect isn't available on this device. Install it from the Play Store, then re-tap the toggle."
+            permissionDeniedMessage = healthUnavailableMsg
             return
         }
         // Don't pre-check granted state — Health Connect's contract handles the
@@ -249,63 +252,63 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // Section 1 — Personal Info (matches iOS Section "Personal Info")
-            SectionCard(title = "Personal Info") {
+            SectionCard(title = stringResource(R.string.settings_section_personal)) {
                 profile?.let { p ->
-                    SettingRow("Gender", p.gender.displayName, icon = Icons.Outlined.Person, inlineMenu = true) { sheet = SettingsSheet.GENDER }
+                    SettingRow(stringResource(R.string.settings_gender), stringResource(p.gender.displayNameRes), icon = Icons.Outlined.Person, inlineMenu = true) { sheet = SettingsSheet.GENDER }
                     HorizontalDivider()
-                    SettingRow("Birthday", birthdayDisplay(p), icon = Icons.Outlined.Cake) { sheet = SettingsSheet.BIRTHDAY }
+                    SettingRow(stringResource(R.string.settings_birthday), birthdayDisplay(p), icon = Icons.Outlined.Cake) { sheet = SettingsSheet.BIRTHDAY }
                     HorizontalDivider()
                     SettingRow(
-                        "Height",
-                        if (ui.useMetric) "${p.heightCm.toInt()} cm"
+                        stringResource(R.string.settings_height),
+                        if (ui.useMetric) stringResource(R.string.height_cm_format, p.heightCm.toInt())
                         else feetInchesLabel(p.heightCm.toInt()),
                         icon = Icons.Outlined.Height
                     ) { sheet = SettingsSheet.HEIGHT }
                     HorizontalDivider()
                     SettingRow(
-                        "Weight",
+                        stringResource(R.string.settings_weight),
                         if (ui.useMetric) String.format(Locale.US, "%.1f kg", p.weightKg)
                         else String.format(Locale.US, "%.1f lbs", p.weightKg * 2.20462),
                         icon = Icons.Outlined.MonitorWeight
                     ) { sheet = SettingsSheet.WEIGHT }
                     HorizontalDivider()
                     SettingRow(
-                        "Body Fat",
-                        p.bodyFatPercentage?.let { "${(it * 100).toInt()}%" } ?: "Not set",
+                        stringResource(R.string.settings_body_fat),
+                        p.bodyFatPercentage?.let { "${(it * 100).toInt()}%" } ?: stringResource(R.string.settings_not_set),
                         icon = Icons.Outlined.Percent
                     ) { sheet = SettingsSheet.BODY_FAT }
                 }
             }
 
             // Section 2 — Goals & Nutrition (matches iOS Section "Goals & Nutrition")
-            SectionCard(title = "Goals & Nutrition") {
+            SectionCard(title = stringResource(R.string.settings_section_goals)) {
                 profile?.let { p ->
-                    SettingRow("Weight Goal", p.goal.displayName, icon = Icons.Outlined.Equalizer, inlineMenu = true) { sheet = SettingsSheet.GOAL }
+                    SettingRow(stringResource(R.string.settings_weight_goal), stringResource(p.goal.displayNameRes), icon = Icons.Outlined.Equalizer, inlineMenu = true) { sheet = SettingsSheet.GOAL }
                     HorizontalDivider()
-                    SettingRow("Activity Level", p.activityLevel.displayName, icon = Icons.AutoMirrored.Outlined.DirectionsRun, inlineMenu = true) { sheet = SettingsSheet.ACTIVITY }
+                    SettingRow(stringResource(R.string.settings_activity_level), stringResource(p.activityLevel.displayNameRes), icon = Icons.AutoMirrored.Outlined.DirectionsRun, inlineMenu = true) { sheet = SettingsSheet.ACTIVITY }
                     if (p.goal != WeightGoal.MAINTAIN) {
                         HorizontalDivider()
                         SettingRow(
-                            "Weekly Change",
+                            stringResource(R.string.settings_weekly_change),
                             p.weeklyChangeKg?.let {
                                 if (ui.useMetric) String.format(Locale.US, "%.2f kg/wk", it)
                                 else String.format(Locale.US, "%.2f lbs/wk", it * 2.20462)
-                            } ?: "0.50 kg/wk",
+                            } ?: stringResource(R.string.settings_weekly_default),
                             icon = Icons.Outlined.Speed
                         ) { sheet = SettingsSheet.GOAL_SPEED }
                         HorizontalDivider()
                         SettingRow(
-                            "Goal Weight",
+                            stringResource(R.string.settings_goal_weight),
                             p.goalWeightKg?.let {
                                 if (ui.useMetric) String.format(Locale.US, "%.1f kg", it)
                                 else String.format(Locale.US, "%.1f lbs", it * 2.20462)
-                            } ?: "Not set",
+                            } ?: stringResource(R.string.settings_not_set),
                             icon = Icons.AutoMirrored.Outlined.TrendingUp
                         ) { sheet = SettingsSheet.GOAL_WEIGHT }
                     }
                     HorizontalDivider()
                     // iOS shows "2452 kcal" with no chevron suffix on the Calories row.
-                    SettingRow("Calories", "${p.effectiveCalories} kcal", icon = Icons.Outlined.LocalFireDepartment) { sheet = SettingsSheet.CALORIES }
+                    SettingRow(stringResource(R.string.settings_calories), stringResource(R.string.kcal_value_format, p.effectiveCalories), icon = Icons.Outlined.LocalFireDepartment) { sheet = SettingsSheet.CALORIES }
                     HorizontalDivider()
                     // Per-macro rows mirror iOS macroRow(): "{value}g · auto" suffix when
                     // unpinned, "{value}g" when pinned, plus lock.fill / lock.open icon.
@@ -317,21 +320,21 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                         else sheet = target
                     }
                     MacroSettingRow(
-                        label = "Protein",
+                        label = stringResource(R.string.macro_protein),
                         value = p.effectiveProtein,
                         pinned = p.isPinned(AutoBalanceMacro.PROTEIN),
                         onClick = { openMacro(AutoBalanceMacro.PROTEIN, SettingsSheet.PROTEIN) }
                     )
                     HorizontalDivider()
                     MacroSettingRow(
-                        label = "Carbs",
+                        label = stringResource(R.string.macro_carbs),
                         value = p.effectiveCarbs,
                         pinned = p.isPinned(AutoBalanceMacro.CARBS),
                         onClick = { openMacro(AutoBalanceMacro.CARBS, SettingsSheet.CARBS) }
                     )
                     HorizontalDivider()
                     MacroSettingRow(
-                        label = "Fat",
+                        label = stringResource(R.string.macro_fat),
                         value = p.effectiveFat,
                         pinned = p.isPinned(AutoBalanceMacro.FAT),
                         onClick = { openMacro(AutoBalanceMacro.FAT, SettingsSheet.FAT) }
@@ -351,67 +354,67 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                             modifier = Modifier.size(22.dp)
                         )
                         Spacer(Modifier.width(14.dp))
-                        Text("Recalculate Goals", color = AppColors.Calorie, style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.settings_recalculate_goals), color = AppColors.Calorie, style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }
 
             // Section 3 — App Settings (matches iOS Section "App Settings")
-            SectionCard(title = "App Settings") {
+            SectionCard(title = stringResource(R.string.settings_section_app)) {
                 SettingRow(
-                    "Appearance",
+                    stringResource(R.string.settings_appearance),
                     when (ui.appearanceMode) {
-                        "light" -> "Light"
-                        "dark" -> "Dark"
-                        else -> "System"
+                        "light" -> stringResource(R.string.settings_appearance_light)
+                        "dark" -> stringResource(R.string.settings_appearance_dark)
+                        else -> stringResource(R.string.settings_appearance_system)
                     },
                     icon = Icons.Outlined.Brightness6
                 ) { sheet = SettingsSheet.APPEARANCE }
                 HorizontalDivider()
-                ToggleRow("Metric Units", ui.useMetric, icon = Icons.Outlined.Straighten, onChange = vm::setUseMetric)
+                ToggleRow(stringResource(R.string.settings_metric_units), ui.useMetric, icon = Icons.Outlined.Straighten, onChange = vm::setUseMetric)
                 HorizontalDivider()
                 SettingRow(
-                    "Week Starts On",
-                    if (ui.weekStartsOnMonday) "Monday" else "Sunday",
+                    stringResource(R.string.settings_week_starts),
+                    if (ui.weekStartsOnMonday) stringResource(R.string.settings_week_monday) else stringResource(R.string.settings_week_sunday),
                     icon = Icons.Outlined.CalendarToday
                 ) { sheet = SettingsSheet.WEEK_START }
                 HorizontalDivider()
-                ToggleRow("Notifications", ui.notificationsEnabled, icon = Icons.Outlined.Notifications, onChange = ::onNotificationsToggle)
+                ToggleRow(stringResource(R.string.settings_notifications), ui.notificationsEnabled, icon = Icons.Outlined.Notifications, onChange = ::onNotificationsToggle)
                 if (ui.notificationsEnabled) {
                     HorizontalDivider()
                     SettingRow(
-                        "Battery Optimization",
-                        "Whitelist Fud AI",
+                        stringResource(R.string.settings_battery_opt),
+                        stringResource(R.string.settings_battery_opt_value),
                         icon = Icons.Outlined.BatteryAlert
                     ) { openBatteryOptimizationSettings() }
                 }
             }
 
             // Section 4 — AI Provider (matches iOS Section "AI Provider")
-            SectionCard(title = "AI Provider") {
-                SettingRow("Provider", ui.selectedAI.displayName, icon = Icons.Outlined.SmartToy) { sheet = SettingsSheet.AI_PROVIDER }
+            SectionCard(title = stringResource(R.string.settings_section_ai)) {
+                SettingRow(stringResource(R.string.settings_ai_provider), stringResource(ui.selectedAI.displayNameRes), icon = Icons.Outlined.SmartToy) { sheet = SettingsSheet.AI_PROVIDER }
                 HorizontalDivider()
-                SettingRow("Model", ui.selectedModel.ifEmpty { "(set one below)" }, icon = Icons.Outlined.Tune) { sheet = SettingsSheet.AI_MODEL }
+                SettingRow(stringResource(R.string.settings_ai_model), ui.selectedModel.ifEmpty { stringResource(R.string.settings_ai_model_unset) }, icon = Icons.Outlined.Tune) { sheet = SettingsSheet.AI_MODEL }
                 if (ui.selectedAI.requiresApiKey) {
                     HorizontalDivider()
-                    SettingRow("API Key", ui.apiKeyMasked.ifEmpty { "Not set" }, icon = Icons.Outlined.Key) { sheet = SettingsSheet.API_KEY }
+                    SettingRow(stringResource(R.string.settings_api_key), ui.apiKeyMasked.ifEmpty { stringResource(R.string.settings_not_set) }, icon = Icons.Outlined.Key) { sheet = SettingsSheet.API_KEY }
                 }
                 if (ui.selectedAI.requiresCustomEndpoint || ui.selectedAI == AIProvider.OLLAMA) {
                     HorizontalDivider()
                     SettingRow(
-                        if (ui.selectedAI.requiresCustomEndpoint) "Base URL" else "Server URL",
-                        "Tap to edit",
+                        if (ui.selectedAI.requiresCustomEndpoint) stringResource(R.string.settings_base_url) else stringResource(R.string.settings_server_url),
+                        stringResource(R.string.settings_tap_to_edit),
                         icon = Icons.Outlined.Link
                     ) { sheet = SettingsSheet.CUSTOM_BASE_URL }
                 }
             }
 
             // Section 5 — Speech-to-Text (matches iOS Section "Speech-to-Text")
-            SectionCard(title = "Speech-to-Text") {
-                SettingRow("Provider", ui.selectedSpeech.displayName, icon = Icons.Outlined.Mic) { sheet = SettingsSheet.SPEECH_PROVIDER }
+            SectionCard(title = stringResource(R.string.settings_section_speech)) {
+                SettingRow(stringResource(R.string.settings_ai_provider), stringResource(ui.selectedSpeech.displayNameRes), icon = Icons.Outlined.Mic) { sheet = SettingsSheet.SPEECH_PROVIDER }
                 HorizontalDivider()
                 Text(
-                    ui.selectedSpeech.description,
+                    stringResource(ui.selectedSpeech.descriptionRes),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
@@ -419,16 +422,16 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                 if (ui.selectedSpeech.requiresApiKey) {
                     HorizontalDivider()
                     SettingRow(
-                        "API Key",
-                        ui.speechApiKeyMasked.ifEmpty { "Not set" },
+                        stringResource(R.string.settings_api_key),
+                        ui.speechApiKeyMasked.ifEmpty { stringResource(R.string.settings_not_set) },
                         icon = Icons.Outlined.Key
                     ) { sheet = SettingsSheet.SPEECH_KEY }
                 }
             }
 
             // Section 6 — Health & Data (matches iOS Section "Health & Data")
-            SectionCard(title = "Health & Data") {
-                ToggleRow("Health Connect", ui.healthConnectEnabled, icon = Icons.Outlined.Favorite, onChange = ::onHealthConnectToggle)
+            SectionCard(title = stringResource(R.string.settings_section_health)) {
+                ToggleRow(stringResource(R.string.settings_health_connect), ui.healthConnectEnabled, icon = Icons.Outlined.Favorite, onChange = ::onHealthConnectToggle)
                 HorizontalDivider()
                 Row(
                     Modifier
@@ -439,7 +442,7 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                 ) {
                     Icon(Icons.Outlined.DeleteSweep, contentDescription = null, tint = Color(0xFFFF9500), modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(14.dp))
-                    Text("Clear Food Log", color = Color(0xFFFF9500), style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.settings_clear_food_log), color = Color(0xFFFF9500), style = MaterialTheme.typography.bodyLarge)
                 }
                 HorizontalDivider()
                 Row(
@@ -451,7 +454,7 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                 ) {
                     Icon(Icons.Outlined.DeleteForever, contentDescription = null, tint = Color(0xFFFF3B30), modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(14.dp))
-                    Text("Delete All Data", color = Color(0xFFFF3B30), style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.settings_delete_all_data), color = Color(0xFFFF3B30), style = MaterialTheme.typography.bodyLarge)
                 }
             }
 
@@ -472,14 +475,14 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
     if (showClearFoodDialog) {
         AlertDialog(
             onDismissRequest = { showClearFoodDialog = false },
-            title = { Text("Clear food log?") },
-            text = { Text("Wipes all food entries and photos. Profile, weights, and settings stay.") },
+            title = { Text(stringResource(R.string.settings_clear_food_title)) },
+            text = { Text(stringResource(R.string.settings_clear_food_message)) },
             confirmButton = {
                 TextButton(onClick = { vm.clearFoodLog(); showClearFoodDialog = false }) {
-                    Text("Clear", color = Color(0xFFD32F2F))
+                    Text(stringResource(R.string.action_clear), color = Color(0xFFD32F2F))
                 }
             },
-            dismissButton = { TextButton(onClick = { showClearFoodDialog = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { showClearFoodDialog = false }) { Text(stringResource(R.string.action_cancel)) } }
         )
     }
 
@@ -487,8 +490,8 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
         val context = LocalContext.current
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete all local data?") },
-            text = { Text("Wipes profile, food log, weight history, chat, and API keys, then takes you back to onboarding. Health Connect data stays intact.") },
+            title = { Text(stringResource(R.string.settings_delete_all_title)) },
+            text = { Text(stringResource(R.string.settings_delete_all_message)) },
             confirmButton = {
                 TextButton(onClick = {
                     vm.deleteAllData {
@@ -496,47 +499,47 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                         (context as? android.app.Activity)?.recreate()
                     }
                 }) {
-                    Text("Delete", color = Color(0xFFD32F2F))
+                    Text(stringResource(R.string.action_delete), color = Color(0xFFD32F2F))
                 }
             },
-            dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.action_cancel)) } }
         )
     }
 
     if (showMaxPinnedAlert) {
         AlertDialog(
             onDismissRequest = { showMaxPinnedAlert = false },
-            title = { Text("Max 2 Pinned") },
-            text = { Text("At most 2 macros can be pinned at a time. Unpin another macro first by opening it and tapping Reset to Auto-balance.") },
-            confirmButton = { TextButton(onClick = { showMaxPinnedAlert = false }) { Text("OK") } }
+            title = { Text(stringResource(R.string.settings_max_pinned_title)) },
+            text = { Text(stringResource(R.string.settings_max_pinned_message)) },
+            confirmButton = { TextButton(onClick = { showMaxPinnedAlert = false }) { Text(stringResource(R.string.action_ok)) } }
         )
     }
 
     if (showRecalcDialog) {
         AlertDialog(
             onDismissRequest = { showRecalcDialog = false },
-            title = { Text("Recalculate goals?") },
-            text = { Text("Resets calories and macros to formula defaults from your height/weight/activity/goal. Any pinned macros are cleared.") },
-            confirmButton = { TextButton(onClick = { vm.recalculateGoals(); showRecalcDialog = false }) { Text("Recalculate") } },
-            dismissButton = { TextButton(onClick = { showRecalcDialog = false }) { Text("Cancel") } }
+            title = { Text(stringResource(R.string.settings_recalc_title)) },
+            text = { Text(stringResource(R.string.settings_recalc_message)) },
+            confirmButton = { TextButton(onClick = { vm.recalculateGoals(); showRecalcDialog = false }) { Text(stringResource(R.string.settings_recalc_confirm)) } },
+            dismissButton = { TextButton(onClick = { showRecalcDialog = false }) { Text(stringResource(R.string.action_cancel)) } }
         )
     }
 
     invalidGoalWeightMessage?.let { msg ->
         AlertDialog(
             onDismissRequest = { invalidGoalWeightMessage = null },
-            title = { Text("Goal weight doesn't match your goal") },
+            title = { Text(stringResource(R.string.settings_invalid_goal_title)) },
             text = { Text(msg) },
-            confirmButton = { TextButton(onClick = { invalidGoalWeightMessage = null }) { Text("OK") } }
+            confirmButton = { TextButton(onClick = { invalidGoalWeightMessage = null }) { Text(stringResource(R.string.action_ok)) } }
         )
     }
 
     permissionDeniedMessage?.let { msg ->
         AlertDialog(
             onDismissRequest = { permissionDeniedMessage = null },
-            title = { Text("Permission needed") },
+            title = { Text(stringResource(R.string.settings_permission_title)) },
             text = { Text(msg) },
-            confirmButton = { TextButton(onClick = { permissionDeniedMessage = null }) { Text("OK") } }
+            confirmButton = { TextButton(onClick = { permissionDeniedMessage = null }) { Text(stringResource(R.string.action_ok)) } }
         )
     }
 }
@@ -551,51 +554,53 @@ private fun SettingsSheets(
     onInvalidGoalWeight: (String) -> Unit
 ) {
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val invalidLoseMsg = stringResource(R.string.settings_invalid_goal_lose)
+    val invalidGainMsg = stringResource(R.string.settings_invalid_goal_gain)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = state, shape = RoundedCornerShape(28.dp)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)) {
             when (sheet) {
                 SettingsSheet.AI_PROVIDER -> ListSheet(
-                    title = "AI Provider",
+                    title = stringResource(R.string.sheet_ai_provider),
                     items = AIProvider.values().toList(),
-                    label = { it.displayName },
+                    label = { stringResource(it.displayNameRes) },
                     selected = { it == ui.selectedAI },
                     onSelect = { vm.selectProvider(it); onDismiss() }
                 )
                 SettingsSheet.AI_MODEL -> ListSheet(
-                    title = "Model",
+                    title = stringResource(R.string.sheet_model),
                     items = ui.selectedAI.models,
                     label = { it },
                     selected = { it == ui.selectedModel },
                     onSelect = { vm.selectModel(it); onDismiss() },
-                    footer = if (ui.selectedAI.supportsCustomModelName) "Or type any custom model ID below." else null,
+                    footer = if (ui.selectedAI.supportsCustomModelName) stringResource(R.string.sheet_model_footer) else null,
                     customField = if (ui.selectedAI.supportsCustomModelName) {
                         { m -> vm.selectModel(m); onDismiss() }
                     } else null
                 )
                 SettingsSheet.API_KEY -> ApiKeySheet(
-                    title = "API Key — ${ui.selectedAI.displayName}",
-                    placeholder = ui.selectedAI.apiKeyPlaceholder,
+                    title = stringResource(R.string.sheet_api_key_format, stringResource(ui.selectedAI.displayNameRes)),
+                    placeholder = stringResource(ui.selectedAI.apiKeyPlaceholderRes),
                     onSave = { vm.setApiKey(it); onDismiss() }
                 )
                 SettingsSheet.CUSTOM_BASE_URL -> {
                     val existing = remember { runBlocking { vm.container.prefs.customBaseUrl(ui.selectedAI).first().orEmpty() } }
                     TextFieldSheet(
-                        title = "Custom base URL",
+                        title = stringResource(R.string.settings_custom_url_title),
                         initial = existing,
-                        placeholder = "https://your-endpoint.com/v1",
+                        placeholder = stringResource(R.string.settings_custom_url_placeholder),
                         onSave = { vm.setCustomBaseUrl(ui.selectedAI, it); onDismiss() }
                     )
                 }
                 SettingsSheet.SPEECH_PROVIDER -> ListSheet(
-                    title = "Speech Engine",
+                    title = stringResource(R.string.sheet_speech_engine),
                     items = SpeechProvider.values().toList(),
-                    label = { it.displayName },
+                    label = { stringResource(it.displayNameRes) },
                     selected = { it == ui.selectedSpeech },
                     onSelect = { vm.selectSpeech(it); onDismiss() }
                 )
                 SettingsSheet.SPEECH_KEY -> ApiKeySheet(
-                    title = "Speech API Key — ${ui.selectedSpeech.displayName}",
-                    placeholder = ui.selectedSpeech.apiKeyPlaceholder,
+                    title = stringResource(R.string.sheet_speech_api_key_format, stringResource(ui.selectedSpeech.displayNameRes)),
+                    placeholder = stringResource(ui.selectedSpeech.apiKeyPlaceholderRes),
                     onSave = {
                         // Route through the VM so SettingsUiState.speechApiKeyMasked
                         // updates and the API Key row reflects the new value
@@ -606,9 +611,9 @@ private fun SettingsSheets(
                     }
                 )
                 SettingsSheet.GENDER -> ListSheet(
-                    title = "Gender",
+                    title = stringResource(R.string.sheet_gender),
                     items = Gender.values().toList(),
-                    label = { it.displayName },
+                    label = { stringResource(it.displayNameRes) },
                     selected = { it == ui.profile?.gender },
                     onSelect = { g -> vm.updateProfileAndRecompute { it.copy(gender = g) }; onDismiss() },
                     icon = { genderIcon(it) }
@@ -624,7 +629,7 @@ private fun SettingsSheets(
                 SettingsSheet.WEIGHT -> {
                     val kg = ui.profile?.weightKg ?: 70.0
                     WeightSheet(
-                        titleText = "Weight",
+                        titleText = stringResource(R.string.sheet_weight),
                         current = kg,
                         useMetric = ui.useMetric,
                         onSave = { newKg -> vm.saveCurrentWeight(newKg); onDismiss() }
@@ -635,18 +640,18 @@ private fun SettingsSheets(
                     onSave = { bf -> vm.updateProfileAndRecompute { it.copy(bodyFatPercentage = bf) }; onDismiss() }
                 )
                 SettingsSheet.ACTIVITY -> ListSheet(
-                    title = "Activity level",
+                    title = stringResource(R.string.sheet_activity_level),
                     items = ActivityLevel.values().toList(),
-                    label = { it.displayName },
-                    subtitle = { it.subtitle },
+                    label = { stringResource(it.displayNameRes) },
+                    subtitle = { stringResource(it.subtitleRes) },
                     selected = { it == ui.profile?.activityLevel },
                     onSelect = { a -> vm.updateProfileAndRecompute { it.copy(activityLevel = a) }; onDismiss() },
                     icon = { activityIcon(it) }
                 )
                 SettingsSheet.GOAL -> ListSheet(
-                    title = "Goal",
+                    title = stringResource(R.string.sheet_goal),
                     items = WeightGoal.values().toList(),
-                    label = { it.displayName },
+                    label = { stringResource(it.displayNameRes) },
                     selected = { it == ui.profile?.goal },
                     icon = { goalIcon(it) },
                     onSelect = { g ->
@@ -679,7 +684,7 @@ private fun SettingsSheets(
                 SettingsSheet.GOAL_WEIGHT -> {
                     val kg = ui.profile?.goalWeightKg ?: (ui.profile?.weightKg ?: 70.0)
                     WeightSheet(
-                        titleText = "Target weight",
+                        titleText = stringResource(R.string.sheet_target_weight),
                         current = kg,
                         useMetric = ui.useMetric,
                         onSave = { newKg ->
@@ -696,9 +701,9 @@ private fun SettingsSheets(
                             if (invalid) {
                                 onInvalidGoalWeight(
                                     if (p!!.goal == WeightGoal.LOSE)
-                                        "A Lose goal needs a target below your current weight."
+                                        invalidLoseMsg
                                     else
-                                        "A Gain goal needs a target above your current weight."
+                                        invalidGainMsg
                                 )
                             } else {
                                 vm.updateProfile { it.copy(goalWeightKg = newKg) }
@@ -721,22 +726,29 @@ private fun SettingsSheets(
                     }
                 )
                 SettingsSheet.APPEARANCE -> ListSheet(
-                    title = "Appearance",
-                    items = listOf("system" to "System", "light" to "Light", "dark" to "Dark"),
+                    title = stringResource(R.string.sheet_appearance),
+                    items = listOf(
+                        "system" to stringResource(R.string.settings_appearance_system),
+                        "light" to stringResource(R.string.settings_appearance_light),
+                        "dark" to stringResource(R.string.settings_appearance_dark)
+                    ),
                     label = { it.second },
                     selected = { it.first == ui.appearanceMode },
                     onSelect = { vm.setAppearanceMode(it.first); onDismiss() },
                     icon = { appearanceIcon(it.first) }
                 )
                 SettingsSheet.WEEK_START -> ListSheet(
-                    title = "Week Starts On",
-                    items = listOf(false to "Sunday", true to "Monday"),
+                    title = stringResource(R.string.sheet_week_starts),
+                    items = listOf(
+                        false to stringResource(R.string.settings_week_sunday),
+                        true to stringResource(R.string.settings_week_monday)
+                    ),
                     label = { it.second },
                     selected = { it.first == ui.weekStartsOnMonday },
                     onSelect = { vm.setWeekStartsOnMonday(it.first); onDismiss() }
                 )
                 SettingsSheet.CALORIES -> NutritionPickerSheet(
-                    label = "Calories", unit = "kcal",
+                    label = stringResource(R.string.macro_calories), unit = stringResource(R.string.unit_kcal),
                     currentValue = ui.profile?.effectiveCalories ?: 2000,
                     range = 800..6000, step = 50,
                     onSave = { v ->
@@ -745,7 +757,7 @@ private fun SettingsSheets(
                     }
                 )
                 SettingsSheet.PROTEIN -> NutritionPickerSheet(
-                    label = "Protein", unit = "g",
+                    label = stringResource(R.string.macro_protein), unit = stringResource(R.string.unit_g),
                     currentValue = ui.profile?.effectiveProtein ?: 0,
                     range = 10..500, step = 5,
                     onSave = { v ->
@@ -760,7 +772,7 @@ private fun SettingsSheets(
                     } else null
                 )
                 SettingsSheet.CARBS -> NutritionPickerSheet(
-                    label = "Carbs", unit = "g",
+                    label = stringResource(R.string.macro_carbs), unit = stringResource(R.string.unit_g),
                     currentValue = ui.profile?.effectiveCarbs ?: 0,
                     range = 0..800, step = 5,
                     onSave = { v ->
@@ -775,7 +787,7 @@ private fun SettingsSheets(
                     } else null
                 )
                 SettingsSheet.FAT -> NutritionPickerSheet(
-                    label = "Fat", unit = "g",
+                    label = stringResource(R.string.macro_fat), unit = stringResource(R.string.unit_g),
                     currentValue = ui.profile?.effectiveFat ?: 0,
                     range = 10..300, step = 5,
                     onSave = { v ->
@@ -799,11 +811,11 @@ private fun SettingsSheets(
 private fun <T> ListSheet(
     title: String,
     items: List<T>,
-    label: (T) -> String,
+    label: @Composable (T) -> String,
     selected: (T) -> Boolean,
     onSelect: (T) -> Unit,
     icon: ((T) -> ImageVector?)? = null,
-    subtitle: ((T) -> String?)? = null,
+    subtitle: (@Composable (T) -> String?)? = null,
     footer: String? = null,
     customField: ((String) -> Unit)? = null
 ) {
@@ -845,7 +857,7 @@ private fun <T> ListSheet(
                 if (isSel) {
                     Icon(
                         Icons.Filled.Check,
-                        contentDescription = "Selected",
+                        contentDescription = stringResource(R.string.sheet_selected_a11y),
                         tint = AppColors.Calorie,
                         modifier = Modifier.size(20.dp)
                     )
@@ -863,7 +875,7 @@ private fun <T> ListSheet(
         OutlinedTextField(
             value = custom,
             onValueChange = { custom = it },
-            placeholder = { Text("Any model ID") },
+            placeholder = { Text(stringResource(R.string.sheet_any_model_id)) },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(8.dp))
@@ -871,7 +883,7 @@ private fun <T> ListSheet(
             onClick = { if (custom.isNotBlank()) customField(custom.trim()) },
             colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie),
             modifier = Modifier.fillMaxWidth()
-        ) { Text("Save", color = Color.White) }
+        ) { Text(stringResource(R.string.action_save), color = Color.White) }
     }
 }
 
@@ -894,9 +906,9 @@ private fun ApiKeySheet(title: String, placeholder: String, onSave: (String) -> 
         onClick = { onSave(value) },
         colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie),
         modifier = Modifier.fillMaxWidth()
-    ) { Text("Save", color = Color.White) }
+    ) { Text(stringResource(R.string.action_save), color = Color.White) }
     Spacer(Modifier.height(4.dp))
-    TextButton(onClick = { onSave("") }, modifier = Modifier.fillMaxWidth()) { Text("Clear key") }
+    TextButton(onClick = { onSave("") }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings_clear_key)) }
 }
 
 @Composable
@@ -916,18 +928,18 @@ private fun TextFieldSheet(title: String, initial: String, placeholder: String, 
         onClick = { onSave(value.trim()) },
         colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie),
         modifier = Modifier.fillMaxWidth()
-    ) { Text("Save", color = Color.White) }
+    ) { Text(stringResource(R.string.action_save), color = Color.White) }
 }
 
 @Composable
 private fun HeightSheet(current: Int, useMetric: Boolean, onSave: (Int) -> Unit) {
     var cm by remember(current) { mutableStateOf(current) }
     var metric by remember { mutableStateOf(useMetric) }
-    Text("Height", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Text(stringResource(R.string.sheet_height), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
     Spacer(Modifier.height(12.dp))
-    UnitToggle("cm", "ft / in", metric, { metric = it }, Modifier.fillMaxWidth())
+    UnitToggle(stringResource(R.string.unit_cm), stringResource(R.string.unit_ft_in), metric, { metric = it }, Modifier.fillMaxWidth())
     Spacer(Modifier.height(20.dp))
-    if (metric) NumericWheelPicker(cm, { cm = it }, 100, 250, "cm")
+    if (metric) NumericWheelPicker(cm, { cm = it }, 100, 250, stringResource(R.string.unit_cm))
     else FeetInchesWheelPicker(cm, { cm = it })
     Spacer(Modifier.height(16.dp))
     GradientSaveButton { onSave(cm) }
@@ -940,12 +952,12 @@ private fun WeightSheet(titleText: String, current: Double, useMetric: Boolean, 
     var metric by remember { mutableStateOf(useMetric) }
     Text(titleText, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
     Spacer(Modifier.height(12.dp))
-    UnitToggle("kg", "lbs", metric, { metric = it }, Modifier.fillMaxWidth())
+    UnitToggle(stringResource(R.string.unit_kg), stringResource(R.string.unit_lbs), metric, { metric = it }, Modifier.fillMaxWidth())
     Spacer(Modifier.height(20.dp))
     if (metric) {
-        SplitDecimalWheelPicker(kg, { kg = it }, 30, 250, "kg")
+        SplitDecimalWheelPicker(kg, { kg = it }, 30, 250, stringResource(R.string.unit_kg))
     } else {
-        SplitDecimalWheelPicker(kg * 2.20462, { lbs -> kg = lbs / 2.20462 }, 66, 551, "lbs")
+        SplitDecimalWheelPicker(kg * 2.20462, { lbs -> kg = lbs / 2.20462 }, 66, 551, stringResource(R.string.unit_lbs))
     }
     Spacer(Modifier.height(16.dp))
     GradientSaveButton { onSave(kg) }
@@ -955,13 +967,13 @@ private fun WeightSheet(titleText: String, current: Double, useMetric: Boolean, 
 @Composable
 private fun BodyFatSheet(current: Double?, onSave: (Double?) -> Unit) {
     var pct by remember(current) { mutableStateOf((current ?: 0.20) * 100) }
-    Text("Body fat %", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Text(stringResource(R.string.sheet_body_fat_percent), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
     Spacer(Modifier.height(12.dp))
-    DecimalWheelPicker(pct, { pct = it }, 5.0, 60.0, 0.5, "%")
+    DecimalWheelPicker(pct, { pct = it }, 5.0, 60.0, 0.5, stringResource(R.string.unit_percent))
     Spacer(Modifier.height(12.dp))
     GradientSaveButton { onSave(pct / 100.0) }
     Spacer(Modifier.height(4.dp))
-    TextButton(onClick = { onSave(null) }, modifier = Modifier.fillMaxWidth()) { Text("Clear") }
+    TextButton(onClick = { onSave(null) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_clear)) }
     Spacer(Modifier.height(8.dp))
 }
 

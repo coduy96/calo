@@ -56,10 +56,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.AppContainer
+import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.services.speech.AudioRecorder
 import com.apoorvdarshan.calorietracker.services.speech.NativeSpeechRecognizer
@@ -84,6 +86,9 @@ fun VoiceInputSheet(
     val scope = rememberCoroutineScope()
 
     val provider by container.prefs.selectedSpeechProvider.collectAsState(initial = SpeechProvider.NATIVE)
+    val micDeniedMsg = stringResource(R.string.voice_mic_permission_denied)
+    val micStartFailedMsg = stringResource(R.string.voice_mic_start_failed)
+    val transcriptionFailedMsg = stringResource(R.string.voice_transcription_failed)
 
     var phase by remember { mutableStateOf(VoicePhase.IDLE) }
     var transcript by remember { mutableStateOf("") }
@@ -156,7 +161,7 @@ fun VoiceInputSheet(
         } else {
             val file = recorder.start()
             if (file == null) {
-                error = "Couldn't start the mic. Check permissions."
+                error = micStartFailedMsg
             } else {
                 recordedFile = file
                 phase = VoicePhase.RECORDING
@@ -169,7 +174,7 @@ fun VoiceInputSheet(
     ) { granted ->
         // Permission is requested on sheet open but we no longer auto-start.
         // The user opens the sheet → sees an idle mic → taps it to begin.
-        if (!granted) error = "Microphone permission denied."
+        if (!granted) error = micDeniedMsg
     }
 
     LaunchedEffect(Unit) {
@@ -215,7 +220,7 @@ fun VoiceInputSheet(
                 )
                 Spacer(Modifier.size(6.dp))
                 Text(
-                    provider.displayName,
+                    stringResource(provider.displayNameRes),
                     color = AppColors.Calorie,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
@@ -245,7 +250,7 @@ fun VoiceInputSheet(
                             )
                             Spacer(Modifier.size(10.dp))
                             Text(
-                                "Transcribing via ${provider.displayName}…",
+                                stringResource(R.string.voice_transcribing_format, stringResource(provider.displayNameRes)),
                                 fontSize = 13.sp,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
@@ -265,7 +270,7 @@ fun VoiceInputSheet(
                     }
                     else -> {
                         Text(
-                            if (phase == VoicePhase.RECORDING) "Listening…" else "Tap the mic to start",
+                            if (phase == VoicePhase.RECORDING) stringResource(R.string.voice_listening) else stringResource(R.string.voice_tap_to_start),
                             fontSize = 16.sp,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                         )
@@ -301,7 +306,7 @@ fun VoiceInputSheet(
                                                 transcript = container.speechService.transcribeRemote(file)
                                                 phase = VoicePhase.REVIEWING
                                             } catch (e: Throwable) {
-                                                error = e.localizedMessage ?: "Transcription failed"
+                                                error = e.localizedMessage ?: transcriptionFailedMsg
                                                 phase = VoicePhase.IDLE
                                             }
                                         }
@@ -339,7 +344,7 @@ fun VoiceInputSheet(
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier.fillMaxWidth().height(52.dp)
             ) {
-                Text("Analyze", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                Text(stringResource(R.string.action_analyze), color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
             }
 
             error?.let {
@@ -353,7 +358,7 @@ fun VoiceInputSheet(
                 recorder.cancel()
                 onDismiss()
             }, modifier = Modifier.fillMaxWidth()) {
-                Text("Cancel", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                Text(stringResource(R.string.action_cancel), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
             }
         }
     }
@@ -397,7 +402,7 @@ private fun MicButton(phase: VoicePhase, onToggle: () -> Unit) {
     ) {
         Icon(
             imageVector = if (recording) Icons.Filled.Mic else Icons.Filled.MicNone,
-            contentDescription = if (recording) "Stop" else "Record",
+            contentDescription = if (recording) stringResource(R.string.voice_stop) else stringResource(R.string.voice_record),
             tint = Color.White,
             modifier = Modifier.size(32.dp)
         )

@@ -64,8 +64,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import com.apoorvdarshan.calorietracker.R
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -104,7 +106,7 @@ fun CoachScreen(container: AppContainer) {
             // iOS Coach: centered "Coach" title, with a small circular dark
             // chip on the right wrapping a counterclockwise arrow reset icon.
             CenterAlignedTopAppBar(
-                title = { Text("Coach", fontWeight = FontWeight.SemiBold) },
+                title = { Text(stringResource(R.string.coach_title), fontWeight = FontWeight.SemiBold) },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 ),
@@ -121,7 +123,7 @@ fun CoachScreen(container: AppContainer) {
                     ) {
                         Icon(
                             Icons.Filled.Replay,
-                            contentDescription = "Reset chat",
+                            contentDescription = stringResource(R.string.coach_reset_chat_a11y),
                             tint = if (canReset)
                                 MaterialTheme.colorScheme.onBackground
                             else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
@@ -137,18 +139,20 @@ fun CoachScreen(container: AppContainer) {
             if (ui.messages.isEmpty()) {
                 EmptyState(modifier = Modifier.weight(1f))
             } else {
+                val resolvedError = ui.error ?: ui.errorRes?.let { stringResource(it) }
                 MessageList(
                     messages = ui.messages,
                     sending = ui.sending,
-                    error = ui.error,
+                    error = resolvedError,
                     listState = listState,
                     modifier = Modifier.weight(1f)
                 )
             }
 
             // promptChips — horizontal scrolling, ALWAYS visible (matches iOS)
+            val resolvedChips = ui.suggestions.map { stringResource(it) }
             PromptChipRow(
-                chips = ui.suggestions,
+                chips = resolvedChips,
                 enabled = !ui.sending,
                 onTap = { chip ->
                     input = ""
@@ -175,16 +179,16 @@ fun CoachScreen(container: AppContainer) {
     if (showResetConfirm) {
         AlertDialog(
             onDismissRequest = { showResetConfirm = false },
-            title = { Text("Reset Chat") },
-            text = { Text("Clear all messages and start fresh? This can't be undone.") },
+            title = { Text(stringResource(R.string.coach_reset_dialog_title)) },
+            text = { Text(stringResource(R.string.coach_reset_dialog_message)) },
             confirmButton = {
                 TextButton(onClick = {
                     vm.resetConversation()
                     showResetConfirm = false
-                }) { Text("Reset", color = Color(0xFFD32F2F)) }
+                }) { Text(stringResource(R.string.coach_reset_confirm), color = Color(0xFFD32F2F)) }
             },
             dismissButton = {
-                TextButton(onClick = { showResetConfirm = false }) { Text("Cancel") }
+                TextButton(onClick = { showResetConfirm = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -231,13 +235,13 @@ private fun EmptyState(modifier: Modifier = Modifier) {
         }
         Spacer(Modifier.height(16.dp))
         Text(
-            "Ask your Coach",
+            stringResource(R.string.coach_empty_title),
             fontSize = 22.sp,
             fontWeight = FontWeight.SemiBold
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            "Your coach can see your weight history, calorie log, and goals. Ask about expected weight, what to eat, or how to hit your target.",
+            stringResource(R.string.coach_empty_subtitle),
             fontSize = 15.sp,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
             textAlign = TextAlign.Center,
@@ -543,7 +547,7 @@ private fun InputBar(
         Box(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 8.dp)) {
             if (value.isEmpty()) {
                 Text(
-                    "Ask Coach…",
+                    stringResource(R.string.coach_input_placeholder),
                     fontSize = 17.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
                 )
@@ -600,7 +604,7 @@ private fun SendButton(canSend: Boolean, onClick: () -> Unit) {
     ) {
         Icon(
             Icons.Filled.ArrowUpward,
-            contentDescription = "Send",
+            contentDescription = stringResource(R.string.coach_send_a11y),
             tint = Color.White,
             modifier = Modifier.size(16.dp)
         )

@@ -53,8 +53,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.annotation.StringRes
+import com.apoorvdarshan.calorietracker.R
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -84,13 +87,13 @@ import java.util.Locale
  *   5. MacroAveragesSection — averages over the selected time range,
  *      one MacroProgressRow per macro
  */
-enum class TimeRange(val label: String, val days: Int) {
-    WEEK("1W", 7),
-    MONTH("1M", 30),
-    THREE_MONTHS("3M", 90),
-    SIX_MONTHS("6M", 180),
-    YEAR("1Y", 365),
-    ALL_TIME("All", 3650);
+enum class TimeRange(@StringRes val labelRes: Int, val days: Int) {
+    WEEK(R.string.progress_range_week, 7),
+    MONTH(R.string.progress_range_month, 30),
+    THREE_MONTHS(R.string.progress_range_3m, 90),
+    SIX_MONTHS(R.string.progress_range_6m, 180),
+    YEAR(R.string.progress_range_year, 365),
+    ALL_TIME(R.string.progress_range_all, 3650);
 
     fun dateRange(today: LocalDate = LocalDate.now()): Pair<LocalDate, LocalDate> {
         val start = today.minusDays((days - 1).toLong())
@@ -218,9 +221,9 @@ fun ProgressScreen(container: AppContainer) {
     if (ui.goalReached) {
         AlertDialog(
             onDismissRequest = { vm.dismissGoalReached() },
-            title = { Text("Congratulations! 🎉", fontWeight = FontWeight.SemiBold) },
-            text = { Text("You've reached your goal weight! Head to Settings to switch your goal and tap Recalculate Goals to refresh your targets.") },
-            confirmButton = { TextButton(onClick = { vm.dismissGoalReached() }) { Text("Keep Going") } }
+            title = { Text(stringResource(R.string.progress_goal_reached_title), fontWeight = FontWeight.SemiBold) },
+            text = { Text(stringResource(R.string.progress_goal_reached_message)) },
+            confirmButton = { TextButton(onClick = { vm.dismissGoalReached() }) { Text(stringResource(R.string.action_keep_going)) } }
         )
     }
 }
@@ -254,7 +257,7 @@ private fun TimeRangePicker(selected: TimeRange, onSelect: (TimeRange) -> Unit) 
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    r.label,
+                    stringResource(r.labelRes),
                     fontSize = 13.sp,
                     fontWeight = if (isSel) FontWeight.SemiBold else FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
@@ -286,7 +289,7 @@ private fun WeightSection(
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             // iOS .font(.headline) = 17sp semibold rounded.
-            Text("Weight", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.progress_weight_section), fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.weight(1f))
             Row(
                 modifier = Modifier.clickable(onClick = onLogWeight),
@@ -294,22 +297,22 @@ private fun WeightSection(
             ) {
                 Icon(Icons.Filled.AddCircle, null, tint = AppColors.Calorie, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
-                Text("Log Weight", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = AppColors.Calorie)
+                Text(stringResource(R.string.progress_log_weight), fontSize = 15.sp, fontWeight = FontWeight.Medium, color = AppColors.Calorie)
             }
         }
         if (entries.isEmpty()) {
             // iOS emptyState: centered secondary text inside the card.
             Box(Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
                 Text(
-                    "Log your first weight to see trends",
+                    stringResource(R.string.progress_log_first_weight),
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
                 )
             }
         } else {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                latest?.let { StatBadge("Current", formatWeight(it.weightKg, useMetric)) }
-                goalKg?.let { StatBadge("Goal", formatWeight(it, useMetric)) }
+                latest?.let { StatBadge(stringResource(R.string.progress_stat_current), formatWeight(it.weightKg, useMetric)) }
+                goalKg?.let { StatBadge(stringResource(R.string.progress_stat_goal), formatWeight(it, useMetric)) }
             }
             WeightChartCanvas(entries = entries, goalKg = goalKg, useMetric = useMetric)
         }
@@ -473,9 +476,9 @@ private fun WeightHistoryLink(count: Int, onClick: () -> Unit) {
         )
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text("Weight History", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.progress_weight_history), fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
             Text(
-                "$count entries · tap to view or delete",
+                stringResource(R.string.progress_history_count_format, count),
                 fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
@@ -493,12 +496,12 @@ private fun WeightHistoryLink(count: Int, onClick: () -> Unit) {
 private fun CalorieSection(dailyCalories: List<Pair<LocalDate, Int>>, calorieGoal: Int) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Calories", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.progress_calories_section), fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.weight(1f))
             if (dailyCalories.isNotEmpty()) {
                 val avg = dailyCalories.sumOf { it.second } / dailyCalories.size
                 Text(
-                    "Avg: $avg kcal",
+                    stringResource(R.string.progress_avg_format, avg),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
@@ -508,7 +511,7 @@ private fun CalorieSection(dailyCalories: List<Pair<LocalDate, Int>>, calorieGoa
         if (dailyCalories.isEmpty()) {
             Box(Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
                 Text(
-                    "No food logged yet",
+                    stringResource(R.string.progress_no_food),
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
                 )
@@ -659,10 +662,10 @@ private fun MacroAveragesSection(
     proteinGoal: Int, carbsGoal: Int, fatGoal: Int
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Macro Averages", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-        MacroProgressRow("Protein", avgProtein, proteinGoal)
-        MacroProgressRow("Carbs", avgCarbs, carbsGoal)
-        MacroProgressRow("Fat", avgFat, fatGoal)
+        Text(stringResource(R.string.progress_macro_averages), fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+        MacroProgressRow(stringResource(R.string.macro_protein), avgProtein, proteinGoal)
+        MacroProgressRow(stringResource(R.string.macro_carbs), avgCarbs, carbsGoal)
+        MacroProgressRow(stringResource(R.string.macro_fat), avgFat, fatGoal)
     }
 }
 
@@ -674,7 +677,7 @@ private fun MacroProgressRow(label: String, current: Int, goal: Int) {
             Text(label, fontSize = 15.sp, fontWeight = FontWeight.Medium)
             Spacer(Modifier.weight(1f))
             Text(
-                "${current}g / ${goal}g",
+                stringResource(R.string.progress_macro_progress_format, current, goal),
                 fontSize = 15.sp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
@@ -720,9 +723,9 @@ private fun AllWeightHistorySheet(
     ) {
         Column(Modifier.fillMaxWidth().padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Weight History", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.progress_weight_history), fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = onDismiss) { Text("Done", color = AppColors.Calorie) }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_done), color = AppColors.Calorie) }
             }
             Spacer(Modifier.height(12.dp))
             entries.forEach { entry ->
@@ -735,7 +738,7 @@ private fun AllWeightHistorySheet(
                         Text(fmt.format(entry.date), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f))
                     }
                     IconButton(onClick = { onDelete(entry.id) }) {
-                        Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), modifier = Modifier.size(18.dp))
+                        Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.action_delete), tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), modifier = Modifier.size(18.dp))
                     }
                 }
                 Box(Modifier.fillMaxWidth().height(0.5.dp).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)))
@@ -750,12 +753,12 @@ private fun AddWeightDialog(useMetric: Boolean, onDismiss: () -> Unit, onSubmit:
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(24.dp),
-        title = { Text("Log Weight", fontWeight = FontWeight.SemiBold) },
+        title = { Text(stringResource(R.string.progress_log_weight_title), fontWeight = FontWeight.SemiBold) },
         text = {
             OutlinedTextField(
                 value = input,
                 onValueChange = { input = it },
-                placeholder = { Text(if (useMetric) "kg" else "lbs") },
+                placeholder = { Text(if (useMetric) stringResource(R.string.unit_kg) else stringResource(R.string.unit_lbs)) },
                 keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
@@ -768,9 +771,9 @@ private fun AddWeightDialog(useMetric: Boolean, onDismiss: () -> Unit, onSubmit:
                     if (v != null && v > 0.0) onSubmit(if (useMetric) v else v / 2.20462)
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie)
-            ) { Text("Save", color = Color.White) }
+            ) { Text(stringResource(R.string.action_save), color = Color.White) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
 }
 

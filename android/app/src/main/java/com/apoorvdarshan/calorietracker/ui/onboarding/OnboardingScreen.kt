@@ -72,6 +72,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -125,7 +126,7 @@ fun OnboardingScreen(container: AppContainer, onComplete: () -> Unit) {
             ) {
                 Icon(
                     imageVector = Icons.Outlined.ChevronLeft,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.onboarding_back),
                     tint = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier
                         .size(28.dp)
@@ -231,7 +232,7 @@ fun OnboardingScreen(container: AppContainer, onComplete: () -> Unit) {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            "Get Started",
+                            stringResource(R.string.action_get_started),
                             color = Color.White,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
@@ -294,7 +295,7 @@ fun OnboardingScreen(container: AppContainer, onComplete: () -> Unit) {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            "Rate fud",
+                            stringResource(R.string.onboarding_review_rate),
                             color = Color.White,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
@@ -303,7 +304,7 @@ fun OnboardingScreen(container: AppContainer, onComplete: () -> Unit) {
                     Spacer(Modifier.height(12.dp))
                     TextButton(onClick = { vm.complete(onComplete) }) {
                         Text(
-                            "Maybe Later",
+                            stringResource(R.string.onboarding_review_maybe_later),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
                         )
@@ -326,7 +327,7 @@ fun OnboardingScreen(container: AppContainer, onComplete: () -> Unit) {
                         .height(54.dp)
                 ) {
                     Text(
-                        "Continue",
+                        stringResource(R.string.action_continue),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -348,12 +349,12 @@ private fun WelcomeStep() {
     ) {
         Image(
             painter = painterResource(id = R.drawable.ic_logo),
-            contentDescription = "Fud AI logo",
+            contentDescription = stringResource(R.string.onboarding_logo_description),
             modifier = Modifier.size(120.dp)
         )
         Spacer(Modifier.height(20.dp))
         Text(
-            "Eat Smart,",
+            stringResource(R.string.onboarding_welcome_line1),
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
@@ -362,7 +363,7 @@ private fun WelcomeStep() {
         // Second line of the headline uses the pink gradient as a foreground
         // brush — matches iOS .foregroundStyle(LinearGradient(...)).
         Text(
-            "Live Better",
+            stringResource(R.string.onboarding_welcome_line2),
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
             style = LocalTextStyle.current.copy(
@@ -373,7 +374,7 @@ private fun WelcomeStep() {
         )
         Spacer(Modifier.height(20.dp))
         Text(
-            "Just snap, track, and thrive.\nYour nutrition, simplified.",
+            stringResource(R.string.onboarding_welcome_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -404,7 +405,10 @@ private fun StepHeader(title: String, subtitle: String? = null) {
 @Composable
 private fun GenderStep(selected: Gender, onSelect: (Gender) -> Unit) {
     Column(Modifier.fillMaxSize()) {
-        StepHeader("What's your gender?", subtitle = "This helps us calculate your metabolism")
+        StepHeader(
+            stringResource(R.string.onboarding_gender_title),
+            subtitle = stringResource(R.string.onboarding_gender_subtitle)
+        )
         Spacer(Modifier.weight(1f))
         for (g in Gender.values()) {
             SelectionCard(
@@ -413,7 +417,7 @@ private fun GenderStep(selected: Gender, onSelect: (Gender) -> Unit) {
                     Gender.FEMALE -> Icons.Outlined.Woman
                     Gender.OTHER -> Icons.Outlined.Accessibility
                 },
-                title = g.displayName,
+                title = stringResource(g.displayNameRes),
                 selected = g == selected
             ) { onSelect(g) }
             Spacer(Modifier.height(12.dp))
@@ -425,7 +429,10 @@ private fun GenderStep(selected: Gender, onSelect: (Gender) -> Unit) {
 @Composable
 private fun BirthdayStep(current: LocalDate, onChange: (LocalDate) -> Unit) {
     Column(Modifier.fillMaxSize()) {
-        StepHeader("When's your birthday?", subtitle = "Used to calculate your daily needs")
+        StepHeader(
+            stringResource(R.string.onboarding_birthday_title),
+            subtitle = stringResource(R.string.onboarding_birthday_subtitle)
+        )
         Spacer(Modifier.weight(1f))
         DateWheelPicker(selected = current, onSelect = onChange)
         Spacer(Modifier.weight(1f))
@@ -445,10 +452,13 @@ private fun HeightWeightStep(
     // Imperial layout shows three columns (Feet | Inches | Weight) and the
     // Metric layout shows two (Height | Weight). Match that.
     Column(Modifier.fillMaxSize()) {
-        StepHeader("Height & Weight", subtitle = "We'll keep this private")
+        StepHeader(
+            stringResource(R.string.onboarding_height_weight_title),
+            subtitle = stringResource(R.string.onboarding_height_weight_subtitle)
+        )
         UnitToggle(
-            leftLabel = "Imperial",
-            rightLabel = "Metric",
+            leftLabel = stringResource(R.string.onboarding_imperial),
+            rightLabel = stringResource(R.string.onboarding_metric),
             // useMetric=false → Imperial selected (left segment).
             isLeft = !useMetric,
             onSelect = { isLeftSel -> onToggle(!isLeftSel) },
@@ -485,16 +495,16 @@ private fun HeightWeightMetricWheels(
         Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Top
     ) {
-        WheeledColumn(label = "Height", modifier = Modifier.weight(1f)) {
-            NumericWheelPicker(value = cm, onValueChange = onHeightChange, min = 100, max = 250, unit = "cm")
+        WheeledColumn(label = stringResource(R.string.onboarding_height), modifier = Modifier.weight(1f)) {
+            NumericWheelPicker(value = cm, onValueChange = onHeightChange, min = 100, max = 250, unit = stringResource(R.string.unit_cm))
         }
-        WheeledColumn(label = "Weight", modifier = Modifier.weight(1f)) {
+        WheeledColumn(label = stringResource(R.string.onboarding_weight), modifier = Modifier.weight(1f)) {
             NumericWheelPicker(
                 value = kg.toInt().coerceIn(30, 250),
                 onValueChange = { onWeightChange(it.toDouble()) },
                 min = 30,
                 max = 250,
-                unit = "kg"
+                unit = stringResource(R.string.unit_kg)
             )
         }
     }
@@ -513,7 +523,7 @@ private fun HeightWeightImperialWheels(
     val lbs = (kg * 2.20462).toInt().coerceIn(60, 500)
 
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-        WheeledColumn(label = "Feet", modifier = Modifier.weight(1f)) {
+        WheeledColumn(label = stringResource(R.string.onboarding_feet), modifier = Modifier.weight(1f)) {
             NumericWheelPicker(
                 value = feet,
                 onValueChange = { newFt ->
@@ -522,10 +532,10 @@ private fun HeightWeightImperialWheels(
                 },
                 min = 3,
                 max = 8,
-                unit = "ft"
+                unit = stringResource(R.string.unit_ft)
             )
         }
-        WheeledColumn(label = "Inches", modifier = Modifier.weight(1f)) {
+        WheeledColumn(label = stringResource(R.string.onboarding_inches), modifier = Modifier.weight(1f)) {
             NumericWheelPicker(
                 value = inches,
                 onValueChange = { newIn ->
@@ -534,16 +544,16 @@ private fun HeightWeightImperialWheels(
                 },
                 min = 0,
                 max = 11,
-                unit = "in"
+                unit = stringResource(R.string.unit_in)
             )
         }
-        WheeledColumn(label = "Weight", modifier = Modifier.weight(1f)) {
+        WheeledColumn(label = stringResource(R.string.onboarding_weight), modifier = Modifier.weight(1f)) {
             NumericWheelPicker(
                 value = lbs,
                 onValueChange = { newLbs -> onWeightChange(newLbs / 2.20462) },
                 min = 60,
                 max = 500,
-                unit = "lbs"
+                unit = stringResource(R.string.unit_lbs)
             )
         }
     }
@@ -570,12 +580,15 @@ private fun WheeledColumn(
 @Composable
 private fun ActivityStep(selected: ActivityLevel, onSelect: (ActivityLevel) -> Unit) {
     Column(Modifier.fillMaxSize()) {
-        StepHeader("How active are you?", subtitle = "Your typical week")
+        StepHeader(
+            stringResource(R.string.onboarding_activity_title),
+            subtitle = stringResource(R.string.onboarding_activity_subtitle)
+        )
         for (a in ActivityLevel.values()) {
             SelectionCard(
                 icon = activityIcon(a),
-                title = a.displayName,
-                subtitle = a.subtitle,
+                title = stringResource(a.displayNameRes),
+                subtitle = stringResource(a.subtitleRes),
                 selected = a == selected
             ) { onSelect(a) }
             Spacer(Modifier.height(12.dp))
@@ -595,12 +608,15 @@ private fun activityIcon(level: ActivityLevel): ImageVector = when (level) {
 @Composable
 private fun GoalStep(selected: WeightGoal, onSelect: (WeightGoal) -> Unit) {
     Column(Modifier.fillMaxSize()) {
-        StepHeader("What's your goal?", subtitle = "You can change this anytime")
+        StepHeader(
+            stringResource(R.string.onboarding_goal_title),
+            subtitle = stringResource(R.string.onboarding_goal_subtitle)
+        )
         Spacer(Modifier.weight(1f))
         for (g in WeightGoal.values()) {
             SelectionCard(
                 icon = goalIcon(g),
-                title = g.displayName,
+                title = stringResource(g.displayNameRes),
                 selected = g == selected
             ) { onSelect(g) }
             Spacer(Modifier.height(12.dp))
@@ -621,7 +637,10 @@ private fun GoalWeightStep(current: Double, goal: WeightGoal, useMetric: Boolean
     // goal.displayName, integer wheel picker; no unit toggle (respects
     // profile useMetric).
     Column(Modifier.fillMaxSize()) {
-        StepHeader("What's your\ndesired weight?", subtitle = goal.displayName)
+        StepHeader(
+            stringResource(R.string.onboarding_desired_weight_title),
+            subtitle = stringResource(goal.displayNameRes)
+        )
         Spacer(Modifier.weight(1f))
         if (useMetric) {
             NumericWheelPicker(
@@ -629,7 +648,7 @@ private fun GoalWeightStep(current: Double, goal: WeightGoal, useMetric: Boolean
                 onValueChange = { onChange(it.toDouble()) },
                 min = 30,
                 max = 250,
-                unit = "kg"
+                unit = stringResource(R.string.unit_kg)
             )
         } else {
             val lbs = (current * 2.20462).toInt().coerceIn(60, 500)
@@ -638,7 +657,7 @@ private fun GoalWeightStep(current: Double, goal: WeightGoal, useMetric: Boolean
                 onValueChange = { newLbs -> onChange(newLbs / 2.20462) },
                 min = 60,
                 max = 500,
-                unit = "lbs"
+                unit = stringResource(R.string.unit_lbs)
             )
         }
         Spacer(Modifier.weight(1f))
@@ -652,19 +671,19 @@ private fun BodyFatStep(bodyFat: Double?, onChange: (Double?) -> Unit) {
     val knows = bodyFat != null
     Column(Modifier.fillMaxSize()) {
         StepHeader(
-            "Do you know your\nbody fat %?",
-            subtitle = "Helps us calculate your metabolism more accurately"
+            stringResource(R.string.onboarding_body_fat_title),
+            subtitle = stringResource(R.string.onboarding_body_fat_subtitle)
         )
         SelectionCard(
             icon = Icons.Outlined.CheckCircle,
-            title = "Yes",
+            title = stringResource(R.string.onboarding_yes),
             selected = knows,
             onClick = { if (!knows) onChange(0.20) }
         )
         Spacer(Modifier.height(12.dp))
         SelectionCard(
             icon = Icons.Outlined.Cancel,
-            title = "No",
+            title = stringResource(R.string.onboarding_no),
             selected = !knows,
             onClick = { if (knows) onChange(null) }
         )
@@ -676,11 +695,11 @@ private fun BodyFatStep(bodyFat: Double?, onChange: (Double?) -> Unit) {
                 min = 3.0,
                 max = 60.0,
                 step = 0.5,
-                unit = "%"
+                unit = stringResource(R.string.unit_percent)
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                "Common ranges: Men 10–25%, Women 18–35%",
+                stringResource(R.string.onboarding_body_fat_ranges),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
                 modifier = Modifier.fillMaxWidth(),
@@ -699,7 +718,7 @@ private fun BodyFatStep(bodyFat: Double?, onChange: (Double?) -> Unit) {
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "No worries! We'll use a standard formula\nbased on your height, weight, and age.",
+                    stringResource(R.string.onboarding_body_fat_no_worries),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -723,10 +742,13 @@ private fun GoalSpeedStep(
     // (0.25/0.5/1.0 kg/wk), and an estimated-days card.
     Column(Modifier.fillMaxSize()) {
         StepHeader(
-            title = if (goal == WeightGoal.MAINTAIN) "Your pace"
-                    else "How fast do you want\nto reach your goal?",
-            subtitle = if (goal == WeightGoal.MAINTAIN) "We'll set a balanced plan"
-                       else "${if (goal == WeightGoal.LOSE) "Weight loss" else "Weight gain"} speed per week"
+            title = if (goal == WeightGoal.MAINTAIN) stringResource(R.string.onboarding_pace_title_maintain)
+                    else stringResource(R.string.onboarding_pace_title_change),
+            subtitle = when {
+                goal == WeightGoal.MAINTAIN -> stringResource(R.string.onboarding_pace_subtitle_maintain)
+                goal == WeightGoal.LOSE -> stringResource(R.string.onboarding_pace_subtitle_lose)
+                else -> stringResource(R.string.onboarding_pace_subtitle_gain)
+            }
         )
         if (goal == WeightGoal.MAINTAIN) {
             Spacer(Modifier.weight(1f))
@@ -739,13 +761,13 @@ private fun GoalSpeedStep(
                 )
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    "Balanced pace set",
+                    stringResource(R.string.onboarding_pace_balanced_set),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "We'll keep your calories steady\nto maintain your current weight.",
+                    stringResource(R.string.onboarding_pace_balanced_subtitle),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -758,7 +780,7 @@ private fun GoalSpeedStep(
                 kotlin.math.abs(weeklyKg - 1.0) < 0.01 -> 2
                 else -> 1
             }
-            val unit = if (useMetric) "kg" else "lbs"
+            val unit = if (useMetric) stringResource(R.string.unit_kg) else stringResource(R.string.unit_lbs)
             val display = if (useMetric) String.format(Locale.US, "%.1f", weeklyKg)
                           else String.format(Locale.US, "%.1f", weeklyKg * 2.20462)
             val diffKg = kotlin.math.abs(targetKg - currentKg)
@@ -772,7 +794,7 @@ private fun GoalSpeedStep(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    "per week",
+                    stringResource(R.string.onboarding_pace_per_week),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
                 )
@@ -780,9 +802,9 @@ private fun GoalSpeedStep(
             Spacer(Modifier.height(20.dp))
             // tortoise / hare / bolt icons with labels
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                PaceIcon(Icons.AutoMirrored.Outlined.DirectionsWalk, "Slow", idx == 0)
-                PaceIcon(Icons.AutoMirrored.Outlined.DirectionsRun, "Recommended", idx == 1)
-                PaceIcon(Icons.Outlined.Bolt, "Fast", idx == 2)
+                PaceIcon(Icons.AutoMirrored.Outlined.DirectionsWalk, stringResource(R.string.onboarding_pace_slow), idx == 0)
+                PaceIcon(Icons.AutoMirrored.Outlined.DirectionsRun, stringResource(R.string.onboarding_pace_recommended), idx == 1)
+                PaceIcon(Icons.Outlined.Bolt, stringResource(R.string.onboarding_pace_fast), idx == 2)
             }
             Spacer(Modifier.height(12.dp))
             // Slider with 3 stops
@@ -812,12 +834,12 @@ private fun GoalSpeedStep(
                 Column(Modifier.padding(16.dp)) {
                     Row {
                         Text(
-                            "You'll reach your goal in ",
+                            stringResource(R.string.onboarding_pace_reach_prefix),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            "$estimatedDays days",
+                            stringResource(R.string.onboarding_pace_days_format, estimatedDays),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = AppColors.Calorie
@@ -826,9 +848,9 @@ private fun GoalSpeedStep(
                     Spacer(Modifier.height(4.dp))
                     Text(
                         when (idx) {
-                            0 -> "Gentle and sustainable. Great for long-term habits."
-                            2 -> "Aggressive but doable. Requires strong discipline."
-                            else -> "The most balanced pace, motivating and sustainable."
+                            0 -> stringResource(R.string.onboarding_pace_caption_slow)
+                            2 -> stringResource(R.string.onboarding_pace_caption_fast)
+                            else -> stringResource(R.string.onboarding_pace_caption_recommended)
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
@@ -881,14 +903,14 @@ private fun NotificationsStep(enabled: Boolean, onToggle: (Boolean) -> Unit) {
         )
         Spacer(Modifier.height(20.dp))
         Text(
-            "Be reminded to\nlog meals",
+            stringResource(R.string.onboarding_notifications_title),
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
         Spacer(Modifier.height(10.dp))
         Text(
-            "Get gentle reminders at meal times\nso you never forget to track.",
+            stringResource(R.string.onboarding_notifications_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -912,7 +934,7 @@ private fun NotificationsStep(enabled: Boolean, onToggle: (Boolean) -> Unit) {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                if (enabled) "Reminders enabled" else "Allow Notifications",
+                if (enabled) stringResource(R.string.onboarding_notifications_enabled) else stringResource(R.string.onboarding_notifications_allow),
                 color = Color.White,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
@@ -920,7 +942,7 @@ private fun NotificationsStep(enabled: Boolean, onToggle: (Boolean) -> Unit) {
         }
         Spacer(Modifier.height(10.dp))
         Text(
-            "You can change this anytime in Settings.",
+            stringResource(R.string.onboarding_notifications_change_anytime),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
         )
@@ -958,14 +980,14 @@ private fun HealthConnectStep(container: AppContainer, enabled: Boolean, onToggl
         }
         Spacer(Modifier.height(20.dp))
         Text(
-            "Connect to\nHealth Connect",
+            stringResource(R.string.onboarding_health_title),
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
         Spacer(Modifier.height(10.dp))
         Text(
-            "Keep your nutrition and body\nmeasurements in sync automatically.",
+            stringResource(R.string.onboarding_health_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -975,9 +997,9 @@ private fun HealthConnectStep(container: AppContainer, enabled: Boolean, onToggl
             Modifier.padding(horizontal = 40.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            HealthFeatureRow(icon = Icons.Outlined.Restaurant, label = "Nutrition Data")
-            HealthFeatureRow(icon = Icons.Outlined.MonitorWeight, label = "Weight Sync")
-            HealthFeatureRow(icon = Icons.Outlined.Accessibility, label = "Body Measurements")
+            HealthFeatureRow(icon = Icons.Outlined.Restaurant, label = stringResource(R.string.onboarding_health_feature_nutrition))
+            HealthFeatureRow(icon = Icons.Outlined.MonitorWeight, label = stringResource(R.string.onboarding_health_feature_weight))
+            HealthFeatureRow(icon = Icons.Outlined.Accessibility, label = stringResource(R.string.onboarding_health_feature_body))
         }
         Spacer(Modifier.height(24.dp))
         Box(
@@ -1001,9 +1023,9 @@ private fun HealthConnectStep(container: AppContainer, enabled: Boolean, onToggl
         ) {
             Text(
                 when {
-                    !available -> "Health Connect unavailable"
-                    enabled -> "Connected"
-                    else -> "Connect"
+                    !available -> stringResource(R.string.onboarding_health_unavailable)
+                    enabled -> stringResource(R.string.onboarding_health_connected)
+                    else -> stringResource(R.string.onboarding_health_connect)
                 },
                 color = Color.White,
                 style = MaterialTheme.typography.titleMedium,
@@ -1088,14 +1110,14 @@ private fun ProviderStep(
         }
         Spacer(Modifier.height(18.dp))
         Text(
-            "Bring Your Own AI",
+            stringResource(R.string.onboarding_provider_title),
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            "Fud AI needs an AI provider key to\nanalyze your food. You bring your own.",
+            stringResource(R.string.onboarding_provider_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -1131,12 +1153,12 @@ private fun ProviderStep(
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(
-                        "Recommended: Google Gemini",
+                        stringResource(R.string.onboarding_provider_recommended_title),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        "Free tier available, fast & accurate",
+                        stringResource(R.string.onboarding_provider_recommended_subtitle),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
                     )
@@ -1151,14 +1173,14 @@ private fun ProviderStep(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                AiSetupRow("1", "Get a free key at aistudio.google.com/apikey")
-                AiSetupRow("2", "Open Settings → AI Provider")
-                AiSetupRow("3", "Paste your key — done")
+                AiSetupRow("1", stringResource(R.string.onboarding_provider_step_1))
+                AiSetupRow("2", stringResource(R.string.onboarding_provider_step_2))
+                AiSetupRow("3", stringResource(R.string.onboarding_provider_step_3))
             }
         }
         Spacer(Modifier.height(14.dp))
         Text(
-            "13 providers supported. Your key stays on\nthis device, encrypted.",
+            stringResource(R.string.onboarding_provider_footer),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -1197,15 +1219,13 @@ private fun AiSetupRow(number: String, text: String) {
  */
 @Composable
 private fun BuildingPlanStep(onComplete: () -> Unit) {
-    val items = remember {
-        listOf(
-            "Calories" to Icons.Outlined.LocalFireDepartment,
-            "Carbs" to Icons.Outlined.Restaurant,
-            "Protein" to Icons.Outlined.FitnessCenter,
-            "Fats" to Icons.Outlined.Bolt,
-            "Health Score" to Icons.Filled.Favorite
-        )
-    }
+    val items = listOf(
+        stringResource(R.string.onboarding_building_calories) to Icons.Outlined.LocalFireDepartment,
+        stringResource(R.string.onboarding_building_carbs) to Icons.Outlined.Restaurant,
+        stringResource(R.string.onboarding_building_protein) to Icons.Outlined.FitnessCenter,
+        stringResource(R.string.onboarding_building_fats) to Icons.Outlined.Bolt,
+        stringResource(R.string.onboarding_building_health_score) to Icons.Filled.Favorite
+    )
     var checkedCount by remember { mutableIntStateOf(0) }
     var percent by remember { mutableIntStateOf(0) }
     val targetProgress = checkedCount / items.size.toFloat()
@@ -1232,13 +1252,13 @@ private fun BuildingPlanStep(onComplete: () -> Unit) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            "$percent%",
+            stringResource(R.string.onboarding_building_percent_format, percent),
             fontSize = 56.sp,
             fontWeight = FontWeight.Bold
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            "We're setting everything\nup for you",
+            stringResource(R.string.onboarding_building_setting_up),
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -1266,7 +1286,7 @@ private fun BuildingPlanStep(onComplete: () -> Unit) {
         }
         Spacer(Modifier.height(18.dp))
         Text(
-            "Finalizing results...",
+            stringResource(R.string.onboarding_building_finalizing),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
         )
@@ -1278,14 +1298,14 @@ private fun BuildingPlanStep(onComplete: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Text(
-                "Daily recommendation for",
+                stringResource(R.string.onboarding_building_recommendation),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold
             )
             items.forEachIndexed { index, (label, _) ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        "•",
+                        stringResource(R.string.onboarding_building_bullet),
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
                     )
                     Spacer(Modifier.width(10.dp))
@@ -1316,7 +1336,10 @@ private fun PlanReadyStep(state: OnboardingState, vm: OnboardingViewModel) {
     val profile = state.buildProfile()
     var editing by remember { mutableStateOf<PlanField?>(null) }
     Column(Modifier.fillMaxSize()) {
-        StepHeader("Your Plan", subtitle = "Tap any value to edit")
+        StepHeader(
+            stringResource(R.string.onboarding_plan_title),
+            subtitle = stringResource(R.string.onboarding_plan_subtitle)
+        )
         Spacer(Modifier.height(20.dp))
         Column(
             Modifier
@@ -1337,7 +1360,7 @@ private fun PlanReadyStep(state: OnboardingState, vm: OnboardingViewModel) {
                 )
             )
             Text(
-                "daily calories",
+                stringResource(R.string.onboarding_plan_daily_calories),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
             )
@@ -1349,19 +1372,19 @@ private fun PlanReadyStep(state: OnboardingState, vm: OnboardingViewModel) {
         ) {
             val macroGradient = listOf(AppColors.CalorieStart, AppColors.CalorieEnd)
             MacroCard(
-                label = "Protein",
+                label = stringResource(R.string.macro_protein),
                 value = profile.effectiveProtein,
                 gradient = macroGradient,
                 modifier = Modifier.weight(1f).clickable { editing = PlanField.PROTEIN }
             )
             MacroCard(
-                label = "Carbs",
+                label = stringResource(R.string.macro_carbs),
                 value = profile.effectiveCarbs,
                 gradient = macroGradient,
                 modifier = Modifier.weight(1f).clickable { editing = PlanField.CARBS }
             )
             MacroCard(
-                label = "Fat",
+                label = stringResource(R.string.macro_fat),
                 value = profile.effectiveFat,
                 gradient = macroGradient,
                 modifier = Modifier.weight(1f).clickable { editing = PlanField.FAT }
@@ -1427,12 +1450,12 @@ private fun PlanReadyStep(state: OnboardingState, vm: OnboardingViewModel) {
                     Spacer(Modifier.width(10.dp))
                     Column {
                         Text(
-                            "Please consult with a doctor",
+                            stringResource(R.string.onboarding_plan_doctor_title),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            "The minimum recommendation is 1,200 calories per day.",
+                            stringResource(R.string.onboarding_plan_doctor_message),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
                         )
@@ -1521,14 +1544,14 @@ private fun ReviewStep() {
         }
         Spacer(Modifier.height(24.dp))
         Text(
-            "Enjoying fud so far?",
+            stringResource(R.string.onboarding_review_title),
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            "A quick rating helps us grow\nand build more features for you!",
+            stringResource(R.string.onboarding_review_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -1652,11 +1675,11 @@ private fun ChoiceRow(label: String, subtitle: String? = null, selected: Boolean
     }
 }
 
-private enum class PlanField(val title: String, val unit: String) {
-    CALORIES("Daily calories", "kcal"),
-    PROTEIN("Protein", "g"),
-    CARBS("Carbs", "g"),
-    FAT("Fat", "g")
+private enum class PlanField(@androidx.annotation.StringRes val titleRes: Int, @androidx.annotation.StringRes val unitRes: Int) {
+    CALORIES(R.string.onboarding_plan_field_calories, R.string.unit_kcal),
+    PROTEIN(R.string.onboarding_plan_field_protein, R.string.unit_g),
+    CARBS(R.string.onboarding_plan_field_carbs, R.string.unit_g),
+    FAT(R.string.onboarding_plan_field_fat, R.string.unit_g)
 }
 
 @Composable
@@ -1670,13 +1693,13 @@ private fun PlanEditDialog(
     var text by remember(currentValue) { mutableStateOf(currentValue.toString()) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(field.title) },
+        title = { Text(stringResource(field.titleRes)) },
         text = {
             OutlinedTextField(
                 value = text,
                 onValueChange = { new -> text = new.filter(Char::isDigit).take(5) },
                 singleLine = true,
-                suffix = { Text(field.unit) },
+                suffix = { Text(stringResource(field.unitRes)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -1686,15 +1709,15 @@ private fun PlanEditDialog(
                 onClick = { text.toIntOrNull()?.let { onSave(it) } },
                 enabled = text.toIntOrNull() != null && (text.toIntOrNull() ?: 0) > 0
             ) {
-                Text("Save", color = AppColors.Calorie)
+                Text(stringResource(R.string.action_save), color = AppColors.Calorie)
             }
         },
         dismissButton = {
             Row {
                 if (onReset != null) {
-                    TextButton(onClick = onReset) { Text("Reset") }
+                    TextButton(onClick = onReset) { Text(stringResource(R.string.action_reset)) }
                 }
-                TextButton(onClick = onDismiss) { Text("Cancel") }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
             }
         }
     )

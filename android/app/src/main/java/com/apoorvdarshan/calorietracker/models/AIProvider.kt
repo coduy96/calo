@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.models
 
+import androidx.annotation.StringRes
+import com.apoorvdarshan.calorietracker.R
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -19,20 +21,21 @@ enum class AIProvider {
     @SerialName("Ollama (Local)") OLLAMA,
     @SerialName("Custom (OpenAI-compatible)") CUSTOM_OPENAI;
 
-    val displayName: String get() = when (this) {
-        GEMINI -> "Google Gemini"
-        OPENAI -> "OpenAI"
-        ANTHROPIC -> "Anthropic Claude"
-        XAI -> "xAI Grok"
-        OPENROUTER -> "OpenRouter"
-        TOGETHER_AI -> "Together AI"
-        GROQ -> "Groq"
-        HUGGING_FACE -> "Hugging Face"
-        FIREWORKS -> "Fireworks AI"
-        DEEP_INFRA -> "DeepInfra"
-        MISTRAL -> "Mistral"
-        OLLAMA -> "Ollama (Local)"
-        CUSTOM_OPENAI -> "Custom (OpenAI-compatible)"
+    @get:StringRes
+    val displayNameRes: Int get() = when (this) {
+        GEMINI -> R.string.ai_provider_gemini
+        OPENAI -> R.string.ai_provider_openai
+        ANTHROPIC -> R.string.ai_provider_anthropic
+        XAI -> R.string.ai_provider_xai
+        OPENROUTER -> R.string.ai_provider_openrouter
+        TOGETHER_AI -> R.string.ai_provider_together
+        GROQ -> R.string.ai_provider_groq
+        HUGGING_FACE -> R.string.ai_provider_huggingface
+        FIREWORKS -> R.string.ai_provider_fireworks
+        DEEP_INFRA -> R.string.ai_provider_deepinfra
+        MISTRAL -> R.string.ai_provider_mistral
+        OLLAMA -> R.string.ai_provider_ollama
+        CUSTOM_OPENAI -> R.string.ai_provider_custom
     }
 
     val baseUrl: String get() = when (this) {
@@ -138,20 +141,21 @@ enum class AIProvider {
         FIREWORKS, DEEP_INFRA, MISTRAL, OLLAMA, CUSTOM_OPENAI -> ApiFormat.OPENAI_COMPATIBLE
     }
 
-    val apiKeyPlaceholder: String get() = when (this) {
-        GEMINI -> "AIza..."
-        OPENAI -> "sk-..."
-        ANTHROPIC -> "sk-ant-..."
-        XAI -> "xai-..."
-        OPENROUTER -> "sk-or-..."
-        TOGETHER_AI -> "..."
-        GROQ -> "gsk_..."
-        HUGGING_FACE -> "hf_..."
-        FIREWORKS -> "fw_..."
-        DEEP_INFRA -> "..."
-        MISTRAL -> "..."
-        OLLAMA -> "No key needed"
-        CUSTOM_OPENAI -> "API key (or anything if endpoint doesn't need one)"
+    @get:StringRes
+    val apiKeyPlaceholderRes: Int get() = when (this) {
+        GEMINI -> R.string.ai_key_placeholder_gemini
+        OPENAI -> R.string.ai_key_placeholder_openai
+        ANTHROPIC -> R.string.ai_key_placeholder_anthropic
+        XAI -> R.string.ai_key_placeholder_xai
+        OPENROUTER -> R.string.ai_key_placeholder_openrouter
+        TOGETHER_AI -> R.string.ai_key_placeholder_together
+        GROQ -> R.string.ai_key_placeholder_groq
+        HUGGING_FACE -> R.string.ai_key_placeholder_huggingface
+        FIREWORKS -> R.string.ai_key_placeholder_fireworks
+        DEEP_INFRA -> R.string.ai_key_placeholder_deepinfra
+        MISTRAL -> R.string.ai_key_placeholder_mistral
+        OLLAMA -> R.string.ai_key_placeholder_ollama
+        CUSTOM_OPENAI -> R.string.ai_key_placeholder_custom
     }
 
     enum class ApiFormat { GEMINI, OPENAI_COMPATIBLE, ANTHROPIC }

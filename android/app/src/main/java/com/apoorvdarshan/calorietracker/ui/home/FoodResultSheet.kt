@@ -31,10 +31,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.MealType
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
@@ -76,8 +78,8 @@ fun FoodResultSheet(
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         SheetReviewToolbar(
-            title = "Review Food",
-            primaryLabel = "Log",
+            title = stringResource(R.string.sheet_review_food),
+            primaryLabel = stringResource(R.string.action_log),
             onCancel = onDismiss,
             onPrimary = {
                 onSave(name.trim().ifEmpty { analysis.name }, servingGrams, scale, mealType)
@@ -109,10 +111,10 @@ fun FoodResultSheet(
                 }
             }
 
-            item { SheetSectionHeader("Food Details") }
+            item { SheetSectionHeader(stringResource(R.string.sheet_food_details)) }
             item {
                 SheetPillRow {
-                    Text("Name", fontSize = 17.sp, modifier = Modifier.padding(end = 8.dp))
+                    Text(stringResource(R.string.sheet_name), fontSize = 17.sp, modifier = Modifier.padding(end = 8.dp))
                     Spacer(Modifier.weight(1f))
                     androidx.compose.foundation.text.BasicTextField(
                         value = name,
@@ -129,10 +131,10 @@ fun FoodResultSheet(
                 }
             }
 
-            item { SheetSectionHeader("Serving") }
+            item { SheetSectionHeader(stringResource(R.string.sheet_serving)) }
             item {
                 SheetPillRow {
-                    Text("Quantity", fontSize = 17.sp, modifier = Modifier.padding(end = 8.dp))
+                    Text(stringResource(R.string.sheet_quantity), fontSize = 17.sp, modifier = Modifier.padding(end = 8.dp))
                     Spacer(Modifier.weight(1f))
                     androidx.compose.foundation.text.BasicTextField(
                         value = servingGramsText,
@@ -149,7 +151,7 @@ fun FoodResultSheet(
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        "g",
+                        stringResource(R.string.unit_g),
                         fontSize = 17.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         modifier = Modifier.width(20.dp)
@@ -157,16 +159,16 @@ fun FoodResultSheet(
                 }
             }
 
-            item { SheetSectionHeader("Nutrition") }
+            item { SheetSectionHeader(stringResource(R.string.sheet_nutrition)) }
             item {
                 SheetPillCard {
-                    SheetNutritionRow("Calories", "${scaledInt(analysis.calories)}", "kcal")
+                    SheetNutritionRow(stringResource(R.string.nutrition_label_calories), "${scaledInt(analysis.calories)}", stringResource(R.string.unit_kcal))
                     SheetHairline()
-                    SheetNutritionRow("Protein", "${scaledInt(analysis.protein)}", "g")
+                    SheetNutritionRow(stringResource(R.string.nutrition_label_protein), "${scaledInt(analysis.protein)}", stringResource(R.string.unit_g))
                     SheetHairline()
-                    SheetNutritionRow("Carbs", "${scaledInt(analysis.carbs)}", "g")
+                    SheetNutritionRow(stringResource(R.string.nutrition_label_carbs), "${scaledInt(analysis.carbs)}", stringResource(R.string.unit_g))
                     SheetHairline()
-                    SheetNutritionRow("Fat", "${scaledInt(analysis.fat)}", "g")
+                    SheetNutritionRow(stringResource(R.string.nutrition_label_fat), "${scaledInt(analysis.fat)}", stringResource(R.string.unit_g))
                 }
             }
 
@@ -174,7 +176,7 @@ fun FoodResultSheet(
             // chevron-down when expanded; matches iOS DisclosureGroup.
             item {
                 SheetPillRow(onClick = { moreNutritionExpanded = !moreNutritionExpanded }) {
-                    Text("More Nutrition", fontSize = 17.sp, modifier = Modifier.weight(1f))
+                    Text(stringResource(R.string.sheet_more_nutrition), fontSize = 17.sp, modifier = Modifier.weight(1f))
                     Icon(
                         if (moreNutritionExpanded) Icons.Filled.KeyboardArrowDown
                         else Icons.Filled.KeyboardArrowRight,
@@ -186,22 +188,25 @@ fun FoodResultSheet(
             if (moreNutritionExpanded) {
                 item {
                     SheetPillCard {
+                        val gUnit = stringResource(R.string.unit_g)
+                        val mgUnit = stringResource(R.string.unit_mg)
+                        val emDash = stringResource(R.string.nutrition_em_dash)
                         val micros = listOf(
-                            Triple("Sugar", scaledD(analysis.sugar), "g"),
-                            Triple("Added Sugar", scaledD(analysis.addedSugar), "g"),
-                            Triple("Fiber", scaledD(analysis.fiber), "g"),
-                            Triple("Saturated Fat", scaledD(analysis.saturatedFat), "g"),
-                            Triple("Mono Fat", scaledD(analysis.monounsaturatedFat), "g"),
-                            Triple("Poly Fat", scaledD(analysis.polyunsaturatedFat), "g"),
-                            Triple("Cholesterol", scaledD(analysis.cholesterol), "mg"),
-                            Triple("Sodium", scaledD(analysis.sodium), "mg"),
-                            Triple("Potassium", scaledD(analysis.potassium), "mg")
+                            Triple(stringResource(R.string.sheet_micro_sugar), scaledD(analysis.sugar), gUnit),
+                            Triple(stringResource(R.string.sheet_micro_added_sugar), scaledD(analysis.addedSugar), gUnit),
+                            Triple(stringResource(R.string.sheet_micro_fiber), scaledD(analysis.fiber), gUnit),
+                            Triple(stringResource(R.string.sheet_micro_saturated_fat), scaledD(analysis.saturatedFat), gUnit),
+                            Triple(stringResource(R.string.sheet_micro_mono_fat), scaledD(analysis.monounsaturatedFat), gUnit),
+                            Triple(stringResource(R.string.sheet_micro_poly_fat), scaledD(analysis.polyunsaturatedFat), gUnit),
+                            Triple(stringResource(R.string.sheet_micro_cholesterol), scaledD(analysis.cholesterol), mgUnit),
+                            Triple(stringResource(R.string.sheet_micro_sodium), scaledD(analysis.sodium), mgUnit),
+                            Triple(stringResource(R.string.sheet_micro_potassium), scaledD(analysis.potassium), mgUnit)
                         )
                         micros.forEachIndexed { idx, (label, value, unit) ->
                             if (idx > 0) SheetHairline()
                             SheetNutritionRow(
                                 label,
-                                value?.let { String.format("%.1f", it) } ?: "—",
+                                value?.let { String.format("%.1f", it) } ?: emDash,
                                 unit,
                                 dim = true
                             )
@@ -210,10 +215,10 @@ fun FoodResultSheet(
                 }
             }
 
-            item { SheetSectionHeader("Meal") }
+            item { SheetSectionHeader(stringResource(R.string.sheet_meal)) }
             item {
                 SheetPillRow(onClick = { mealMenuExpanded = true }) {
-                    Text("Meal Type", fontSize = 17.sp, modifier = Modifier.weight(1f))
+                    Text(stringResource(R.string.sheet_meal_type), fontSize = 17.sp, modifier = Modifier.weight(1f))
                     // Anchor the DropdownMenu inside the right-side cluster so
                     // it pops open under the value, not the row's left edge.
                     Box {
@@ -228,7 +233,7 @@ fun FoodResultSheet(
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                mealType.displayName,
+                                stringResource(mealType.displayNameRes),
                                 fontSize = 17.sp,
                                 color = AppColors.Calorie,
                                 fontWeight = FontWeight.Medium
@@ -249,7 +254,7 @@ fun FoodResultSheet(
                                     leadingIcon = {
                                         Icon(sheetMealIcon(m), contentDescription = null, tint = AppColors.Calorie)
                                     },
-                                    text = { Text(m.displayName) },
+                                    text = { Text(stringResource(m.displayNameRes)) },
                                     onClick = {
                                         mealType = m
                                         mealMenuExpanded = false

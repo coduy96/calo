@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.models
 
+import androidx.annotation.StringRes
+import com.apoorvdarshan.calorietracker.R
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -9,9 +11,10 @@ enum class WeightGoal {
     @SerialName("maintain") MAINTAIN,
     @SerialName("gain") GAIN;
 
-    val displayName: String get() = when (this) {
-        LOSE -> "Lose Weight"
-        MAINTAIN -> "Maintain"
-        GAIN -> "Gain Weight"
+    @get:StringRes
+    val displayNameRes: Int get() = when (this) {
+        LOSE -> R.string.goal_lose
+        MAINTAIN -> R.string.goal_maintain
+        GAIN -> R.string.goal_gain
     }
 }

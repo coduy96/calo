@@ -99,9 +99,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.MealType
@@ -810,7 +812,7 @@ private fun MealSectionHeader(meal: MealType) {
         )
         Spacer(Modifier.width(8.dp))
         Text(
-            meal.displayName,
+            stringResource(meal.displayNameRes),
             fontSize = 17.sp,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f)
@@ -1328,7 +1330,7 @@ private fun ManualEntryDialog(
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                mealType.displayName,
+                                stringResource(mealType.displayNameRes),
                                 fontSize = 16.sp,
                                 color = AppColors.Calorie,
                                 fontWeight = FontWeight.Medium
@@ -1343,7 +1345,7 @@ private fun ManualEntryDialog(
                                     leadingIcon = {
                                         Icon(sheetMealIcon(m), contentDescription = null, tint = AppColors.Calorie)
                                     },
-                                    text = { Text(m.displayName) },
+                                    text = { Text(stringResource(m.displayNameRes)) },
                                     onClick = {
                                         mealType = m
                                         mealMenuExpanded = false

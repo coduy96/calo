@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.apoorvdarshan.calorietracker.AppContainer
+import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.ChatMessage
 import com.apoorvdarshan.calorietracker.models.WeightGoal
 import com.apoorvdarshan.calorietracker.services.ai.AiError
@@ -15,11 +16,22 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
+/**
+ * Sealed wrapper around chip text — either a resource (for our preset chips,
+ * so they translate) or a literal string (for user-typed sends, which already
+ * go through the localized input path).
+ */
+sealed class CoachError {
+    data class FromResource(val resId: Int) : CoachError()
+    data class Literal(val message: String) : CoachError()
+}
+
 data class CoachUiState(
     val messages: List<ChatMessage> = emptyList(),
     val sending: Boolean = false,
     val error: String? = null,
-    val suggestions: List<String> = emptyList()
+    val errorRes: Int? = null,
+    val suggestions: List<Int> = emptyList()
 )
 
 class CoachViewModel(private val container: AppContainer) : ViewModel() {
@@ -37,29 +49,29 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
             .launchIn(viewModelScope)
     }
 
-    private fun chipsFor(goal: WeightGoal?): List<String> = when (goal) {
+    private fun chipsFor(goal: WeightGoal?): List<Int> = when (goal) {
         WeightGoal.LOSE -> listOf(
-            "What's my expected weight in 30 days?",
-            "How do I lose weight faster safely?",
-            "Am I eating too much?",
-            "What should I eat for dinner?"
+            R.string.coach_chip_predict_30_days,
+            R.string.coach_chip_lose_faster,
+            R.string.coach_chip_eating_too_much,
+            R.string.coach_chip_what_dinner
         )
         WeightGoal.GAIN -> listOf(
-            "What's my expected weight in 30 days?",
-            "How do I gain weight healthily?",
-            "Am I eating enough?",
-            "High-protein foods I can add?"
+            R.string.coach_chip_predict_30_days,
+            R.string.coach_chip_gain_healthy,
+            R.string.coach_chip_eating_enough,
+            R.string.coach_chip_high_protein
         )
         WeightGoal.MAINTAIN -> listOf(
-            "Am I holding my weight?",
-            "What's my average intake?",
-            "Macro suggestions?",
-            "How's my trend?"
+            R.string.coach_chip_holding_weight,
+            R.string.coach_chip_average_intake,
+            R.string.coach_chip_macro_suggestions,
+            R.string.coach_chip_trend
         )
         else -> listOf(
-            "How am I doing this week?",
-            "What's my expected weight in 30 days?",
-            "Any advice based on my log?"
+            R.string.coach_chip_doing_this_week,
+            R.string.coach_chip_predict_30_days,
+            R.string.coach_chip_log_advice
         )
     }
 
@@ -68,14 +80,14 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             val userMsg = ChatMessage(role = ChatMessage.Role.USER, content = userText)
             container.chatRepository.append(userMsg)
-            _ui.value = _ui.value.copy(sending = true, error = null)
+            _ui.value = _ui.value.copy(sending = true, error = null, errorRes = null)
             try {
                 val history = container.chatRepository.contextMessages(limit = 20).dropLast(1) // exclude the just-appended user msg — it's passed separately
                 val profile = container.profileRepository.current()
                     ?: return@launch run {
                         _ui.value = _ui.value.copy(
                             sending = false,
-                            error = "No profile yet. Finish onboarding first."
+                            errorRes = R.string.coach_no_profile_error
                         )
                     }
                 val weights = container.weightRepository.entries.first()
@@ -95,7 +107,11 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
             } catch (e: AiError) {
                 _ui.value = _ui.value.copy(sending = false, error = e.message)
             } catch (e: Throwable) {
-                _ui.value = _ui.value.copy(sending = false, error = e.localizedMessage ?: "Chat failed")
+                _ui.value = _ui.value.copy(
+                    sending = false,
+                    error = e.localizedMessage,
+                    errorRes = if (e.localizedMessage.isNullOrBlank()) R.string.coach_chat_failed else null
+                )
             }
         }
     }
@@ -104,7 +120,7 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch { container.chatRepository.clear() }
     }
 
-    fun dismissError() { _ui.value = _ui.value.copy(error = null) }
+    fun dismissError() { _ui.value = _ui.value.copy(error = null, errorRes = null) }
 
     class Factory(private val container: AppContainer) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")

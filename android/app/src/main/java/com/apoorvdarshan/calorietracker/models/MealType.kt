@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.models
 
+import androidx.annotation.StringRes
+import com.apoorvdarshan.calorietracker.R
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.time.LocalTime
@@ -12,12 +14,13 @@ enum class MealType {
     @SerialName("snack") SNACK,
     @SerialName("other") OTHER;
 
-    val displayName: String get() = when (this) {
-        BREAKFAST -> "Breakfast"
-        LUNCH -> "Lunch"
-        DINNER -> "Dinner"
-        SNACK -> "Snack"
-        OTHER -> "Other"
+    @get:StringRes
+    val displayNameRes: Int get() = when (this) {
+        BREAKFAST -> R.string.meal_breakfast
+        LUNCH -> R.string.meal_lunch
+        DINNER -> R.string.meal_dinner
+        SNACK -> R.string.meal_snack
+        OTHER -> R.string.meal_other
     }
 
     companion object {

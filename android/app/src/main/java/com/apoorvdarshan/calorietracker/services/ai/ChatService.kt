@@ -3,7 +3,9 @@ package com.apoorvdarshan.calorietracker.services.ai
 import com.apoorvdarshan.calorietracker.data.KeyStore
 import com.apoorvdarshan.calorietracker.data.PreferencesStore
 import com.apoorvdarshan.calorietracker.models.AIProvider
+import com.apoorvdarshan.calorietracker.models.ActivityLevel
 import com.apoorvdarshan.calorietracker.models.ChatMessage
+import com.apoorvdarshan.calorietracker.models.WeightGoal
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.WeightEntry
@@ -118,8 +120,8 @@ class ChatService(
         else String.format(Locale.US, "%.1f in", profile.heightCm / 2.54)
         lines.add("- Height: $heightStr")
         lines.add("- Current weight: ${wUnit(profile.weightKg)}")
-        lines.add("- Activity: ${profile.activityLevel.displayName}")
-        lines.add("- Goal: ${profile.goal.displayName}")
+        lines.add("- Activity: ${activityEnglish(profile.activityLevel)}")
+        lines.add("- Goal: ${goalEnglish(profile.goal)}")
         profile.goalWeightKg?.let { lines.add("- Goal weight: ${wUnit(it)}") }
         profile.bodyFatPercentage?.let { lines.add("- Body fat: ${(it * 100).toInt()}%") }
         lines.add("")
@@ -167,4 +169,22 @@ class ChatService(
 
     @Suppress("unused")
     private fun Instant.toLocalDateInZone(): LocalDate = this.atZone(ZoneId.systemDefault()).toLocalDate()
+
+    // English-only labels for the LLM prompt — intentionally NOT routed
+    // through resources, since the model expects English input regardless
+    // of the user's device locale.
+    private fun activityEnglish(level: ActivityLevel): String = when (level) {
+        ActivityLevel.SEDENTARY -> "Sedentary"
+        ActivityLevel.LIGHT -> "Light"
+        ActivityLevel.MODERATE -> "Moderate"
+        ActivityLevel.ACTIVE -> "Active"
+        ActivityLevel.VERY_ACTIVE -> "Very Active"
+        ActivityLevel.EXTRA_ACTIVE -> "Extra Active"
+    }
+
+    private fun goalEnglish(goal: WeightGoal): String = when (goal) {
+        WeightGoal.LOSE -> "Lose Weight"
+        WeightGoal.MAINTAIN -> "Maintain"
+        WeightGoal.GAIN -> "Gain Weight"
+    }
 }
