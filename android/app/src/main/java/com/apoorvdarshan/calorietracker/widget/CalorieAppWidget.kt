@@ -1,6 +1,7 @@
 package com.apoorvdarshan.calorietracker.widget
 
 import android.content.Context
+import android.content.res.Resources
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -8,13 +9,13 @@ import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
-import androidx.glance.LocalContext
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.LocalSize
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
-import androidx.glance.appwidget.LinearProgressIndicator
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
@@ -34,8 +35,8 @@ import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import androidx.glance.unit.ColorProvider
 import com.apoorvdarshan.calorietracker.MainActivity
+import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.data.PreferencesStore
 import com.apoorvdarshan.calorietracker.models.WidgetSnapshot
 import kotlinx.coroutines.flow.first
@@ -76,7 +77,7 @@ private fun CalorieWidgetContent(snapshot: WidgetSnapshot) {
         modifier = GlanceModifier
             .fillMaxSize()
             .background(WidgetTheme.backgroundProvider)
-            .cornerRadius(20.dp)
+            .cornerRadius(22.dp)
             .padding(14.dp)
             .clickable(actionStartActivity<MainActivity>())
     ) {
@@ -90,50 +91,21 @@ private fun CalorieWidgetContent(snapshot: WidgetSnapshot) {
 
 @Composable
 private fun CalorieSmall(snapshot: WidgetSnapshot) {
-    Column(
-        modifier = GlanceModifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = GlanceModifier.fillMaxWidth()) {
-            Text(
-                text = "Today",
-                style = TextStyle(
-                    color = WidgetTheme.secondaryTextProvider,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp
-                )
-            )
-        }
-        Spacer(modifier = GlanceModifier.height(6.dp))
+    Column(modifier = GlanceModifier.fillMaxSize()) {
+        WidgetHeader(iconRes = R.drawable.ic_widget_flame, label = "Today")
+        Spacer(modifier = GlanceModifier.height(4.dp))
         Box(
             modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = snapshot.calories.toString(),
-                    style = TextStyle(
-                        color = WidgetTheme.calorieProvider,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 28.sp
-                    )
-                )
-                Text(
-                    text = "of ${snapshot.calorieGoal} kcal",
-                    style = TextStyle(
-                        color = WidgetTheme.secondaryTextProvider,
-                        fontSize = 11.sp
-                    )
-                )
-            }
+            RingWithCenter(
+                progress = snapshot.calorieProgress.toFloat(),
+                ringSizeDp = 92,
+                strokeDp = 9,
+                centerLarge = snapshot.calories.toString(),
+                centerSmall = "/ ${snapshot.calorieGoal}"
+            )
         }
-        Spacer(modifier = GlanceModifier.height(8.dp))
-        LinearProgressIndicator(
-            progress = snapshot.calorieProgress.toFloat(),
-            modifier = GlanceModifier.fillMaxWidth().height(6.dp),
-            color = WidgetTheme.calorieProvider,
-            backgroundColor = WidgetTheme.calorieTrackProvider
-        )
         Spacer(modifier = GlanceModifier.height(4.dp))
         Text(
             text = "${snapshot.caloriesRemaining} kcal left",
@@ -148,56 +120,108 @@ private fun CalorieSmall(snapshot: WidgetSnapshot) {
 
 @Composable
 private fun CalorieMedium(snapshot: WidgetSnapshot) {
-    Row(modifier = GlanceModifier.fillMaxSize()) {
-        Column(
-            modifier = GlanceModifier.fillMaxHeight().defaultWeight(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Today",
-                style = TextStyle(
-                    color = WidgetTheme.secondaryTextProvider,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp
-                )
-            )
-            Spacer(modifier = GlanceModifier.height(4.dp))
-            Text(
-                text = snapshot.calories.toString(),
-                style = TextStyle(
-                    color = WidgetTheme.calorieProvider,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 26.sp
-                )
-            )
-            Text(
-                text = "of ${snapshot.calorieGoal} kcal",
-                style = TextStyle(color = WidgetTheme.secondaryTextProvider, fontSize = 11.sp)
-            )
-            Spacer(modifier = GlanceModifier.height(6.dp))
-            LinearProgressIndicator(
-                progress = snapshot.calorieProgress.toFloat(),
-                modifier = GlanceModifier.fillMaxWidth().height(6.dp),
-                color = WidgetTheme.calorieProvider,
-                backgroundColor = WidgetTheme.calorieTrackProvider
-            )
-        }
+    Row(
+        modifier = GlanceModifier.fillMaxSize(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RingWithCenter(
+            progress = snapshot.calorieProgress.toFloat(),
+            ringSizeDp = 100,
+            strokeDp = 9,
+            centerLarge = snapshot.calories.toString(),
+            centerSmall = "/ ${snapshot.calorieGoal}",
+            centerCaption = "kcal"
+        )
         Spacer(modifier = GlanceModifier.width(14.dp))
         Column(
             modifier = GlanceModifier.fillMaxHeight().defaultWeight(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            MacroRow("Protein", snapshot.protein, snapshot.proteinGoal, snapshot.proteinProgress.toFloat())
+            CapsuleMacroRow("Protein", snapshot.protein, snapshot.proteinGoal, snapshot.proteinProgress.toFloat(), unit = "g")
             Spacer(modifier = GlanceModifier.height(8.dp))
-            MacroRow("Carbs", snapshot.carbs, snapshot.carbsGoal, snapshot.carbsProgress.toFloat())
+            CapsuleMacroRow("Carbs", snapshot.carbs, snapshot.carbsGoal, snapshot.carbsProgress.toFloat(), unit = "g")
             Spacer(modifier = GlanceModifier.height(8.dp))
-            MacroRow("Fat", snapshot.fat, snapshot.fatGoal, snapshot.fatProgress.toFloat())
+            CapsuleMacroRow("Fat", snapshot.fat, snapshot.fatGoal, snapshot.fatProgress.toFloat(), unit = "g")
+        }
+    }
+}
+
+// ─── Shared building blocks ────────────────────────────────────────────────
+
+@Composable
+internal fun WidgetHeader(iconRes: Int, label: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Image(
+            provider = ImageProvider(iconRes),
+            contentDescription = null,
+            modifier = GlanceModifier.size(12.dp)
+        )
+        Spacer(modifier = GlanceModifier.width(4.dp))
+        Text(
+            text = label,
+            style = TextStyle(
+                color = WidgetTheme.secondaryTextProvider,
+                fontWeight = FontWeight.Medium,
+                fontSize = 12.sp
+            )
+        )
+    }
+}
+
+@Composable
+internal fun RingWithCenter(
+    progress: Float,
+    ringSizeDp: Int,
+    strokeDp: Int,
+    centerLarge: String,
+    centerSmall: String,
+    centerCaption: String? = null
+) {
+    val density = Resources.getSystem().displayMetrics.density
+    val sizePx = (ringSizeDp * density).toInt().coerceAtLeast(1)
+    val strokePx = strokeDp * density
+    val bitmap = ringBitmap(sizePx = sizePx, progress = progress, strokeWidthPx = strokePx)
+    Box(
+        modifier = GlanceModifier.size(ringSizeDp.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            provider = ImageProvider(bitmap),
+            contentDescription = null,
+            modifier = GlanceModifier.fillMaxSize()
+        )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = centerLarge,
+                style = TextStyle(
+                    color = WidgetTheme.primaryTextProvider,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
+                )
+            )
+            Text(
+                text = centerSmall,
+                style = TextStyle(
+                    color = WidgetTheme.secondaryTextProvider,
+                    fontSize = 10.sp
+                )
+            )
+            if (centerCaption != null) {
+                Text(
+                    text = centerCaption,
+                    style = TextStyle(
+                        color = WidgetTheme.secondaryTextProvider,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 10.sp
+                    )
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun MacroRow(label: String, value: Int, goal: Int, progress: Float) {
+internal fun CapsuleMacroRow(label: String, value: Int, goal: Int, progress: Float, unit: String) {
     Column(modifier = GlanceModifier.fillMaxWidth()) {
         Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -210,7 +234,7 @@ private fun MacroRow(label: String, value: Int, goal: Int, progress: Float) {
                 modifier = GlanceModifier.defaultWeight()
             )
             Text(
-                text = "${value}g / ${goal}g",
+                text = "${value}${unit} / ${goal}${unit}",
                 style = TextStyle(
                     color = WidgetTheme.primaryTextProvider,
                     fontWeight = FontWeight.Medium,
@@ -219,11 +243,19 @@ private fun MacroRow(label: String, value: Int, goal: Int, progress: Float) {
             )
         }
         Spacer(modifier = GlanceModifier.height(3.dp))
-        LinearProgressIndicator(
-            progress = progress,
-            modifier = GlanceModifier.fillMaxWidth().height(5.dp),
-            color = WidgetTheme.calorieProvider,
-            backgroundColor = WidgetTheme.calorieTrackProvider
-        )
+        CapsuleBar(progress = progress)
     }
+}
+
+@Composable
+internal fun CapsuleBar(progress: Float, widthDp: Int = 130, heightDp: Int = 6) {
+    val density = Resources.getSystem().displayMetrics.density
+    val widthPx = (widthDp * density).toInt().coerceAtLeast(2)
+    val heightPx = (heightDp * density).toInt().coerceAtLeast(2)
+    val bitmap = capsuleBitmap(widthPx, heightPx, progress)
+    Image(
+        provider = ImageProvider(bitmap),
+        contentDescription = null,
+        modifier = GlanceModifier.fillMaxWidth().height(heightDp.dp)
+    )
 }

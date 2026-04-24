@@ -13,7 +13,6 @@ import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
-import androidx.glance.appwidget.LinearProgressIndicator
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
@@ -33,6 +32,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.apoorvdarshan.calorietracker.MainActivity
+import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.data.PreferencesStore
 import com.apoorvdarshan.calorietracker.models.WidgetSnapshot
 import kotlinx.coroutines.flow.first
@@ -73,7 +73,7 @@ private fun ProteinWidgetContent(snapshot: WidgetSnapshot) {
         modifier = GlanceModifier
             .fillMaxSize()
             .background(WidgetTheme.backgroundProvider)
-            .cornerRadius(20.dp)
+            .cornerRadius(22.dp)
             .padding(14.dp)
             .clickable(actionStartActivity<MainActivity>())
     ) {
@@ -87,47 +87,21 @@ private fun ProteinWidgetContent(snapshot: WidgetSnapshot) {
 
 @Composable
 private fun ProteinSmall(snapshot: WidgetSnapshot) {
-    Column(
-        modifier = GlanceModifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "Protein",
-                style = TextStyle(
-                    color = WidgetTheme.secondaryTextProvider,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp
-                )
-            )
-        }
-        Spacer(modifier = GlanceModifier.height(6.dp))
+    Column(modifier = GlanceModifier.fillMaxSize()) {
+        WidgetHeader(iconRes = R.drawable.ic_widget_bolt, label = "Protein")
+        Spacer(modifier = GlanceModifier.height(4.dp))
         Box(
             modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "${snapshot.protein}g",
-                    style = TextStyle(
-                        color = WidgetTheme.calorieProvider,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 28.sp
-                    )
-                )
-                Text(
-                    text = "of ${snapshot.proteinGoal}g",
-                    style = TextStyle(color = WidgetTheme.secondaryTextProvider, fontSize = 11.sp)
-                )
-            }
+            RingWithCenter(
+                progress = snapshot.proteinProgress.toFloat(),
+                ringSizeDp = 92,
+                strokeDp = 9,
+                centerLarge = "${snapshot.protein}g",
+                centerSmall = "/ ${snapshot.proteinGoal}g"
+            )
         }
-        Spacer(modifier = GlanceModifier.height(8.dp))
-        LinearProgressIndicator(
-            progress = snapshot.proteinProgress.toFloat(),
-            modifier = GlanceModifier.fillMaxWidth().height(6.dp),
-            color = WidgetTheme.calorieProvider,
-            backgroundColor = WidgetTheme.calorieTrackProvider
-        )
         Spacer(modifier = GlanceModifier.height(4.dp))
         Text(
             text = "${snapshot.proteinRemaining}g left",
@@ -142,82 +116,28 @@ private fun ProteinSmall(snapshot: WidgetSnapshot) {
 
 @Composable
 private fun ProteinMedium(snapshot: WidgetSnapshot) {
-    Row(modifier = GlanceModifier.fillMaxSize()) {
-        Column(
-            modifier = GlanceModifier.fillMaxHeight().defaultWeight(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Protein",
-                style = TextStyle(
-                    color = WidgetTheme.secondaryTextProvider,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp
-                )
-            )
-            Spacer(modifier = GlanceModifier.height(4.dp))
-            Text(
-                text = "${snapshot.protein}g",
-                style = TextStyle(
-                    color = WidgetTheme.calorieProvider,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 26.sp
-                )
-            )
-            Text(
-                text = "of ${snapshot.proteinGoal}g",
-                style = TextStyle(color = WidgetTheme.secondaryTextProvider, fontSize = 11.sp)
-            )
-            Spacer(modifier = GlanceModifier.height(6.dp))
-            LinearProgressIndicator(
-                progress = snapshot.proteinProgress.toFloat(),
-                modifier = GlanceModifier.fillMaxWidth().height(6.dp),
-                color = WidgetTheme.calorieProvider,
-                backgroundColor = WidgetTheme.calorieTrackProvider
-            )
-        }
+    Row(
+        modifier = GlanceModifier.fillMaxSize(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RingWithCenter(
+            progress = snapshot.proteinProgress.toFloat(),
+            ringSizeDp = 100,
+            strokeDp = 9,
+            centerLarge = snapshot.protein.toString(),
+            centerSmall = "/ ${snapshot.proteinGoal}",
+            centerCaption = "protein g"
+        )
         Spacer(modifier = GlanceModifier.width(14.dp))
         Column(
             modifier = GlanceModifier.fillMaxHeight().defaultWeight(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ProteinSideRow("Calories", snapshot.calories, snapshot.calorieGoal, snapshot.calorieProgress.toFloat(), unit = "")
+            CapsuleMacroRow("Calories", snapshot.calories, snapshot.calorieGoal, snapshot.calorieProgress.toFloat(), unit = "")
             Spacer(modifier = GlanceModifier.height(8.dp))
-            ProteinSideRow("Carbs", snapshot.carbs, snapshot.carbsGoal, snapshot.carbsProgress.toFloat(), unit = "g")
+            CapsuleMacroRow("Carbs", snapshot.carbs, snapshot.carbsGoal, snapshot.carbsProgress.toFloat(), unit = "g")
             Spacer(modifier = GlanceModifier.height(8.dp))
-            ProteinSideRow("Fat", snapshot.fat, snapshot.fatGoal, snapshot.fatProgress.toFloat(), unit = "g")
+            CapsuleMacroRow("Fat", snapshot.fat, snapshot.fatGoal, snapshot.fatProgress.toFloat(), unit = "g")
         }
-    }
-}
-
-@Composable
-private fun ProteinSideRow(label: String, value: Int, goal: Int, progress: Float, unit: String) {
-    Column(modifier = GlanceModifier.fillMaxWidth()) {
-        Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = label,
-                style = TextStyle(
-                    color = WidgetTheme.secondaryTextProvider,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 11.sp
-                ),
-                modifier = GlanceModifier.defaultWeight()
-            )
-            Text(
-                text = "${value}${unit} / ${goal}${unit}",
-                style = TextStyle(
-                    color = WidgetTheme.primaryTextProvider,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 11.sp
-                )
-            )
-        }
-        Spacer(modifier = GlanceModifier.height(3.dp))
-        LinearProgressIndicator(
-            progress = progress,
-            modifier = GlanceModifier.fillMaxWidth().height(5.dp),
-            color = WidgetTheme.calorieProvider,
-            backgroundColor = WidgetTheme.calorieTrackProvider
-        )
     }
 }
