@@ -102,6 +102,13 @@ fun VoiceInputSheet(
     // to [committed] on each Final event so a long pause doesn't end the
     // recording session. Only invoked while phase == RECORDING and provider
     // == NATIVE.
+    //
+    // Re-arming after Final / soft errors is what makes the recording feel
+    // continuous (Android's online SpeechRecognizer naturally tears down
+    // after silence and on transient server hiccups). A small delay before
+    // re-arm avoids the "ERROR_SERVER_DISCONNECTED (11)" / "RECOGNIZER_BUSY
+    // (8)" loop that Android's speech service throws when you start a new
+    // session with the previous one not fully torn down.
     fun launchNativeListenerLoop() {
         nativeJob?.cancel()
         nativeJob = scope.launch {
@@ -113,13 +120,25 @@ fun VoiceInputSheet(
                     is SttEvent.Final -> {
                         committed = (committed + " " + event.text).trim()
                         transcript = committed
-                        // Re-arm so the user can keep speaking — the user
-                        // explicitly stops by tapping the mic again.
-                        if (phase == VoicePhase.RECORDING) launchNativeListenerLoop()
+                        if (phase == VoicePhase.RECORDING) {
+                            kotlinx.coroutines.delay(250)
+                            if (phase == VoicePhase.RECORDING) launchNativeListenerLoop()
+                        }
                     }
                     is SttEvent.Error -> {
-                        error = event.message
-                        phase = VoicePhase.IDLE
+                        // Codes that mean "session ended, try again" are part
+                        // of normal continuous-listening — just re-arm without
+                        // showing the user an error or dropping back to IDLE.
+                        // 6 = SPEECH_TIMEOUT, 7 = NO_MATCH,
+                        // 8 = RECOGNIZER_BUSY, 11 = SERVER_DISCONNECTED.
+                        val recoverable = event.code in setOf(6, 7, 8, 11)
+                        if (recoverable && phase == VoicePhase.RECORDING) {
+                            kotlinx.coroutines.delay(300)
+                            if (phase == VoicePhase.RECORDING) launchNativeListenerLoop()
+                        } else {
+                            error = event.message
+                            phase = VoicePhase.IDLE
+                        }
                     }
                     else -> Unit
                 }
