@@ -298,7 +298,6 @@ p { color: var(--ink-soft); }
 
 .app-store-btn,
 .play-store-btn,
-.ph-btn,
 .ph-badge {
   height: 52px;
   border-radius: 10px;
@@ -309,12 +308,10 @@ p { color: var(--ink-soft); }
 }
 .app-store-btn:hover,
 .play-store-btn:hover,
-.ph-btn:hover,
 .ph-badge:hover { transform: translateY(-2px); }
 
 .app-store-btn,
-.play-store-btn,
-.ph-btn {
+.play-store-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -331,11 +328,8 @@ p { color: var(--ink-soft); }
 }
 .app-store-btn svg,
 .play-store-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
-.ph-btn i { font-size: 18px; flex-shrink: 0; color: #DA552F; }
 .app-store-btn:hover,
-.play-store-btn:hover,
-.ph-btn:hover { background: #fff; color: #000; }
-.ph-btn:hover i { color: #DA552F; }
+.play-store-btn:hover { background: #fff; color: #000; }
 
 .ph-badge {
   display: inline-flex;
@@ -377,6 +371,7 @@ p { color: var(--ink-soft); }
   transform: translateY(-1px);
 }
 .chip-btn.chip-github:hover i { color: #FFC857; }
+.chip-btn.chip-ph:hover i     { color: #DA552F; }
 .chip-btn.chip-paypal:hover i { color: #0BAFE2; }
 .chip-btn.chip-x:hover i      { color: #FFFFFF; }
 
@@ -997,17 +992,14 @@ p { color: var(--ink-soft); }
   .hero-content .cta-sub { justify-content: flex-start; }
   .app-store-btn,
   .play-store-btn,
-  .ph-btn,
   .ph-badge {
     height: 50px;        /* iOS-friendly touch target */
   }
   .ph-badge img { height: 50px; }
   .app-store-btn,
-  .play-store-btn,
-  .ph-btn { padding: 0 18px; font-size: 0.88rem; }
+  .play-store-btn { padding: 0 18px; font-size: 0.88rem; }
   .app-store-btn svg,
   .play-store-btn svg { width: 16px; height: 16px; }
-  .ph-btn i { font-size: 16px; }
   /* Bigger chip touch target — was 32px, Apple HIG min is 44 but 36 with 14px padding works */
   .chip-btn { height: 38px; padding: 0 14px; font-size: 10.5px; }
   .chip-btn i { font-size: 12px; }
@@ -1082,7 +1074,6 @@ p { color: var(--ink-soft); }
 
   .app-store-btn,
   .play-store-btn,
-  .ph-btn,
   .ph-badge { width: 100%; max-width: 100%; }
   .ph-badge img { width: 100%; height: auto; }
 
