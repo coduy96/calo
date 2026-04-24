@@ -1,6 +1,6 @@
-# App Store Optimization (ASO)
+# App Store Listing
 
-App Store listing details for Fud AI v3.1. Each field is in a code block for easy copy-paste.
+App Store Connect submission details for Fud AI v3.1. Each field is in a code block for easy copy-paste.
 
 ## App Name
 ```

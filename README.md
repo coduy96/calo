@@ -223,7 +223,6 @@ ios/
 ├── calorietrackerTests/              # Unit test target (boilerplate)
 ├── calorietrackerUITests/            # UI test target (boilerplate)
 ├── FudAIWidgets/                     # Widget extension target (Home + Lock Screen)
-├── ASO.md                            # App Store listing copy
 ├── screenshots/                      # README screenshots
 └── calorietracker/
     ├── calorietrackerApp.swift       # Entry point, environment setup

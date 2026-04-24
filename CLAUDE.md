@@ -10,10 +10,11 @@ Fud AI is an open-source calorie tracker. The iOS client (SwiftUI, iOS 17.6+) li
 
 ```
 fud-ai/
-├── ios/        ← iOS app (SwiftUI, Xcode project)
-│   └── ASO.md  ← App Store listing copy (title, promo, keywords, reviewer notes)
-├── android/    ← Android app (empty placeholder; Kotlin + Compose coming)
-├── web/        ← Marketing site (index.html, styles.css, privacy/terms, sitemap)
+├── ios/          ← iOS app (SwiftUI, Xcode project)
+├── android/      ← Android app (Kotlin + Jetpack Compose)
+├── web/          ← Marketing site (index.html, styles.css, privacy/terms, sitemap)
+├── APPSTORE.md   ← App Store Connect listing copy (iOS)
+├── PLAYSTORE.md  ← Play Console listing copy (Android)
 └── …root-level meta (README, LICENSE, CONTRIBUTING, SECURITY, CLAUDE.md, .github/)
 ```
 
@@ -322,7 +323,8 @@ Plain static HTML + CSS — no build step, no framework. Deployed to Vercel with
 
 ## Release Artifacts
 
-- **`ios/ASO.md`** holds the App Store listing copy (name, subtitle, promo text, keywords, What's New, full description, reviewer notes). Update it whenever the version bumps; the current header is `v3.0`. App Store Connect uploads happen by hand-pasting from this file — don't let it drift from the code.
+- **`APPSTORE.md`** (repo root) holds the App Store Connect listing copy for iOS — name, subtitle, promo text, keywords, What's New, full description, reviewer notes. Update it whenever the iOS version bumps; the current header is `v3.1`. Uploads to App Store Connect happen by hand-pasting from this file — don't let it drift from the code.
+- **`PLAYSTORE.md`** (repo root) is the Android-side equivalent for the Play Console — short + full description, Data Safety answers, App Content declarations, reviewer notes. Header is `v1.0.0`.
 - **App Store screenshots** live in `~/Documents/fud ai/appstore screenshots/` (raw 1179×2556 captures from device) and get composited into 1242×2688 marketing PNGs by ad-hoc Python scripts in `/tmp/`. The scripts are not in the repo — they're rebuilt per release. The current iteration uses PIL gradient backgrounds + a pixel-perfect iPhone 15 Pro Max frame + Bricolage Grotesque ExtraBold typography.
 - Bump `MARKETING_VERSION` in `ios/calorietracker.xcodeproj/project.pbxproj` (two occurrences — main app + widget extension) before each App Store submission. `CURRENT_PROJECT_VERSION` is the build number.
 
