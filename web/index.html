@@ -100,19 +100,13 @@
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
             <span>Download on the App Store</span>
           </a>
-          <!-- TODO: revert to the production Play Store URL once Closed Testing graduates to Production (currently routes to the Closed Testing Alpha listing — only opted-in group members can install). -->
-          <a href="https://play.google.com/store/apps/details?id=com.apoorvdarshan.calorietracker" class="play-store-btn">
+          <!-- TODO: once Closed Testing graduates to Production, revert this back to a plain anchor pointing at the Play Store URL and delete the data-open-beta hook + the #beta-modal block at the bottom of this file. The href stays as a no-JS fallback so users without JS still land on the Play Store listing. -->
+          <a href="https://play.google.com/store/apps/details?id=com.apoorvdarshan.calorietracker" class="play-store-btn" data-open-beta aria-haspopup="dialog" aria-controls="beta-modal">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.792 12 3.61 22.186a.998.998 0 0 1-.61-.92V2.734c0-.39.222-.732.61-.92zM14.91 13.117l2.605 2.605-12.232 6.86 9.627-9.465zm3.978-3.205l2.74 1.535c.733.41.733 1.475 0 1.886l-2.741 1.536-2.969-2.969 2.97-2.988zM5.282 1.349l12.232 6.86-2.605 2.605L5.282 1.35z"/></svg>
             <span>Join Android beta</span>
           </a>
         </div>
         <div class="cta-sub">
-          <a href="https://groups.google.com/g/fud-ai-testers" target="_blank" rel="noopener" class="chip-btn chip-group" aria-label="Join the Fud AI Testers Google Group (required before installing)">
-            <i class="fa-solid fa-users"></i><span>Join Group</span>
-          </a>
-          <a href="https://play.google.com/apps/testing/com.apoorvdarshan.calorietracker" target="_blank" rel="noopener" class="chip-btn chip-beta-web" aria-label="Opt in to the Android beta on the web">
-            <i class="fa-solid fa-flask"></i><span>Beta · Web</span>
-          </a>
           <a href="https://github.com/apoorvdarshan/fud-ai" target="_blank" rel="noopener" class="chip-btn chip-github" aria-label="Star on GitHub">
             <i class="fa-solid fa-star"></i><span>Star · GitHub</span>
           </a>
@@ -422,15 +416,13 @@
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
           <span>Download on the App Store</span>
         </a>
-        <!-- TODO: revert to the production Play Store URL once Closed Testing graduates to Production (currently routes to the Closed Testing Alpha listing — only opted-in group members can install). -->
-        <a href="https://play.google.com/store/apps/details?id=com.apoorvdarshan.calorietracker" class="play-store-btn">
+        <!-- TODO: once Closed Testing graduates to Production, revert this back to a plain anchor pointing at the Play Store URL and delete the data-open-beta hook + the #beta-modal block at the bottom of this file. The href stays as a no-JS fallback so users without JS still land on the Play Store listing. -->
+        <a href="https://play.google.com/store/apps/details?id=com.apoorvdarshan.calorietracker" class="play-store-btn" data-open-beta aria-haspopup="dialog" aria-controls="beta-modal">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.792 12 3.61 22.186a.998.998 0 0 1-.61-.92V2.734c0-.39.222-.732.61-.92zM14.91 13.117l2.605 2.605-12.232 6.86 9.627-9.465zm3.978-3.205l2.74 1.535c.733.41.733 1.475 0 1.886l-2.741 1.536-2.969-2.969 2.97-2.988zM5.282 1.349l12.232 6.86-2.605 2.605L5.282 1.35z"/></svg>
           <span>Join Android beta</span>
         </a>
       </div>
       <div class="cta-sub">
-        <a href="https://groups.google.com/g/fud-ai-testers" target="_blank" rel="noopener" class="chip-btn chip-group" aria-label="Join the Fud AI Testers Google Group (required before installing)"><i class="fa-solid fa-users"></i><span>Join Group</span></a>
-        <a href="https://play.google.com/apps/testing/com.apoorvdarshan.calorietracker" target="_blank" rel="noopener" class="chip-btn chip-beta-web" aria-label="Opt in to the Android beta on the web"><i class="fa-solid fa-flask"></i><span>Beta · Web</span></a>
         <a href="https://github.com/apoorvdarshan/fud-ai" target="_blank" rel="noopener" class="chip-btn chip-github"><i class="fa-solid fa-star"></i><span>Star · GitHub</span></a>
         <a href="https://www.producthunt.com/products/fud-ai-calorie-tracker" target="_blank" rel="noopener" class="chip-btn chip-ph"><i class="fa-brands fa-product-hunt"></i><span>Vote · PH</span></a>
         <a href="https://www.linkedin.com/company/fud-ai-app" target="_blank" rel="noopener" class="chip-btn chip-linkedin"><i class="fa-brands fa-linkedin-in"></i><span>LinkedIn</span></a>
@@ -515,5 +507,93 @@
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
+
+<!--
+  ANDROID CLOSED-BETA MODAL
+  -------------------------
+  Shown when the "Join Android beta" CTA is clicked. Walks the visitor
+  through the 3-step Play Store closed-test opt-in (group join → opt-in
+  page → install). Pure HTML+CSS+vanilla JS, no framework, no build step.
+
+  Hidden by default via the [hidden] attribute. The trigger anchors keep
+  their direct Play Store href as a no-JS fallback — visitors with JS
+  disabled bypass the modal and land straight on the Play Store listing
+  (which only works for opted-in group members anyway, but at least it
+  fails informatively rather than silently doing nothing).
+
+  Remove this whole block (and the data-open-beta attribute on the two
+  triggers) once Closed Testing graduates to Production.
+-->
+<div class="beta-modal" id="beta-modal" hidden role="dialog" aria-modal="true" aria-labelledby="beta-modal-title">
+  <div class="beta-modal__backdrop" data-close-beta></div>
+  <div class="beta-modal__panel" role="document">
+    <button type="button" class="beta-modal__close" data-close-beta aria-label="Close">&times;</button>
+    <p class="beta-modal__eyebrow">Android · Closed beta</p>
+    <h2 id="beta-modal-title">Install the Fud AI Android beta</h2>
+    <p class="beta-modal__sub">3 steps. The first one is required — Google checks Group membership before the opt-in URL works.</p>
+    <ol class="beta-modal__steps">
+      <li>
+        <span class="beta-modal__step-num">1</span>
+        <div class="beta-modal__step-body">
+          <h3>Join the Google Group</h3>
+          <p>Required prerequisite. Click "Join group" on the Google Groups page.</p>
+          <a href="https://groups.google.com/g/fud-ai-testers" target="_blank" rel="noopener" class="beta-modal__step-cta">
+            <i class="fa-solid fa-users"></i><span>Join Group</span>
+          </a>
+        </div>
+      </li>
+      <li>
+        <span class="beta-modal__step-num">2</span>
+        <div class="beta-modal__step-body">
+          <h3>Become a tester</h3>
+          <p>Open the opt-in URL, tap "Become a tester", and wait ~5 minutes for Google to provision your account.</p>
+          <a href="https://play.google.com/apps/testing/com.apoorvdarshan.calorietracker" target="_blank" rel="noopener" class="beta-modal__step-cta">
+            <i class="fa-solid fa-flask"></i><span>Become tester</span>
+          </a>
+        </div>
+      </li>
+      <li>
+        <span class="beta-modal__step-num">3</span>
+        <div class="beta-modal__step-body">
+          <h3>Install from Play Store</h3>
+          <p>Once provisioned, open the Play Store listing on your Android phone and install.</p>
+          <a href="https://play.google.com/store/apps/details?id=com.apoorvdarshan.calorietracker" target="_blank" rel="noopener" class="beta-modal__step-cta">
+            <i class="fa-brands fa-google-play"></i><span>Open Play Store</span>
+          </a>
+        </div>
+      </li>
+    </ol>
+    <p class="beta-modal__footnote">Stay opted-in for 14 days so the test qualifies for the public Play Store launch. Uninstalling the app is fine — just don't click <em>Leave the program</em>.</p>
+  </div>
+</div>
+
+<script>
+  // Wire up the "Join Android beta" CTA → beta modal. Click the CTA →
+  // intercept the navigation and open the modal. ESC + backdrop click +
+  // explicit × button close it. Body scroll is locked while open so the
+  // page underneath doesn't scroll under the modal on iOS Safari.
+  (function () {
+    const modal = document.getElementById('beta-modal');
+    if (!modal) return;
+    const openModal = (e) => {
+      if (e) e.preventDefault();
+      modal.hidden = false;
+      document.body.style.overflow = 'hidden';
+    };
+    const closeModal = () => {
+      modal.hidden = true;
+      document.body.style.overflow = '';
+    };
+    document.querySelectorAll('[data-open-beta]').forEach((trigger) => {
+      trigger.addEventListener('click', openModal);
+    });
+    modal.querySelectorAll('[data-close-beta]').forEach((closer) => {
+      closer.addEventListener('click', closeModal);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.hidden) closeModal();
+    });
+  })();
+</script>
 </body>
 </html>
