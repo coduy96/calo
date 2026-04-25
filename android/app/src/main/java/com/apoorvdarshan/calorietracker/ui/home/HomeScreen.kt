@@ -95,6 +95,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -233,6 +234,40 @@ fun HomeScreen(container: AppContainer) {
                             ),
                             label = "plusPress"
                         )
+                        // Light mode: white-on-translucent-white glass disappears into the
+                        // cream background, so swap to the brand pink gradient so the white
+                        // "+" pops. Dark mode: keep the original liquid-glass look (it reads
+                        // fine on the near-black background). Decide via the actual rendered
+                        // background luminance — isSystemInDarkTheme() can drift from
+                        // MaterialTheme on some OEM skins (OriginOS) that override uimode.
+                        val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+                        val plusBg = if (isDark) {
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color.White.copy(alpha = 0.22f),
+                                    Color.White.copy(alpha = 0.08f)
+                                )
+                            )
+                        } else {
+                            Brush.verticalGradient(
+                                listOf(AppColors.CalorieStart, AppColors.CalorieEnd)
+                            )
+                        }
+                        val plusBorder = if (isDark) {
+                            Brush.linearGradient(
+                                listOf(
+                                    Color.White.copy(alpha = 0.45f),
+                                    Color.White.copy(alpha = 0.05f)
+                                )
+                            )
+                        } else {
+                            Brush.linearGradient(
+                                listOf(
+                                    Color.White.copy(alpha = 0.85f),
+                                    Color.White.copy(alpha = 0.35f)
+                                )
+                            )
+                        }
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
@@ -246,24 +281,8 @@ fun HomeScreen(container: AppContainer) {
                                     spotColor = Color.Black.copy(alpha = 0.25f)
                                 )
                                 .clip(CircleShape)
-                                .background(
-                                    Brush.verticalGradient(
-                                        listOf(
-                                            Color.White.copy(alpha = 0.22f),
-                                            Color.White.copy(alpha = 0.08f)
-                                        )
-                                    )
-                                )
-                                .border(
-                                    0.7.dp,
-                                    Brush.linearGradient(
-                                        listOf(
-                                            Color.White.copy(alpha = 0.45f),
-                                            Color.White.copy(alpha = 0.05f)
-                                        )
-                                    ),
-                                    CircleShape
-                                )
+                                .background(plusBg)
+                                .border(0.7.dp, plusBorder, CircleShape)
                                 .clickable(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = null
