@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Fud AI is an open-source calorie tracker. The iOS client (SwiftUI, iOS 17.6+) lives in `ios/` — shipping on the App Store at v3.1. The Android client (Kotlin + Jetpack Compose, min SDK 26) lives in `android/` — feature-parity port, v1.0.0, ready for Play Store submission. The marketing website (plain HTML/CSS, deployed to Vercel at https://fud-ai.app) lives in `web/`. Both clients work the same way: snap/speak/type a meal, an AI provider returns nutrition JSON, the user reviews it, and it lands in the food store + Apple Health (iOS) or Health Connect (Android). There's also a "Coach" tab — multi-turn AI chat that sees the user's full profile, weight history, and food log and answers questions like "what's my expected weight in 30 days?". Bring-your-own-key model; all data is local. No subscriptions, no sign-in, no cloud sync.
+Fud AI is an open-source calorie tracker. The iOS client (SwiftUI, iOS 17.6+) lives in `ios/` — shipping on the App Store at v3.1. The Android client (Kotlin + Jetpack Compose, min SDK 26) lives in `android/` — feature-parity port, v1.0.2 in Play Store closed testing. The marketing website (plain HTML/CSS, deployed to Vercel at https://fud-ai.app) lives in `web/`. Both clients work the same way: snap/speak/type a meal, an AI provider returns nutrition JSON, the user reviews it, and it lands in the food store + Apple Health (iOS) or Health Connect (Android). There's also a "Coach" tab — multi-turn AI chat that sees the user's full profile, weight history, and food log and answers questions like "what's my expected weight in 30 days?". Bring-your-own-key model; all data is local. No subscriptions, no sign-in, no cloud sync.
 
 ## Repo Layout
 
@@ -206,7 +206,19 @@ adb shell am start -n com.apoorvdarshan.calorietracker/.MainActivity --ez reset_
 adb logcat -s FudAI:* AndroidRuntime:E
 ```
 
-OriginOS quirks: USB debugging needs **two** toggles enabled (USB debugging + USB debugging Security settings under Developer options). After first install, whitelist Fud AI in battery optimization so alarm-based reminders survive.
+**adb is not on PATH** on Apoorv's machine — the binary lives at `~/Library/Android/sdk/platform-tools/adb`. Either alias it or use the absolute path; `command not found: adb` from a fresh shell is the giveaway.
+
+**Debug builds install side-by-side with the Play Store release**, never overwriting it. `buildTypes.debug` sets `applicationIdSuffix = ".debug"` + `versionNameSuffix = "-debug"` so `:app:assembleDebug` produces `com.apoorvdarshan.calorietracker.debug` — separate package, separate DataStore, separate widgets. Apoorv has the live closed-test build (`com.apoorvdarshan.calorietracker`, signed by the production keystore) installed from Play Store; for any iteration on device, **always use the debug variant** so that production install + its real-user state stay intact. Targeting the debug package in adb commands looks like:
+
+```bash
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb shell am start -n com.apoorvdarshan.calorietracker.debug/com.apoorvdarshan.calorietracker.MainActivity
+adb shell am start -n com.apoorvdarshan.calorietracker.debug/com.apoorvdarshan.calorietracker.MainActivity --ez reset_onboarding true
+```
+
+The launcher icon stays as plain "Fud AI" for both (no `app_name` override) — Apoorv distinguishes by install order / icon position.
+
+OriginOS quirks: USB debugging needs **two** toggles enabled (USB debugging + USB debugging Security settings under Developer options). After first install, whitelist Fud AI in battery optimization so alarm-based reminders survive. Forcing dark/light mode via `cmd uimode night yes|no` or `settings put secure ui_night_mode` is **silently ignored** by the OEM skin — to verify both themes either toggle the Appearance picker inside Fud AI (Settings → Appearance → System / Light / Dark, persisted in DataStore and read by `MainActivity`'s `FudAITheme(darkTheme = ...)` wrap) or flip the OS Settings → Display switch by hand.
 
 ## Tests (Android)
 
@@ -342,6 +354,7 @@ Plain static HTML + CSS — no build step, no framework. Deployed to Vercel with
 - **No exact alarms**: reminders use the inexact `setAndAllowWhileIdle` path, never `setExactAndAllowWhileIdle`. Play Console blocks `USE_EXACT_ALARM` for any app whose core function isn't a calendar or alarm clock — Fud AI is neither, and the v1.0.0 closed-test upload was rejected the one time we shipped that permission. The manifest deliberately omits both `USE_EXACT_ALARM` and `SCHEDULE_EXACT_ALARM`. A daily streak/summary nudge that fires within a few minutes of the chosen time is fine for this use case; don't reintroduce exact alarms.
 - **DataStore singleton**: `Context.fudaiDataStore` is a `preferencesDataStore` extension. Both the main app process and widget receivers call `PreferencesStore(context)` and get the same backing DataStore as long as the application context is used — that's how widgets see writes from the app without IPC. Don't reach for a separate widget store.
 - **Drag-to-reorder inside ModalBottomSheet** is fundamentally fragile on Android — the sheet's drag-to-dismiss and any internal vertical scroll compete for the same gesture. Favorites in Saved Meals uses native ↑/↓ buttons (`MoveButtons`) instead. If you reach for drag-to-reorder again, expect to fight it.
+- **Light-mode visibility for white-on-glass overlays**: the iOS-26-style liquid-glass + button on the Home top bar uses `Color.White` at 0.22/0.08 alpha, which reads against `AppBackgroundDark` (#0C0C0C) but completely vanishes against `AppBackgroundLight` (#FFF8F2) — the v1.0.1 build shipped with an invisible + button in light mode. Fix lives in `HomeScreen.kt`: `MaterialTheme.colorScheme.background.luminance() < 0.5f` decides which fill+border to use, swapping in the brand pink gradient (`AppColors.CalorieStart` → `AppColors.CalorieEnd`) for light mode. **Use `MaterialTheme.colorScheme.background.luminance()` rather than `isSystemInDarkTheme()`** when branching styles — OriginOS overrides uimode at the OEM layer and the two can drift, so the rendered theme is the only reliable source of truth. The same swap applies to any other glass overlay you add (Coach FAB, Saved-Meals header, etc.).
 
 ## Gotchas (iOS)
 
