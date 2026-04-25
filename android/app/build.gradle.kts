@@ -59,6 +59,13 @@ android {
             // apksigner before uploading to the Play Console.
             signingConfigs.findByName("release")?.let { signingConfig = it }
         }
+        debug {
+            // Suffix the package + version so the debug build installs side-by-side
+            // with the production app pulled from Play Store. The launcher label is
+            // overridden via app/src/debug/res/values/strings.xml.
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
