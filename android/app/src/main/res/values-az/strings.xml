@@ -608,4 +608,21 @@
     <string name="notif_summary_title">Bu günün xülasəsi hazırdır</string>
     <string name="notif_summary_text">Bu günün makrolarının necə düzüldüyünü görmək üçün toxunun.</string>
 
+    <string name="onboarding_goal_optional">Hədəf (isteğe bağlı)</string>
+    <string name="onboarding_goal_set_later">Bunu sonra Tənzimləmələrdə təyin edə bilərsiniz.</string>
+    <string name="settings_goal_body_fat">Hədəf bədən yağı</string>
+    <string name="settings_use_body_fat_bmr">BMR üçün bədən yağını istifadə et</string>
+    <string name="settings_use_body_fat_bmr_subtitle">Açıq = Katch-McArdle (daha dəqiq BMR üçün arıq kütlədən istifadə edir). Bağlı = Mifflin-St Jeor (yalnız boy/çəki/yaş). Bədən yağı oxunuşunuz köhnəlibsə, bağlayın.</string>
+    <string name="sheet_goal_body_fat">Bədən yağı hədəfi</string>
+    <string name="sheet_goal_body_fat_currently">Hazırda %%%1$d</string>
+    <string name="action_remove_goal">Hədəfi sil</string>
+    <string name="progress_metric_weight">Çəki</string>
+    <string name="progress_metric_body_fat">Bədən yağı</string>
+    <string name="progress_log_body_fat">Bədən yağını qeyd et</string>
+    <string name="progress_log_first_body_fat">Trendləri görmək üçün ilk bədən yağı %-ni qeyd edin</string>
+    <string name="progress_log_body_fat_title">Bədən yağını qeyd et</string>
+    <string name="notif_body_fat_log_title">Bədən yağı yoxlanışı</string>
+    <string name="notif_body_fat_log_text">Bədən tərkibinizin trendini izləmək üçün bu günkü bədən yağı %-ni qeyd edin.</string>
+    <string name="saved_meals_search_placeholder">Saxlanılan yeməklərdə axtarın</string>
+    <string name="saved_meals_no_match">Uyğun yemək tapılmadı</string>
 </resources>

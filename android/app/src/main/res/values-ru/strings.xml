@@ -608,4 +608,21 @@
     <string name="notif_summary_title">Сводка за сегодня готова</string>
     <string name="notif_summary_text">Коснитесь, чтобы увидеть, как сложились макросы за день.</string>
 
+    <string name="onboarding_goal_optional">Цель (необязательно)</string>
+    <string name="onboarding_goal_set_later">Можно настроить позже в Настройках.</string>
+    <string name="settings_goal_body_fat">Цель по жиру</string>
+    <string name="settings_use_body_fat_bmr">Использовать жир для BMR</string>
+    <string name="settings_use_body_fat_bmr_subtitle">Вкл = Katch-McArdle (использует сухую массу для более точного BMR). Выкл = Mifflin-St Jeor (только рост/вес/возраст). Отключите, если измерение жира устарело.</string>
+    <string name="sheet_goal_body_fat">Цель по жиру</string>
+    <string name="sheet_goal_body_fat_currently">Сейчас %1$d%%</string>
+    <string name="action_remove_goal">Удалить цель</string>
+    <string name="progress_metric_weight">Вес</string>
+    <string name="progress_metric_body_fat">Жир тела</string>
+    <string name="progress_log_body_fat">Записать жир</string>
+    <string name="progress_log_first_body_fat">Запишите первое измерение жира, чтобы увидеть динамику</string>
+    <string name="progress_log_body_fat_title">Записать жир</string>
+    <string name="notif_body_fat_log_title">Проверка жира</string>
+    <string name="notif_body_fat_log_text">Запишите свой % жира сегодня, чтобы отслеживать динамику состава тела.</string>
+    <string name="saved_meals_search_placeholder">Поиск сохранённых продуктов</string>
+    <string name="saved_meals_no_match">Нет подходящих продуктов</string>
 </resources>

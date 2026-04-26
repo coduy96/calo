@@ -608,4 +608,21 @@
     <string name="notif_summary_title">今日摘要已就绪</string>
     <string name="notif_summary_text">点按查看今日宏量营养素的完成情况。</string>
 
+    <string name="onboarding_goal_optional">目标(可选)</string>
+    <string name="onboarding_goal_set_later">稍后可以在设置中设置。</string>
+    <string name="settings_goal_body_fat">目标体脂</string>
+    <string name="settings_use_body_fat_bmr">使用体脂计算BMR</string>
+    <string name="settings_use_body_fat_bmr_subtitle">开启 = Katch-McArdle(使用瘦体重以获得更准确的BMR)。关闭 = Mifflin-St Jeor(仅使用身高/体重/年龄)。如果体脂测量值已过时,请关闭。</string>
+    <string name="sheet_goal_body_fat">体脂目标</string>
+    <string name="sheet_goal_body_fat_currently">当前%1$d%%</string>
+    <string name="action_remove_goal">移除目标</string>
+    <string name="progress_metric_weight">体重</string>
+    <string name="progress_metric_body_fat">体脂</string>
+    <string name="progress_log_body_fat">记录体脂</string>
+    <string name="progress_log_first_body_fat">记录你的第一个体脂百分比以查看趋势</string>
+    <string name="progress_log_body_fat_title">记录体脂</string>
+    <string name="notif_body_fat_log_title">体脂签到</string>
+    <string name="notif_body_fat_log_text">记录今天的体脂百分比以追踪你的体成分趋势。</string>
+    <string name="saved_meals_search_placeholder">搜索已保存的食物</string>
+    <string name="saved_meals_no_match">没有匹配的食物</string>
 </resources>

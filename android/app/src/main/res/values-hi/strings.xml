@@ -608,4 +608,21 @@
     <string name="notif_summary_title">आज का सारांश तैयार है</string>
     <string name="notif_summary_text">देखने के लिए टैप करें कि आज के मैक्रो कैसे रहे।</string>
 
+    <string name="onboarding_goal_optional">लक्ष्य (वैकल्पिक)</string>
+    <string name="onboarding_goal_set_later">आप इसे बाद में सेटिंग्स में सेट कर सकते हैं।</string>
+    <string name="settings_goal_body_fat">लक्ष्य बॉडी फैट</string>
+    <string name="settings_use_body_fat_bmr">BMR के लिए बॉडी फैट का उपयोग करें</string>
+    <string name="settings_use_body_fat_bmr_subtitle">चालू = Katch-McArdle (अधिक सटीक BMR के लिए लीन मास का उपयोग)। बंद = Mifflin-St Jeor (केवल ऊंचाई/वजन/उम्र)। यदि आपका बॉडी फैट रीडिंग पुराना है तो बंद करें।</string>
+    <string name="sheet_goal_body_fat">बॉडी फैट लक्ष्य</string>
+    <string name="sheet_goal_body_fat_currently">वर्तमान %1$d%%</string>
+    <string name="action_remove_goal">लक्ष्य हटाएं</string>
+    <string name="progress_metric_weight">वज़न</string>
+    <string name="progress_metric_body_fat">बॉडी फैट</string>
+    <string name="progress_log_body_fat">बॉडी फैट दर्ज करें</string>
+    <string name="progress_log_first_body_fat">रुझान देखने के लिए अपना पहला बॉडी फैट % दर्ज करें</string>
+    <string name="progress_log_body_fat_title">बॉडी फैट दर्ज करें</string>
+    <string name="notif_body_fat_log_title">बॉडी फैट चेक-इन</string>
+    <string name="notif_body_fat_log_text">अपनी संरचना का रुझान देखने के लिए आज का बॉडी फैट % दर्ज करें।</string>
+    <string name="saved_meals_search_placeholder">सहेजे गए खानों में खोजें</string>
+    <string name="saved_meals_no_match">कोई मेल खाता खाना नहीं</string>
 </resources>

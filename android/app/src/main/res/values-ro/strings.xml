@@ -608,4 +608,21 @@
     <string name="notif_summary_title">Rezumatul de azi e gata</string>
     <string name="notif_summary_text">Atinge pentru a vedea cum s-au aliniat macronutrienții de azi.</string>
 
+    <string name="onboarding_goal_optional">Țintă (opțional)</string>
+    <string name="onboarding_goal_set_later">Poți seta asta mai târziu în Setări.</string>
+    <string name="settings_goal_body_fat">Țintă grăsime corporală</string>
+    <string name="settings_use_body_fat_bmr">Folosește grăsimea corporală pentru BMR</string>
+    <string name="settings_use_body_fat_bmr_subtitle">Pornit = Katch-McArdle (folosește masa slabă pentru un BMR mai precis). Oprit = Mifflin-St Jeor (doar înălțime/greutate/vârstă). Oprește dacă măsurarea grăsimii corporale este învechită.</string>
+    <string name="sheet_goal_body_fat">Țintă grăsime corporală</string>
+    <string name="sheet_goal_body_fat_currently">Curent %1$d%%</string>
+    <string name="action_remove_goal">Elimină ținta</string>
+    <string name="progress_metric_weight">Greutate</string>
+    <string name="progress_metric_body_fat">Grăsime corporală</string>
+    <string name="progress_log_body_fat">Înregistrează grăsimea corporală</string>
+    <string name="progress_log_first_body_fat">Înregistrează primul tău % de grăsime corporală pentru a vedea tendințele</string>
+    <string name="progress_log_body_fat_title">Înregistrează grăsimea corporală</string>
+    <string name="notif_body_fat_log_title">Verificare grăsime corporală</string>
+    <string name="notif_body_fat_log_text">Înregistrează grăsimea corporală de azi pentru a urmări tendința compoziției.</string>
+    <string name="saved_meals_search_placeholder">Caută în mâncărurile salvate</string>
+    <string name="saved_meals_no_match">Nicio mâncare potrivită</string>
 </resources>

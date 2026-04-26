@@ -608,4 +608,21 @@
     <string name="notif_summary_title">El resumen de hoy está listo</string>
     <string name="notif_summary_text">Toca para ver cómo cuadraron los macros de hoy.</string>
 
+    <string name="onboarding_goal_optional">Objetivo (opcional)</string>
+    <string name="onboarding_goal_set_later">Puedes establecer esto más tarde en Ajustes.</string>
+    <string name="settings_goal_body_fat">Grasa corporal objetivo</string>
+    <string name="settings_use_body_fat_bmr">Usar grasa corporal para BMR</string>
+    <string name="settings_use_body_fat_bmr_subtitle">Activo = Katch-McArdle (usa la masa magra para un BMR más preciso). Desactivado = Mifflin-St Jeor (solo altura/peso/edad). Desactiva si tu medición de grasa corporal está desactualizada.</string>
+    <string name="sheet_goal_body_fat">Objetivo de grasa corporal</string>
+    <string name="sheet_goal_body_fat_currently">Actual %1$d%%</string>
+    <string name="action_remove_goal">Quitar objetivo</string>
+    <string name="progress_metric_weight">Peso</string>
+    <string name="progress_metric_body_fat">Grasa corporal</string>
+    <string name="progress_log_body_fat">Registrar grasa corporal</string>
+    <string name="progress_log_first_body_fat">Registra tu primer % de grasa corporal para ver tendencias</string>
+    <string name="progress_log_body_fat_title">Registrar grasa corporal</string>
+    <string name="notif_body_fat_log_title">Revisión de grasa corporal</string>
+    <string name="notif_body_fat_log_text">Registra tu grasa corporal de hoy para seguir tu tendencia de composición.</string>
+    <string name="saved_meals_search_placeholder">Buscar comidas guardadas</string>
+    <string name="saved_meals_no_match">No hay comidas que coincidan</string>
 </resources>

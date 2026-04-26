@@ -608,4 +608,21 @@
     <string name="notif_summary_title">오늘의 요약이 준비되었어요</string>
     <string name="notif_summary_text">탭하여 오늘의 매크로 결과를 확인하세요.</string>
 
+    <string name="onboarding_goal_optional">목표(선택)</string>
+    <string name="onboarding_goal_set_later">나중에 설정에서 설정할 수 있습니다.</string>
+    <string name="settings_goal_body_fat">목표 체지방</string>
+    <string name="settings_use_body_fat_bmr">BMR 계산에 체지방 사용</string>
+    <string name="settings_use_body_fat_bmr_subtitle">켜짐 = Katch-McArdle (제지방량을 사용하여 더 정확한 BMR). 꺼짐 = Mifflin-St Jeor (키/체중/나이만 사용). 체지방 측정값이 오래되었다면 꺼두세요.</string>
+    <string name="sheet_goal_body_fat">체지방 목표</string>
+    <string name="sheet_goal_body_fat_currently">현재 %1$d%%</string>
+    <string name="action_remove_goal">목표 제거</string>
+    <string name="progress_metric_weight">체중</string>
+    <string name="progress_metric_body_fat">체지방</string>
+    <string name="progress_log_body_fat">체지방 기록</string>
+    <string name="progress_log_first_body_fat">추이를 보려면 첫 체지방률을 기록하세요</string>
+    <string name="progress_log_body_fat_title">체지방 기록</string>
+    <string name="notif_body_fat_log_title">체지방 체크인</string>
+    <string name="notif_body_fat_log_text">체성분 변화를 추적하려면 오늘의 체지방률을 기록하세요.</string>
+    <string name="saved_meals_search_placeholder">저장된 음식 검색</string>
+    <string name="saved_meals_no_match">일치하는 음식이 없습니다</string>
 </resources>
