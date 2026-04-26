@@ -68,21 +68,24 @@ struct CoachTools {
         let weightDates = weights.map { $0.date }.sorted()
         let bodyFatDates = bodyFats.map { $0.date }.sorted()
         let foodDates = foods.map { $0.timestamp }.sorted()
+        // Explicit `as Any` on the optional → NSNull coalesce so the dictionary
+        // literal doesn't trigger Swift's "Any? coerced to Any" warning. Both
+        // branches resolve to a concrete JSON-serializable type at runtime.
         let payload: [String: Any] = [
             "weights": [
                 "count": weights.count,
-                "first_date": weightDates.first.map(Self.iso) ?? NSNull(),
-                "last_date": weightDates.last.map(Self.iso) ?? NSNull(),
+                "first_date": (weightDates.first.map(Self.iso) ?? NSNull()) as Any,
+                "last_date": (weightDates.last.map(Self.iso) ?? NSNull()) as Any,
             ],
             "body_fats": [
                 "count": bodyFats.count,
-                "first_date": bodyFatDates.first.map(Self.iso) ?? NSNull(),
-                "last_date": bodyFatDates.last.map(Self.iso) ?? NSNull(),
+                "first_date": (bodyFatDates.first.map(Self.iso) ?? NSNull()) as Any,
+                "last_date": (bodyFatDates.last.map(Self.iso) ?? NSNull()) as Any,
             ],
             "foods": [
                 "count": foods.count,
-                "first_date": foodDates.first.map(Self.iso) ?? NSNull(),
-                "last_date": foodDates.last.map(Self.iso) ?? NSNull(),
+                "first_date": (foodDates.first.map(Self.iso) ?? NSNull()) as Any,
+                "last_date": (foodDates.last.map(Self.iso) ?? NSNull()) as Any,
             ],
         ]
         return jsonString(payload)
@@ -192,7 +195,12 @@ struct CoachTools {
         return (startOfDay, endOfDay)
     }
 
-    private static let isoFormatter: DateFormatter = {
+    /// `nonisolated` on the helpers below so they can be called from any
+    /// context without tripping Swift's main-actor isolation warnings under
+    /// the project-wide SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor setting.
+    /// DateFormatter is Sendable as of recent SDKs, so a plain `private static
+    /// let` is fine — no `nonisolated(unsafe)` needed.
+    nonisolated private static let isoFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
         f.locale = Locale(identifier: "en_US_POSIX")
@@ -200,8 +208,8 @@ struct CoachTools {
         return f
     }()
 
-    private static func iso(_ date: Date) -> String { isoFormatter.string(from: date) }
-    private static func parseDate(_ s: String) -> Date? { isoFormatter.date(from: s) }
+    nonisolated private static func iso(_ date: Date) -> String { isoFormatter.string(from: date) }
+    nonisolated private static func parseDate(_ s: String) -> Date? { isoFormatter.date(from: s) }
 
     private func jsonString(_ obj: Any) -> String {
         guard let data = try? JSONSerialization.data(withJSONObject: obj, options: [.sortedKeys]),
