@@ -1,8 +1,10 @@
 import Foundation
 
 /// Routes a multi-turn chat (system context + user/assistant message history + new user message)
-/// to the currently-selected LLM provider. Builds the system prompt from the user's live profile,
-/// weight history, food log, and computed forecast so the model always answers with fresh data.
+/// to the currently-selected LLM provider, with **tool calling** so the model can fetch any
+/// historical slice of the user's data on demand instead of receiving a fixed-size dump in
+/// the system prompt. Tool definitions live next to each provider's HTTP layer (Gemini /
+/// Anthropic / OpenAI-compatible) and the executor lives in CoachTools.
 struct ChatService {
     enum ChatError: LocalizedError {
         case noAPIKey
@@ -24,6 +26,12 @@ struct ChatService {
         }
     }
 
+    /// Hard cap on the number of tool-call rounds per user message. Generous —
+    /// most real questions resolve in 1–2 calls (e.g. summary → range fetch →
+    /// answer). Without this cap a misbehaving model could loop forever on
+    /// recursive calls.
+    private static let maxToolRounds = 6
+
     // MARK: - Public entry point
 
     static func sendMessage(
@@ -42,6 +50,7 @@ struct ChatService {
             foods: foods,
             useMetric: useMetric
         )
+        let tools = CoachTools(weights: weights, bodyFats: bodyFats, foods: foods, useMetric: useMetric)
 
         let provider = AIProviderSettings.selectedProvider
         let model = AIProviderSettings.selectedModel
@@ -53,16 +62,21 @@ struct ChatService {
 
         switch provider.apiFormat {
         case .gemini:
-            return try await callGemini(baseURL: baseURL, model: model, systemPrompt: systemPrompt, history: history, newUserMessage: newUserMessage)
+            return try await callGemini(baseURL: baseURL, model: model, systemPrompt: systemPrompt, history: history, newUserMessage: newUserMessage, tools: tools)
         case .anthropic:
-            return try await callAnthropic(baseURL: baseURL, model: model, systemPrompt: systemPrompt, history: history, newUserMessage: newUserMessage)
+            return try await callAnthropic(baseURL: baseURL, model: model, systemPrompt: systemPrompt, history: history, newUserMessage: newUserMessage, tools: tools)
         case .openaiCompatible:
-            return try await callOpenAICompatible(baseURL: baseURL, model: model, systemPrompt: systemPrompt, history: history, newUserMessage: newUserMessage, provider: provider)
+            return try await callOpenAICompatible(baseURL: baseURL, model: model, systemPrompt: systemPrompt, history: history, newUserMessage: newUserMessage, provider: provider, tools: tools)
         }
     }
 
     // MARK: - System prompt builder
 
+    /// Slim prompt: identity + profile + formulas + forecast summary + a short
+    /// "data available" snapshot + tool-use guidance. Bulk history dumps are
+    /// gone — Coach calls tools when it actually needs older data, so token
+    /// cost per message stays low and Coach can reach **all** of the user's
+    /// history (not just the previously-hardcoded last 10/14 entries).
     private static func buildSystemPrompt(profile: UserProfile, weights: [WeightEntry], bodyFats: [BodyFatEntry], foods: [FoodEntry], useMetric: Bool) -> String {
         let forecast = WeightAnalysisService.compute(weights: weights, foods: foods, profile: profile)
 
@@ -77,36 +91,20 @@ struct ChatService {
         if profile.usesBodyFatForBMR {
             bmrFormula = "Katch-McArdle (uses body fat %)"
         } else if profile.bodyFatPercentage != nil {
-            // Body fat is set but the user disabled the Katch-McArdle override
-            // in Settings → Profile. Surface it so Coach explains why BMR isn't
-            // using the body-fat value the user can see in their profile.
             bmrFormula = "Mifflin-St Jeor (user disabled the body-fat override in Settings)"
         } else {
             bmrFormula = "Mifflin-St Jeor (body fat not set)"
         }
 
-        // Recent weights (last 10) compact line for LLM to reason about trend
-        let recentWeights = weights.sorted { $0.date > $1.date }.prefix(10)
-        let weightLog = recentWeights.reversed().map { entry -> String in
-            let dateStr = ChatService.shortDateFormatter.string(from: entry.date)
-            return "\(dateStr): \(wUnit(entry.weightKg))"
-        }.joined(separator: ", ")
-
-        // Recent foods by day (last 14 days of totals — bumped from 7 so Coach
-        // sees ~2 weeks of intake patterns, enough to spot weekday/weekend
-        // splits and short-term streaks while keeping the prompt size bounded).
-        let calendar = Calendar.current
-        let twoWeeksAgo = calendar.date(byAdding: .day, value: -14, to: .now) ?? .now
-        let recentFoods = foods.filter { $0.timestamp >= twoWeeksAgo }
-        var dailyCal: [String: Int] = [:]
-        for entry in recentFoods {
-            let dayKey = ChatService.shortDateFormatter.string(from: entry.timestamp)
-            dailyCal[dayKey, default: 0] += entry.calories
-        }
-        let caloriesLog = dailyCal.sorted { $0.key < $1.key }.map { "\($0.key): \($0.value) kcal" }.joined(separator: ", ")
-
         var lines: [String] = []
-        lines.append("You are Coach, an AI nutrition and weight-change assistant inside a calorie tracking app. Answer in plain English, be specific and factual, and always ground your recommendations in the user's own data below. Avoid medical advice; when relevant, suggest consulting a doctor. Be concise — 2–5 sentences per response unless the user asks for detail.")
+        lines.append("You are Coach, an AI nutrition and weight-change assistant inside a calorie tracking app. Answer in plain English, be specific and factual, and ground your recommendations in the user's own data. Avoid medical advice; when relevant, suggest consulting a doctor. Be concise — 2–5 sentences per response unless the user asks for detail.")
+        lines.append("")
+        lines.append("## How to use the data tools")
+        lines.append("You have access to functions that fetch the user's history on demand. The user profile + formulas + forecast below cover what's needed for most questions. Call a tool ONLY when the user asks about specific past dates, longer time ranges, individual meals, or trends that need raw data. Examples:")
+        lines.append("- \"How was my weight in March?\" → call get_weight_history(from, to)")
+        lines.append("- \"What did I eat last Tuesday?\" → call get_food_entries(from, to)")
+        lines.append("- \"What's my data range?\" → call get_data_summary")
+        lines.append("Do NOT call tools for questions you can answer from the profile/forecast below.")
         lines.append("")
         lines.append("## User profile")
         lines.append("- Gender: \(profile.gender.rawValue)")
@@ -154,46 +152,224 @@ struct ChatService {
             lines.append("- Not enough data yet (need ≥2 days food + ≥2 weights). Encourage the user to log more.")
         }
         lines.append("")
-        if !weightLog.isEmpty {
-            lines.append("## Recent weights (oldest → newest)")
-            lines.append(weightLog)
-            lines.append("")
-        }
-
-        // Body fat trend — sibling section to Recent weights so the Coach can
-        // reason about composition recomp (e.g. "you're holding weight but
-        // body fat is dropping" → recomp working). Last 10 readings keeps the
-        // prompt size predictable; Katch-McArdle BMR already reflects the
-        // latest value via syncProfileBodyFatToLatest().
-        let recentBodyFats = bodyFats.sorted { $0.date > $1.date }.prefix(10)
-        if !recentBodyFats.isEmpty {
-            let bodyFatLog = recentBodyFats.reversed().map { entry -> String in
-                let dateStr = ChatService.shortDateFormatter.string(from: entry.date)
-                return "\(dateStr): \(Int(entry.bodyFatFraction * 100))%"
-            }.joined(separator: ", ")
-            lines.append("## Recent body fat readings (oldest → newest)")
-            lines.append(bodyFatLog)
-            lines.append("")
-        }
-
-        if !caloriesLog.isEmpty {
-            lines.append("## Last 14 days of calorie totals (actual logged intake)")
-            lines.append(caloriesLog)
-            lines.append("")
-        }
+        lines.append("## Data available")
+        lines.append("- \(weights.count) weight entries, \(bodyFats.count) body-fat readings, \(foods.count) food entries logged total. Use get_data_summary to see exact date ranges.")
+        lines.append("")
         lines.append("When the user asks how to lose or gain, give a concrete calorie target and at least one actionable food or activity change. When they ask expected weight, reference the forecast numbers above.")
         return lines.joined(separator: "\n")
     }
 
-    private static let shortDateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "MMM d"
-        return f
-    }()
+    // MARK: - OpenAI-compatible (/chat/completions) — covers 10 of 13 providers
 
-    // MARK: - Gemini (v1beta generateContent with system_instruction)
+    /// OpenAI-style tool schema: each tool is `{"type":"function","function":{name, description, parameters}}`.
+    private static func openAIToolsArray() -> [[String: Any]] {
+        let dateRangeSchema: [String: Any] = [
+            "type": "object",
+            "properties": [
+                "from": ["type": "string", "description": "ISO date yyyy-MM-dd, inclusive start"],
+                "to": ["type": "string", "description": "ISO date yyyy-MM-dd, inclusive end"],
+                "limit": ["type": "integer", "description": "Optional max entries to return"],
+            ],
+            "required": ["from", "to"],
+        ]
+        let summarySchema: [String: Any] = ["type": "object", "properties": [:]]
 
-    private static func callGemini(baseURL: String, model: String, systemPrompt: String, history: [ChatMessage], newUserMessage: String) async throws -> String {
+        return CoachTools.toolNames.map { name -> [String: Any] in
+            [
+                "type": "function",
+                "function": [
+                    "name": name,
+                    "description": CoachTools.toolDescriptions[name] ?? "",
+                    "parameters": name == "get_data_summary" ? summarySchema : dateRangeSchema,
+                ],
+            ]
+        }
+    }
+
+    private static func callOpenAICompatible(baseURL: String, model: String, systemPrompt: String, history: [ChatMessage], newUserMessage: String, provider: AIProvider, tools: CoachTools) async throws -> String {
+        guard let url = URL(string: "\(baseURL)/chat/completions") else {
+            throw ChatError.apiError("Invalid API URL.")
+        }
+
+        var messages: [[String: Any]] = [["role": "system", "content": systemPrompt]]
+        for msg in history {
+            messages.append(["role": msg.role.rawValue, "content": msg.content])
+        }
+        messages.append(["role": "user", "content": newUserMessage])
+
+        var headers = ["Content-Type": "application/json"]
+        if let apiKey = AIProviderSettings.currentAPIKey {
+            headers["Authorization"] = "Bearer \(apiKey)"
+        }
+        if provider == .openrouter {
+            headers["HTTP-Referer"] = "https://github.com/apoorvdarshan/fud-ai"
+            headers["X-Title"] = "Fud AI"
+        }
+
+        let toolsArray = openAIToolsArray()
+
+        for _ in 0..<maxToolRounds {
+            let body: [String: Any] = [
+                "model": model,
+                "messages": messages,
+                "tools": toolsArray,
+                "tool_choice": "auto",
+            ]
+            let data = try await send(url: url, headers: headers, body: body)
+            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let choices = json["choices"] as? [[String: Any]],
+                  let message = choices.first?["message"] as? [String: Any]
+            else {
+                throw ChatError.invalidResponse
+            }
+
+            // Tool calls take precedence — if present, run them and loop.
+            if let toolCalls = message["tool_calls"] as? [[String: Any]], !toolCalls.isEmpty {
+                // Append the assistant's tool-call message verbatim so the
+                // next turn knows which tool_call_ids to respond to.
+                messages.append(message)
+                for call in toolCalls {
+                    guard let function = call["function"] as? [String: Any],
+                          let name = function["name"] as? String,
+                          let id = call["id"] as? String else { continue }
+                    let argsString = function["arguments"] as? String ?? "{}"
+                    let args = (try? JSONSerialization.jsonObject(with: Data(argsString.utf8))) as? [String: Any] ?? [:]
+                    let result = tools.execute(name: name, arguments: args)
+                    messages.append([
+                        "role": "tool",
+                        "tool_call_id": id,
+                        "content": result,
+                    ])
+                }
+                continue
+            }
+
+            if let content = message["content"] as? String {
+                return content.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            throw ChatError.invalidResponse
+        }
+        throw ChatError.apiError("Coach exceeded the tool-call round limit. Try rephrasing your question.")
+    }
+
+    // MARK: - Anthropic Messages API
+
+    /// Anthropic tool schema: `{name, description, input_schema}`. Tool calls
+    /// arrive as `tool_use` content blocks; results go back as `tool_result`
+    /// blocks within a user message.
+    private static func anthropicToolsArray() -> [[String: Any]] {
+        let dateRangeSchema: [String: Any] = [
+            "type": "object",
+            "properties": [
+                "from": ["type": "string", "description": "ISO date yyyy-MM-dd"],
+                "to": ["type": "string", "description": "ISO date yyyy-MM-dd"],
+                "limit": ["type": "integer", "description": "Optional max entries"],
+            ],
+            "required": ["from", "to"],
+        ]
+        let summarySchema: [String: Any] = ["type": "object", "properties": [:]]
+        return CoachTools.toolNames.map { name -> [String: Any] in
+            [
+                "name": name,
+                "description": CoachTools.toolDescriptions[name] ?? "",
+                "input_schema": name == "get_data_summary" ? summarySchema : dateRangeSchema,
+            ]
+        }
+    }
+
+    private static func callAnthropic(baseURL: String, model: String, systemPrompt: String, history: [ChatMessage], newUserMessage: String, tools: CoachTools) async throws -> String {
+        guard let apiKey = AIProviderSettings.currentAPIKey else { throw ChatError.noAPIKey }
+        guard let url = URL(string: "\(baseURL)/messages") else {
+            throw ChatError.apiError("Invalid API URL.")
+        }
+        var messages: [[String: Any]] = []
+        for msg in history {
+            messages.append(["role": msg.role.rawValue, "content": msg.content])
+        }
+        messages.append(["role": "user", "content": newUserMessage])
+
+        let toolsArray = anthropicToolsArray()
+        let headers = [
+            "Content-Type": "application/json",
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+        ]
+
+        for _ in 0..<maxToolRounds {
+            let body: [String: Any] = [
+                "model": model,
+                "max_tokens": 1024,
+                "system": systemPrompt,
+                "tools": toolsArray,
+                "messages": messages,
+            ]
+            let data = try await send(url: url, headers: headers, body: body)
+            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let contentArray = json["content"] as? [[String: Any]]
+            else {
+                throw ChatError.invalidResponse
+            }
+
+            // Anthropic returns "stop_reason": "tool_use" alongside content blocks
+            // mixing text + tool_use. Run all tool_use blocks, append their
+            // results, and loop.
+            let toolUses = contentArray.filter { ($0["type"] as? String) == "tool_use" }
+            if !toolUses.isEmpty {
+                // Echo the assistant's full content array back so Anthropic
+                // can pair tool_result blocks to their tool_use ids.
+                messages.append(["role": "assistant", "content": contentArray])
+                var toolResults: [[String: Any]] = []
+                for use in toolUses {
+                    guard let id = use["id"] as? String, let name = use["name"] as? String else { continue }
+                    let input = (use["input"] as? [String: Any]) ?? [:]
+                    let result = tools.execute(name: name, arguments: input)
+                    toolResults.append([
+                        "type": "tool_result",
+                        "tool_use_id": id,
+                        "content": result,
+                    ])
+                }
+                messages.append(["role": "user", "content": toolResults])
+                continue
+            }
+
+            // No tool calls → first text block is the answer.
+            if let firstText = contentArray.first(where: { ($0["type"] as? String) == "text" }),
+               let text = firstText["text"] as? String {
+                return text.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            throw ChatError.invalidResponse
+        }
+        throw ChatError.apiError("Coach exceeded the tool-call round limit. Try rephrasing your question.")
+    }
+
+    // MARK: - Gemini (v1beta generateContent with system_instruction + tools)
+
+    /// Gemini tool schema: `{"functionDeclarations": [{name, description, parameters}]}`
+    /// where parameters use OpenAPI type names (object/string/integer).
+    private static func geminiToolsObject() -> [String: Any] {
+        let dateRangeSchema: [String: Any] = [
+            "type": "object",
+            "properties": [
+                "from": ["type": "string", "description": "ISO date yyyy-MM-dd"],
+                "to": ["type": "string", "description": "ISO date yyyy-MM-dd"],
+                "limit": ["type": "integer", "description": "Optional max entries"],
+            ],
+            "required": ["from", "to"],
+        ]
+        let summarySchema: [String: Any] = ["type": "object", "properties": [:]]
+
+        let declarations: [[String: Any]] = CoachTools.toolNames.map { name in
+            [
+                "name": name,
+                "description": CoachTools.toolDescriptions[name] ?? "",
+                "parameters": name == "get_data_summary" ? summarySchema : dateRangeSchema,
+            ]
+        }
+        return ["functionDeclarations": declarations]
+    }
+
+    private static func callGemini(baseURL: String, model: String, systemPrompt: String, history: [ChatMessage], newUserMessage: String, tools: CoachTools) async throws -> String {
         guard let apiKey = AIProviderSettings.currentAPIKey else { throw ChatError.noAPIKey }
         guard let url = URL(string: "\(baseURL)/models/\(model):generateContent") else {
             throw ChatError.apiError("Invalid API URL.")
@@ -206,104 +382,59 @@ struct ChatService {
         }
         contents.append(["role": "user", "parts": [["text": newUserMessage]]])
 
-        let body: [String: Any] = [
-            "systemInstruction": ["parts": [["text": systemPrompt]]],
-            "contents": contents,
-        ]
+        let toolsObj = geminiToolsObject()
 
-        let data = try await send(
-            url: url,
-            headers: ["Content-Type": "application/json", "X-goog-api-key": apiKey],
-            body: body
-        )
+        for _ in 0..<maxToolRounds {
+            let body: [String: Any] = [
+                "systemInstruction": ["parts": [["text": systemPrompt]]],
+                "contents": contents,
+                "tools": [toolsObj],
+            ]
+            let data = try await send(
+                url: url,
+                headers: ["Content-Type": "application/json", "X-goog-api-key": apiKey],
+                body: body
+            )
+            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let candidates = json["candidates"] as? [[String: Any]],
+                  let candidate = candidates.first,
+                  let content = candidate["content"] as? [String: Any],
+                  let parts = content["parts"] as? [[String: Any]]
+            else {
+                throw ChatError.invalidResponse
+            }
 
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let candidates = json["candidates"] as? [[String: Any]],
-              let content = candidates.first?["content"] as? [String: Any],
-              let parts = content["parts"] as? [[String: Any]],
-              let text = parts.first?["text"] as? String
-        else {
+            // Function calls + plain text can both appear. Run any function
+            // calls and loop; otherwise concatenate text and return.
+            let functionCalls = parts.compactMap { $0["functionCall"] as? [String: Any] }
+            if !functionCalls.isEmpty {
+                // Echo the model's full parts back so Gemini sees its own
+                // function call when matching responses.
+                contents.append(["role": "model", "parts": parts])
+                var responseParts: [[String: Any]] = []
+                for call in functionCalls {
+                    guard let name = call["name"] as? String else { continue }
+                    let args = (call["args"] as? [String: Any]) ?? [:]
+                    let resultString = tools.execute(name: name, arguments: args)
+                    let resultObj = (try? JSONSerialization.jsonObject(with: Data(resultString.utf8))) ?? [:]
+                    responseParts.append([
+                        "functionResponse": [
+                            "name": name,
+                            "response": ["content": resultObj],
+                        ],
+                    ])
+                }
+                contents.append(["role": "user", "parts": responseParts])
+                continue
+            }
+
+            let texts = parts.compactMap { $0["text"] as? String }.joined()
+            if !texts.isEmpty {
+                return texts.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
             throw ChatError.invalidResponse
         }
-        return text.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    // MARK: - OpenAI-compatible (/chat/completions)
-
-    private static func callOpenAICompatible(baseURL: String, model: String, systemPrompt: String, history: [ChatMessage], newUserMessage: String, provider: AIProvider) async throws -> String {
-        guard let url = URL(string: "\(baseURL)/chat/completions") else {
-            throw ChatError.apiError("Invalid API URL.")
-        }
-        var messages: [[String: Any]] = [["role": "system", "content": systemPrompt]]
-        for msg in history {
-            messages.append(["role": msg.role.rawValue, "content": msg.content])
-        }
-        messages.append(["role": "user", "content": newUserMessage])
-
-        let body: [String: Any] = [
-            "model": model,
-            "messages": messages,
-        ]
-
-        var headers = ["Content-Type": "application/json"]
-        if let apiKey = AIProviderSettings.currentAPIKey {
-            headers["Authorization"] = "Bearer \(apiKey)"
-        }
-        if provider == .openrouter {
-            headers["HTTP-Referer"] = "https://github.com/apoorvdarshan/fud-ai"
-            headers["X-Title"] = "Fud AI"
-        }
-
-        let data = try await send(url: url, headers: headers, body: body)
-
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let choices = json["choices"] as? [[String: Any]],
-              let message = choices.first?["message"] as? [String: Any],
-              let content = message["content"] as? String
-        else {
-            throw ChatError.invalidResponse
-        }
-        return content.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    // MARK: - Anthropic Messages API
-
-    private static func callAnthropic(baseURL: String, model: String, systemPrompt: String, history: [ChatMessage], newUserMessage: String) async throws -> String {
-        guard let apiKey = AIProviderSettings.currentAPIKey else { throw ChatError.noAPIKey }
-        guard let url = URL(string: "\(baseURL)/messages") else {
-            throw ChatError.apiError("Invalid API URL.")
-        }
-        var messages: [[String: Any]] = []
-        for msg in history {
-            messages.append(["role": msg.role.rawValue, "content": msg.content])
-        }
-        messages.append(["role": "user", "content": newUserMessage])
-
-        let body: [String: Any] = [
-            "model": model,
-            "max_tokens": 1024,
-            "system": systemPrompt,
-            "messages": messages,
-        ]
-
-        let data = try await send(
-            url: url,
-            headers: [
-                "Content-Type": "application/json",
-                "x-api-key": apiKey,
-                "anthropic-version": "2023-06-01",
-            ],
-            body: body
-        )
-
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let contentArray = json["content"] as? [[String: Any]],
-              let firstText = contentArray.first(where: { ($0["type"] as? String) == "text" }),
-              let text = firstText["text"] as? String
-        else {
-            throw ChatError.invalidResponse
-        }
-        return text.trimmingCharacters(in: .whitespacesAndNewlines)
+        throw ChatError.apiError("Coach exceeded the tool-call round limit. Try rephrasing your question.")
     }
 
     // MARK: - Shared HTTP
@@ -315,8 +446,6 @@ struct ChatService {
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
         // Retry transient overload responses (503/429/529) with exponential backoff: 1s, 2s, 4s.
-        // Mirrors GeminiService — "model experiencing high demand" is usually a global throttle
-        // on the chosen model, so a quick retry resolves it invisibly most of the time.
         let retryDelaysNs: [UInt64] = [1_000_000_000, 2_000_000_000, 4_000_000_000]
         var lastError: ChatError = .apiError("Request failed")
 
@@ -332,8 +461,6 @@ struct ChatService {
 
             if http.statusCode == 200 { return data }
 
-            // Fall back to a status-only message when parsing finds nothing OR when the parsed
-            // value is empty (e.g. `{"error": {"message": ""}}`) so we never show a blank alert.
             let parsedRaw = parseErrorMessage(from: data) ?? ""
             let parsed = parsedRaw.isEmpty ? "HTTP \(http.statusCode)" : parsedRaw
             lastError = .apiError(friendlyMessage(for: http.statusCode, raw: parsed))
