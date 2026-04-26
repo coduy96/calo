@@ -1449,7 +1449,7 @@ struct ProfileView: View {
                             Label {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Use Body Fat for BMR")
-                                    Text("Off = Mifflin-St Jeor (height/weight/age only). Useful when your body-fat reading is outdated.")
+                                    Text("On = Katch-McArdle (uses lean mass for a more accurate BMR). Off = Mifflin-St Jeor (height/weight/age only). Turn off if your body-fat reading is outdated.")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
