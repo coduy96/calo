@@ -28,9 +28,13 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.ui.res.stringResource
+import com.apoorvdarshan.calorietracker.R
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -115,6 +119,25 @@ fun SavedMealsSheet(
     val favorites by container.foodRepository.favorites.collectAsState(initial = emptyList())
     val favKeys by container.foodRepository.favoriteKeys.collectAsState(initial = emptySet())
 
+    // Per-tab search query — substring + case-insensitive match against
+    // entry.name (or group.template.name for Frequent). Resets when the user
+    // switches segments since the same word almost never matches across all
+    // three contexts and the empty list reads as "your data vanished".
+    var searchQuery by remember(tab) { mutableStateOf("") }
+    val isSearching = searchQuery.isNotBlank()
+    val filteredRecents = remember(recents, searchQuery) {
+        if (searchQuery.isBlank()) recents
+        else recents.filter { it.name.contains(searchQuery.trim(), ignoreCase = true) }
+    }
+    val filteredFrequent = remember(frequent, searchQuery) {
+        if (searchQuery.isBlank()) frequent
+        else frequent.filter { it.template.name.contains(searchQuery.trim(), ignoreCase = true) }
+    }
+    val filteredFavorites = remember(favorites, searchQuery) {
+        if (searchQuery.isBlank()) favorites
+        else favorites.filter { it.name.contains(searchQuery.trim(), ignoreCase = true) }
+    }
+
     // Run the legacy → ordered favorites migration once on mount so existing
     // users see their previous favorites in the new ordered list.
     LaunchedEffect(Unit) { container.foodRepository.migratedFavorites() }
@@ -152,14 +175,38 @@ fun SavedMealsSheet(
                 tab = newTab
                 scope.launch { container.prefs.setLastSavedMealsSegment(newTab.name) }
             })
+            Spacer(Modifier.height(12.dp))
+
+            // Search field — filters whichever tab is active. Substring match,
+            // case-insensitive. Reset on tab switch via remember(tab) above.
+            androidx.compose.material3.OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text(stringResource(R.string.saved_meals_search_placeholder)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                leadingIcon = {
+                    Icon(Icons.Outlined.Search, contentDescription = null)
+                },
+                trailingIcon = if (isSearching) {
+                    {
+                        androidx.compose.material3.IconButton(onClick = { searchQuery = "" }) {
+                            Icon(Icons.Outlined.Close, contentDescription = null)
+                        }
+                    }
+                } else null,
+                shape = RoundedCornerShape(14.dp)
+            )
             Spacer(Modifier.height(16.dp))
 
             when (tab) {
                 SavedTab.RECENTS -> {
-                    if (recents.isEmpty()) {
-                        EmptyState(icon = Icons.Outlined.Schedule, text = "No foods logged yet")
+                    if (filteredRecents.isEmpty()) {
+                        val msg = if (isSearching) stringResource(R.string.saved_meals_no_match)
+                                  else "No foods logged yet"
+                        EmptyState(icon = if (isSearching) Icons.Outlined.Search else Icons.Outlined.Schedule, text = msg)
                     } else {
-                        SavedList(items = recents) { entry ->
+                        SavedList(items = filteredRecents) { entry ->
                             SavedMealRow(
                                 entry = entry,
                                 isFavorite = entry.favoriteKey in favKeys,
@@ -171,10 +218,12 @@ fun SavedMealsSheet(
                     }
                 }
                 SavedTab.FREQUENT -> {
-                    if (frequent.isEmpty()) {
-                        EmptyState(icon = Icons.Outlined.Refresh, text = "No foods logged yet")
+                    if (filteredFrequent.isEmpty()) {
+                        val msg = if (isSearching) stringResource(R.string.saved_meals_no_match)
+                                  else "No foods logged yet"
+                        EmptyState(icon = if (isSearching) Icons.Outlined.Search else Icons.Outlined.Refresh, text = msg)
                     } else {
-                        SavedList(items = frequent) { group ->
+                        SavedList(items = filteredFrequent) { group ->
                             SavedMealRow(
                                 entry = group.template,
                                 isFavorite = group.template.favoriteKey in favKeys,
@@ -191,6 +240,22 @@ fun SavedMealsSheet(
                             icon = Icons.Outlined.Favorite,
                             text = "No favorites yet\nSwipe left on any food to add it"
                         )
+                    } else if (filteredFavorites.isEmpty()) {
+                        EmptyState(icon = Icons.Outlined.Search, text = stringResource(R.string.saved_meals_no_match))
+                    } else if (isSearching) {
+                        // Drag-to-reorder is hidden during search since the
+                        // filtered indices don't map back to the unfiltered
+                        // favorites array — letting reorder run on a filtered
+                        // list would silently swap the wrong items.
+                        SavedList(items = filteredFavorites) { entry ->
+                            SavedMealRow(
+                                entry = entry,
+                                isFavorite = true,
+                                subtitle = null,
+                                imageStore = container.imageStore,
+                                onClick = { onRelogEntry(entry); onDismiss() }
+                            )
+                        }
                     } else {
                         FavoritesReorderableList(
                             favorites = favorites,

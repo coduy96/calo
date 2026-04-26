@@ -49,6 +49,15 @@ class FudAIApp : Application() {
                 container.notifications.canPostNotifications()
             ) {
                 container.notifications.scheduleWeightReminder()
+                // Body-fat reminder only fires for users who've actually opted
+                // into body-fat tracking — the toggle in Settings is the same
+                // master Notifications switch, but the body-fat ping is gated
+                // on the profile having a current body-fat value so we don't
+                // ping users who haven't entered one.
+                val profile = container.profileRepository.current()
+                if (profile?.bodyFatPercentage != null) {
+                    container.notifications.scheduleBodyFatReminder()
+                }
             }
         }
     }

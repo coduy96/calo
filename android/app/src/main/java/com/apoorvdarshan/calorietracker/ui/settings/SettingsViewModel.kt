@@ -136,8 +136,16 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             // POST_NOTIFICATIONS hasn't been granted.
             if (v && container.notifications.canPostNotifications()) {
                 container.notifications.scheduleWeightReminder()
+                // Body-fat reminder only arms for users who've opted into
+                // body-fat tracking — gated on profile.bodyFatPercentage so
+                // we don't ping users who never entered one.
+                val profile = container.profileRepository.current()
+                if (profile?.bodyFatPercentage != null) {
+                    container.notifications.scheduleBodyFatReminder()
+                }
             } else {
                 container.notifications.cancelWeightReminder()
+                container.notifications.cancelBodyFatReminder()
             }
             _ui.value = _ui.value.copy(notificationsEnabled = v)
         }

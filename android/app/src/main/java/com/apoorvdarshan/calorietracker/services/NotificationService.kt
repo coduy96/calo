@@ -62,7 +62,13 @@ class NotificationService(private val context: Context) {
             NotificationManager.IMPORTANCE_DEFAULT
         ).apply { description = "Daily reminder to weigh in and log your weight." }
 
-        mgr.createNotificationChannels(listOf(streak, daily, goal, weight))
+        val bodyFat = NotificationChannel(
+            CHANNEL_BODY_FAT_LOG,
+            "Body Fat Log Reminder",
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply { description = "Daily reminder to log a body-fat reading." }
+
+        mgr.createNotificationChannels(listOf(streak, daily, goal, weight, bodyFat))
     }
 
     fun canPostNotifications(): Boolean {
@@ -112,9 +118,16 @@ class NotificationService(private val context: Context) {
         text = context.getString(R.string.notif_weight_log_text)
     )
 
+    fun scheduleBodyFatReminder(hour: Int = 8, minute: Int = 0) = schedule(
+        REQUEST_BODY_FAT, hour, minute, CHANNEL_BODY_FAT_LOG,
+        title = context.getString(R.string.notif_body_fat_log_title),
+        text = context.getString(R.string.notif_body_fat_log_text)
+    )
+
     fun cancelStreakReminder() = cancel(REQUEST_STREAK)
     fun cancelDailySummary() = cancel(REQUEST_DAILY)
     fun cancelWeightReminder() = cancel(REQUEST_WEIGHT)
+    fun cancelBodyFatReminder() = cancel(REQUEST_BODY_FAT)
 
     private fun schedule(requestCode: Int, hour: Int, minute: Int, channel: String, title: String, text: String) {
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -159,6 +172,7 @@ class NotificationService(private val context: Context) {
         const val CHANNEL_DAILY = "daily_summary"
         const val CHANNEL_WEIGHT_GOAL = "weight_goal"
         const val CHANNEL_WEIGHT_LOG = "weight_log_reminder"
+        const val CHANNEL_BODY_FAT_LOG = "body_fat_log_reminder"
         const val EXTRA_CHANNEL = "channel"
         const val EXTRA_TITLE = "title"
         const val EXTRA_TEXT = "text"
@@ -167,6 +181,7 @@ class NotificationService(private val context: Context) {
         private const val REQUEST_STREAK = 1001
         private const val REQUEST_DAILY = 1002
         private const val REQUEST_WEIGHT = 1003
+        private const val REQUEST_BODY_FAT = 1004
     }
 }
 
