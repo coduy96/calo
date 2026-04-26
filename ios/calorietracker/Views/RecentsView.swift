@@ -10,6 +10,7 @@ struct RecentsView: View {
     @AppStorage("lastRecentsSegment") private var lastSegment: String = RecentsSegment.recents.rawValue
 
     @State private var segment: RecentsSegment = .recents
+    @State private var searchText: String = ""
 
     private enum RecentsSegment: String, CaseIterable {
         case recents = "Recents"
@@ -18,11 +19,31 @@ struct RecentsView: View {
     }
 
     private var recentItems: [FoodEntry] {
-        foodStore.recentEntries(limit: 50)
+        let items = foodStore.recentEntries(limit: 50)
+        return filterByName(items) { $0.name }
     }
 
     private var frequentItems: [FrequentFoodGroup] {
-        foodStore.frequentGroups()
+        let items = foodStore.frequentGroups()
+        return filterByName(items) { $0.template.name }
+    }
+
+    private var favoriteItems: [FoodEntry] {
+        filterByName(foodStore.favorites) { $0.name }
+    }
+
+    /// Substring, case-insensitive, diacritic-insensitive match against the
+    /// extracted name. Empty query returns the full list unchanged.
+    private func filterByName<T>(_ items: [T], name: (T) -> String) -> [T] {
+        let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !q.isEmpty else { return items }
+        return items.filter { item in
+            name(item).range(of: q, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+        }
+    }
+
+    private var isSearching: Bool {
+        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     var body: some View {
@@ -41,7 +62,10 @@ struct RecentsView: View {
                 switch segment {
                 case .recents:
                     if recentItems.isEmpty {
-                        emptySection(icon: "clock", message: "No foods logged yet")
+                        emptySection(
+                            icon: isSearching ? "magnifyingglass" : "clock",
+                            message: isSearching ? "No matching foods" : "No foods logged yet"
+                        )
                     } else {
                         Section {
                             ForEach(recentItems) { entry in
@@ -63,7 +87,10 @@ struct RecentsView: View {
 
                 case .frequent:
                     if frequentItems.isEmpty {
-                        emptySection(icon: "repeat", message: "No foods logged yet")
+                        emptySection(
+                            icon: isSearching ? "magnifyingglass" : "repeat",
+                            message: isSearching ? "No matching foods" : "No foods logged yet"
+                        )
                     } else {
                         Section {
                             ForEach(frequentItems) { group in
@@ -84,11 +111,14 @@ struct RecentsView: View {
                     }
 
                 case .favorites:
-                    if foodStore.favorites.isEmpty {
-                        emptySection(icon: "heart", message: "No favorites yet\nSwipe left on any food to add it")
+                    if favoriteItems.isEmpty {
+                        emptySection(
+                            icon: isSearching ? "magnifyingglass" : "heart",
+                            message: isSearching ? "No matching favorites" : "No favorites yet\nSwipe left on any food to add it"
+                        )
                     } else {
                         Section {
-                            ForEach(foodStore.favorites) { entry in
+                            ForEach(favoriteItems) { entry in
                                 SavedMealRow(entry: entry, isFavorite: true)
                                     .listRowBackground(AppColors.appCard)
                                     .contentShape(Rectangle())
@@ -101,9 +131,13 @@ struct RecentsView: View {
                                         }
                                     }
                             }
-                            .onMove { from, to in
+                            // Reorder is only meaningful on the unfiltered list — the
+                            // ForEach indices we'd hand to moveFavorite are the
+                            // filtered indices, which don't map back to favorites
+                            // when a search is active.
+                            .onMove(perform: isSearching ? nil : { from, to in
                                 foodStore.moveFavorite(from: from, to: to)
-                            }
+                            })
                         }
                     }
                 }
@@ -112,11 +146,15 @@ struct RecentsView: View {
             .background(AppColors.appBackground)
             .navigationTitle("Saved Meals")
             .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: Text("Search saved foods"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") { dismiss() }
                 }
-                if segment == .favorites && !foodStore.favorites.isEmpty {
+                // Hide the EditButton while searching — drag-to-reorder writes
+                // back to the unfiltered favorites list using the rendered row
+                // indices, so a filtered list would reorder the wrong items.
+                if segment == .favorites && !foodStore.favorites.isEmpty && !isSearching {
                     ToolbarItem(placement: .topBarTrailing) {
                         EditButton()
                     }
@@ -129,6 +167,10 @@ struct RecentsView: View {
             }
             .onChange(of: segment) { _, newValue in
                 lastSegment = newValue.rawValue
+                // Stale query confuses users when they tap a tab and the results
+                // collapse to "No matching foods" — reset and let them re-type
+                // if they want to keep searching in the new context.
+                searchText = ""
             }
         }
     }
