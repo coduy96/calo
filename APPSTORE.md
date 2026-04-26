@@ -53,90 +53,72 @@ Bug fixes
 
 ## Description
 ```
-Fud AI makes calorie tracking effortless with AI-powered food recognition. Snap a photo, speak it, or type it — and get instant, accurate nutrition data: calories, protein, carbs, fats, and 9 micronutrients.
+Effortless calorie tracking with AI-powered food recognition. Snap, speak, or type a meal — get instant nutrition: calories, protein, carbs, fats, and 9 micronutrients.
 
-NEW in v3.2: full body fat tracking with goal + history graph + Apple Health sync, Coach can now access your complete history (not just the last 14 days), and smart daily reminders for weight + body fat logging.
+NEW in v3.2: body fat tracking with goal + history + Apple Health sync, Coach can access your full history (not just the last 14 days), and smart daily reminders.
 
-Fud AI is free, open source, and privacy-first. Bring your own API key. All data stays on your device.
+Free, open source, privacy-first. Bring your own API key. All data on-device.
 
-HOW TO USE FUD AI:
-
-1) Set up your profile with your goals and body stats
-2) Snap, speak, type, or manually enter your meal — review and save
-3) Ask the Coach anything: trends, predictions, advice
-4) Track your progress over time on charts and widgets
+HOW TO USE
+1) Set your profile and goals
+2) Snap, speak, type, or manually enter a meal — review and save
+3) Ask Coach for trends, predictions, and advice
+4) Track progress on charts and widgets
 
 4 WAYS TO LOG A MEAL
-• Snap a photo — AI identifies the food and returns nutrition
-• Speak it — voice input with 5 STT engines (native iOS or remote)
-• Type it — describe the meal in plain language and AI parses it
-• Manual Entry — type name, calories, and macros directly when you don't need AI; meal-type picker (Breakfast / Lunch / Dinner / Snack / Other) defaults to the time of day
+• Photo — AI identifies the food and returns nutrition
+• Voice — 5 STT engines (native iOS or remote)
+• Text — describe in plain language, AI parses it
+• Manual Entry — name + calories + macros + meal type, no AI needed
 
-13 AI PROVIDERS SUPPORTED
-• Google Gemini (including the new Gemini 3.1 Flash Lite, 3.1 Pro, and 3 Flash), OpenAI, Anthropic Claude, xAI Grok, Groq, OpenRouter, Together AI, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama (local), and any OpenAI-compatible endpoint
-• Switch providers and models anytime
-• API keys stored securely in iOS Keychain
+13 AI PROVIDERS
+Google Gemini (incl. Gemini 3.1), OpenAI, Anthropic Claude, xAI Grok, Groq, OpenRouter, Together AI, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama (local), or any OpenAI-compatible endpoint. Switch anytime. Keys stored in iOS Keychain.
 
 5 SPEECH-TO-TEXT ENGINES
-• Native iOS, OpenAI Whisper, Groq, Deepgram, AssemblyAI
+Native iOS, OpenAI Whisper, Groq, Deepgram, AssemblyAI.
 
 COACH
-• Multi-turn AI chat tab with on-demand access to your full history via tool calling
-• Ask about any date range — "what was my weight in March?", "how much body fat have I lost in the last 60 days?", "what did I eat last Tuesday?" — Coach fetches exactly what it needs
-• Sees your full profile, BMR formula, calorie + macro targets, and forecast at all times
-• Goal-aware prompts — different chips for Lose / Gain / Maintain
-• Predicts future weight from your real energy balance, not guesses
+• Multi-turn chat with on-demand access to your full history via tool calling
+• Ask any date range — "what was my weight in March?", "body fat in the last 60 days?", "what did I eat Tuesday?"
+• Sees your profile, BMR formula, macro targets, and forecast
+• Goal-aware prompt chips for Lose / Gain / Maintain
 
-13 NUTRIENTS TRACKED
-• Calories, protein, carbs, fat
-• Sugar, added sugar, fiber, saturated fat, mono/polyunsaturated fat
-• Cholesterol, sodium, potassium
+13 NUTRIENTS
+Calories, protein, carbs, fat, sugar, added sugar, fiber, saturated fat, mono/polyunsaturated fat, cholesterol, sodium, potassium.
 
 PERSONALIZED GOALS
-• BMR calculated with Katch-McArdle or Mifflin-St Jeor
+• BMR via Katch-McArdle or Mifflin-St Jeor (toggle which one in Settings)
 • TDEE with 6 activity levels
-• Auto-calculated daily calorie, protein, carbs, and fat targets
-• Fully customizable — override any value
+• Auto-calculated calorie + protein + carbs + fat targets — fully overridable
 
-PROGRESS & ANALYTICS
-• Unified Weight / Body Fat chart — segmented toggle to flip between metrics, swipe to switch
-• Goal-line overlays for both weight and body fat
-• Calorie trend chart with daily intake vs goal
-• Macro averages over 1W, 1M, 3M, 6M, 1Y, or All Time
+PROGRESS
+• Unified Weight / Body Fat chart with segmented toggle and swipe to switch
+• Goal-line overlays for both metrics
+• Calorie trend chart vs goal
+• Macro averages over 1W, 1M, 3M, 6M, 1Y, All Time
 
 WIDGETS
-• Two widget types — Calorie and Protein — each available in all 5 families
-• Home Screen — Small and Medium
-• Lock Screen — Circular, Rectangular, Inline
-• Today's calories, protein, macros, and goals — at a glance, no app open
+Calorie and Protein widgets in all 5 families — Small, Medium, Circular, Rectangular, Inline.
 
 15 LANGUAGES
-• English, Spanish, French, German, Italian, Portuguese (BR), Dutch, Russian, Japanese, Korean, Chinese (Simplified), Hindi, Arabic, Romanian, Azerbaijani
+English, Spanish, French, German, Italian, Portuguese (BR), Dutch, Russian, Japanese, Korean, Chinese (Simplified), Hindi, Arabic, Romanian, Azerbaijani.
 
-PRIVACY FIRST
-• No account required — no sign-in, no cloud sync
-• All data stored locally on your device
-• No analytics, no ads, no tracking
-• Open source under MIT License
+PRIVACY
+No account, no sign-in, no cloud sync, no analytics, no ads, no tracking. Local-only. MIT licensed.
 
 APPLE HEALTH
-• Two-way sync for nutrition, weight, height, and body fat
-• External samples (Apple Watch, scales, Health app) auto-imported
-• One-shot historical backfill — first time you enable HK sync, years of past weight + body fat data import into your charts
-• Background observer for real-time updates
+Two-way sync for nutrition, weight, height, body fat. External samples (Apple Watch, scales, Health app) auto-import. One-shot backfill of years of past weight + body fat data on first enable.
 
 ALSO ON ANDROID
-• Fud AI now ships on Google Play with full feature parity — Health Connect sync, Glance widgets (Calorie + Protein), all 13 AI providers, all 5 STT engines, all 15 languages
+Full feature parity on Google Play — Health Connect, widgets, all providers, all engines, all languages.
 
-I built Fud AI because tracking calories shouldn't feel like a chore. I want to make healthy eating simple and accessible for everyone.
+Built solo because tracking calories shouldn't feel like a chore. Reach out at apoorv@fud-ai.app or on GitHub.
 
-If you have ideas or questions, reach out at apoorv@fud-ai.app or open an issue on GitHub.
+Fud AI is not medical advice — consult a healthcare professional before significant diet changes.
 
-NOTE: Fud AI does not offer medical advice. All nutritional estimates are AI-generated suggestions only. Please consult with a healthcare professional before making significant changes to your diet.
-
-Terms of Service: https://fud-ai.app/terms.html
-Privacy Policy: https://fud-ai.app/privacy.html
-Source Code: https://github.com/apoorvdarshan/fud-ai
+Terms: https://fud-ai.app/terms.html
+Privacy: https://fud-ai.app/privacy.html
+Source: https://github.com/apoorvdarshan/fud-ai
 ```
 
 ## Privacy URL
