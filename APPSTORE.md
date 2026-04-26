@@ -1,6 +1,6 @@
 # App Store Listing
 
-App Store Connect submission details for Fud AI v3.1. Each field is in a code block for easy copy-paste.
+App Store Connect submission details for Fud AI v3.2. Each field is in a code block for easy copy-paste.
 
 ## App Name
 ```
@@ -14,12 +14,12 @@ Food & Macro Tracker
 
 ## Promotional Text (170 chars max)
 ```
-Snap, speak, type, or now manually enter a meal — AI logs the macros. New Protein widget, Gemini 3 models, and Coach chat. Free, open source, on-device.
+Track body fat alongside weight, see every metric on one chart, and ask Coach anything from your full history — months of data, not just last week. Free.
 ```
 
 ## Keywords (100 chars max)
 ```
-calorie,tracker,nutrition,macro,AI,food,scanner,diet,protein,weight,health,fitness,meal,log,TDEE
+calorie,tracker,nutrition,macro,AI,food,scanner,diet,protein,weight,bodyfat,health,fitness,meal,log
 ```
 
 ## Category
@@ -28,25 +28,34 @@ Primary: Health & Fitness
 Secondary: Food & Drink
 ```
 
-## What's New (v3.1)
+## What's New (v3.2)
 ```
-Fud AI 3.1 — manual entry, a dedicated Protein widget, and Gemini 3.
+Fud AI 3.2 — body fat tracking, Coach reaches your full history, and smart daily reminders.
 
 NEW
-• Manual Entry — type a meal directly when you don't need AI: name, calories, protein, carbs, fat. Tag it Breakfast / Lunch / Dinner / Snack / Other from the same picker the AI flow uses. Defaults to the meal type for the time of day.
-• Protein widget — track protein progress on its own. 5 sizes (Small, Medium, Circular, Rectangular, Inline) — same families as the Calorie widget. Add both for at-a-glance daily protein + calories without opening the app.
-• Gemini 3 models — Gemini 3.1 Flash Lite, Gemini 3.1 Pro, and Gemini 3 Flash now available in the AI Provider picker. Pick the one that matches your speed/quality preference.
+• Body fat tracking — log readings over time, set a goal %, see your composition trend on the Progress chart alongside weight. Optional: only shown if you opt in during onboarding or set a value in Settings → Profile.
+• Apple Health body fat sync — readings flow both ways with Apple Health. Smart-scale data (Withings, Renpho, Eufy, etc.) auto-imports into Fud AI. First time you enable HK sync, years of historical scale data backfills into the chart.
+• Unified Weight / Body Fat chart — segmented toggle on the Progress card lets you flip between metrics. Swipe horizontally on the chart to switch.
+• Coach gets your full history — instead of seeing only the last 10 weights or 14 days of food, Coach can now fetch any date range on demand. Ask "what was my weight in March?" or "show me my body fat trend over the last 6 months" and it pulls exactly what it needs.
+• Use Body Fat for BMR toggle — non-destructive escape hatch in Settings → Profile. When your body fat reading is stale, flip off to fall back to Mifflin-St Jeor without losing the value.
+• Log Weight + Log Body Fat reminders — two new smart daily nudges (Settings → Notifications). Skip firing on days you've already logged. Body fat default off (most people don't measure daily).
+• Search saved meals — search bar in the Saved Meals sheet filters Recents / Frequent / Favorites separately.
+• Decimal weight pickers — pick 72.4 kg or 158.3 lbs without typing in onboarding's Height & Weight + Goal Weight steps.
 
 Polish
-• Active tab in the bottom tab bar now tints pink to match the brand.
-• Manual Entry's meal type picker matches the AI review sheet's style for a consistent feel.
+• Onboarding loader is now a single brand-pink gradient (was pink → blue).
+• Restacked Onboarding Height & Weight imperial layout so the lbs wheel stops collapsing on narrow columns.
+
+Bug fixes
+• Favorites no longer lose their image when the source food log entry is deleted.
+• Gender no longer flips to "Other" for users without a HealthKit biological sex value.
 ```
 
 ## Description
 ```
 Fud AI makes calorie tracking effortless with AI-powered food recognition. Snap a photo, speak it, or type it — and get instant, accurate nutrition data: calories, protein, carbs, fats, and 9 micronutrients.
 
-NEW in v3.1: Manual Entry for fully manual logging, a dedicated Protein widget across all 5 widget families, and the Gemini 3 model lineup (3.1 Flash Lite, 3.1 Pro, and 3 Flash) in the AI Provider picker.
+NEW in v3.2: full body fat tracking with goal + history graph + Apple Health sync, Coach can now access your complete history (not just the last 14 days), and smart daily reminders for weight + body fat logging.
 
 Fud AI is free, open source, and privacy-first. Bring your own API key. All data stays on your device.
 
@@ -72,8 +81,9 @@ HOW TO USE FUD AI:
 • Native iOS, OpenAI Whisper, Groq, Deepgram, AssemblyAI
 
 COACH
-• Multi-turn AI chat tab
-• Sees your full profile, weight trend, daily macro totals, and last 10 weight entries
+• Multi-turn AI chat tab with on-demand access to your full history via tool calling
+• Ask about any date range — "what was my weight in March?", "how much body fat have I lost in the last 60 days?", "what did I eat last Tuesday?" — Coach fetches exactly what it needs
+• Sees your full profile, BMR formula, calorie + macro targets, and forecast at all times
 • Goal-aware prompts — different chips for Lose / Gain / Maintain
 • Predicts future weight from your real energy balance, not guesses
 
@@ -89,12 +99,13 @@ PERSONALIZED GOALS
 • Fully customizable — override any value
 
 PROGRESS & ANALYTICS
-• Weight chart with trend line and goal weight
+• Unified Weight / Body Fat chart — segmented toggle to flip between metrics, swipe to switch
+• Goal-line overlays for both weight and body fat
 • Calorie trend chart with daily intake vs goal
 • Macro averages over 1W, 1M, 3M, 6M, 1Y, or All Time
 
 WIDGETS
-• Two widget types — Calorie and Protein (NEW in v3.1) — each available in all 5 families
+• Two widget types — Calorie and Protein — each available in all 5 families
 • Home Screen — Small and Medium
 • Lock Screen — Circular, Rectangular, Inline
 • Today's calories, protein, macros, and goals — at a glance, no app open
@@ -111,6 +122,7 @@ PRIVACY FIRST
 APPLE HEALTH
 • Two-way sync for nutrition, weight, height, and body fat
 • External samples (Apple Watch, scales, Health app) auto-imported
+• One-shot historical backfill — first time you enable HK sync, years of past weight + body fat data import into your charts
 • Background observer for real-time updates
 
 ALSO ON ANDROID
