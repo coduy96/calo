@@ -252,38 +252,48 @@ struct OnboardingView: View {
             .padding(.top, 16)
             .onChange(of: isMetric) { _, newValue in useMetric = newValue }
             Spacer()
+            // Stack height + weight as two rows so the weight picker (whole +
+            // "." + tenth + unit = 4 sub-cells) gets the full screen width
+            // instead of competing with feet/inches for one-third of it. The
+            // 3-column imperial layout used to render the lbs whole-number
+            // wheel as "..." because there wasn't enough width for 3-digit
+            // values like 152 alongside the decimal column.
             if isMetric {
-                HStack(spacing: 4) {
+                VStack(spacing: 8) {
                     VStack(spacing: 4) {
                         Text("Height").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
                         Picker("cm", selection: $heightCm) {
                             ForEach(100...250, id: \.self) { cm in Text("\(cm) cm").tag(cm) }
-                        }.pickerStyle(.wheel)
+                        }.pickerStyle(.wheel).frame(height: 130)
                     }
                     VStack(spacing: 4) {
                         Text("Weight").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
                         decimalWeightWheel(whole: $weightKgWhole, tenth: $weightKgTenth, range: 30...250, unit: "kg")
+                            .frame(height: 130)
                     }
-                }.padding(.horizontal, 16)
+                }.padding(.horizontal, 24)
             } else {
-                HStack(spacing: 4) {
-                    VStack(spacing: 4) {
-                        Text("Feet").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
-                        Picker("ft", selection: $heightFeet) {
-                            ForEach(3...8, id: \.self) { ft in Text("\(ft) ft").tag(ft) }
-                        }.pickerStyle(.wheel)
-                    }
-                    VStack(spacing: 4) {
-                        Text("Inches").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
-                        Picker("in", selection: $heightInches) {
-                            ForEach(0...11, id: \.self) { inch in Text("\(inch) in").tag(inch) }
-                        }.pickerStyle(.wheel)
+                VStack(spacing: 8) {
+                    HStack(spacing: 8) {
+                        VStack(spacing: 4) {
+                            Text("Feet").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
+                            Picker("ft", selection: $heightFeet) {
+                                ForEach(3...8, id: \.self) { ft in Text("\(ft) ft").tag(ft) }
+                            }.pickerStyle(.wheel).frame(height: 130)
+                        }
+                        VStack(spacing: 4) {
+                            Text("Inches").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
+                            Picker("in", selection: $heightInches) {
+                                ForEach(0...11, id: \.self) { inch in Text("\(inch) in").tag(inch) }
+                            }.pickerStyle(.wheel).frame(height: 130)
+                        }
                     }
                     VStack(spacing: 4) {
                         Text("Weight").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
                         decimalWeightWheel(whole: $weightLbsWhole, tenth: $weightLbsTenth, range: 60...500, unit: "lbs")
+                            .frame(height: 130)
                     }
-                }.padding(.horizontal, 16)
+                }.padding(.horizontal, 24)
             }
             Spacer()
             continueButton()
