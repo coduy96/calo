@@ -74,7 +74,7 @@ struct calorietrackerApp: App {
                 }
                 if notificationsEnabled, let profile = UserProfile.load() {
                     notificationManager.rescheduleDataDependentNotifications(
-                        foodStore: foodStore, profile: profile
+                        foodStore: foodStore, weightStore: weightStore, bodyFatStore: bodyFatStore, profile: profile
                     )
                 }
                 if hasCompletedOnboarding {
@@ -275,11 +275,11 @@ struct calorietrackerApp: App {
     }
 
     private func wireUpFoodStoreCallback() {
-        foodStore.onEntriesChanged = { [notificationManager, foodStore] in
+        foodStore.onEntriesChanged = { [notificationManager, foodStore, weightStore, bodyFatStore] in
             if UserDefaults.standard.bool(forKey: "notificationsEnabled"),
                let profile = UserProfile.load() {
                 notificationManager.rescheduleDataDependentNotifications(
-                    foodStore: foodStore, profile: profile
+                    foodStore: foodStore, weightStore: weightStore, bodyFatStore: bodyFatStore, profile: profile
                 )
             }
             if let profile = UserProfile.load() {

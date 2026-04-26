@@ -841,6 +841,14 @@ struct NotificationSettingsView: View {
     @AppStorage("dailySummaryHour") private var summaryHour = 20
     @AppStorage("dailySummaryMinute") private var summaryMinute = 0
 
+    @AppStorage("weightLogReminderEnabled") private var weightLogEnabled = true
+    @AppStorage("weightLogReminderHour") private var weightLogHour = 8
+    @AppStorage("weightLogReminderMinute") private var weightLogMinute = 0
+
+    @AppStorage("bodyFatLogReminderEnabled") private var bodyFatLogEnabled = false
+    @AppStorage("bodyFatLogReminderHour") private var bodyFatLogHour = 8
+    @AppStorage("bodyFatLogReminderMinute") private var bodyFatLogMinute = 0
+
     var body: some View {
         List {
             // Master toggle
@@ -938,10 +946,26 @@ struct NotificationSettingsView: View {
                         hour: $summaryHour,
                         minute: $summaryMinute
                     )
+
+                    NotificationTimeRow(
+                        label: "Log Weight",
+                        icon: "scalemass.fill",
+                        isEnabled: $weightLogEnabled,
+                        hour: $weightLogHour,
+                        minute: $weightLogMinute
+                    )
+
+                    NotificationTimeRow(
+                        label: "Log Body Fat",
+                        icon: "percent",
+                        isEnabled: $bodyFatLogEnabled,
+                        hour: $bodyFatLogHour,
+                        minute: $bodyFatLogMinute
+                    )
                 } header: {
                     Text("Smart Notifications")
                 } footer: {
-                    Text("Streak and summary notifications update automatically based on your logged food.")
+                    Text("All four reminders are smart — they skip firing on days you've already logged. Body fat default is off since most users don't measure daily.")
                         .font(.system(.caption, design: .rounded))
                 }
                 .listRowBackground(AppColors.appCard)
