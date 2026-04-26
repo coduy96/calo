@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Fud AI is an open-source calorie tracker. The iOS client (SwiftUI, iOS 17.6+) lives in `ios/` — shipping on the App Store at v3.2. The Android client (Kotlin + Jetpack Compose, min SDK 26) lives in `android/` — feature-parity port, v1.0.3 in Play Store closed testing. The marketing website (plain HTML/CSS, deployed to Vercel at https://fud-ai.app) lives in `web/`. Both clients work the same way: snap/speak/type a meal, an AI provider returns nutrition JSON, the user reviews it, and it lands in the food store + Apple Health (iOS) or Health Connect (Android). There's also a "Coach" tab — multi-turn AI chat that sees the user's full profile, weight history, and food log and answers questions like "what's my expected weight in 30 days?". Bring-your-own-key model; all data is local. No subscriptions, no sign-in, no cloud sync.
+Fud AI is an open-source calorie tracker. The iOS client (SwiftUI, iOS 17.6+) lives in `ios/` — shipping on the App Store at v3.2. The Android client (Kotlin + Jetpack Compose, min SDK 26) lives in `android/` — feature-parity port, v1.0.4 in Play Store closed testing. The marketing website (plain HTML/CSS, deployed to Vercel at https://fud-ai.app) lives in `web/`. Both clients work the same way: snap/speak/type a meal, an AI provider returns nutrition JSON, the user reviews it, and it lands in the food store + Apple Health (iOS) or Health Connect (Android). There's also a "Coach" tab — multi-turn AI chat that sees the user's full profile, weight history, and food log and answers questions like "what's my expected weight in 30 days?". Bring-your-own-key model; all data is local. No subscriptions, no sign-in, no cloud sync.
 
 ## Repo Layout
 
@@ -14,7 +14,6 @@ fud-ai/
 ├── android/      ← Android app (Kotlin + Jetpack Compose)
 ├── web/          ← Marketing site (index.html, styles.css, privacy/terms, sitemap)
 ├── APPSTORE.md   ← App Store Connect listing copy (iOS)
-├── PLAYSTORE.md  ← Play Console listing copy (Android)
 └── …root-level meta (README, LICENSE, CONTRIBUTING, SECURITY, CLAUDE.md, .github/)
 ```
 
@@ -244,14 +243,15 @@ No automated tests yet — matches iOS policy. Validate by hand on device. `calo
 android/app/src/main/java/com/apoorvdarshan/calorietracker/
 ├── MainActivity.kt              ← entry point, checks onboarding flag, wires NavHost
 ├── FudAIApp.kt                  ← Application class + AppContainer (manual DI)
-├── models/                      ← data classes: UserProfile, FoodEntry, WeightEntry,
+├── models/                      ← data classes: UserProfile, FoodEntry, WeightEntry, BodyFatEntry,
 │                                   ChatMessage, AIProvider, SpeechProvider, WidgetSnapshot,
 │                                   Gender/ActivityLevel/WeightGoal/MealType/FoodSource/AutoBalanceMacro
 ├── data/                        ← PreferencesStore (DataStore), KeyStore (EncryptedSharedPreferences),
-│                                   FoodRepository, WeightRepository, ProfileRepository, ChatRepository
+│                                   FoodRepository, WeightRepository, BodyFatRepository,
+│                                   ProfileRepository, ChatRepository
 ├── services/
 │   ├── ai/                      ← AiError, RetryPolicy, GeminiClient, AnthropicClient,
-│   │                              OpenAICompatibleClient, FoodAnalysisService, ChatService,
+│   │                              OpenAICompatibleClient, FoodAnalysisService, ChatService, CoachTools,
 │   │                              FoodAnalysis (+ NutritionLabelAnalysis + FoodJsonParser)
 │   ├── speech/                  ← NativeSpeechRecognizer, AudioRecorder, SpeechService,
 │   │                              WhisperClient, DeepgramClient, AssemblyAIClient
@@ -285,6 +285,8 @@ Matches iOS semantically:
 
 `FoodAnalysisService` and `ChatService` both dispatch by `AIProvider.apiFormat`. `RetryPolicy` does 1s/2s/4s exponential backoff on 503/429/529. Error copy surfaces friendly messages ("provider is overloaded", "API key rejected") instead of raw HTTP codes.
 
+**Coach tool calling** (`services/ai/CoachTools.kt` + `ChatService` per-format multi-turn loops): Coach exposes 5 functions the LLM can call mid-turn — `get_data_summary`, `get_weight_history(from, to, limit?)`, `get_body_fat_history(from, to, limit?)`, `get_calorie_totals(from, to)`, `get_food_entries(from, to, limit?)` — all returning date-stamped JSON via `org.json`. List-returning tools cap at 365 entries. Each provider format has its own loop in `ChatService` (`runOpenAIToolLoop` / `runAnthropicToolLoop` / `runGeminiToolLoop`) capped at `MAX_TOOL_ROUNDS = 6` per user message. OpenAI uses `tool_choice:auto` + `role:tool` messages with `tool_call_id`; Anthropic uses `tools` + `tool_use` content blocks with `tool_result` blocks echoed in user-role; Gemini uses `functionDeclarations` under `tools` + `functionCall`/`functionResponse` parts in `role:model`/`role:user` echoes. `ChatService.buildSystemPrompt` is **slim** (profile + formulas + forecast + a one-line "Data available" snapshot pointing at `get_data_summary`) — bulk Recent weights / Recent body fat / Last N days dumps are gone, Coach pulls history on demand.
+
 ### Speech-to-text
 
 - Native: `android.speech.SpeechRecognizer` wrapped as a cold `Flow<SttEvent>` with streaming partials.
@@ -292,7 +294,7 @@ Matches iOS semantically:
 
 ### Health Connect (replaces HealthKit)
 
-Single boundary in `HealthConnectManager`. Weight + Nutrition read/write with `Metadata.manualEntry(clientRecordId = "fudai_<uuid>")` for dedup. Change-token loop for external weight imports (Samsung Health, Withings, Fitbit via Health Connect). Requires **Min SDK 26** — that's why `minSdk = 26` in `app/build.gradle.kts` (Android Studio default was 24).
+Single boundary in `HealthConnectManager`. Weight + Nutrition + Body Fat read/write with `Metadata.manualEntry(clientRecordId = "fudai_<uuid>")` for dedup. Change-token request now watches both `WeightRecord` + `BodyFatRecord` (single token covers both). `consumeWeightChanges` / `consumeBodyFatChanges` drain externals; `writeBodyFat(entry)` / `deleteBodyFat(entryId)` mirror the weight pair. `CURRENT_TYPES_VERSION = 2` (bumped from 1 when BodyFat permissions were added so existing users re-prompt). Requires **Min SDK 26** — that's why `minSdk = 26` in `app/build.gradle.kts` (Android Studio default was 24). **Caveat**: the manager methods are built but `BodyFatRepository` + `WeightRepository` don't yet wire `onEntryAdded`/`onEntryDeleted` callbacks into `writeBodyFat`/`writeWeight`, and there's no scene-active observer loop draining `consumeChanges`. The full sync wire-up is pending — when added, do both metrics together since they share the change-token + the `*BackfillVersion` UserDefaults orchestration pattern.
 
 ### Persistence
 
@@ -389,7 +391,7 @@ Plain static HTML + CSS — no build step, no framework. Deployed to Vercel with
 ## Release Artifacts
 
 - **`APPSTORE.md`** (repo root) holds the App Store Connect listing copy for iOS — name, subtitle, promo text, keywords, What's New, full description, reviewer notes. Update it whenever the iOS version bumps; the current header is `v3.2`. Uploads to App Store Connect happen by hand-pasting from this file — don't let it drift from the code. **Description has a 4000-char hard cap** (App Store Connect rejects anything over) — if you bloat it past that, trim per-section bullets into single dense lines (the v3.2 trim went 4515 → 3159 chars without losing any feature).
-- **`PLAYSTORE.md`** (repo root) is the Android-side equivalent for the Play Console — short + full description, Data Safety answers, App Content declarations, reviewer notes. Header is `v1.0.0`.
+- **Play Console listing copy** is maintained directly in Play Console (no in-repo `PLAYSTORE.md` — the file existed briefly but was removed because it kept drifting from what's actually live in Play Console; the canonical source for store description / Data Safety answers / App Content declarations is the Play Console UI itself).
 - **App Store screenshots** live in `~/Documents/fud ai/appstore screenshots/` (raw 1179×2556 captures from device) and get composited into 1242×2688 marketing PNGs by ad-hoc Python scripts in `/tmp/`. The scripts are not in the repo — they're rebuilt per release. The current iteration uses PIL gradient backgrounds + a pixel-perfect iPhone 15 Pro Max frame + Bricolage Grotesque ExtraBold typography.
 - Bump `MARKETING_VERSION` in `ios/calorietracker.xcodeproj/project.pbxproj` (two occurrences — main app + widget extension) before each App Store submission. `CURRENT_PROJECT_VERSION` is the build number.
 
