@@ -163,7 +163,15 @@ class FoodStore {
         } else {
             // Remove any existing entry with same id to prevent duplicates
             favorites.removeAll { $0.id == entry.id }
-            favorites.append(entry)
+            // Make sure the favorite has its own on-disk JPEG before persisting.
+            // Without this, favoriting an entry that hasn't been through
+            // addEntry() yet (e.g. straight from the Food Result review screen)
+            // would persist with imageData = bytes-in-memory-only — and since
+            // FoodEntry.encode drops raw bytes by design, the favorite would
+            // come back image-less on the next launch.
+            var favorite = entry
+            offloadImageToDiskIfNeeded(&favorite)
+            favorites.append(favorite)
         }
         saveFavorites()
     }
@@ -211,7 +219,11 @@ class FoodStore {
 
     func deleteEntry(_ entry: FoodEntry) {
         let id = entry.id
-        if let filename = entry.imageFilename {
+        // Skip the disk-delete when a favorite (or another entry) still
+        // references this filename. Without this guard, favoriting a meal,
+        // deleting the log entry, and relaunching wipes the favorite's image
+        // because both rows share the same fudai-image-<uuid>.jpg.
+        if let filename = entry.imageFilename, !isImageStillReferenced(filename: filename, excludingEntryID: id) {
             FoodImageStore.shared.delete(filename: filename)
         }
         entries.removeAll { $0.id == id }
@@ -223,12 +235,15 @@ class FoodStore {
     func replaceAllEntries(_ newEntries: [FoodEntry]) {
         // Delete on-disk JPEGs for any entry that's about to be removed —
         // otherwise Clear Food Log / Delete All Data orphan files in
-        // Application Support forever.
+        // Application Support forever. Skip files that a favorite or a
+        // surviving entry still references (same filename, different id).
         let surviving = Set(newEntries.map(\.id))
+        let survivingFilenames = Set(newEntries.compactMap(\.imageFilename))
+        let favoriteFilenames = Set(favorites.compactMap(\.imageFilename))
         for old in entries where !surviving.contains(old.id) {
-            if let filename = old.imageFilename {
-                FoodImageStore.shared.delete(filename: filename)
-            }
+            guard let filename = old.imageFilename else { continue }
+            if survivingFilenames.contains(filename) || favoriteFilenames.contains(filename) { continue }
+            FoodImageStore.shared.delete(filename: filename)
         }
         entries = newEntries.map { var e = $0; offloadImageToDiskIfNeeded(&e); return e }
         saveEntries()
@@ -254,6 +269,17 @@ class FoodStore {
         if let filename = FoodImageStore.shared.store(data: data, for: entry.id) {
             entry.imageFilename = filename
         }
+    }
+
+    /// Used by deleteEntry / replaceAllEntries to decide whether the on-disk
+    /// JPEG can safely be removed. A filename can be shared by a logged entry
+    /// + a favorite (same `id`, same generated `fudai-image-<uuid>.jpg`), or
+    /// by two logged entries that came from the same favorite re-log.
+    private func isImageStillReferenced(filename: String, excludingEntryID: UUID) -> Bool {
+        if entries.contains(where: { $0.id != excludingEntryID && $0.imageFilename == filename }) {
+            return true
+        }
+        return favorites.contains { $0.imageFilename == filename }
     }
 
     private func saveEntries() {
