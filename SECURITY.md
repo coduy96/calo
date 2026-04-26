@@ -34,7 +34,7 @@ Only the latest released version on each store (App Store for iOS, Play Store fo
 - Network requests to AI and speech-to-text providers (`GeminiService`, `ChatService`, `SpeechService`)
 - HealthKit read/write paths (`HealthKitManager`) and UUID-tagged sample conventions
 - Widget App Group container (`group.com.apoorvdarshan.calorietracker`) and the snapshot written into it
-- Local persistence layer (`UserDefaults`, Keychain) including the Coach chat history and food/weight logs
+- Local persistence layer (`UserDefaults`, Keychain) including the Coach chat history and food/weight/body-fat logs
 
 **In scope (Android):**
 

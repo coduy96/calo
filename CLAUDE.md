@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Fud AI is an open-source calorie tracker. The iOS client (SwiftUI, iOS 17.6+) lives in `ios/` — shipping on the App Store at v3.1. The Android client (Kotlin + Jetpack Compose, min SDK 26) lives in `android/` — feature-parity port, v1.0.3 in Play Store closed testing. The marketing website (plain HTML/CSS, deployed to Vercel at https://fud-ai.app) lives in `web/`. Both clients work the same way: snap/speak/type a meal, an AI provider returns nutrition JSON, the user reviews it, and it lands in the food store + Apple Health (iOS) or Health Connect (Android). There's also a "Coach" tab — multi-turn AI chat that sees the user's full profile, weight history, and food log and answers questions like "what's my expected weight in 30 days?". Bring-your-own-key model; all data is local. No subscriptions, no sign-in, no cloud sync.
+Fud AI is an open-source calorie tracker. The iOS client (SwiftUI, iOS 17.6+) lives in `ios/` — shipping on the App Store at v3.2. The Android client (Kotlin + Jetpack Compose, min SDK 26) lives in `android/` — feature-parity port, v1.0.3 in Play Store closed testing. The marketing website (plain HTML/CSS, deployed to Vercel at https://fud-ai.app) lives in `web/`. Both clients work the same way: snap/speak/type a meal, an AI provider returns nutrition JSON, the user reviews it, and it lands in the food store + Apple Health (iOS) or Health Connect (Android). There's also a "Coach" tab — multi-turn AI chat that sees the user's full profile, weight history, and food log and answers questions like "what's my expected weight in 30 days?". Bring-your-own-key model; all data is local. No subscriptions, no sign-in, no cloud sync.
 
 ## Repo Layout
 
@@ -66,6 +66,7 @@ All stores use Swift's `@Observable` macro (not `ObservableObject`) and are inje
 
 - `FoodStore` — food entries, favorites, macro aggregates
 - `WeightStore` — weight entries; `addEntry` auto-syncs `profile.weightKg` to latest
+- `BodyFatStore` — body-fat readings (Codable, persisted to UserDefaults at `bodyFatEntries`); `addEntry` auto-syncs `profile.bodyFatPercentage` to latest via `syncProfileBodyFatToLatest()` so Katch-McArdle BMR + Settings → Body Fat row never drift apart. Wired to HealthKit via `onEntryAdded` / `onEntryDeleted` callbacks (writes tagged with `fudai_bodyfat_id` metadata, deletes by metadata predicate). Optional opt-in — only seeded from onboarding when the user picked "Yes I know my body fat %".
 - `ProfileStore` — **source of truth for `UserProfile`**. All reads/writes go through `profileStore.profile`. It listens for `.userProfileDidChange` and reloads so external writers (WeightStore, HealthKit observer) propagate to every view.
 - `ChatStore` — Coach conversation history (persisted in UserDefaults as JSON, capped at last 20 messages in LLM payload)
 - `NotificationManager`, `HealthKitManager`
@@ -77,7 +78,7 @@ Build setting `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` means most types are m
 Two services, both route to the same 13 providers via `AIProvider.apiFormat`:
 
 - **`GeminiService`** (`Services/GeminiService.swift`) — single-shot food/label analysis. Methods: `analyzeFood`, `analyzeTextInput`, `autoAnalyze`, `analyzeNutritionLabel`. All funnel through `callAI`.
-- **`ChatService`** (`Services/ChatService.swift`) — multi-turn Coach chat. Builds a fresh system prompt every turn from the live profile + forecast + recent weights/foods, sends history + new user message.
+- **`ChatService`** (`Services/ChatService.swift`) — multi-turn Coach chat with **tool calling**. Builds a slim system prompt (profile + formulas + forecast + data-availability snapshot) and exposes 5 functions via `CoachTools` (`get_data_summary`, `get_weight_history`, `get_body_fat_history`, `get_calorie_totals`, `get_food_entries`) that the model calls when it needs older or specific data. Multi-turn loop capped at 6 rounds per user message.
 
 The three API dialects are:
 - **Gemini** (`.gemini`): `POST /models/{model}:generateContent` with `systemInstruction` + `contents[{role, parts}]`. API key goes in `X-goog-api-key` header, not the URL.
@@ -100,7 +101,9 @@ OpenAI + Groq share `/v1/audio/transcriptions` (multipart). Deepgram takes raw a
 
 - 5th tab in `ContentView` TabView (Home / Progress / Coach / Settings / About).
 - `ChatStore` persists the full conversation in UserDefaults. `contextMessages()` returns the last 20 for the LLM payload (token-cost cap); the full history stays visible locally regardless.
-- `ChatService.buildSystemPrompt` includes: profile (gender/age/height/weight/activity/goal + body fat if set), **which BMR formula is active** (Katch-McArdle if body fat known, else Mifflin-St Jeor), BMR/TDEE numbers, macro targets, `WeightAnalysisService.compute` output (predicted/observed trends, 30/60/90-day weight, days-to-goal, under-logging flag), last 10 weight entries, last 7 days of daily calorie totals.
+- `ChatService.buildSystemPrompt` is **slim**: profile (gender/age/height/weight/activity/goal + body fat + goal body fat if set), **which BMR formula is active** (Katch-McArdle when body fat is set AND `useBodyFatInBMR` is on, else Mifflin-St Jeor — the prompt distinguishes "body fat not set" vs "user disabled the override" so Coach can explain its reasoning), BMR/TDEE numbers, macro targets, `WeightAnalysisService.compute` output (predicted/observed trends, 30/60/90-day weight, days-to-goal, under-logging flag), and a one-line "Data available" snapshot pointing at `get_data_summary`. The bulk Recent weights / Recent body fat / Last N days dumps that used to live in the prompt are **gone** — Coach pulls history on demand via tools.
+- **Tool calling** (`Services/CoachTools.swift`) — five functions the LLM can call mid-turn: `get_data_summary` (counts + earliest/latest dates), `get_weight_history(from, to, limit?)`, `get_body_fat_history(from, to, limit?)`, `get_calorie_totals(from, to)`, `get_food_entries(from, to, limit?)`. Each returns date-stamped JSON. List-returning tools cap at 365 entries to bound any one tool result. Date-range parser is generous (defaults to last 30 days when `from` is missing, end-of-day inclusive on `to`) so a malformed call still produces useful data instead of failing the whole turn. The `nonisolated` static helpers (`iso`, `parseDate`, `isoFormatter`) avoid cross-actor warnings under the project-wide `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` setting.
+- Each provider format (Gemini / Anthropic / OpenAI-compatible) has its own multi-turn tool loop in `ChatService` (see `callGemini` / `callAnthropic` / `callOpenAICompatible`) capped at `maxToolRounds = 6` per user message — covers the recursive-call edge case where a model loops on itself. OpenAI uses `tool_choice: "auto"` + `role: "tool"` messages with `tool_call_id`; Anthropic uses `tools` + `tool_use` content blocks with `tool_result` blocks echoed back in user-role; Gemini uses `functionDeclarations` + `functionCall` / `functionResponse` parts in `role: "model"` and `role: "user"` echoes.
 - Goal-aware prompt chips — `ChatView.promptChips` returns a different set for Lose / Gain / Maintain.
 
 ### Weight forecast math (`WeightAnalysisService`)
@@ -133,13 +136,22 @@ Edits use `onEntryUpdated` rather than back-to-back delete+add so HealthKit can 
 
 `HealthKitManager.writeWeight(kg:date:)` (the profile-state push used by onboarding/Settings, not the per-entry variant) also tags samples with a synthetic `fudai_weight_id = UUID().uuidString`. Untagged samples are invisible to `deleteWeight(entryID:)`'s metadata predicate.
 
+### BodyFatStore → HealthKit callbacks
+
+Mirrors the WeightStore HK pairing — `onEntryAdded` → `writeBodyFat(for:)` tagging the HK sample with `fudai_bodyfat_id = entry.id.uuidString`; `onEntryDeleted` → `deleteBodyFat(entryID:)` by metadata predicate, bypasses `healthKitEnabled` so an in-app delete cleans up samples written while sync was on.
+
+`fetchLatestBodyMeasurements()` returns `bodyFatDate` + `bodyFatFudaiID` alongside the existing weight fields so the change-token observer can apply the same dedup discipline weight uses (skip our own writes via the metadata key, dedup external samples by same-day + same-fraction). External body-fat samples (Withings / Renpho / Eufy / Apple Health manual entries) auto-import into `BodyFatStore.addEntry` from the observer with the HK sample's real date — same end-to-end flow weight already had.
+
+**One-shot historical backfill**: `backfillWeightFromHealthKitIfNeeded` and `backfillBodyFatFromHealthKitIfNeeded` (both in `HealthKitManager`) pull every historical sample out of Apple Health on first HK-enable, dedupe against the current store snapshot (skip our own writes via metadata, dedupe externals by same-day + same-value), then bulk-import via `WeightStore.importExternalEntries` / `BodyFatStore.importExternalEntries` — new bulk paths that bypass `onEntryAdded` so the imports don't echo back to HK as fresh writes (they already exist there). Each backfill is gated by its own `UserDefaults` version key (`healthKitWeightBackfillVersion`, `healthKitBodyFatBackfillVersion`) compared against `typesVersion` so it's a one-shot per HK schema bump, with `isBackfilling{Weight,BodyFat}` re-entrancy guards for the scene-active wire-up loop.
+
 ### HealthKit Conventions
 
 `HealthKitManager` (`Stores/HealthKitManager.swift`) is the only HealthKit boundary.
 
 - **`typesVersion`** (renamed from the old `authVersion` to dodge a CodeQL heuristic on "auth" keywords) is bumped when new HealthKit types are added. `needsReauthorization` returns `max(typesVersionKey, legacy healthKitAuthVersion)` < current so existing users aren't re-prompted after the rename.
 - `requestAuthorization` only persists the new version via `persistCurrentTypesVersion()` when **all** dietary share types are `.sharingAuthorized`, so users who deny nutrition can re-prompt.
-- Each nutrition sample carries `fudai_entry_id` metadata; each weight sample carries `fudai_weight_id`. Deletion uses metadata predicates.
+- Each nutrition sample carries `fudai_entry_id` metadata; each weight sample carries `fudai_weight_id`; each body-fat sample carries `fudai_bodyfat_id`. Deletion uses metadata predicates per quantity type. The `fetchLatestSample` helper takes a `fudaiMetadataKey` parameter so each quantity type can specify its own marker (height has none — we don't tag height writes).
+- The change-token observer's gender-sync path uses `switch ... default: break` (only update when HK explicitly reports `.male` or `.female`). An earlier ternary mapped `.notSet` and `.other` to `Gender.other` and silently overwrote a user's onboarding-chosen gender on every scene-active when HK had no biological-sex value (which is the default on the simulator and for users who never filled in Health). Don't reintroduce the ternary.
 - `writeNutrition` guards on `healthKitEnabled`. `deleteNutrition` and the delete half of `updateNutrition` always run (even with sync off) so in-app edits/deletes still clean up samples that were exported before the user flipped sync off — otherwise those would orphan in Apple Health forever.
 - `backfillNutritionIfNeeded` is idempotent (queries Apple Health for each entry's UUID before writing) and is guarded by `isBackfillingNutrition` so scene-phase re-entry can't spawn overlapping scans. The caller passes `currentEntryIDs: () -> Set<UUID>` so a meal deleted mid-backfill won't be re-exported as a phantom sample.
 - The body-measurements observer skips adding weights whose sample metadata contains `fudai_weight_id` — those are our own writes and are handled by `WeightStore.addEntry` directly. External samples (Apple Watch, scale, Health app entry) go through the observer's date+value dedup and get added to `WeightStore` with the sample's real date.
@@ -365,7 +377,7 @@ Plain static HTML + CSS — no build step, no framework. Deployed to Vercel with
 - **`ProgressView`** is renamed to `ProgressTabView` to avoid clashing with SwiftUI's built-in `ProgressView`.
 - **`@Observable` tracking can miss property access buried in computed vars.** HomeView, ProgressTabView, and NutritionDetailView each read `let _ = profileStore.profile` at the top of `body` to force observation tracking. Don't remove those lines.
 - **Dead files** (kept for git history but not referenced anywhere): `StoreManager.swift`, `PaywallView.swift`, `SpinWheelView.swift`, `CloudKitService.swift`. Don't add new code to them.
-- **Persistent state** lives in two places: `UserDefaults` (preferences + JSON-encoded `entries`/`weights`/`favorites`/`coachChatHistory` arrays + `*Enabled`/`*Reminder*` keys read via `@AppStorage`) and iOS Keychain (LLM + STT API keys via `KeychainHelper`). There is no Core Data / SwiftData / iCloud.
+- **Persistent state** lives in two places: `UserDefaults` (preferences + JSON-encoded `entries`/`weights`/`bodyFatEntries`/`favorites`/`coachChatHistory` arrays + `*Enabled`/`*Reminder*` keys read via `@AppStorage`) and iOS Keychain (LLM + STT API keys via `KeychainHelper`). There is no Core Data / SwiftData / iCloud.
 - **CodeQL is not configured** anymore — the workflow was removed because it produced almost entirely false positives on UserDefaults writes near "auth"-keyword variables for a local-only app with no auth flows.
 
 ## Commit Style
@@ -376,7 +388,7 @@ Plain static HTML + CSS — no build step, no framework. Deployed to Vercel with
 
 ## Release Artifacts
 
-- **`APPSTORE.md`** (repo root) holds the App Store Connect listing copy for iOS — name, subtitle, promo text, keywords, What's New, full description, reviewer notes. Update it whenever the iOS version bumps; the current header is `v3.1`. Uploads to App Store Connect happen by hand-pasting from this file — don't let it drift from the code.
+- **`APPSTORE.md`** (repo root) holds the App Store Connect listing copy for iOS — name, subtitle, promo text, keywords, What's New, full description, reviewer notes. Update it whenever the iOS version bumps; the current header is `v3.2`. Uploads to App Store Connect happen by hand-pasting from this file — don't let it drift from the code. **Description has a 4000-char hard cap** (App Store Connect rejects anything over) — if you bloat it past that, trim per-section bullets into single dense lines (the v3.2 trim went 4515 → 3159 chars without losing any feature).
 - **`PLAYSTORE.md`** (repo root) is the Android-side equivalent for the Play Console — short + full description, Data Safety answers, App Content declarations, reviewer notes. Header is `v1.0.0`.
 - **App Store screenshots** live in `~/Documents/fud ai/appstore screenshots/` (raw 1179×2556 captures from device) and get composited into 1242×2688 marketing PNGs by ad-hoc Python scripts in `/tmp/`. The scripts are not in the repo — they're rebuilt per release. The current iteration uses PIL gradient backgrounds + a pixel-perfect iPhone 15 Pro Max frame + Bricolage Grotesque ExtraBold typography.
 - Bump `MARKETING_VERSION` in `ios/calorietracker.xcodeproj/project.pbxproj` (two occurrences — main app + widget extension) before each App Store submission. `CURRENT_PROJECT_VERSION` is the build number.
