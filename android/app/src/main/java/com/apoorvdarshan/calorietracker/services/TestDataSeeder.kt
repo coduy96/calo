@@ -1,6 +1,7 @@
 package com.apoorvdarshan.calorietracker.services
 
 import com.apoorvdarshan.calorietracker.AppContainer
+import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FoodSource
 import com.apoorvdarshan.calorietracker.models.MealType
@@ -63,6 +64,62 @@ class TestDataSeeder(private val container: AppContainer) {
         container.weightRepository.replaceAll(generateWeights())
     }
 
+    /**
+     * Focused seeder for the v3.2 Progress chart verification — fills 30 days
+     * of weight + 30 days of body-fat readings (overlapping so both 1W and 1M
+     * Progress views render with data + a goal-line overlay) without touching
+     * food entries or other state. Use this when verifying the Body Fat chart
+     * + segmented toggle on debug:
+     *
+     *   adb shell am start -n com.apoorvdarshan.calorietracker.debug/com.apoorvdarshan.calorietracker.MainActivity --ez seed_body_metrics true
+     *   adb shell am start -n com.apoorvdarshan.calorietracker.debug/com.apoorvdarshan.calorietracker.MainActivity --ez restore_real_data true
+     *
+     * Snapshots into the same SeedBackup blob seedYear uses, so restore_real_data
+     * recovers the original state regardless of which seeder was last invoked.
+     */
+    suspend fun seedBodyMetrics() {
+        if (container.prefs.testSeedBackupJson.first() == null) {
+            val backup = SeedBackup(
+                entriesJson = json.encodeToString(
+                    ListSerializer(FoodEntry.serializer()),
+                    container.foodRepository.entries.first()
+                ),
+                weightsJson = json.encodeToString(
+                    ListSerializer(WeightEntry.serializer()),
+                    container.weightRepository.entries.first()
+                ),
+                profileJson = container.profileRepository.profile.first()?.let {
+                    json.encodeToString(UserProfile.serializer(), it)
+                },
+                healthConnectEnabled = container.prefs.healthConnectEnabled.first(),
+                onboarded = container.prefs.hasCompletedOnboarding.first()
+            )
+            container.prefs.setTestSeedBackupJson(json.encodeToString(SeedBackup.serializer(), backup))
+        }
+
+        // Disable HC so the synthetic entries can't echo to the production
+        // install's HC sync relationship. (Ports the same guard from seedYear.)
+        container.prefs.setHealthConnectEnabled(false)
+
+        // Seed the profile with body fat + a goal so the Body Fat segment on
+        // Progress is visible (showsBodyFatSection guard checks any of: entries
+        // exist, profile.bodyFatPercentage, profile.goalBodyFatPercentage).
+        val baseProfile = container.profileRepository.profile.first()
+            ?: UserProfile(weightKg = 75.0, goalWeightKg = 70.0)
+        container.profileRepository.save(
+            baseProfile.copy(
+                weightKg = 73.0,
+                goalWeightKg = 68.0,
+                bodyFatPercentage = 0.18,
+                goalBodyFatPercentage = 0.12
+            )
+        )
+        container.prefs.setOnboardingCompleted(true)
+
+        container.weightRepository.replaceAll(generateMonthOfWeights())
+        container.bodyFatRepository.replaceAll(generateMonthOfBodyFats())
+    }
+
     suspend fun restore() {
         val raw = container.prefs.testSeedBackupJson.first() ?: return
         val backup = runCatching {
@@ -75,6 +132,12 @@ class TestDataSeeder(private val container: AppContainer) {
         container.weightRepository.replaceAll(
             json.decodeFromString(ListSerializer(WeightEntry.serializer()), backup.weightsJson)
         )
+        // Body fat entries weren't snapshotted in the original SeedBackup
+        // shape (it predates the BodyFatRepository). seedBodyMetrics is the
+        // only path that writes them, so always clear on restore — the user's
+        // real body-fat history (if any) is preserved via profile.bodyFatPercentage
+        // which is restored from profileJson below.
+        container.bodyFatRepository.replaceAll(emptyList())
         backup.profileJson?.let {
             container.profileRepository.save(json.decodeFromString(UserProfile.serializer(), it))
         }
@@ -146,6 +209,52 @@ class TestDataSeeder(private val container: AppContainer) {
             add(lunch.random(rng), hour = 13, meal = MealType.LUNCH)
             add(dinner.random(rng), hour = 19, meal = MealType.DINNER)
             if (rng.nextBoolean()) add(snacks.random(rng), hour = 16, meal = MealType.SNACK)
+        }
+        return out
+    }
+
+    /** 30 days of weight readings, slight downward trend, ~25% skipped days for realism. */
+    private fun generateMonthOfWeights(): List<WeightEntry> {
+        val zone = ZoneId.systemDefault()
+        val today = LocalDate.now()
+        val rng = Random(seed = 0xBEEF)
+        val startKg = 75.5
+        val endKg = 73.0
+        val totalDays = 30
+        val out = mutableListOf<WeightEntry>()
+        for (daysAgo in (totalDays - 1) downTo 0) {
+            // Always log today + yesterday so the 1W view always shows 2+ points.
+            if (daysAgo > 1 && rng.nextInt(10) < 2) continue
+            val day = today.minusDays(daysAgo.toLong())
+            val progress = (totalDays - 1 - daysAgo).toDouble() / (totalDays - 1)
+            val baseline = startKg - (startKg - endKg) * progress
+            val noise = rng.nextDouble(-0.5, 0.5)
+            val ts = day.atTime(8, rng.nextInt(0, 30)).atZone(zone).toInstant()
+            out.add(WeightEntry(date = ts, weightKg = baseline + noise))
+        }
+        return out
+    }
+
+    /** 30 days of body-fat readings, slight downward trend (~18% → 16.5%), ~40%
+     *  skipped days since people don't measure body fat as often as weight. */
+    private fun generateMonthOfBodyFats(): List<BodyFatEntry> {
+        val zone = ZoneId.systemDefault()
+        val today = LocalDate.now()
+        val rng = Random(seed = 0xFA7)
+        val startFraction = 0.180
+        val endFraction = 0.165
+        val totalDays = 30
+        val out = mutableListOf<BodyFatEntry>()
+        for (daysAgo in (totalDays - 1) downTo 0) {
+            // Always log today + yesterday so the 1W chart isn't empty.
+            if (daysAgo > 1 && rng.nextInt(10) < 4) continue
+            val day = today.minusDays(daysAgo.toLong())
+            val progress = (totalDays - 1 - daysAgo).toDouble() / (totalDays - 1)
+            val baseline = startFraction - (startFraction - endFraction) * progress
+            // ±0.3% jitter to simulate caliper / smart-scale measurement noise.
+            val noise = rng.nextDouble(-0.003, 0.003)
+            val ts = day.atTime(8, rng.nextInt(0, 30)).atZone(zone).toInstant()
+            out.add(BodyFatEntry(date = ts, bodyFatFraction = baseline + noise))
         }
         return out
     }

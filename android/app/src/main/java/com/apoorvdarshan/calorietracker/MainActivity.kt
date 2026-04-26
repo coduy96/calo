@@ -45,6 +45,13 @@ class MainActivity : ComponentActivity() {
             runBlocking { container.testDataSeeder.seedYear() }
             intent.removeExtra("seed_test_data")
         }
+        // Focused 30-day weight + body-fat seeder for verifying the v3.2 Body
+        // Fat chart + segmented Progress toggle without polluting food data.
+        // adb shell am start -n com.apoorvdarshan.calorietracker.debug/com.apoorvdarshan.calorietracker.MainActivity --ez seed_body_metrics true
+        if (intent?.getBooleanExtra("seed_body_metrics", false) == true) {
+            runBlocking { container.testDataSeeder.seedBodyMetrics() }
+            intent.removeExtra("seed_body_metrics")
+        }
         if (intent?.getBooleanExtra("restore_real_data", false) == true) {
             runBlocking { container.testDataSeeder.restore() }
             intent.removeExtra("restore_real_data")
