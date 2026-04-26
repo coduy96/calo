@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fud AI — Free Open Source AI Calorie Tracker for iOS &amp; Android</title>
-<meta name="description" content="Free, open-source AI calorie tracker for iOS and Android. Snap food, speak meals, or type it. 13 AI providers including Gemini, OpenAI, Claude, Grok, Groq, Hugging Face, Fireworks, DeepInfra, Mistral, Ollama. Calorie + Protein widgets. AI Coach chat. 15 languages. Apple Health + Health Connect. Privacy-first, no account needed.">
-<meta name="keywords" content="calorie tracker, AI food scanner, nutrition tracker, macro tracker, open source, iOS, Android, privacy, BYOK, Gemini, OpenAI, Claude, Grok, Groq, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama, Gemma, Llama Vision, Qwen VL, Pixtral, widgets, AI coach, multi-turn chat, Apple Health, Health Connect, weight tracker, TDEE calculator, 15 languages">
+<meta name="description" content="Free, open-source AI calorie tracker for iOS and Android. Snap food, speak meals, or type it. Body fat tracking with goal + history. AI Coach with full-history tool calling. 13 AI providers (Gemini, OpenAI, Claude, Grok, Groq, more). Calorie + Protein widgets. 15 languages. Apple Health + Health Connect. Privacy-first, no account needed.">
+<meta name="keywords" content="calorie tracker, AI food scanner, nutrition tracker, macro tracker, body fat tracker, body composition, open source, iOS, Android, privacy, BYOK, Gemini, OpenAI, Claude, Grok, Groq, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama, Gemma, Llama Vision, Qwen VL, Pixtral, widgets, AI coach, tool calling, Apple Health, Health Connect, weight tracker, TDEE calculator, 15 languages">
 <link rel="canonical" href="https://fud-ai.app/">
 <meta name="theme-color" content="#FF375F">
 <!-- Open Graph (Facebook · WhatsApp · LinkedIn · iMessage · Discord · Slack) -->
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="styles.css?v=20260425d">
+<link rel="stylesheet" href="styles.css?v=20260427a">
 <!-- Structured Data -->
 <script type="application/ld+json">
 {
@@ -44,12 +44,12 @@
   "operatingSystem": "iOS, Android",
   "applicationCategory": "HealthApplication",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-  "description": "Free, open-source AI-powered calorie and nutrition tracker for iOS and Android. Snap a photo of food, speak your meal, or type it. Supports 13 AI providers including Google Gemini, OpenAI GPT-5, Anthropic Claude (Sonnet 4.6, Opus 4.7, Haiku 4.5), xAI Grok, Groq, Together AI, OpenRouter, Hugging Face (open-weight Gemma, Qwen VL, Llama Vision), Fireworks AI, DeepInfra, Mistral (Pixtral), Ollama for local inference, and any custom OpenAI-compatible endpoint. Multi-turn AI Coach chat for personalized weight and nutrition guidance. Home Screen and Lock Screen widgets on iOS (5 families); Calorie + Protein Glance widgets on Android. 5 speech-to-text providers (Native iOS / Native Android, OpenAI Whisper, Groq, Deepgram, AssemblyAI). 15 languages with system auto-selection on both platforms. Tracks 13 nutrients per meal including calories, protein, carbs, fat, sugar, fiber, saturated fat, monounsaturated fat, polyunsaturated fat, cholesterol, sodium, and potassium. Personalized TDEE and BMR calculation using Katch-McArdle and Mifflin-St Jeor formulas. Apple Health (iOS) and Health Connect (Android) bidirectional sync for body measurements and per-meal nutrition. Privacy-first with no account, no cloud sync, no ads, no tracking. API keys stored in iOS Keychain (iOS) or EncryptedSharedPreferences with AES-256 (Android). Delete All Data is local-only and never touches Apple Health or Health Connect. MIT licensed open source. Built with SwiftUI (iOS) and Jetpack Compose (Android).",
+  "description": "Free, open-source AI-powered calorie and nutrition tracker for iOS and Android. Snap a photo of food, speak your meal, or type it. Body fat tracking with goal + history graph alongside weight on the Progress tab. Multi-turn AI Coach with on-demand tool calling — Coach can fetch any date range of weight, body-fat, food, or calorie history (\"what was my weight in March?\", \"what did I eat Tuesday?\"). Supports 13 AI providers including Google Gemini, OpenAI GPT-5, Anthropic Claude (Sonnet 4.6, Opus 4.7, Haiku 4.5), xAI Grok, Groq, Together AI, OpenRouter, Hugging Face (open-weight Gemma, Qwen VL, Llama Vision), Fireworks AI, DeepInfra, Mistral (Pixtral), Ollama for local inference, and any custom OpenAI-compatible endpoint. Smart daily reminders for weight + body fat logging that skip on days already logged. Home Screen and Lock Screen widgets on iOS (5 families); Calorie + Protein Glance widgets on Android. 5 speech-to-text providers (Native iOS / Native Android, OpenAI Whisper, Groq, Deepgram, AssemblyAI). 15 languages with system auto-selection on both platforms. Tracks 13 nutrients per meal including calories, protein, carbs, fat, sugar, fiber, saturated fat, monounsaturated fat, polyunsaturated fat, cholesterol, sodium, and potassium. Personalized TDEE and BMR calculation using Katch-McArdle (with body-fat input) and Mifflin-St Jeor formulas — toggle which one is active in Settings. Apple Health (iOS) and Health Connect (Android) bidirectional sync for body measurements and per-meal nutrition, including a one-shot historical backfill on first enable that pulls years of past weight + body-fat scale data into the Progress chart (iOS). Privacy-first with no account, no cloud sync, no ads, no tracking. API keys stored in iOS Keychain (iOS) or EncryptedSharedPreferences with AES-256 (Android). Delete All Data is local-only and never touches Apple Health or Health Connect. MIT licensed open source. Built with SwiftUI (iOS) and Jetpack Compose (Android).",
   "author": { "@type": "Person", "name": "Apoorv Darshan" },
   "url": "https://fud-ai.app",
   "downloadUrl": "https://apps.apple.com/us/app/fud-ai-calorie-tracker/id6758935726",
   "screenshot": "https://fud-ai.app/assets/screenshots/home.png",
-  "softwareVersion": "3.1",
+  "softwareVersion": "3.2",
   "aggregateRating": { "@type": "AggregateRating", "ratingValue": "5", "ratingCount": "1" }
 }
 </script>
@@ -92,7 +92,7 @@
         <h1 class="hero-title">Eat smart,<br><em>live</em> better.</h1>
 
         <p class="hero-lede">
-          <span class="dropcap">A</span>free, open-source calorie tracker for iOS and Android. Snap a photo, speak your meal, or type it — your AI provider handles the rest. Thirteen providers including Gemini, OpenAI, Claude, Grok, Groq, Hugging Face, Mistral and Ollama. Multi-turn AI Coach with full context of your weight history. Home Screen widgets that update the moment you log. All data stays on your device.
+          <span class="dropcap">A</span>free, open-source calorie tracker for iOS and Android. Snap a photo, speak your meal, or type it — your AI provider handles the rest. Thirteen providers including Gemini, OpenAI, Claude, Grok, Groq, Hugging Face, Mistral and Ollama. Track weight and body fat together on the Progress chart. Multi-turn AI Coach that can fetch any date range of your history on demand. Home Screen widgets that update the moment you log. All data stays on your device.
         </p>
 
         <div class="cta-group">
@@ -436,7 +436,7 @@
 <!-- ========== HIDDEN SEO CONTENT ========== -->
 <section class="seo-only" aria-hidden="true">
   <h2>Fud AI — Free AI Calorie Tracker App for iPhone &amp; Android</h2>
-  <p>Free open-source calorie tracker for iPhone and Android. AI food recognition from photos. Scan nutrition labels (iOS), voice input, text logging, manual entry. Supports 13 AI providers: Google Gemini, OpenAI GPT-5, Anthropic Claude Sonnet 4.6 / Opus 4.7 / Haiku 4.5, xAI Grok, Groq, Together AI, OpenRouter, Hugging Face, Fireworks AI, DeepInfra, Mistral Pixtral, Ollama for local AI. Tracks 13 nutrients including calories, protein, carbs, fat, sugar, fiber, saturated fat, mono-fat, poly-fat, cholesterol, sodium, potassium. AI Coach chat with weight forecast. Calorie + Protein widgets — Home Screen and Lock Screen on iOS, Glance on Android. Apple Health (iOS) and Health Connect (Android) bidirectional sync. 15 languages auto-selected by phone's system language. Privacy-first, no account, no cloud sync, BYOK. MIT licensed. Built with SwiftUI on iOS, Jetpack Compose on Android. Best alternative to MyFitnessPal, Lose It, Cronometer, MacroFactor, Carbon Diet Coach, Cal AI, Yazio.</p>
+  <p>Free open-source calorie tracker for iPhone and Android. AI food recognition from photos. Scan nutrition labels (iOS), voice input, text logging, manual entry. Body fat tracking with goal % and history graph alongside weight on the Progress tab. Supports 13 AI providers: Google Gemini, OpenAI GPT-5, Anthropic Claude Sonnet 4.6 / Opus 4.7 / Haiku 4.5, xAI Grok, Groq, Together AI, OpenRouter, Hugging Face, Fireworks AI, DeepInfra, Mistral Pixtral, Ollama for local AI. Tracks 13 nutrients including calories, protein, carbs, fat, sugar, fiber, saturated fat, mono-fat, poly-fat, cholesterol, sodium, potassium. AI Coach with on-demand tool calling — fetches any date range of weight, body-fat, food, or calorie history when asked ("what was my weight in March?", "what did I eat Tuesday?"). Smart daily reminders for weight + body-fat logging. Calorie + Protein widgets — Home Screen and Lock Screen on iOS, Glance on Android. Apple Health (iOS) and Health Connect (Android) bidirectional sync, including a one-shot historical backfill of past scale data on first enable (iOS). 15 languages auto-selected by phone's system language. Privacy-first, no account, no cloud sync, BYOK. MIT licensed. Built with SwiftUI on iOS, Jetpack Compose on Android. Best alternative to MyFitnessPal, Lose It, Cronometer, MacroFactor, Carbon Diet Coach, Cal AI, Yazio.</p>
 </section>
 
 <!-- ========== FOOTER ========== -->
