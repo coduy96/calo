@@ -122,6 +122,13 @@ struct UserProfile: Codable, Equatable {
     /// in BMR / TDEE / macro calculations. Only shown to users who entered a
     /// current body-fat % in onboarding (or set one later via Settings).
     var goalBodyFatPercentage: Double?
+    /// User-controlled override for whether the BMR calc uses Katch-McArdle.
+    /// Optional so Codable decodes pre-existing saved profiles cleanly (nil →
+    /// treat as true). When false, BMR falls back to Mifflin-St Jeor even if
+    /// `bodyFatPercentage` is set — escape hatch for users whose body-fat
+    /// reading is stale (e.g. weight shifted but they haven't re-measured).
+    /// Read everywhere via `usesBodyFatForBMR` to apply the nil default.
+    var useBodyFatInBMR: Bool?
     var weeklyChangeKg: Double?
     var goalWeightKg: Double?
     var customCalories: Int?
@@ -147,8 +154,15 @@ struct UserProfile: Codable, Equatable {
         Calendar.current.dateComponents([.year], from: birthday, to: Date()).year ?? 25
     }
 
+    /// Whether BMR currently uses Katch-McArdle. Centralized accessor — read
+    /// this everywhere instead of the raw `useBodyFatInBMR` Bool? so the
+    /// nil-default-true semantics stay in one place.
+    var usesBodyFatForBMR: Bool {
+        bodyFatPercentage != nil && (useBodyFatInBMR ?? true)
+    }
+
     var bmr: Double {
-        if let bf = bodyFatPercentage {
+        if let bf = bodyFatPercentage, useBodyFatInBMR ?? true {
             // Katch-McArdle
             return 370 + 21.6 * (1 - bf) * weightKg
         }
@@ -280,6 +294,7 @@ struct UserProfile: Codable, Equatable {
         goal: .maintain,
         bodyFatPercentage: nil,
         goalBodyFatPercentage: nil,
+        useBodyFatInBMR: nil,
         weeklyChangeKg: nil,
         goalWeightKg: nil,
         customCalories: nil,

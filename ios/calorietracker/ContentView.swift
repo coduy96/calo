@@ -1433,6 +1433,32 @@ struct ProfileView: View {
                         ) {
                             activeSheet = .editGoalBodyFat
                         }
+
+                        // Toggle to disable Katch-McArdle without wiping the
+                        // body-fat value — escape hatch for users whose
+                        // reading is stale (weight shifted but they haven't
+                        // re-measured). When off, BMR/TDEE/macros recompute
+                        // from Mifflin-St Jeor (height/weight/age only).
+                        Toggle(isOn: Binding(
+                            get: { profile.useBodyFatInBMR ?? true },
+                            set: { newValue in
+                                profile.useBodyFatInBMR = newValue
+                                resetCustomGoalsAndSave()
+                            }
+                        )) {
+                            Label {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Use Body Fat for BMR")
+                                    Text("Off = Mifflin-St Jeor (height/weight/age only). Useful when your body-fat reading is outdated.")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            } icon: {
+                                Image(systemName: "function")
+                                    .foregroundStyle(AppColors.calorie)
+                            }
+                        }
+                        .tint(AppColors.calorie)
                     }
                 }
                 .listRowBackground(AppColors.appCard)

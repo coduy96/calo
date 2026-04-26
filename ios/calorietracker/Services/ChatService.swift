@@ -73,7 +73,17 @@ struct ChatService {
             useMetric ? String(format: "%+.2f kg/week", kg) : String(format: "%+.2f lbs/week", kg * 2.20462)
         }
 
-        let bmrFormula = profile.bodyFatPercentage != nil ? "Katch-McArdle (uses body fat %)" : "Mifflin-St Jeor (body fat not set)"
+        let bmrFormula: String
+        if profile.usesBodyFatForBMR {
+            bmrFormula = "Katch-McArdle (uses body fat %)"
+        } else if profile.bodyFatPercentage != nil {
+            // Body fat is set but the user disabled the Katch-McArdle override
+            // in Settings → Profile. Surface it so Coach explains why BMR isn't
+            // using the body-fat value the user can see in their profile.
+            bmrFormula = "Mifflin-St Jeor (user disabled the body-fat override in Settings)"
+        } else {
+            bmrFormula = "Mifflin-St Jeor (body fat not set)"
+        }
 
         // Recent weights (last 10) compact line for LLM to reason about trend
         let recentWeights = weights.sorted { $0.date > $1.date }.prefix(10)
@@ -82,10 +92,12 @@ struct ChatService {
             return "\(dateStr): \(wUnit(entry.weightKg))"
         }.joined(separator: ", ")
 
-        // Recent foods by day (last 7 days of totals)
+        // Recent foods by day (last 14 days of totals — bumped from 7 so Coach
+        // sees ~2 weeks of intake patterns, enough to spot weekday/weekend
+        // splits and short-term streaks while keeping the prompt size bounded).
         let calendar = Calendar.current
-        let weekAgo = calendar.date(byAdding: .day, value: -7, to: .now) ?? .now
-        let recentFoods = foods.filter { $0.timestamp >= weekAgo }
+        let twoWeeksAgo = calendar.date(byAdding: .day, value: -14, to: .now) ?? .now
+        let recentFoods = foods.filter { $0.timestamp >= twoWeeksAgo }
         var dailyCal: [String: Int] = [:]
         for entry in recentFoods {
             let dayKey = ChatService.shortDateFormatter.string(from: entry.timestamp)
@@ -165,7 +177,7 @@ struct ChatService {
         }
 
         if !caloriesLog.isEmpty {
-            lines.append("## Last 7 days of calorie totals")
+            lines.append("## Last 14 days of calorie totals (actual logged intake)")
             lines.append(caloriesLog)
             lines.append("")
         }
