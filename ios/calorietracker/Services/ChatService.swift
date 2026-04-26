@@ -31,12 +31,14 @@ struct ChatService {
         newUserMessage: String,
         profile: UserProfile,
         weights: [WeightEntry],
+        bodyFats: [BodyFatEntry],
         foods: [FoodEntry],
         useMetric: Bool
     ) async throws -> String {
         let systemPrompt = buildSystemPrompt(
             profile: profile,
             weights: weights,
+            bodyFats: bodyFats,
             foods: foods,
             useMetric: useMetric
         )
@@ -61,7 +63,7 @@ struct ChatService {
 
     // MARK: - System prompt builder
 
-    private static func buildSystemPrompt(profile: UserProfile, weights: [WeightEntry], foods: [FoodEntry], useMetric: Bool) -> String {
+    private static func buildSystemPrompt(profile: UserProfile, weights: [WeightEntry], bodyFats: [BodyFatEntry], foods: [FoodEntry], useMetric: Bool) -> String {
         let forecast = WeightAnalysisService.compute(weights: weights, foods: foods, profile: profile)
 
         let wUnit: (Double) -> String = { kg in
@@ -107,6 +109,9 @@ struct ChatService {
         if let bf = profile.bodyFatPercentage {
             lines.append("- Body fat: \(Int(bf * 100))%")
         }
+        if let goalBF = profile.goalBodyFatPercentage {
+            lines.append("- Goal body fat: \(Int(goalBF * 100))%")
+        }
         lines.append("")
         lines.append("## Formulas in use")
         lines.append("- BMR: \(bmrFormula). Current BMR ≈ \(Int(profile.bmr)) kcal/day")
@@ -142,6 +147,23 @@ struct ChatService {
             lines.append(weightLog)
             lines.append("")
         }
+
+        // Body fat trend — sibling section to Recent weights so the Coach can
+        // reason about composition recomp (e.g. "you're holding weight but
+        // body fat is dropping" → recomp working). Last 10 readings keeps the
+        // prompt size predictable; Katch-McArdle BMR already reflects the
+        // latest value via syncProfileBodyFatToLatest().
+        let recentBodyFats = bodyFats.sorted { $0.date > $1.date }.prefix(10)
+        if !recentBodyFats.isEmpty {
+            let bodyFatLog = recentBodyFats.reversed().map { entry -> String in
+                let dateStr = ChatService.shortDateFormatter.string(from: entry.date)
+                return "\(dateStr): \(Int(entry.bodyFatFraction * 100))%"
+            }.joined(separator: ", ")
+            lines.append("## Recent body fat readings (oldest → newest)")
+            lines.append(bodyFatLog)
+            lines.append("")
+        }
+
         if !caloriesLog.isEmpty {
             lines.append("## Last 7 days of calorie totals")
             lines.append(caloriesLog)
