@@ -534,6 +534,10 @@
     <string name="settings_permission_title">Berechtigung erforderlich</string>
 
     <string name="settings_notifications_denied">Mitteilungs-Berechtigung verweigert. Aktiviere sie unter Systemeinstellungen → Apps → Fud AI → Mitteilungen, um Erinnerungen zu erhalten.</string>
+
+    <!-- Notification copy -->
+    <string name="notif_weight_log_title">Zeit zum Wiegen</string>
+    <string name="notif_weight_log_text">Erfasse dein heutiges Gewicht, damit dein Verlaufsdiagramm genau bleibt.</string>
     <string name="settings_health_denied">Health Connect benötigt Lese- und Schreibrechte für Gewicht und Ernährung. Tippe erneut auf den Schalter und gewähre alle vier Berechtigungen, um zu synchronisieren.</string>
     <string name="settings_health_unavailable">Health Connect ist auf diesem Gerät nicht verfügbar. Installiere es aus dem Play Store und tippe dann erneut auf den Schalter.</string>
 

@@ -534,6 +534,10 @@
     <string name="settings_permission_title">अनुमति आवश्यक</string>
 
     <string name="settings_notifications_denied">सूचनाओं की अनुमति अस्वीकृत। रिमाइंडर पाने के लिए सिस्टम सेटिंग्स → ऐप्स → Fud AI → सूचनाएँ में सक्षम करें।</string>
+
+    <!-- Notification copy -->
+    <string name="notif_weight_log_title">वज़न मापने का समय</string>
+    <string name="notif_weight_log_text">अपनी प्रगति का चार्ट सटीक रखने के लिए आज का वज़न दर्ज करें।</string>
     <string name="settings_health_denied">Health Connect को वज़न और पोषण के लिए पढ़ने + लिखने की ज़रूरत है। टॉगल पर फिर से टैप करें और सिंक के लिए चारों अनुमतियाँ दें।</string>
     <string name="settings_health_unavailable">इस डिवाइस पर Health Connect उपलब्ध नहीं है। इसे Play Store से इंस्टॉल करें, फिर टॉगल पर फिर से टैप करें।</string>
 

@@ -534,6 +534,10 @@
     <string name="settings_permission_title">需要权限</string>
 
     <string name="settings_notifications_denied">通知权限被拒绝。请在“系统设置 → 应用 → Fud AI → 通知”中启用以接收提醒。</string>
+
+    <!-- Notification copy -->
+    <string name="notif_weight_log_title">称重时间到了</string>
+    <string name="notif_weight_log_text">记录今天的体重，让进度图保持准确。</string>
     <string name="settings_health_denied">Health Connect 需要体重和营养的读写权限。请重新点按开关并授予全部四项权限以同步。</string>
     <string name="settings_health_unavailable">此设备不支持 Health Connect。请从 Play Store 安装后再次点按开关。</string>
 

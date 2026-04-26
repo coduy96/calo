@@ -534,6 +534,10 @@
     <string name="settings_permission_title">الإذن مطلوب</string>
 
     <string name="settings_notifications_denied">تم رفض إذن الإشعارات. فعّله من إعدادات النظام ← التطبيقات ← Fud AI ← الإشعارات لتلقي التذكيرات.</string>
+
+    <!-- Notification copy -->
+    <string name="notif_weight_log_title">حان وقت الوزن</string>
+    <string name="notif_weight_log_text">سجّل وزنك اليوم لإبقاء مخطط تقدمك دقيقاً.</string>
     <string name="settings_health_denied">يحتاج Health Connect إلى أذونات قراءة وكتابة للوزن والتغذية. أعد الضغط على المفتاح وامنح الأذونات الأربعة للمزامنة.</string>
     <string name="settings_health_unavailable">Health Connect غير متاح على هذا الجهاز. ثبّته من Play Store، ثم أعد الضغط على المفتاح.</string>
 

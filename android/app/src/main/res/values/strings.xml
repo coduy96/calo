@@ -534,6 +534,10 @@
     <string name="settings_permission_title">Permission needed</string>
 
     <string name="settings_notifications_denied">Notifications permission denied. Enable it in System Settings → Apps → Fud AI → Notifications to receive reminders.</string>
+
+    <!-- Notification copy -->
+    <string name="notif_weight_log_title">Time to weigh in</string>
+    <string name="notif_weight_log_text">Log today\'s weight to keep your progress chart accurate.</string>
     <string name="settings_health_denied">Health Connect needs read + write for Weight and Nutrition. Re-tap the toggle and grant all four permissions to sync.</string>
     <string name="settings_health_unavailable">Health Connect isn\'t available on this device. Install it from the Play Store, then re-tap the toggle.</string>
 

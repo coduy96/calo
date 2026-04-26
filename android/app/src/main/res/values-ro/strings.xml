@@ -534,6 +534,10 @@
     <string name="settings_permission_title">Este necesară permisiunea</string>
 
     <string name="settings_notifications_denied">Permisiunea pentru notificări a fost refuzată. Activează-o în Setări sistem → Aplicații → Fud AI → Notificări pentru a primi mementouri.</string>
+
+    <!-- Notification copy -->
+    <string name="notif_weight_log_title">Este ora cântăririi</string>
+    <string name="notif_weight_log_text">Înregistrează greutatea de azi pentru a menține graficul tău de progres precis.</string>
     <string name="settings_health_denied">Health Connect are nevoie de citire + scriere pentru Greutate și Nutriție. Atinge din nou comutatorul și acordă toate cele patru permisiuni pentru a sincroniza.</string>
     <string name="settings_health_unavailable">Health Connect nu este disponibil pe acest dispozitiv. Instalează-l din Play Store, apoi atinge din nou comutatorul.</string>
 

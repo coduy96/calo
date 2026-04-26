@@ -130,6 +130,15 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
     fun setNotificationsEnabled(v: Boolean) {
         viewModelScope.launch {
             container.prefs.setNotificationsEnabled(v)
+            // Arm/disarm the weight-log reminder alongside the master toggle.
+            // canPostNotifications() guards against scheduling alarms whose
+            // posted notification would be silently dropped on API 33+ when
+            // POST_NOTIFICATIONS hasn't been granted.
+            if (v && container.notifications.canPostNotifications()) {
+                container.notifications.scheduleWeightReminder()
+            } else {
+                container.notifications.cancelWeightReminder()
+            }
             _ui.value = _ui.value.copy(notificationsEnabled = v)
         }
     }

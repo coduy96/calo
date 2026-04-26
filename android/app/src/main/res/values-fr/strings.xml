@@ -534,6 +534,10 @@
     <string name="settings_permission_title">Autorisation requise</string>
 
     <string name="settings_notifications_denied">Autorisation des notifications refusée. Activez-la dans Réglages système → Applis → Fud AI → Notifications pour recevoir les rappels.</string>
+
+    <!-- Notification copy -->
+    <string name="notif_weight_log_title">Il est temps de te peser</string>
+    <string name="notif_weight_log_text">Enregistre ton poids du jour pour garder ton graphique de progression précis.</string>
     <string name="settings_health_denied">Health Connect a besoin de la lecture et de l\'écriture pour le poids et la nutrition. Réappuyez sur la bascule et accordez les quatre autorisations pour synchroniser.</string>
     <string name="settings_health_unavailable">Health Connect n\'est pas disponible sur cet appareil. Installez-le depuis le Play Store, puis réappuyez sur la bascule.</string>
 

@@ -18,9 +18,11 @@ import com.apoorvdarshan.calorietracker.R
 import java.util.Calendar
 
 /**
- * Schedules + fires the two local reminders the app supports:
- *   - Streak reminder: daily at user-chosen time (default 7:00pm)
- *   - Daily summary: daily at user-chosen time (default 9:00pm)
+ * Schedules + fires the local reminders the app supports:
+ *   - Weight log reminder: daily at 8:00am — gated by the master Notifications
+ *     toggle so it tracks the system permission state and never fires silently
+ *   - Streak reminder + Daily summary: present in code for parity with iOS but
+ *     not wired to the Settings UI yet
  *
  * Uses inexact alarms (setAndAllowWhileIdle) — a daily nudge firing within a
  * few minutes of the chosen time is perfectly fine, and Play Store reserves
@@ -54,7 +56,13 @@ class NotificationService(private val context: Context) {
             NotificationManager.IMPORTANCE_HIGH
         ).apply { description = "Celebration when you reach your goal weight." }
 
-        mgr.createNotificationChannels(listOf(streak, daily, goal))
+        val weight = NotificationChannel(
+            CHANNEL_WEIGHT_LOG,
+            "Weight Log Reminder",
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply { description = "Daily reminder to weigh in and log your weight." }
+
+        mgr.createNotificationChannels(listOf(streak, daily, goal, weight))
     }
 
     fun canPostNotifications(): Boolean {
@@ -98,8 +106,15 @@ class NotificationService(private val context: Context) {
         text = "Tap to see how today's macros lined up."
     )
 
+    fun scheduleWeightReminder(hour: Int = 8, minute: Int = 0) = schedule(
+        REQUEST_WEIGHT, hour, minute, CHANNEL_WEIGHT_LOG,
+        title = context.getString(R.string.notif_weight_log_title),
+        text = context.getString(R.string.notif_weight_log_text)
+    )
+
     fun cancelStreakReminder() = cancel(REQUEST_STREAK)
     fun cancelDailySummary() = cancel(REQUEST_DAILY)
+    fun cancelWeightReminder() = cancel(REQUEST_WEIGHT)
 
     private fun schedule(requestCode: Int, hour: Int, minute: Int, channel: String, title: String, text: String) {
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -143,6 +158,7 @@ class NotificationService(private val context: Context) {
         const val CHANNEL_STREAK = "streak_reminder"
         const val CHANNEL_DAILY = "daily_summary"
         const val CHANNEL_WEIGHT_GOAL = "weight_goal"
+        const val CHANNEL_WEIGHT_LOG = "weight_log_reminder"
         const val EXTRA_CHANNEL = "channel"
         const val EXTRA_TITLE = "title"
         const val EXTRA_TEXT = "text"
@@ -150,6 +166,7 @@ class NotificationService(private val context: Context) {
         private const val GOAL_NOTIFICATION_ID = 4242
         private const val REQUEST_STREAK = 1001
         private const val REQUEST_DAILY = 1002
+        private const val REQUEST_WEIGHT = 1003
     }
 }
 

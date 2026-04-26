@@ -534,6 +534,10 @@
     <string name="settings_permission_title">Se necesita permiso</string>
 
     <string name="settings_notifications_denied">Permiso de notificaciones denegado. Actívalo en Ajustes del sistema → Apps → Fud AI → Notificaciones para recibir recordatorios.</string>
+
+    <!-- Notification copy -->
+    <string name="notif_weight_log_title">Hora de pesarte</string>
+    <string name="notif_weight_log_text">Registra tu peso de hoy para que tu gráfico de progreso siga siendo preciso.</string>
     <string name="settings_health_denied">Health Connect necesita permiso de lectura y escritura para Peso y Nutrición. Vuelve a tocar el interruptor y concede los cuatro permisos para sincronizar.</string>
     <string name="settings_health_unavailable">Health Connect no está disponible en este dispositivo. Instálalo desde la Play Store y vuelve a tocar el interruptor.</string>
 

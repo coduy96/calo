@@ -534,6 +534,10 @@
     <string name="settings_permission_title">Permissie nodig</string>
 
     <string name="settings_notifications_denied">Meldingenpermissie geweigerd. Schakel deze in via Systeeminstellingen → Apps → Fud AI → Meldingen om herinneringen te ontvangen.</string>
+
+    <!-- Notification copy -->
+    <string name="notif_weight_log_title">Tijd om te wegen</string>
+    <string name="notif_weight_log_text">Log je gewicht van vandaag om je voortgangsgrafiek nauwkeurig te houden.</string>
     <string name="settings_health_denied">Health Connect heeft lees- + schrijftoegang nodig voor gewicht en voeding. Tik nogmaals op de schakelaar en verleen alle vier de permissies om te synchroniseren.</string>
     <string name="settings_health_unavailable">Health Connect is niet beschikbaar op dit apparaat. Installeer het via de Play Store en tik vervolgens nogmaals op de schakelaar.</string>
 

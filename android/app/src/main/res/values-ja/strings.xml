@@ -534,6 +534,10 @@
     <string name="settings_permission_title">権限が必要です</string>
 
     <string name="settings_notifications_denied">通知の権限が拒否されています。システム設定 → アプリ → Fud AI → 通知 で有効にしてリマインダーを受け取ってください。</string>
+
+    <!-- Notification copy -->
+    <string name="notif_weight_log_title">計量の時間です</string>
+    <string name="notif_weight_log_text">進捗グラフを正確に保つために、今日の体重を記録しましょう。</string>
     <string name="settings_health_denied">Health Connect には体重と栄養の読み取り＋書き込み権限が必要です。トグルを再度タップして4つすべての権限を付与してください。</string>
     <string name="settings_health_unavailable">この端末では Health Connect が利用できません。Play ストアからインストールしてからトグルを再度タップしてください。</string>
 

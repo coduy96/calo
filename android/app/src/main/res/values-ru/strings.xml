@@ -534,6 +534,10 @@
     <string name="settings_permission_title">Нужно разрешение</string>
 
     <string name="settings_notifications_denied">Доступ к уведомлениям запрещён. Включите его в Системных настройках → Приложения → Fud AI → Уведомления, чтобы получать напоминания.</string>
+
+    <!-- Notification copy -->
+    <string name="notif_weight_log_title">Пора взвеситься</string>
+    <string name="notif_weight_log_text">Запишите свой вес сегодня, чтобы график прогресса оставался точным.</string>
     <string name="settings_health_denied">Health Connect требует чтения и записи для Веса и Питания. Снова коснитесь переключателя и выдайте все четыре разрешения для синхронизации.</string>
     <string name="settings_health_unavailable">Health Connect недоступен на этом устройстве. Установите его из Play Store, затем снова коснитесь переключателя.</string>
 
