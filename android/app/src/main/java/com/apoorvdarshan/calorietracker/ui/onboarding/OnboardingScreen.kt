@@ -675,16 +675,16 @@ private fun GoalWeightStep(current: Double, goal: WeightGoal, useMetric: Boolean
         )
         Spacer(Modifier.weight(1f))
         if (useMetric) {
-            NumericWheelPicker(
-                value = current.toInt().coerceIn(30, 250),
-                onValueChange = { onChange(it.toDouble()) },
+            SplitDecimalWheelPicker(
+                value = current.coerceIn(30.0, 250.0),
+                onValueChange = onChange,
                 min = 30,
                 max = 250,
                 unit = stringResource(R.string.unit_kg)
             )
         } else {
-            val lbs = (current * 2.20462).toInt().coerceIn(60, 500)
-            NumericWheelPicker(
+            val lbs = (current * 2.20462).coerceIn(60.0, 500.0)
+            SplitDecimalWheelPicker(
                 value = lbs,
                 onValueChange = { newLbs -> onChange(newLbs / 2.20462) },
                 min = 60,
@@ -1311,7 +1311,7 @@ private fun BuildingPlanStep(onComplete: () -> Unit) {
                     .clip(RoundedCornerShape(5.dp))
                     .background(
                         Brush.horizontalGradient(
-                            listOf(AppColors.CalorieStart, AppColors.CalorieEnd, Color(0xFF4A90E2))
+                            listOf(AppColors.CalorieStart, AppColors.CalorieEnd)
                         )
                     )
             )
