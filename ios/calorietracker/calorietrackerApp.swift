@@ -207,8 +207,19 @@ struct calorietrackerApp: App {
                 }
             }
             if let s = sex {
-                let mapped: Gender = s == .male ? .male : s == .female ? .female : .other
-                if profile.gender != mapped {
+                // Only sync when HealthKit gave us an actual male/female reading.
+                // HKBiologicalSex.notSet (sim default + users who never set it
+                // in Health) and .other should NOT overwrite the user's
+                // onboarding-chosen gender — without this guard, the observer
+                // silently flipped gender to "Other" right after onboarding
+                // finished on the simulator since HK returns .notSet there.
+                let mapped: Gender?
+                switch s {
+                case .male: mapped = .male
+                case .female: mapped = .female
+                default: mapped = nil
+                }
+                if let mapped, profile.gender != mapped {
                     profile.gender = mapped
                     changed = true
                 }
