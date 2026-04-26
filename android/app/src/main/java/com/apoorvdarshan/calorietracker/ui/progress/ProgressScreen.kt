@@ -927,60 +927,114 @@ private fun BodyFatSection(
 
 @Composable
 private fun BodyFatChartCanvas(entries: List<BodyFatEntry>, goalFraction: Double?) {
-    // Reuse the same chart styling as WeightChartCanvas — just plot
-    // bodyFatFraction*100 instead of weight, with goal-line overlay if set.
+    // Mirrors WeightChartCanvas — same horizontal grid + tick marks, vertical
+    // dashed columns, dashed green goal line, right-side Y-axis labels (with
+    // "%" suffix), and bottom date labels showing first/last point in range.
     val percents = entries.map { it.bodyFatFraction * 100 } + listOfNotNull(goalFraction?.let { it * 100 })
-    val minP = (percents.minOrNull() ?: 0.0)
-    val maxP = (percents.maxOrNull() ?: 60.0)
-    val padding = ((maxP - minP) * 0.15).coerceAtLeast(1.0)
-    val yMin = (minP - padding).coerceAtLeast(0.0)
-    val yMax = maxP + padding
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(180.dp)
-            .padding(top = 4.dp)
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val w = size.width
-            val h = size.height
-            val xMin = entries.first().date.toEpochMilli().toFloat()
-            val xMax = entries.last().date.toEpochMilli().toFloat()
-            val xRange = (xMax - xMin).coerceAtLeast(1f)
-            val yRange = (yMax - yMin).coerceAtLeast(0.0001).toFloat()
-            fun pointFor(date: Long, percent: Double): Offset {
-                val x = (date.toFloat() - xMin) / xRange * w
-                val y = h - ((percent - yMin).toFloat() / yRange) * h
-                return Offset(x, y)
+    val minP = percents.min()
+    val maxP = percents.max()
+    val pad = maxOf((maxP - minP) * 0.15, 1.0)
+    val yMin = (minP - pad).coerceAtLeast(0.0)
+    val yMax = maxP + pad
+    val tStart = entries.first().date.toEpochMilli()
+    val tEnd = entries.last().date.toEpochMilli()
+    val singleEntry = entries.size == 1
+    val tRange = maxOf(1L, tEnd - tStart)
+    val goalLineColor = Color(0xFF34C759).copy(alpha = 0.7f)
+    val gridColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+    val secondaryColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+    val ticks = niceAxisTicks(yMin, yMax, count = 5)
+    val zone = ZoneId.systemDefault()
+    val xLabelFmt = DateTimeFormatter.ofPattern("MMM d", Locale.US).withZone(zone)
+
+    Row(Modifier.fillMaxWidth().height(180.dp)) {
+        Canvas(Modifier.weight(1f).fillMaxSize()) {
+            val w = size.width; val h = size.height
+            // Horizontal grid + tick marks
+            ticks.forEach { tick ->
+                val y = h - (((tick - yMin) / (yMax - yMin)).toFloat() * h)
+                drawLine(
+                    color = gridColor,
+                    start = Offset(0f, y), end = Offset(w, y),
+                    strokeWidth = 1f
+                )
             }
-            // Goal line
+            // Vertical grid (4 columns) — faint dashed
+            for (i in 0..4) {
+                val x = (i.toFloat() / 4f) * w
+                drawLine(
+                    color = gridColor,
+                    start = Offset(x, 0f), end = Offset(x, h),
+                    strokeWidth = 1f,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 6f))
+                )
+            }
             goalFraction?.let { g ->
-                val gPct = (g * 100)
-                val y = h - ((gPct - yMin).toFloat() / yRange) * h
+                val gPct = g * 100
+                val y = h - (((gPct - yMin) / (yMax - yMin)).toFloat() * h)
                 drawLine(
-                    color = Color(0xFF34C759).copy(alpha = 0.7f),
-                    start = Offset(0f, y),
-                    end = Offset(w, y),
-                    strokeWidth = 2f,
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 8f))
+                    color = goalLineColor,
+                    start = Offset(0f, y), end = Offset(w, y),
+                    strokeWidth = 3f,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(18f, 12f))
                 )
             }
-            // Series line
-            val pts = entries.map { pointFor(it.date.toEpochMilli(), it.bodyFatFraction * 100) }
-            for (i in 0 until pts.size - 1) {
-                drawLine(
-                    color = AppColors.Calorie,
-                    start = pts[i],
-                    end = pts[i + 1],
-                    strokeWidth = 4f
-                )
+            val xFor: (BodyFatEntry) -> Float = { e ->
+                if (singleEntry) w / 2f
+                else ((e.date.toEpochMilli() - tStart).toDouble() / tRange * w).toFloat()
             }
-            // Dots
-            for (p in pts) {
-                drawCircle(color = AppColors.Calorie, radius = 4f, center = p)
+            val path = Path()
+            entries.forEachIndexed { i, e ->
+                val x = xFor(e)
+                val y = h - (((e.bodyFatFraction * 100 - yMin) / (yMax - yMin)).toFloat() * h)
+                if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+            }
+            drawPath(path, AppColors.Calorie, style = Stroke(width = 5f))
+            entries.forEach { e ->
+                val x = xFor(e)
+                val y = h - (((e.bodyFatFraction * 100 - yMin) / (yMax - yMin)).toFloat() * h)
+                drawCircle(AppColors.Calorie, radius = 5.5f, center = Offset(x, y))
+            }
+        }
+        // Y-axis labels on the right
+        Column(
+            Modifier.width(40.dp).fillMaxSize().padding(start = 4.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            ticks.reversed().forEach { tick ->
+                Text(
+                    formatPercentTick(tick),
+                    fontSize = 11.sp,
+                    color = secondaryColor
+                )
             }
         }
     }
+    // X-axis date labels
+    Row(Modifier.fillMaxWidth().padding(top = 4.dp, end = 40.dp)) {
+        Text(
+            xLabelFmt.format(entries.first().date),
+            fontSize = 11.sp,
+            color = secondaryColor
+        )
+        Spacer(Modifier.weight(1f))
+        if (!singleEntry) {
+            Text(
+                xLabelFmt.format(entries.last().date),
+                fontSize = 11.sp,
+                color = secondaryColor
+            )
+        }
+    }
+}
+
+/** Format a body-fat tick value for the Y-axis label (e.g. 17.5 → "17.5%"
+ *  when the tick has a fractional part, otherwise "18%" — keeps short ticks
+ *  short and falls back to one decimal when the chart is zoomed in). */
+private fun formatPercentTick(value: Double): String {
+    val rounded = (value * 10).toInt() / 10.0
+    return if (rounded == rounded.toInt().toDouble()) "${rounded.toInt()}%"
+    else String.format(Locale.US, "%.1f%%", rounded)
 }
 
 @Composable
