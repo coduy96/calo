@@ -6,6 +6,7 @@ import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.MealType as HCMealType
 import androidx.health.connect.client.records.NutritionRecord
 import androidx.health.connect.client.records.WeightRecord
@@ -14,6 +15,8 @@ import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.health.connect.client.units.Energy
 import androidx.health.connect.client.units.Mass
+import androidx.health.connect.client.units.Percentage
+import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.WeightEntry
 import java.time.Instant
@@ -45,7 +48,9 @@ class HealthConnectManager(private val context: Context) {
         HealthPermission.getReadPermission(WeightRecord::class),
         HealthPermission.getWritePermission(WeightRecord::class),
         HealthPermission.getReadPermission(NutritionRecord::class),
-        HealthPermission.getWritePermission(NutritionRecord::class)
+        HealthPermission.getWritePermission(NutritionRecord::class),
+        HealthPermission.getReadPermission(BodyFatRecord::class),
+        HealthPermission.getWritePermission(BodyFatRecord::class)
     )
 
     suspend fun hasAllPermissions(): Boolean {
@@ -95,6 +100,51 @@ class HealthConnectManager(private val context: Context) {
             ExternalWeight(
                 time = it.time,
                 weightKg = it.weight.inKilograms,
+                clientRecordId = it.metadata.clientRecordId
+            )
+        }
+    }
+
+    // -- Body fat ---------------------------------------------------------
+
+    suspend fun writeBodyFat(entry: BodyFatEntry): Boolean {
+        val c = client ?: return false
+        val record = BodyFatRecord(
+            time = entry.date,
+            zoneOffset = null,
+            // BodyFatRecord wants 0–100 percent, not a fraction.
+            percentage = Percentage(entry.bodyFatFraction * 100),
+            metadata = Metadata.manualEntry(clientRecordId = tag(entry.id))
+        )
+        return runCatching { c.insertRecords(listOf(record)) }.isSuccess
+    }
+
+    suspend fun deleteBodyFat(entryId: UUID): Boolean {
+        val c = client ?: return false
+        return runCatching {
+            c.deleteRecords(
+                recordType = BodyFatRecord::class,
+                recordIdsList = emptyList(),
+                clientRecordIdsList = listOf(tag(entryId))
+            )
+        }.isSuccess
+    }
+
+    suspend fun readBodyFats(from: Instant, to: Instant): List<ExternalBodyFat> {
+        val c = client ?: return emptyList()
+        val response = runCatching {
+            c.readRecords(
+                ReadRecordsRequest(
+                    recordType = BodyFatRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(from, to)
+                )
+            )
+        }.getOrNull() ?: return emptyList()
+        return response.records.map {
+            ExternalBodyFat(
+                time = it.time,
+                // Convert HC's 0–100 back to our 0–1 fraction convention.
+                bodyFatFraction = it.percentage.value / 100.0,
                 clientRecordId = it.metadata.clientRecordId
             )
         }
@@ -151,13 +201,14 @@ class HealthConnectManager(private val context: Context) {
 
     // -- Change observation (external weight imports) --------------------
 
-    /** Opaque token used to fetch incremental changes. Call once, persist, pass back later. */
+    /** Opaque token used to fetch incremental changes. Call once, persist, pass back later.
+     *  Now watches both Weight and BodyFat records — a single token reflects upserts of either. */
     suspend fun getChangesToken(): String? {
         val c = client ?: return null
         return runCatching {
             c.getChangesToken(
                 androidx.health.connect.client.request.ChangesTokenRequest(
-                    recordTypes = setOf(WeightRecord::class)
+                    recordTypes = setOf(WeightRecord::class, BodyFatRecord::class)
                 )
             )
         }.getOrNull()
@@ -185,6 +236,27 @@ class HealthConnectManager(private val context: Context) {
         return results to changes.nextChangesToken
     }
 
+    /** Sibling of [consumeWeightChanges] for BodyFat records. The combined
+     *  changes-token watches both record types, so callers should drain both
+     *  consumers using the SAME nextChangesToken returned by either call.
+     *  We expose them as separate functions only to keep each result strongly typed. */
+    suspend fun consumeBodyFatChanges(sinceToken: String): Pair<List<ExternalBodyFat>, String?>? {
+        val c = client ?: return null
+        val changes = runCatching { c.getChanges(sinceToken) }.getOrNull() ?: return null
+        val upserts = changes.changes.filterIsInstance<UpsertionChange>()
+        val results = upserts.mapNotNull { change ->
+            val rec = change.record as? BodyFatRecord ?: return@mapNotNull null
+            val cid = rec.metadata.clientRecordId
+            if (cid != null && cid.startsWith(CLIENT_PREFIX)) return@mapNotNull null
+            ExternalBodyFat(
+                time = rec.time,
+                bodyFatFraction = rec.percentage.value / 100.0,
+                clientRecordId = cid
+            )
+        }
+        return results to changes.nextChangesToken
+    }
+
     private fun tag(id: UUID): String = "$CLIENT_PREFIX${id}"
 
     private fun mealTypeFor(meal: com.apoorvdarshan.calorietracker.models.MealType): Int = when (meal) {
@@ -198,8 +270,9 @@ class HealthConnectManager(private val context: Context) {
     companion object {
         private const val CLIENT_PREFIX = "fudai_"
 
-        /** Bump this when we add a new record type so users re-auth. */
-        const val CURRENT_TYPES_VERSION = 1
+        /** Bump this when we add a new record type so users re-auth.
+         *  v2 = added BodyFatRecord read+write permissions. */
+        const val CURRENT_TYPES_VERSION = 2
     }
 }
 
@@ -211,3 +284,10 @@ data class ExternalWeight(
     @Suppress("unused")
     val zoneOffset: ZoneOffset? get() = null
 }
+
+data class ExternalBodyFat(
+    val time: Instant,
+    /** 0–1 fraction, matching UserProfile.bodyFatPercentage convention. */
+    val bodyFatFraction: Double,
+    val clientRecordId: String?
+)
