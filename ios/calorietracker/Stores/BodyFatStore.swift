@@ -11,6 +11,12 @@ import SwiftUI
 @Observable
 class BodyFatStore {
     private(set) var entries: [BodyFatEntry] = []
+    /// Wired in calorietrackerApp.swift → HealthKitManager.writeBodyFat(for:)
+    /// when HealthKit sync is enabled. Mirrors WeightStore.onEntryAdded.
+    var onEntryAdded: ((BodyFatEntry) -> Void)?
+    /// Wired to HealthKitManager.deleteBodyFat(entryID:) so per-entry deletes
+    /// also pull the matching HK sample (matched by fudai_bodyfat_id metadata).
+    var onEntryDeleted: ((UUID) -> Void)?
 
     private let storageKey = "bodyFatEntries"
 
@@ -39,12 +45,15 @@ class BodyFatStore {
     func addEntry(_ entry: BodyFatEntry) {
         entries.append(entry)
         saveEntries()
+        onEntryAdded?(entry)
         syncProfileBodyFatToLatest()
     }
 
     func deleteEntry(_ entry: BodyFatEntry) {
-        entries.removeAll { $0.id == entry.id }
+        let id = entry.id
+        entries.removeAll { $0.id == id }
         saveEntries()
+        onEntryDeleted?(id)
         syncProfileBodyFatToLatest()
     }
 

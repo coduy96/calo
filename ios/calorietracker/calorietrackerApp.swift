@@ -132,7 +132,7 @@ struct calorietrackerApp: App {
             )
         }
 
-        healthKitManager.onBodyMeasurementsChanged = { [weightStore] weightKg, weightDate, weightFudaiID, heightCm, bodyFat, dob, sex in
+        healthKitManager.onBodyMeasurementsChanged = { [weightStore, bodyFatStore] weightKg, weightDate, weightFudaiID, heightCm, bodyFat, bodyFatDate, bodyFatFudaiID, dob, sex in
             guard var profile = UserProfile.load() else { return }
             var changed = false
 
@@ -168,8 +168,31 @@ struct calorietrackerApp: App {
                 profile.heightCm = cm
                 changed = true
             }
-            if let bf = bodyFat {
-                if profile.bodyFatPercentage == nil || abs((profile.bodyFatPercentage ?? 0) - bf) > 0.001 {
+            if let bf = bodyFat, let date = bodyFatDate {
+                // Same dedup discipline as weight: skip our own writes
+                // (fudai_bodyfat_id present), and dedup external samples by
+                // same-day + same-fraction so re-firing the observer can't
+                // duplicate a smart-scale reading we already imported once.
+                let shouldAdd: Bool
+                if bodyFatFudaiID != nil {
+                    shouldAdd = false
+                } else {
+                    let calendar = Calendar.current
+                    let alreadyLogged = bodyFatStore.entries.contains {
+                        calendar.isDate($0.date, inSameDayAs: date) && abs($0.bodyFatFraction - bf) < 0.001
+                    }
+                    shouldAdd = !alreadyLogged
+                }
+                if shouldAdd {
+                    bodyFatStore.addEntry(BodyFatEntry(date: date, bodyFatFraction: bf))
+                    // BodyFatStore.addEntry already syncs profile.bodyFatPercentage
+                    // for any new entry, so no extra profile.save() needed here.
+                } else if bodyFatFudaiID == nil,
+                          profile.bodyFatPercentage == nil || abs((profile.bodyFatPercentage ?? 0) - bf) > 0.001 {
+                    // External sample we already had (dedup hit) — but the
+                    // profile cache somehow drifted. Realign without creating
+                    // a duplicate entry. Skip when it's our own sample (HK
+                    // may briefly return a stale write of ours during indexing).
                     profile.bodyFatPercentage = bf
                     changed = true
                 }
@@ -199,6 +222,14 @@ struct calorietrackerApp: App {
 
         weightStore.onEntryDeleted = { [healthKitManager] entryID in
             healthKitManager.deleteWeight(entryID: entryID)
+        }
+
+        bodyFatStore.onEntryAdded = { [healthKitManager] entry in
+            healthKitManager.writeBodyFat(for: entry)
+        }
+
+        bodyFatStore.onEntryDeleted = { [healthKitManager] entryID in
+            healthKitManager.deleteBodyFat(entryID: entryID)
         }
 
         foodStore.onEntryAdded = { [healthKitManager] entry in

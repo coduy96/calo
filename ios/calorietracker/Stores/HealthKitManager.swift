@@ -5,7 +5,11 @@ import HealthKit
 class HealthKitManager {
     var authorizationStatus: HKAuthorizationStatus = .notDetermined
 
-    var onBodyMeasurementsChanged: ((Double?, Date?, UUID?, Double?, Double?, Date?, HKBiologicalSex?) -> Void)?
+    /// Args, in order: weight (kg), weightDate, weightFudaiID, heightCm,
+    /// bodyFat (fraction 0–1), bodyFatDate, bodyFatFudaiID, dob, sex.
+    /// FudaiID is non-nil when the latest sample of that type was written by us
+    /// (matched by metadata key) — observer caller uses it to skip echo-imports.
+    var onBodyMeasurementsChanged: ((Double?, Date?, UUID?, Double?, Double?, Date?, UUID?, Date?, HKBiologicalSex?) -> Void)?
 
     private let healthStore = HKHealthStore()
     private var observerQueries: [HKObserverQuery] = []
@@ -155,8 +159,32 @@ class HealthKitManager {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
         let type = HKQuantityType(.bodyFatPercentage)
         let quantity = HKQuantity(unit: .percent(), doubleValue: fraction)
-        let sample = HKQuantitySample(type: type, quantity: quantity, start: .now, end: .now)
+        // Tag with a synthetic fudai_bodyfat_id so the change-token observer
+        // can recognize "this is our own write" and not re-import it as if it
+        // were a fresh external sample. Same convention as writeWeight(kg:date:).
+        let metadata: [String: Any] = ["fudai_bodyfat_id": UUID().uuidString]
+        let sample = HKQuantitySample(type: type, quantity: quantity, start: .now, end: .now, metadata: metadata)
         healthStore.save(sample) { _, _ in }
+    }
+
+    /// Per-entry overload — used when a BodyFatStore entry is added so the HK
+    /// sample can later be deleted by metadata predicate (no fragile date+value
+    /// match needed). Mirrors writeWeight(for entry: WeightEntry).
+    func writeBodyFat(for entry: BodyFatEntry) {
+        guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
+        let type = HKQuantityType(.bodyFatPercentage)
+        let quantity = HKQuantity(unit: .percent(), doubleValue: entry.bodyFatFraction)
+        let metadata: [String: Any] = ["fudai_bodyfat_id": entry.id.uuidString]
+        let sample = HKQuantitySample(type: type, quantity: quantity, start: entry.date, end: entry.date, metadata: metadata)
+        healthStore.save(sample) { _, _ in }
+    }
+
+    /// Delete the HK body-fat sample we tagged with this entry's UUID. Bypasses
+    /// healthKitEnabled so an in-app delete still cleans up samples exported
+    /// while sync was enabled — same policy as deleteWeight / deleteNutrition.
+    func deleteBodyFat(entryID: UUID) {
+        let predicate = HKQuery.predicateForObjects(withMetadataKey: "fudai_bodyfat_id", operatorType: .equalTo, value: entryID.uuidString)
+        healthStore.deleteObjects(of: HKQuantityType(.bodyFatPercentage), predicate: predicate) { _, _, _ in }
     }
 
     // MARK: - Write Nutrition
@@ -277,10 +305,10 @@ class HealthKitManager {
 
     // MARK: - Read Body Measurements
 
-    func fetchLatestBodyMeasurements() async -> (weight: Double?, weightDate: Date?, weightFudaiID: UUID?, height: Double?, bodyFat: Double?, dob: Date?, sex: HKBiologicalSex?) {
-        async let weightSample = fetchLatestSample(.bodyMass, unit: .gramUnit(with: .kilo))
-        async let height = fetchLatestSample(.height, unit: .meterUnit(with: .centi))
-        async let bodyFat = fetchLatestSample(.bodyFatPercentage, unit: .percent())
+    func fetchLatestBodyMeasurements() async -> (weight: Double?, weightDate: Date?, weightFudaiID: UUID?, height: Double?, bodyFat: Double?, bodyFatDate: Date?, bodyFatFudaiID: UUID?, dob: Date?, sex: HKBiologicalSex?) {
+        async let weightSample = fetchLatestSample(.bodyMass, unit: .gramUnit(with: .kilo), fudaiMetadataKey: "fudai_weight_id")
+        async let height = fetchLatestSample(.height, unit: .meterUnit(with: .centi), fudaiMetadataKey: nil)
+        async let bodyFat = fetchLatestSample(.bodyFatPercentage, unit: .percent(), fudaiMetadataKey: "fudai_bodyfat_id")
 
         var dob: Date?
         var sex: HKBiologicalSex?
@@ -295,10 +323,14 @@ class HealthKitManager {
         let w = await weightSample
         let h = await height
         let b = await bodyFat
-        return (w?.value, w?.date, w?.fudaiID, h?.value, b?.value, dob, sex)
+        return (w?.value, w?.date, w?.fudaiID, h?.value, b?.value, b?.date, b?.fudaiID, dob, sex)
     }
 
-    private func fetchLatestSample(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit) async -> (value: Double, date: Date, fudaiID: UUID?)? {
+    /// `fudaiMetadataKey` lets each caller specify which metadata key holds the
+    /// in-app-write marker for that quantity type — bodyMass uses `fudai_weight_id`,
+    /// bodyFatPercentage uses `fudai_bodyfat_id`, height has no marker. Pass nil
+    /// when there's no marker to look for; the returned `fudaiID` will be nil.
+    private func fetchLatestSample(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, fudaiMetadataKey: String?) async -> (value: Double, date: Date, fudaiID: UUID?)? {
         let type = HKQuantityType(identifier)
         let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
         let predicate = HKQuery.predicateForSamples(withStart: nil, end: nil, options: .strictEndDate)
@@ -306,7 +338,7 @@ class HealthKitManager {
         return await withCheckedContinuation { continuation in
             let query = HKSampleQuery(sampleType: type, predicate: predicate, limit: 1, sortDescriptors: [sortDescriptor]) { _, results, _ in
                 if let sample = results?.first as? HKQuantitySample {
-                    let idString = sample.metadata?["fudai_weight_id"] as? String
+                    let idString = fudaiMetadataKey.flatMap { sample.metadata?[$0] as? String }
                     let fudaiID = idString.flatMap(UUID.init(uuidString:))
                     continuation.resume(returning: (sample.quantity.doubleValue(for: unit), sample.startDate, fudaiID))
                 } else {
@@ -339,7 +371,7 @@ class HealthKitManager {
                 Task { @MainActor in
                     let m = await self.fetchLatestBodyMeasurements()
                     self.onBodyMeasurementsChanged?(
-                        m.weight, m.weightDate, m.weightFudaiID, m.height, m.bodyFat, m.dob, m.sex
+                        m.weight, m.weightDate, m.weightFudaiID, m.height, m.bodyFat, m.bodyFatDate, m.bodyFatFudaiID, m.dob, m.sex
                     )
                     completionHandler()
                 }
