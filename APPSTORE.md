@@ -109,9 +109,6 @@ No account, no sign-in, no cloud sync, no analytics, no ads, no tracking. Local-
 APPLE HEALTH
 Two-way sync for nutrition, weight, height, body fat. External samples (Apple Watch, scales, Health app) auto-import. One-shot backfill of years of past weight + body fat data on first enable.
 
-ALSO ON ANDROID
-Full feature parity on Google Play — Health Connect, widgets, all providers, all engines, all languages.
-
 Built solo because tracking calories shouldn't feel like a chore. Reach out at apoorv@fud-ai.app or on GitHub.
 
 Fud AI is not medical advice — consult a healthcare professional before significant diet changes.
