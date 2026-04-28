@@ -45,10 +45,12 @@ NEW
 Polish
 • Onboarding loader is now a single brand-pink gradient (was pink → blue).
 • Restacked Onboarding Height & Weight imperial layout so the lbs wheel stops collapsing on narrow columns.
+• OpenRouter now defaults to a free vision model so you can test the integration without loading credits.
 
 Bug fixes
 • Favorites no longer lose their image when the source food log entry is deleted.
 • Gender no longer flips to "Other" for users without a HealthKit biological sex value.
+• Photo + text analysis is more reliable — better tolerance for AI responses with prose or markdown around the JSON, fewer "Could not understand the AI response" errors.
 ```
 
 ## Description
