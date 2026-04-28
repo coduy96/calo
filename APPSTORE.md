@@ -41,6 +41,8 @@ NEW
 • Log Weight + Log Body Fat reminders — two new smart daily nudges (Settings → Notifications). Skip firing on days you've already logged. Body fat default off (most people don't measure daily).
 • Search saved meals — search bar in the Saved Meals sheet filters Recents / Frequent / Favorites separately.
 • Decimal weight pickers — pick 72.4 kg or 158.3 lbs without typing in onboarding's Height & Weight + Goal Weight steps.
+• Custom AI Instructions — optional text box in Settings → AI Provider. Anything you put there (region, dietary preferences, athletic goals, brand preferences) is sent with every AI request, so you don't have to repeat context for every meal.
+• Fallback AI Provider — opt-in toggle in Settings → AI Provider. If your primary provider fails (overload, rate limit, network error), the app auto-retries with a second provider you configure. Pair a paid model as primary with a free model as fallback for cheap reliability.
 
 Polish
 • Onboarding loader is now a single brand-pink gradient (was pink → blue).
