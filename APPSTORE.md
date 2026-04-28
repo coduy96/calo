@@ -43,6 +43,8 @@ NEW
 • Decimal weight pickers — pick 72.4 kg or 158.3 lbs without typing in onboarding's Height & Weight + Goal Weight steps.
 • Custom AI Instructions — optional text box in Settings → AI Provider. Anything you put there (region, dietary preferences, athletic goals, brand preferences) is sent with every AI request, so you don't have to repeat context for every meal.
 • Fallback AI Provider — opt-in toggle in Settings → AI Provider. If your primary provider fails (overload, rate limit, network error), the app auto-retries with a second provider you configure. Pair a paid model as primary with a free model as fallback for cheap reliability.
+• Calculation Methods — every formula behind your calorie target, BMR, TDEE, and macro split is now documented in-app with peer-reviewed citations (Mifflin-St Jeor, Katch-McArdle, FAO/WHO/UNU activity multipliers, Hall 2011 energy balance, Morton 2018 protein meta-analysis). Reachable from the Plan onboarding step or Settings → Goals & Nutrition.
+• AI Analysis Notice — clear in-app prompt before any food photo, voice transcript, or text description is sent to your selected AI provider. Names the provider, lists what's sent, and gives an explicit Allow / Not Now choice.
 
 Polish
 • Onboarding loader is now a single brand-pink gradient (was pink → blue).
