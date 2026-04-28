@@ -42,6 +42,7 @@ struct OnboardingView: View {
     @State private var editedFat: Int?
     @State private var editedCarbs: Int?
     @State private var editingField: EditableField?
+    @State private var showCalculationSources = false
 
     private enum EditableField: String, Identifiable {
         case calories, protein, fat, carbs
@@ -744,7 +745,7 @@ struct OnboardingView: View {
                         withAnimation(.snappy) { step += 1 }
                     }
                 } label: {
-                    Text("Connect")
+                    Text("Continue")
                         .font(.system(.body, design: .rounded, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -752,14 +753,6 @@ struct OnboardingView: View {
                         .background(AppColors.calorie, in: RoundedRectangle(cornerRadius: 16))
                 }
                 .padding(.horizontal, 24)
-
-                Button {
-                    withAnimation(.snappy) { step += 1 }
-                } label: {
-                    Text("Skip")
-                        .font(.system(.body, design: .rounded, weight: .medium))
-                        .foregroundStyle(.secondary)
-                }
                 .padding(.bottom, 20)
             }
         }
@@ -1089,6 +1082,22 @@ struct OnboardingView: View {
                         .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
                         .padding(.horizontal, 24)
                     }
+                    // Citations link (Apple Guideline 1.4.1 — medical info needs sources)
+                    Button {
+                        showCalculationSources = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "book.fill")
+                                .font(.system(size: 11))
+                            Text("How is this calculated?")
+                                .font(.system(.footnote, design: .rounded, weight: .medium))
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 10, weight: .semibold))
+                        }
+                        .foregroundStyle(AppColors.calorie)
+                    }
+                    .padding(.top, 8)
+                    .padding(.horizontal, 24)
                 }
                 .padding(.top, 16)
                 .padding(.bottom, 100)
@@ -1105,6 +1114,9 @@ struct OnboardingView: View {
             }
         }
         .onAppear { initPlanValues() }
+        .sheet(isPresented: $showCalculationSources) {
+            CalculationMethodsView()
+        }
     }
 
     private func editableMacroCard(label: String, value: Int, unit: String, gradientColors: [Color], field: EditableField) -> some View {

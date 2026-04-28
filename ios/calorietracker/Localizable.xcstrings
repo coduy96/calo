@@ -21530,6 +21530,2142 @@
           }
         }
       }
+    },
+    "How is this calculated?": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كيف يتم حساب هذا؟"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu necə hesablanır?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie wird das berechnet?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cómo se calcula esto?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment est-ce calculé ?"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह कैसे गणना की जाती है?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Come viene calcolato?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "どのように計算されますか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어떻게 계산되나요?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoe wordt dit berekend?"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Como isso é calculado?"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cum se calculează asta?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Как это рассчитывается?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这是如何计算的？"
+          }
+        }
+      }
+    },
+    "Calculation Methods": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طرق الحساب"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hesablama Üsulları"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berechnungsmethoden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Métodos de cálculo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Méthodes de calcul"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "गणना विधियाँ"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metodi di calcolo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "計算方法"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계산 방법"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berekeningsmethoden"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Métodos de cálculo"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metode de calcul"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Методы расчёта"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计算方法"
+          }
+        }
+      }
+    },
+    "AI Analysis Notice": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إشعار تحليل الذكاء الاصطناعي"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI Analiz Bildirişi"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinweis zur KI-Analyse"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aviso de análisis con IA"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avis d'analyse par IA"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI विश्लेषण सूचना"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avviso di analisi AI"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI解析に関するお知らせ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 분석 알림"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melding over AI-analyse"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aviso de análise com IA"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notificare privind analiza AI"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Уведомление об анализе ИИ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 分析提示"
+          }
+        }
+      }
+    },
+    "Before Fud AI sends data to a third-party AI provider, we need your permission.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قبل أن يرسل Fud AI البيانات إلى مزوّد ذكاء اصطناعي خارجي، نحتاج إلى إذنك."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI üçüncü tərəf AI provayderinə məlumat göndərməzdən əvvəl icazəniz lazımdır."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bevor Fud AI Daten an einen externen KI-Anbieter sendet, benötigen wir deine Zustimmung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes de que Fud AI envíe datos a un proveedor de IA externo, necesitamos tu permiso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avant que Fud AI n'envoie des données à un fournisseur d'IA tiers, nous avons besoin de votre autorisation."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI द्वारा किसी तृतीय-पक्ष AI प्रदाता को डेटा भेजने से पहले, हमें आपकी अनुमति चाहिए।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima che Fud AI invii dati a un fornitore di IA di terze parti, abbiamo bisogno del tuo permesso."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AIがサードパーティのAIプロバイダーにデータを送信する前に、許可が必要です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI가 타사 AI 제공업체로 데이터를 보내기 전에 사용자의 동의가 필요합니다."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voordat Fud AI gegevens naar een externe AI-provider stuurt, hebben we je toestemming nodig."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes de o Fud AI enviar dados para um provedor de IA de terceiros, precisamos da sua permissão."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Înainte ca Fud AI să trimită date către un furnizor de IA terț, avem nevoie de permisiunea ta."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прежде чем Fud AI отправит данные стороннему провайдеру ИИ, нам нужно ваше разрешение."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Fud AI 向第三方 AI 提供商发送数据之前,我们需要获得你的许可。"
+          }
+        }
+      }
+    },
+    "What is sent": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ما الذي يتم إرساله"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nə göndərilir"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was gesendet wird"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qué se envía"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce qui est envoyé"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "क्या भेजा जाता है"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cosa viene inviato"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "送信される内容"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전송되는 내용"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wat wordt verstuurd"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O que é enviado"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce se trimite"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Что отправляется"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发送的内容"
+          }
+        }
+      }
+    },
+    "When you log a meal, the photo, voice transcript, or text description is sent to your selected AI provider. Profile data (age, weight, goals) is sent only for Coach chat.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عند تسجيل وجبة، يتم إرسال الصورة أو نص التفريغ الصوتي أو الوصف النصي إلى مزوّد الذكاء الاصطناعي الذي اخترته. تُرسَل بيانات الملف الشخصي (العمر، الوزن، الأهداف) فقط في محادثة المدرب."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yemək qeyd etdiyiniz zaman, foto, səs transkripti və ya mətn təsviri seçdiyiniz AI provayderinə göndərilir. Profil məlumatları (yaş, çəki, məqsədlər) yalnız Məşqçi söhbəti üçün göndərilir."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn du eine Mahlzeit protokollierst, werden das Foto, das Sprachtranskript oder die Textbeschreibung an deinen ausgewählten KI-Anbieter gesendet. Profildaten (Alter, Gewicht, Ziele) werden nur für den Coach-Chat gesendet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando registras una comida, la foto, la transcripción de voz o la descripción de texto se envía al proveedor de IA seleccionado. Los datos del perfil (edad, peso, objetivos) se envían solo para el chat del Coach."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorsque vous enregistrez un repas, la photo, la transcription vocale ou la description textuelle est envoyée au fournisseur d'IA sélectionné. Les données du profil (âge, poids, objectifs) ne sont envoyées que pour le chat Coach."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "जब आप कोई भोजन लॉग करते हैं, तो फ़ोटो, वॉइस ट्रांसक्रिप्ट या टेक्स्ट विवरण आपके चुने हुए AI प्रदाता को भेजा जाता है। प्रोफ़ाइल डेटा (आयु, वजन, लक्ष्य) केवल Coach चैट के लिए भेजा जाता है।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando registri un pasto, la foto, la trascrizione vocale o la descrizione testuale viene inviata al fornitore di IA selezionato. I dati del profilo (età, peso, obiettivi) vengono inviati solo per la chat del Coach."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "食事を記録すると、写真、音声の文字起こし、またはテキストの説明が選択したAIプロバイダーに送信されます。プロフィールデータ(年齢、体重、目標)はコーチチャットでのみ送信されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "식사를 기록하면 사진, 음성 기록 또는 텍스트 설명이 선택한 AI 제공업체로 전송됩니다. 프로필 데이터(나이, 체중, 목표)는 코치 채팅에만 전송됩니다."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wanneer je een maaltijd registreert, worden de foto, de spraaktranscriptie of de tekstbeschrijving naar je geselecteerde AI-provider gestuurd. Profielgegevens (leeftijd, gewicht, doelen) worden alleen voor de Coach-chat verzonden."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando você registra uma refeição, a foto, a transcrição de voz ou a descrição em texto é enviada para o provedor de IA selecionado. Dados do perfil (idade, peso, metas) são enviados apenas para o chat do Coach."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Când înregistrezi o masă, fotografia, transcrierea vocală sau descrierea text este trimisă furnizorului AI selectat. Datele profilului (vârstă, greutate, obiective) sunt trimise doar pentru chatul Coach."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Когда вы записываете приём пищи, фото, расшифровка голоса или текстовое описание отправляются выбранному провайдеру ИИ. Данные профиля (возраст, вес, цели) отправляются только для чата с Тренером."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当你记录一餐时,照片、语音转写或文字描述会发送给你所选的 AI 提供商。个人资料数据(年龄、体重、目标)仅在 Coach 聊天中发送。"
+          }
+        }
+      }
+    },
+    "Who receives it": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من يستلمها"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onu kim alır"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wer es empfängt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quién la recibe"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qui les reçoit"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "इसे कौन प्राप्त करता है"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chi li riceve"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "誰が受け取るか"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "누가 받는지"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie het ontvangt"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quem recebe"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cine le primește"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кто их получает"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "谁会收到"
+          }
+        }
+      }
+    },
+    "Your currently selected provider: %@. You can change this anytime in Settings → AI Provider. Each provider has its own privacy policy and may log requests.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المزوّد المحدد حاليًا: %@. يمكنك تغيير هذا في أي وقت من الإعدادات ← مزوّد الذكاء الاصطناعي. لكل مزوّد سياسة خصوصية خاصة به وقد يسجّل الطلبات."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hazırda seçilmiş provayder: %@. Bunu istənilən vaxt Ayarlar → AI Provayderi bölməsindən dəyişə bilərsiniz. Hər provayderin öz məxfilik siyasəti var və sorğuları qeyd edə bilər."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktuell ausgewählter Anbieter: %@. Du kannst dies jederzeit unter Einstellungen → KI-Anbieter ändern. Jeder Anbieter hat seine eigene Datenschutzrichtlinie und kann Anfragen protokollieren."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proveedor seleccionado actualmente: %@. Puedes cambiarlo en cualquier momento en Ajustes → Proveedor de IA. Cada proveedor tiene su propia política de privacidad y puede registrar las solicitudes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fournisseur actuellement sélectionné : %@. Vous pouvez le modifier à tout moment dans Réglages → Fournisseur d'IA. Chaque fournisseur a sa propre politique de confidentialité et peut journaliser les requêtes."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आपका वर्तमान में चयनित प्रदाता: %@। आप इसे कभी भी सेटिंग्स → AI प्रदाता में बदल सकते हैं। प्रत्येक प्रदाता की अपनी गोपनीयता नीति है और वह अनुरोधों को लॉग कर सकता है।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fornitore attualmente selezionato: %@. Puoi modificarlo in qualsiasi momento in Impostazioni → Fornitore IA. Ogni fornitore ha la propria informativa sulla privacy e può registrare le richieste."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在選択されているプロバイダー: %@。設定 → AIプロバイダー からいつでも変更できます。各プロバイダーには独自のプライバシーポリシーがあり、リクエストを記録する場合があります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "현재 선택된 제공업체: %@. 설정 → AI 제공업체에서 언제든지 변경할 수 있습니다. 각 제공업체에는 자체 개인정보 처리방침이 있으며 요청을 기록할 수 있습니다."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Huidige geselecteerde provider: %@. Je kunt dit op elk moment wijzigen in Instellingen → AI-provider. Elke provider heeft zijn eigen privacybeleid en kan verzoeken loggen."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provedor selecionado atualmente: %@. Você pode alterar isso a qualquer momento em Configurações → Provedor de IA. Cada provedor tem sua própria política de privacidade e pode registrar solicitações."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Furnizorul selectat în prezent: %@. Îl poți schimba oricând din Setări → Furnizor AI. Fiecare furnizor are propria politică de confidențialitate și poate înregistra solicitările."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Текущий выбранный провайдер: %@. Вы можете изменить его в любое время в Настройки → Провайдер ИИ. У каждого провайдера своя политика конфиденциальности, и он может вести журнал запросов."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你当前选择的提供商:%@。你可以随时在 设置 → AI 提供商 中更改。每个提供商都有自己的隐私政策,并可能记录请求。"
+          }
+        }
+      }
+    },
+    "What stays local": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ما يبقى محليًا"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokal qalan nə"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was lokal bleibt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qué se queda en el dispositivo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce qui reste en local"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "क्या स्थानीय रहता है"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cosa resta in locale"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ローカルに残るもの"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기기에 남는 항목"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wat lokaal blijft"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O que fica no dispositivo"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce rămâne local"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Что остаётся локально"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留在本地的内容"
+          }
+        }
+      }
+    },
+    "Your API key, weight history, body fat history, and food log all stay on this device. Fud AI's developer never receives any of your data — requests go directly from your device to the provider.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفتاح API الخاص بك، وسجل الوزن، وسجل نسبة الدهون في الجسم، وسجل الطعام — كلها تبقى على هذا الجهاز. لا يتلقّى مطوّر Fud AI أيًا من بياناتك أبدًا — تذهب الطلبات مباشرةً من جهازك إلى المزوّد."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API açarınız, çəki tarixçəsi, bədən yağı tarixçəsi və yemək jurnalı — hamısı bu cihazda qalır. Fud AI tərtibatçısı sizin məlumatlarınızdan heç birini almır — sorğular cihazınızdan birbaşa provayderə gedir."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein API-Schlüssel, dein Gewichtsverlauf, dein Körperfettverlauf und dein Ernährungstagebuch bleiben alle auf diesem Gerät. Der Entwickler von Fud AI erhält keine deiner Daten — Anfragen gehen direkt von deinem Gerät an den Anbieter."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu clave de API, tu historial de peso, tu historial de grasa corporal y tu registro de comidas permanecen en este dispositivo. El desarrollador de Fud AI nunca recibe ninguno de tus datos: las solicitudes van directamente desde tu dispositivo al proveedor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre clé API, votre historique de poids, votre historique de masse grasse et votre journal alimentaire restent tous sur cet appareil. Le développeur de Fud AI ne reçoit jamais aucune de vos données — les requêtes vont directement de votre appareil au fournisseur."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आपकी API कुंजी, वजन का इतिहास, बॉडी फैट का इतिहास और फूड लॉग — सब कुछ इसी डिवाइस पर रहता है। Fud AI के डेवलपर को आपका कोई भी डेटा कभी नहीं मिलता — अनुरोध सीधे आपके डिवाइस से प्रदाता को जाते हैं।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La tua chiave API, lo storico del peso, lo storico della massa grassa e il diario alimentare restano tutti su questo dispositivo. Lo sviluppatore di Fud AI non riceve mai nessuno dei tuoi dati — le richieste vanno direttamente dal tuo dispositivo al fornitore."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "APIキー、体重履歴、体脂肪履歴、食事記録はすべてこの端末に残ります。Fud AIの開発者があなたのデータを受け取ることは一切ありません。リクエストは端末から直接プロバイダーへ送信されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API 키, 체중 기록, 체지방 기록, 식사 일지는 모두 이 기기에 보관됩니다. Fud AI 개발자는 어떠한 데이터도 받지 않습니다 — 요청은 기기에서 제공업체로 직접 전송됩니다."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je API-sleutel, gewichtsgeschiedenis, vetpercentage-geschiedenis en voedingslogboek blijven allemaal op dit apparaat. De ontwikkelaar van Fud AI ontvangt nooit een van je gegevens — verzoeken gaan rechtstreeks van je apparaat naar de provider."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sua chave de API, histórico de peso, histórico de gordura corporal e diário alimentar ficam todos neste dispositivo. O desenvolvedor do Fud AI nunca recebe nenhum dos seus dados — as solicitações vão direto do seu dispositivo para o provedor."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cheia ta API, istoricul greutății, istoricul grăsimii corporale și jurnalul alimentar rămân toate pe acest dispozitiv. Dezvoltatorul Fud AI nu primește niciodată vreuna dintre datele tale — solicitările merg direct de pe dispozitivul tău la furnizor."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш API-ключ, история веса, история процента жира и журнал питания остаются на этом устройстве. Разработчик Fud AI никогда не получает ваших данных — запросы идут напрямую с вашего устройства к провайдеру."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你的 API 密钥、体重记录、体脂记录和饮食日志都保留在本设备上。Fud AI 开发者永远不会收到你的任何数据 — 请求直接从你的设备发送到提供商。"
+          }
+        }
+      }
+    },
+    "Tap Allow to enable AI food analysis. Manual entry is always available without sending data anywhere. You can revoke consent later by deleting the app or via Settings → Delete All Data.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط على \"اسمح\" لتفعيل تحليل الطعام بالذكاء الاصطناعي. الإدخال اليدوي متاح دائمًا دون إرسال أي بيانات. يمكنك سحب الموافقة لاحقًا عن طريق حذف التطبيق أو من الإعدادات ← حذف جميع البيانات."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI yemək analizini aktivləşdirmək üçün \"İcazə Ver\" düyməsinə toxunun. Əl ilə daxil etmə həmişə əlçatandır və heç bir məlumat göndərmir. Sonradan tətbiqi silməklə və ya Ayarlar → Bütün Məlumatları Sil bölməsindən razılığı geri ala bilərsiniz."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tippe auf „Erlauben“, um die KI-Lebensmittelanalyse zu aktivieren. Manuelle Eingabe ist immer verfügbar, ohne Daten zu senden. Du kannst die Zustimmung später widerrufen, indem du die App löschst oder über Einstellungen → Alle Daten löschen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca «Permitir» para habilitar el análisis de alimentos con IA. La entrada manual siempre está disponible sin enviar datos a ningún sitio. Puedes revocar el consentimiento más tarde eliminando la app o desde Ajustes → Eliminar todos los datos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appuyez sur « Autoriser » pour activer l'analyse alimentaire par IA. La saisie manuelle est toujours disponible sans envoyer de données. Vous pouvez révoquer le consentement plus tard en supprimant l'app ou via Réglages → Supprimer toutes les données."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI फूड विश्लेषण सक्षम करने के लिए \"अनुमति दें\" पर टैप करें। मैनुअल एंट्री हमेशा उपलब्ध है और कहीं भी डेटा नहीं भेजती। आप ऐप को हटाकर या सेटिंग्स → सभी डेटा हटाएँ के माध्यम से बाद में सहमति वापस ले सकते हैं।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca \"Consenti\" per abilitare l'analisi degli alimenti con IA. L'inserimento manuale è sempre disponibile senza inviare dati. Puoi revocare il consenso in seguito eliminando l'app o tramite Impostazioni → Elimina tutti i dati."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「許可」をタップしてAI食事解析を有効にしてください。手動入力はデータを送信せずにいつでも利用できます。後で同意を取り消すには、アプリを削除するか、設定 → すべてのデータを削除 を使用してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 음식 분석을 활성화하려면 \"허용\"을 탭하세요. 수동 입력은 데이터를 어디에도 보내지 않고 언제든지 사용할 수 있습니다. 나중에 앱을 삭제하거나 설정 → 모든 데이터 삭제를 통해 동의를 철회할 수 있습니다."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tik op \"Toestaan\" om AI-voedselanalyse in te schakelen. Handmatige invoer is altijd beschikbaar zonder gegevens te versturen. Je kunt je toestemming later intrekken door de app te verwijderen of via Instellingen → Alle gegevens verwijderen."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toque em \"Permitir\" para habilitar a análise de alimentos com IA. A entrada manual está sempre disponível sem enviar dados. Você pode revogar o consentimento depois excluindo o app ou em Configurações → Excluir todos os dados."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atinge „Permite” pentru a activa analiza alimentară cu AI. Introducerea manuală este mereu disponibilă fără a trimite date. Poți revoca consimțământul mai târziu ștergând aplicația sau din Setări → Șterge toate datele."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нажмите «Разрешить», чтобы включить ИИ-анализ еды. Ручной ввод всегда доступен без отправки данных. Вы можете отозвать согласие позже, удалив приложение или через Настройки → Удалить все данные."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击 \"允许\" 以启用 AI 食物分析。你随时可以使用手动输入,无需发送任何数据。你可以稍后通过删除应用或在 设置 → 删除所有数据 中撤销同意。"
+          }
+        }
+      }
+    },
+    "View privacy policy": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض سياسة الخصوصية"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Məxfilik siyasətinə bax"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datenschutzrichtlinie anzeigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver política de privacidad"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir la politique de confidentialité"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "गोपनीयता नीति देखें"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visualizza l'informativa sulla privacy"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プライバシーポリシーを表示"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인정보 처리방침 보기"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacybeleid bekijken"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver política de privacidade"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vezi politica de confidențialitate"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Посмотреть политику конфиденциальности"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看隐私政策"
+          }
+        }
+      }
+    },
+    "Not Now": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ليس الآن"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndi yox"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht jetzt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ahora no"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas maintenant"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अभी नहीं"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non ora"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今はしない"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "나중에"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niet nu"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agora não"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu acum"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не сейчас"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂不"
+          }
+        }
+      }
+    },
+    "How Fud AI calculates your numbers": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كيف يحسب Fud AI أرقامك"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI rəqəmlərinizi necə hesablayır"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie Fud AI deine Werte berechnet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cómo Fud AI calcula tus cifras"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment Fud AI calcule vos chiffres"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI आपके आँकड़े कैसे गणना करता है"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Come Fud AI calcola i tuoi numeri"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AIがあなたの数値を計算する方法"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI가 수치를 계산하는 방법"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoe Fud AI je cijfers berekent"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Como o Fud AI calcula seus números"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cum calculează Fud AI cifrele tale"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Как Fud AI рассчитывает ваши показатели"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI 如何计算你的数据"
+          }
+        }
+      }
+    },
+    "Every metabolism, calorie target, and macro split shown in the app comes from peer-reviewed equations. Your AI provider only estimates the per-meal nutrition; the daily targets are pure math from your profile.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل قيمة لاستقلاب وهدف للسعرات وتقسيم للمغذيات الكبرى تُعرض في التطبيق مستمدة من معادلات مُحكَّمة علميًا. مزوّد الذكاء الاصطناعي يقدّر فقط القيم الغذائية لكل وجبة؛ أما الأهداف اليومية فهي حسابات رياضية بحتة من ملفك الشخصي."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tətbiqdə göstərilən hər metabolizm, kalori hədəfi və makro bölgüsü elmi cəhətdən təsdiqlənmiş tənliklərdən gəlir. AI provayderiniz yalnız hər yeməyin qidalanmasını qiymətləndirir; gündəlik hədəflər isə profilinizdən təmiz riyaziyyatdır."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeder Stoffwechselwert, jedes Kalorienziel und jede Makro-Aufteilung in der App stammt aus wissenschaftlich überprüften Gleichungen. Dein KI-Anbieter schätzt nur die Nährwerte pro Mahlzeit; die Tageszielwerte sind reine Mathematik aus deinem Profil."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada metabolismo, objetivo de calorías y reparto de macros que se muestra en la app proviene de ecuaciones revisadas por pares. Tu proveedor de IA solo estima la nutrición por comida; los objetivos diarios son matemática pura a partir de tu perfil."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque métabolisme, objectif calorique et répartition de macros affiché dans l'app provient d'équations validées par des pairs. Votre fournisseur d'IA n'estime que la nutrition par repas ; les objectifs quotidiens sont purement mathématiques, à partir de votre profil."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ऐप में दिखाए गए हर मेटाबॉलिज्म, कैलोरी लक्ष्य और मैक्रो विभाजन की गणना सहकर्मी-समीक्षित समीकरणों से होती है। आपका AI प्रदाता केवल प्रति-भोजन पोषण का अनुमान लगाता है; दैनिक लक्ष्य आपकी प्रोफ़ाइल से शुद्ध गणित हैं।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ogni metabolismo, obiettivo calorico e ripartizione dei macro mostrato nell'app proviene da equazioni con revisione paritaria. Il tuo fornitore di IA stima solo i valori nutrizionali per pasto; gli obiettivi giornalieri sono pura matematica a partire dal tuo profilo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アプリに表示されるすべての代謝、カロリー目標、マクロ配分は査読付きの方程式から導かれます。AIプロバイダーが推定するのは1食ごとの栄養素のみで、1日の目標はあなたのプロフィールから計算される純粋な数学です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱에 표시되는 모든 대사량, 칼로리 목표, 매크로 비율은 동료 심사를 거친 방정식에서 산출됩니다. AI 제공업체는 식사별 영양만 추정하며, 하루 목표는 사용자 프로필을 기반으로 한 순수 계산입니다."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke stofwisseling, calorieëndoel en macroverdeling die in de app wordt getoond, komt uit door collega's beoordeelde vergelijkingen. Je AI-provider schat alleen de voedingswaarde per maaltijd; de dagelijkse doelen zijn pure wiskunde op basis van je profiel."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada metabolismo, meta calórica e divisão de macros mostrada no app vem de equações revisadas por pares. Seu provedor de IA só estima a nutrição por refeição; as metas diárias são pura matemática a partir do seu perfil."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiecare metabolism, țintă calorică și împărțire a macronutrienților afișată în aplicație provine din ecuații evaluate de specialiști. Furnizorul tău AI estimează doar nutriția per masă; obiectivele zilnice sunt matematică pură pornind de la profilul tău."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Каждый показатель метаболизма, целевая калорийность и распределение макронутриентов в приложении вычисляется по рецензируемым уравнениям. Ваш провайдер ИИ оценивает только питание по приёму пищи; дневные цели — это чистая математика на основе вашего профиля."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用中显示的每一项代谢、卡路里目标和宏量营养素比例都来自经过同行评审的方程式。你的 AI 提供商仅估算每餐的营养;每日目标完全由你的个人资料数学计算得出。"
+          }
+        }
+      }
+    },
+    "Resting metabolism (BMR)": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معدل الأيض الأساسي (BMR)"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İstirahət metabolizması (BMR)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grundumsatz (BMR)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metabolismo basal (BMR)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Métabolisme de base (BMR)"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "विश्राम चयापचय (BMR)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metabolismo basale (BMR)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "基礎代謝量 (BMR)"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기초대사량 (BMR)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ruststofwisseling (BMR)"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metabolismo basal (BMR)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metabolismul bazal (BMR)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Базовый метаболизм (BMR)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "基础代谢率 (BMR)"
+          }
+        }
+      }
+    },
+    "Daily energy expenditure (TDEE)": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إجمالي الإنفاق اليومي للطاقة (TDEE)"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gündəlik enerji sərfi (TDEE)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Täglicher Energieumsatz (TDEE)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gasto energético diario (TDEE)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dépense énergétique quotidienne (TDEE)"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "दैनिक ऊर्जा व्यय (TDEE)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispendio energetico giornaliero (TDEE)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1日の総消費エネルギー (TDEE)"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일일 에너지 소비량 (TDEE)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dagelijks energieverbruik (TDEE)"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gasto energético diário (TDEE)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consumul energetic zilnic (TDEE)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Суточный расход энергии (TDEE)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每日能量消耗 (TDEE)"
+          }
+        }
+      }
+    },
+    "Calorie target for goal": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هدف السعرات الحرارية للهدف"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Məqsəd üçün kalori hədəfi"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalorienziel für dein Ziel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Objetivo de calorías para la meta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Objectif calorique pour le but"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "लक्ष्य के लिए कैलोरी लक्ष्य"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obiettivo calorico per il traguardo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目標達成のためのカロリー目標"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "목표를 위한 칼로리 목표"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caloriedoel voor je doel"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meta de calorias para o objetivo"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Țintă calorică pentru obiectiv"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Целевая калорийность для цели"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目标卡路里值"
+          }
+        }
+      }
+    },
+    "Macronutrient split": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقسيم المغذيات الكبرى"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Makronutrient bölgüsü"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Makronährstoff-Verteilung"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reparto de macronutrientes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Répartition des macronutriments"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "मैक्रोन्यूट्रिएंट विभाजन"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ripartizione dei macronutrienti"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "マクロ栄養素の配分"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다량영양소 비율"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Macronutriëntenverdeling"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Divisão de macronutrientes"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Împărțirea macronutrienților"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Распределение макронутриентов"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "宏量营养素比例"
+          }
+        }
+      }
+    },
+    "Micronutrient values": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قيم المغذيات الدقيقة"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikronutrient dəyərləri"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikronährstoff-Werte"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valores de micronutrientes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valeurs des micronutriments"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सूक्ष्म पोषक तत्व मान"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valori dei micronutrienti"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "微量栄養素の値"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "미량영양소 값"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Micronutriëntwaarden"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valores de micronutrientes"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valorile micronutrienților"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Значения микронутриентов"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "微量营养素值"
+          }
+        }
+      }
+    },
+    "Source": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المصدر"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mənbə"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quelle"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "स्रोत"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fonte"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出典"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "출처"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bron"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fonte"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sursă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Источник"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来源"
+          }
+        }
+      }
+    },
+    "Open source": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفتوح المصدر"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açıq mənbə"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código abierto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open source"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ओपन सोर्स"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open source"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オープンソース"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오픈 소스"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open source"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código aberto"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sursă deschisă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открытый исходный код"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开源"
+          }
+        }
+      }
+    },
+    "Not medical advice": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ليست نصيحة طبية"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tibbi məsləhət deyil"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine medizinische Beratung"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No es asesoramiento médico"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas un avis médical"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "चिकित्सीय सलाह नहीं"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è un consiglio medico"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "医学的助言ではありません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "의학적 조언이 아닙니다"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen medisch advies"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não é orientação médica"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu este sfat medical"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не является медицинской консультацией"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "非医疗建议"
+          }
+        }
+      }
+    },
+    "Fud AI is an estimation tool, not a clinical instrument. Predictive equations carry inherent error (typically ±10% for BMR). Consult a registered dietitian, physician, or sports medicine professional before significant diet changes — especially if you have a medical condition, are pregnant or breastfeeding, are under 18, or are managing an eating disorder.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI أداة تقديرية وليس جهازًا طبيًا. تحمل المعادلات التنبؤية خطأً متأصلًا (عادةً ±10% لمعدل الأيض الأساسي). استشر اختصاصي تغذية مُسجَّلًا أو طبيبًا أو متخصصًا في طب الرياضة قبل إجراء تغييرات كبيرة في النظام الغذائي — خاصةً إذا كانت لديك حالة طبية، أو كنتِ حاملًا أو مرضعة، أو كان عمرك أقل من 18 عامًا، أو كنت تتعامل مع اضطراب في الأكل."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI bir qiymətləndirmə alətidir, klinik cihaz deyil. Proqnoz tənliklərində daxili xəta var (BMR üçün adətən ±10%). Pəhrizdə ciddi dəyişikliklər etməzdən əvvəl qeydiyyatdan keçmiş diyetoloq, həkim və ya idman təbabəti mütəxəssisi ilə məsləhətləşin — xüsusilə tibbi vəziyyətiniz varsa, hamiləsinizsə və ya əmizdirirsinizsə, 18 yaşdan kiçiksinizsə və ya yemək pozuntusu ilə mübarizə aparırsınızsa."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI ist ein Schätzwerkzeug, kein klinisches Instrument. Prädiktive Gleichungen haben einen inhärenten Fehler (typischerweise ±10 % beim Grundumsatz). Konsultiere vor wesentlichen Ernährungsumstellungen eine qualifizierte Ernährungsfachkraft, einen Arzt oder einen Sportmediziner — insbesondere wenn du eine medizinische Erkrankung hast, schwanger bist oder stillst, unter 18 Jahre alt bist oder mit einer Essstörung umgehst."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI es una herramienta de estimación, no un instrumento clínico. Las ecuaciones predictivas tienen un error inherente (normalmente ±10 % en el BMR). Consulta a un dietista titulado, a un médico o a un especialista en medicina deportiva antes de hacer cambios importantes en tu dieta, especialmente si tienes una condición médica, estás embarazada o en período de lactancia, eres menor de 18 años, o estás gestionando un trastorno alimentario."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI est un outil d'estimation, pas un instrument clinique. Les équations prédictives comportent une erreur inhérente (généralement ±10 % pour le BMR). Consultez un diététicien diplômé, un médecin ou un médecin du sport avant tout changement important de régime — surtout si vous avez une condition médicale, êtes enceinte ou allaitez, avez moins de 18 ans, ou gérez un trouble du comportement alimentaire."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI एक अनुमान उपकरण है, नैदानिक उपकरण नहीं। पूर्वानुमान समीकरणों में अंतर्निहित त्रुटि होती है (BMR के लिए आमतौर पर ±10%)। आहार में महत्वपूर्ण परिवर्तन करने से पहले किसी पंजीकृत आहार विशेषज्ञ, चिकित्सक या खेल चिकित्सा पेशेवर से परामर्श करें — विशेष रूप से यदि आपको कोई चिकित्सा स्थिति है, गर्भवती हैं या स्तनपान करा रही हैं, 18 वर्ष से कम आयु के हैं, या किसी खाने के विकार का प्रबंधन कर रहे हैं।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI è uno strumento di stima, non uno strumento clinico. Le equazioni predittive hanno un errore intrinseco (tipicamente ±10% per il BMR). Consulta un dietista registrato, un medico o uno specialista in medicina dello sport prima di apportare modifiche significative alla dieta — soprattutto se hai una condizione medica, sei incinta o stai allattando, hai meno di 18 anni o stai gestendo un disturbo alimentare."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AIは推定ツールであり、臨床機器ではありません。予測式には固有の誤差があります(BMRで通常±10%)。食事を大きく変更する前に、登録栄養士、医師、またはスポーツ医学の専門家に相談してください。特に、持病がある、妊娠中または授乳中、18歳未満、もしくは摂食障害を抱えている場合は必ずご相談ください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI는 추정 도구이며 임상 기기가 아닙니다. 예측 방정식에는 고유한 오차가 있습니다(BMR의 경우 일반적으로 ±10%). 식단을 크게 바꾸기 전에 등록 영양사, 의사 또는 스포츠 의학 전문가와 상의하세요 — 특히 의학적 상태가 있거나, 임신 중이거나 모유 수유 중이거나, 18세 미만이거나, 섭식 장애를 관리 중인 경우 반드시 상담하시기 바랍니다."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI is een schattingsinstrument, geen klinisch instrument. Voorspellende vergelijkingen bevatten een inherente foutmarge (meestal ±10% voor BMR). Raadpleeg een geregistreerde diëtist, arts of sportarts voordat je grote dieetwijzigingen doorvoert — zeker als je een medische aandoening hebt, zwanger bent of borstvoeding geeft, jonger bent dan 18 of een eetstoornis behandelt."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Fud AI é uma ferramenta de estimativa, não um instrumento clínico. Equações preditivas têm um erro inerente (tipicamente ±10% para o BMR). Consulte um nutricionista, médico ou profissional de medicina esportiva antes de fazer mudanças significativas na dieta — especialmente se você tem uma condição médica, está grávida ou amamentando, tem menos de 18 anos ou está lidando com um transtorno alimentar."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI este un instrument de estimare, nu un instrument clinic. Ecuațiile predictive au o eroare inerentă (de obicei ±10% pentru BMR). Consultă un dietetician înregistrat, un medic sau un specialist în medicină sportivă înainte de a face schimbări semnificative în dietă — mai ales dacă ai o afecțiune medicală, ești însărcinată sau alăptezi, ai sub 18 ani sau gestionezi o tulburare de alimentație."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI — это инструмент оценки, а не клинический прибор. В прогностических уравнениях есть внутренняя погрешность (обычно ±10% для BMR). Перед существенными изменениями рациона проконсультируйтесь с дипломированным диетологом, врачом или спортивным врачом — особенно если у вас есть заболевание, вы беременны или кормите грудью, вам меньше 18 лет, или вы справляетесь с расстройством пищевого поведения."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI 是一款估算工具,而非临床设备。预测公式存在固有误差(BMR 通常约为 ±10%)。在对饮食做出重大改变之前,请咨询注册营养师、医生或运动医学专业人士 — 尤其是当你患有疾病、正在怀孕或哺乳、未满 18 岁或正在应对饮食失调问题时。"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

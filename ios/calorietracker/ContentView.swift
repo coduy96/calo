@@ -294,6 +294,8 @@ struct HomeView: View {
     @State private var currentImage: UIImage?
     @State private var currentEmoji: String?
     @State private var showNutritionDetail = false
+    @AppStorage("aiAnalysisConsentGiven") private var aiConsentGiven: Bool = false
+    @State private var showAIConsent = false
     @Environment(ProfileStore.self) private var profileStore
 
     /// Force a body re-evaluation whenever profileStore.profile changes by reading it
@@ -512,6 +514,7 @@ struct HomeView: View {
                                     showTextPopover = false
                                     currentImage = nil
                                     currentEmoji = nil
+                                    guard aiConsentGiven else { showAIConsent = true; return }
                                     Task {
                                         try? await Task.sleep(for: .milliseconds(300))
                                         activeSheet = .analyzingText
@@ -540,6 +543,7 @@ struct HomeView: View {
                                     showVoicePopover = false
                                     currentImage = nil
                                     currentEmoji = nil
+                                    guard aiConsentGiven else { showAIConsent = true; return }
                                     Task {
                                         try? await Task.sleep(for: .milliseconds(300))
                                         activeSheet = .analyzingText
@@ -682,6 +686,7 @@ struct HomeView: View {
             .onChange(of: selectedPhotoItem) { oldValue, newValue in
                 guard let item = newValue else { return }
                 selectedPhotoItem = nil
+                guard aiConsentGiven else { showAIConsent = true; return }
                 Task {
                     if let data = try? await item.loadTransferable(type: Data.self),
                        let image = UIImage(data: data) {
@@ -709,11 +714,23 @@ struct HomeView: View {
             .sheet(isPresented: $showNutritionDetail) {
                 NutritionDetailView(date: selectedDate)
             }
+            .sheet(isPresented: $showAIConsent) {
+                AIConsentSheetView(
+                    onAllow: {
+                        aiConsentGiven = true
+                        showAIConsent = false
+                    },
+                    onCancel: {
+                        showAIConsent = false
+                    }
+                )
+            }
         }
     }
 
 
     private func startAnalysis(image: UIImage, mode: CameraMode, description: String? = nil) {
+        guard aiConsentGiven else { showAIConsent = true; return }
         activeSheet = .analyzing
 
         Task {
@@ -1323,6 +1340,7 @@ struct ProfileView: View {
     @State private var showDeleteConfirmation = false
     @State private var showClearFoodLogConfirmation = false
     @State private var showRecalculateConfirm = false
+    @State private var showCalculationMethods = false
     @State private var showAutoMacroEditAlert = false
     @State private var showMaxPinnedAlert = false
     @State private var showInvalidGoalWeightAlert = false
@@ -1568,6 +1586,18 @@ struct ProfileView: View {
                             Text("Recalculate Goals")
                         } icon: {
                             Image(systemName: "arrow.clockwise")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .tint(.primary)
+
+                    Button {
+                        showCalculationMethods = true
+                    } label: {
+                        Label {
+                            Text("Calculation Methods")
+                        } icon: {
+                            Image(systemName: "book")
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
@@ -2290,6 +2320,9 @@ struct ProfileView: View {
             } message: {
                 Text("Recompute calories, protein, carbs, and fat from your current weight, activity, and goal? Your custom values will be replaced and Auto-balance will reset to Carbs.")
             }
+            .sheet(isPresented: $showCalculationMethods) {
+                CalculationMethodsView()
+            }
             .alert("Auto-balanced", isPresented: $showAutoMacroEditAlert) {
                 Button("OK", role: .cancel) { }
             } message: {
@@ -2443,6 +2476,117 @@ struct ProfileView: View {
         }
     }
 
+}
+
+// MARK: - AI Consent Sheet (Apple Guideline 5.1.1(i) + 5.1.2(i))
+/// Disclosed-and-explicit consent before any user data is sent to a third-party
+/// AI provider. Apple App Review (April 2026) rejected v3.2 (5) for not having
+/// in-app consent — privacy policy alone is not sufficient. The sheet names the
+/// currently selected provider, lists what data gets sent, and requires an
+/// explicit Allow tap before any food analysis call can fire.
+struct AIConsentSheetView: View {
+    let onAllow: () -> Void
+    let onCancel: () -> Void
+
+    private var providerName: String {
+        AIProviderSettings.selectedProvider.rawValue
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 22) {
+                    ZStack {
+                        Circle()
+                            .fill(.ultraThinMaterial)
+                            .frame(width: 88, height: 88)
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 36))
+                            .foregroundStyle(
+                                LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+                            )
+                    }
+                    .padding(.top, 28)
+
+                    VStack(spacing: 8) {
+                        Text("AI Analysis Notice")
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .multilineTextAlignment(.center)
+                        Text("Before Fud AI sends data to a third-party AI provider, we need your permission.")
+                            .font(.system(.callout, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 24)
+                    }
+
+                    VStack(alignment: .leading, spacing: 14) {
+                        consentRow(icon: "photo.fill", title: "What is sent",
+                                   text: "When you log a meal, the photo, voice transcript, or text description is sent to your selected AI provider. Profile data (age, weight, goals) is sent only for Coach chat.")
+                        consentRow(icon: "network", title: "Who receives it",
+                                   text: "Your currently selected provider: \(providerName). You can change this anytime in Settings → AI Provider. Each provider has its own privacy policy and may log requests.")
+                        consentRow(icon: "lock.shield.fill", title: "What stays local",
+                                   text: "Your API key, weight history, body fat history, and food log all stay on this device. Fud AI's developer never receives any of your data — requests go directly from your device to the provider.")
+                    }
+                    .padding(.horizontal, 20)
+
+                    Text("Tap Allow to enable AI food analysis. Manual entry is always available without sending data anywhere. You can revoke consent later by deleting the app or via Settings → Delete All Data.")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 4)
+
+                    Link("View privacy policy", destination: URL(string: "https://fud-ai.app/privacy.html")!)
+                        .font(.system(.footnote, design: .rounded, weight: .medium))
+                        .foregroundStyle(AppColors.calorie)
+                }
+                .padding(.bottom, 24)
+            }
+
+            VStack(spacing: 10) {
+                Button(action: onAllow) {
+                    Text("Allow")
+                        .font(.system(.body, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 52)
+                        .background(
+                            LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing),
+                            in: RoundedRectangle(cornerRadius: 14)
+                        )
+                }
+                Button(action: onCancel) {
+                    Text("Not Now")
+                        .font(.system(.body, design: .rounded, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 18)
+            .background(.ultraThinMaterial)
+        }
+        .presentationDetents([.large])
+        .interactiveDismissDisabled()
+    }
+
+    private func consentRow(icon: String, title: String, text: String) -> some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: icon)
+                .font(.system(size: 18))
+                .foregroundStyle(AppColors.calorie)
+                .frame(width: 28, height: 28)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                Text(text)
+                    .font(.system(.footnote, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
 }
 
 #Preview {
