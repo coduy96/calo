@@ -20960,6 +20960,386 @@
           }
         }
       }
+    },
+    "Enable Fallback": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable Fallback"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تفعيل الاحتياط"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ehtiyatı aktivləşdir"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fallback aktivieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar respaldo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activer le secours"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "फ़ॉलबैक सक्षम करें"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attiva fallback"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フォールバックを有効化"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "폴백 활성화"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fallback inschakelen"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ativar fallback"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activează rezerva"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включить резерв"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启用备用方案"
+          }
+        }
+      }
+    },
+    "Fallback Provider": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fallback Provider"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مزود احتياطي"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ehtiyat təminatçısı"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fallback-Anbieter"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proveedor de respaldo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fournisseur de secours"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "फ़ॉलबैक प्रदाता"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provider di fallback"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フォールバックプロバイダー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "폴백 제공업체"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fallback-aanbieder"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provedor de fallback"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Furnizor de rezervă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Резервный провайдер"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备用提供商"
+          }
+        }
+      }
+    },
+    "If your primary provider fails (overloaded, no credits, network error), the request automatically retries on this fallback. Only providers with saved API keys are listed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If your primary provider fails (overloaded, no credits, network error), the request automatically retries on this fallback. Only providers with saved API keys are listed."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إذا فشل المزود الأساسي (مزدحم، بدون رصيد، خطأ شبكة)، تتم إعادة المحاولة تلقائيًا على هذا المزود الاحتياطي. تظهر فقط المزودات التي لديك مفاتيح API محفوظة لها."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Əgər əsas təminatçınız uğursuz olsa (yüklənib, kredit yoxdur, şəbəkə xətası), sorğu avtomatik olaraq bu ehtiyatda yenidən cəhd edilir. Yalnız saxlanmış API açarları olan təminatçılar göstərilir."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn dein primärer Anbieter ausfällt (überlastet, keine Credits, Netzwerkfehler), wird die Anfrage automatisch über diesen Fallback wiederholt. Es werden nur Anbieter mit gespeicherten API-Schlüsseln aufgelistet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si tu proveedor principal falla (sobrecargado, sin créditos, error de red), la solicitud se reintenta automáticamente en este respaldo. Solo se listan proveedores con claves API guardadas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si votre fournisseur principal échoue (surchargé, sans crédits, erreur réseau), la requête est automatiquement réessayée sur ce secours. Seuls les fournisseurs avec des clés API enregistrées sont listés."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यदि आपका प्राथमिक प्रदाता विफल हो जाता है (ओवरलोड, क्रेडिट नहीं, नेटवर्क त्रुटि), तो अनुरोध स्वचालित रूप से इस फ़ॉलबैक पर पुनः प्रयास करता है। केवल सहेजी गई API कुंजियों वाले प्रदाता सूचीबद्ध हैं।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se il tuo provider principale fallisce (sovraccarico, senza crediti, errore di rete), la richiesta viene automaticamente ritentata su questo fallback. Sono elencati solo i provider con chiavi API salvate."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プライマリプロバイダーが失敗した場合（過負荷、クレジット不足、ネットワークエラー）、リクエストは自動的にこのフォールバックで再試行されます。APIキーが保存されているプロバイダーのみが表示されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기본 제공업체가 실패하면(과부하, 크레딧 부족, 네트워크 오류) 요청이 자동으로 이 폴백에서 재시도됩니다. API 키가 저장된 제공업체만 표시됩니다."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als je primaire aanbieder faalt (overbelast, geen credits, netwerkfout), wordt het verzoek automatisch opnieuw geprobeerd op deze fallback. Alleen aanbieders met opgeslagen API-sleutels worden vermeld."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se seu provedor principal falhar (sobrecarregado, sem créditos, erro de rede), a solicitação é repetida automaticamente neste fallback. Apenas provedores com chaves de API salvas são listados."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dacă furnizorul principal eșuează (supraîncărcat, fără credite, eroare de rețea), solicitarea se reîncearcă automat pe această rezervă. Sunt listați doar furnizorii cu chei API salvate."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Если основной провайдер сбоит (перегружен, нет кредитов, ошибка сети), запрос автоматически повторяется на этом резерве. Указаны только провайдеры с сохранёнными API-ключами."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如果您的主提供商失败（过载、无积分、网络错误），请求将自动在此备用方案上重试。仅列出已保存 API 密钥的提供商。"
+          }
+        }
+      }
+    },
+    "Save an API key for at least one other provider above, then come back to choose it as the fallback.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save an API key for at least one other provider above, then come back to choose it as the fallback."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احفظ مفتاح API لمزود آخر واحد على الأقل أعلاه، ثم عُد لاختياره كاحتياط."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yuxarıda ən azı bir başqa təminatçı üçün API açarı saxlayın, sonra geri qayıdıb onu ehtiyat kimi seçin."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speichere einen API-Schlüssel für mindestens einen anderen Anbieter oben, dann komm zurück, um ihn als Fallback auszuwählen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda una clave API para al menos otro proveedor arriba, luego regresa para elegirlo como respaldo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrez une clé API pour au moins un autre fournisseur ci-dessus, puis revenez pour le choisir comme secours."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ऊपर कम से कम एक अन्य प्रदाता के लिए API कुंजी सहेजें, फिर इसे फ़ॉलबैक के रूप में चुनने के लिए वापस आएं।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salva una chiave API per almeno un altro provider sopra, poi torna per sceglierlo come fallback."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上記の他のプロバイダーの少なくとも1つのAPIキーを保存してから、フォールバックとして選択するために戻ってきてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "위에서 다른 제공업체에 대한 API 키를 하나 이상 저장한 다음 다시 와서 폴백으로 선택하세요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sla een API-sleutel op voor ten minste één andere aanbieder hierboven, kom dan terug om deze als fallback te kiezen."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salve uma chave de API para pelo menos um outro provedor acima, depois volte para escolhê-lo como fallback."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvează o cheie API pentru cel puțin un alt furnizor de mai sus, apoi revino pentru a-l alege ca rezervă."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохраните API-ключ хотя бы для одного другого провайдера выше, затем вернитесь, чтобы выбрать его в качестве резерва."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先在上方保存至少一个其他提供商的 API 密钥，然后返回此处将其选为备用方案。"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

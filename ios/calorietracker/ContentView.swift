@@ -1335,6 +1335,9 @@ struct ProfileView: View {
     @State private var customAIInstructions: String = AIProviderSettings.userContext
     @State private var savedAIInstructions: String = AIProviderSettings.userContext
     @FocusState private var customInstructionsFocused: Bool
+    @State private var fallbackEnabled: Bool = AIProviderSettings.fallbackEnabled
+    @State private var selectedFallbackProvider: AIProvider = AIProviderSettings.selectedFallbackProvider
+    @State private var selectedFallbackModel: String = AIProviderSettings.selectedFallbackModel
     @State private var selectedSpeechProvider: SpeechProvider = SpeechSettings.selectedProvider
     @State private var speechApiKeyText: String = SpeechSettings.apiKey(for: SpeechSettings.selectedProvider) ?? ""
     @State private var showSpeechAPIKey = false
@@ -1804,6 +1807,75 @@ struct ProfileView: View {
                     Text("Custom AI Instructions")
                 } footer: {
                     Text("Optional context sent with every AI request — region, diet, athletic goals, anything you'd otherwise repeat each time. Leave empty to disable.")
+                }
+                .listRowBackground(AppColors.appCard)
+
+                // Fallback Provider — retry on a second provider when the primary fails
+                Section {
+                    Toggle(isOn: $fallbackEnabled) {
+                        Label {
+                            Text("Enable Fallback")
+                        } icon: {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .tint(AppColors.calorie)
+                    .onChange(of: fallbackEnabled) { _, newValue in
+                        AIProviderSettings.fallbackEnabled = newValue
+                    }
+
+                    if fallbackEnabled {
+                        let candidates = AIProviderSettings.providersWithSavedKeys(excluding: selectedProvider)
+                        if candidates.isEmpty {
+                            Text("Save an API key for at least one other provider above, then come back to choose it as the fallback.")
+                                .font(.system(.footnote, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Picker(selection: $selectedFallbackProvider) {
+                                ForEach(candidates) { provider in
+                                    Text(provider.rawValue).tag(provider)
+                                }
+                            } label: {
+                                Label {
+                                    Text("Provider")
+                                } icon: {
+                                    Image(systemName: "sparkles")
+                                        .foregroundStyle(AppColors.calorie)
+                                }
+                            }
+                            .onChange(of: selectedFallbackProvider) { _, newProvider in
+                                AIProviderSettings.selectedFallbackProvider = newProvider
+                                if !newProvider.supportsCustomModelName,
+                                   !newProvider.models.contains(selectedFallbackModel) {
+                                    selectedFallbackModel = newProvider.defaultModel
+                                    AIProviderSettings.selectedFallbackModel = selectedFallbackModel
+                                }
+                            }
+
+                            if !selectedFallbackProvider.models.isEmpty {
+                                Picker(selection: $selectedFallbackModel) {
+                                    ForEach(selectedFallbackProvider.models, id: \.self) { model in
+                                        Text(model).tag(model)
+                                    }
+                                } label: {
+                                    Label {
+                                        Text("Model")
+                                    } icon: {
+                                        Image(systemName: "cpu")
+                                            .foregroundStyle(AppColors.calorie)
+                                    }
+                                }
+                                .onChange(of: selectedFallbackModel) { _, newModel in
+                                    AIProviderSettings.selectedFallbackModel = newModel
+                                }
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Fallback Provider")
+                } footer: {
+                    Text("If your primary provider fails (overloaded, no credits, network error), the request automatically retries on this fallback. Only providers with saved API keys are listed.")
                 }
                 .listRowBackground(AppColors.appCard)
 

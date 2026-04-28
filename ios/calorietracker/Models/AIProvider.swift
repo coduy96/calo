@@ -195,6 +195,9 @@ struct AIProviderSettings {
     private static let apiKeyKeychainPrefix = "apikey_"
     private static let baseURLKey = "customBaseURL_"
     private static let userContextKey = "aiUserContext"
+    private static let fallbackEnabledKey = "aiFallbackEnabled"
+    private static let fallbackProviderKey = "selectedFallbackAIProvider"
+    private static let fallbackModelKey = "selectedFallbackAIModel"
 
     static var selectedProvider: AIProvider {
         get {
@@ -279,6 +282,70 @@ struct AIProviderSettings {
         return ctx.isEmpty ? nil : ctx
     }
 
+    // MARK: - Fallback Provider
+
+    /// Master toggle for fallback. When true and primary call fails, the app retries
+    /// once on the configured fallback provider before surfacing the error.
+    static var fallbackEnabled: Bool {
+        get { UserDefaults.standard.bool(forKey: fallbackEnabledKey) }
+        set { UserDefaults.standard.set(newValue, forKey: fallbackEnabledKey) }
+    }
+
+    static var selectedFallbackProvider: AIProvider {
+        get {
+            guard let raw = UserDefaults.standard.string(forKey: fallbackProviderKey),
+                  let provider = AIProvider(rawValue: raw) else {
+                return providersWithSavedKeys(excluding: selectedProvider).first ?? .gemini
+            }
+            return provider
+        }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: fallbackProviderKey) }
+    }
+
+    static var selectedFallbackModel: String {
+        get {
+            let provider = selectedFallbackProvider
+            let saved = UserDefaults.standard.string(forKey: fallbackModelKey)
+            if provider.supportsCustomModelName { return saved ?? provider.defaultModel }
+            if let saved, provider.models.contains(saved) { return saved }
+            return provider.defaultModel
+        }
+        set { UserDefaults.standard.set(newValue, forKey: fallbackModelKey) }
+    }
+
+    /// Providers that have a saved API key (or don't require one, e.g. Ollama),
+    /// optionally excluding the primary so the fallback picker doesn't list it.
+    static func providersWithSavedKeys(excluding: AIProvider? = nil) -> [AIProvider] {
+        AIProvider.allCases.filter { provider in
+            if let excluding, provider == excluding { return false }
+            if !provider.requiresAPIKey { return true }
+            return apiKey(for: provider) != nil
+        }
+    }
+
+    struct FallbackConfig {
+        let provider: AIProvider
+        let model: String
+        let baseURL: String
+        let apiKey: String?
+    }
+
+    /// Returns the resolved fallback config when (a) fallback is enabled, (b) the saved
+    /// fallback provider differs from the primary, and (c) the fallback provider has a
+    /// usable key (or doesn't require one). Returns nil otherwise so callers skip retry.
+    static func currentFallbackConfig(excludingPrimary primary: AIProvider) -> FallbackConfig? {
+        guard fallbackEnabled else { return nil }
+        let provider = selectedFallbackProvider
+        guard provider != primary else { return nil }
+        if provider.requiresAPIKey, apiKey(for: provider) == nil { return nil }
+        return FallbackConfig(
+            provider: provider,
+            model: selectedFallbackModel,
+            baseURL: customBaseURL(for: provider) ?? provider.baseURL,
+            apiKey: apiKey(for: provider)
+        )
+    }
+
     static func deleteAllData() {
         for provider in AIProvider.allCases {
             setAPIKey(nil, for: provider)
@@ -287,5 +354,8 @@ struct AIProviderSettings {
         UserDefaults.standard.removeObject(forKey: providerKey)
         UserDefaults.standard.removeObject(forKey: modelKey)
         UserDefaults.standard.removeObject(forKey: userContextKey)
+        UserDefaults.standard.removeObject(forKey: fallbackEnabledKey)
+        UserDefaults.standard.removeObject(forKey: fallbackProviderKey)
+        UserDefaults.standard.removeObject(forKey: fallbackModelKey)
     }
 }

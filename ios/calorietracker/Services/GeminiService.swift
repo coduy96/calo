@@ -221,14 +221,9 @@ struct GeminiService {
     // MARK: - Unified AI Call Router
 
     private static func callAI(prompt: String, image: UIImage?) async throws -> String {
-        let provider = AIProviderSettings.selectedProvider
-        let model = AIProviderSettings.selectedModel
-        let baseURL = AIProviderSettings.currentBaseURL
-
-        if provider.requiresAPIKey {
-            guard let _ = AIProviderSettings.currentAPIKey else {
-                throw AnalysisError.noAPIKey
-            }
+        let primaryProvider = AIProviderSettings.selectedProvider
+        if primaryProvider.requiresAPIKey, AIProviderSettings.currentAPIKey == nil {
+            throw AnalysisError.noAPIKey
         }
 
         var imageData: Data?
@@ -239,20 +234,49 @@ struct GeminiService {
             imageData = data
         }
 
+        do {
+            return try await dispatch(
+                provider: primaryProvider,
+                model: AIProviderSettings.selectedModel,
+                baseURL: AIProviderSettings.currentBaseURL,
+                apiKey: AIProviderSettings.currentAPIKey,
+                prompt: prompt,
+                imageData: imageData
+            )
+        } catch {
+            // imageConversionFailed is local — fallback won't help, rethrow.
+            // For everything else (network / 5xx / 4xx / parser failure) try fallback.
+            if case AnalysisError.imageConversionFailed = error { throw error }
+            guard let fallback = AIProviderSettings.currentFallbackConfig(excludingPrimary: primaryProvider) else {
+                throw error
+            }
+            return try await dispatch(
+                provider: fallback.provider,
+                model: fallback.model,
+                baseURL: fallback.baseURL,
+                apiKey: fallback.apiKey,
+                prompt: prompt,
+                imageData: imageData
+            )
+        }
+    }
+
+    private static func dispatch(provider: AIProvider, model: String, baseURL: String, apiKey: String?, prompt: String, imageData: Data?) async throws -> String {
         switch provider.apiFormat {
         case .gemini:
-            return try await callGemini(baseURL: baseURL, model: model, prompt: prompt, imageData: imageData)
+            guard let key = apiKey else { throw AnalysisError.noAPIKey }
+            return try await callGemini(baseURL: baseURL, model: model, apiKey: key, prompt: prompt, imageData: imageData)
         case .openaiCompatible:
-            return try await callOpenAICompatible(baseURL: baseURL, model: model, prompt: prompt, imageData: imageData, provider: provider)
+            return try await callOpenAICompatible(baseURL: baseURL, model: model, apiKey: apiKey, provider: provider, prompt: prompt, imageData: imageData)
         case .anthropic:
-            return try await callAnthropic(baseURL: baseURL, model: model, prompt: prompt, imageData: imageData)
+            guard let key = apiKey else { throw AnalysisError.noAPIKey }
+            return try await callAnthropic(baseURL: baseURL, model: model, apiKey: key, prompt: prompt, imageData: imageData)
         }
     }
 
     // MARK: - Gemini Format
 
-    private static func callGemini(baseURL: String, model: String, prompt: String, imageData: Data?) async throws -> String {
-        let apiKey = AIProviderSettings.currentAPIKey!
+    private static func callGemini(baseURL: String, model: String, apiKey: String, prompt: String, imageData: Data?) async throws -> String {
         // Send the API key in the X-goog-api-key header, not the URL query string,
         // so it doesn't end up in server logs / proxies (CodeQL: cleartext transmission).
         guard let url = URL(string: "\(baseURL)/models/\(model):generateContent") else {
@@ -294,7 +318,7 @@ struct GeminiService {
 
     // MARK: - OpenAI-Compatible Format (OpenAI, xAI, OpenRouter, Together, Groq, Ollama)
 
-    private static func callOpenAICompatible(baseURL: String, model: String, prompt: String, imageData: Data?, provider: AIProvider) async throws -> String {
+    private static func callOpenAICompatible(baseURL: String, model: String, apiKey: String?, provider: AIProvider, prompt: String, imageData: Data?) async throws -> String {
         guard let url = URL(string: "\(baseURL)/chat/completions") else {
             throw AnalysisError.apiError("Invalid API URL. Check your provider settings.")
         }
@@ -321,7 +345,7 @@ struct GeminiService {
         ]
 
         var headers = ["Content-Type": "application/json"]
-        if let apiKey = AIProviderSettings.currentAPIKey {
+        if let apiKey {
             headers["Authorization"] = "Bearer \(apiKey)"
         }
         if provider == .openrouter {
@@ -341,8 +365,7 @@ struct GeminiService {
 
     // MARK: - Anthropic Format
 
-    private static func callAnthropic(baseURL: String, model: String, prompt: String, imageData: Data?) async throws -> String {
-        let apiKey = AIProviderSettings.currentAPIKey!
+    private static func callAnthropic(baseURL: String, model: String, apiKey: String, prompt: String, imageData: Data?) async throws -> String {
         guard let url = URL(string: "\(baseURL)/messages") else {
             throw AnalysisError.apiError("Invalid API URL. Check your provider settings.")
         }
