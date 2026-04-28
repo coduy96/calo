@@ -450,15 +450,40 @@ struct GeminiService {
 
     private static func extractJSON(from text: String) -> String {
         var cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if cleaned.hasPrefix("```json") {
-            cleaned = String(cleaned.dropFirst(7))
-        } else if cleaned.hasPrefix("```") {
-            cleaned = String(cleaned.dropFirst(3))
+
+        if let openFence = cleaned.range(of: "```json", options: .caseInsensitive)
+            ?? cleaned.range(of: "```") {
+            cleaned = String(cleaned[openFence.upperBound...])
+            if let closeFence = cleaned.range(of: "```", options: .backwards) {
+                cleaned = String(cleaned[..<closeFence.lowerBound])
+            }
         }
-        if cleaned.hasSuffix("```") {
-            cleaned = String(cleaned.dropLast(3))
+        cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard let firstBrace = cleaned.firstIndex(of: "{") else { return cleaned }
+        var depth = 0
+        var inString = false
+        var escape = false
+        var endIndex: String.Index?
+        for idx in cleaned[firstBrace...].indices {
+            let ch = cleaned[idx]
+            if escape { escape = false; continue }
+            if ch == "\\" { escape = true; continue }
+            if ch == "\"" { inString.toggle(); continue }
+            if inString { continue }
+            if ch == "{" { depth += 1 }
+            else if ch == "}" {
+                depth -= 1
+                if depth == 0 {
+                    endIndex = cleaned.index(after: idx)
+                    break
+                }
+            }
         }
-        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let end = endIndex {
+            return String(cleaned[firstBrace..<end])
+        }
+        return cleaned
     }
 
     private static func parseFoodAnalysis(from text: String) throws -> FoodAnalysis {
