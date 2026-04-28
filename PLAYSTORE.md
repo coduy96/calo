@@ -1,6 +1,6 @@
 # Play Store Listing
 
-Google Play Console listing copy for Fud AI Android (current: v1.0.5 / versionCode 6). Each field is in a code block for easy copy-paste. Char counts are tracked because Play Console enforces hard caps and silently truncates anything over.
+Google Play Console listing copy for Fud AI Android (current: v1.0.6 / versionCode 7). Each field is in a code block for easy copy-paste. Char counts are tracked because Play Console enforces hard caps and silently truncates anything over.
 
 **Where to paste each field in Play Console:**
 - App name / Short description / Full description → Grow → Store presence → **Main store listing** (default English) and Grow → Store presence → **Custom store listings** → Manage translations (per-language overrides)
@@ -60,7 +60,7 @@ BODY COMPOSITION TRACKING
 Log body fat % over time, set a goal %, see it graphed alongside weight on the unified Progress chart (segmented toggle + swipe to switch). Bidirectional Health Connect sync — Withings, Renpho, Eufy, Samsung Health, Google Fit auto-import. "Use Body Fat for BMR" toggle flips between Katch-McArdle and Mifflin-St Jeor without losing the value.
 
 13 AI PROVIDERS
-Google Gemini, OpenAI, Anthropic Claude, xAI Grok, Groq, OpenRouter, Together AI, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama (local), or any OpenAI-compatible endpoint. Switch anytime. OpenRouter now defaults to a free vision model — test without loading credits. Keys stored encrypted (AES-256).
+Google Gemini, OpenAI, Anthropic Claude, xAI Grok, Groq, OpenRouter, Together AI, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama (local), or any OpenAI-compatible endpoint. Switch anytime. OpenRouter defaults to a free vision model — test without loading credits. Keys stored encrypted (AES-256). Add Custom AI Instructions to send region, diet, or brand context with every request. Set a Fallback Provider so the app auto-retries on overload or rate-limit errors.
 
 5 SPEECH-TO-TEXT ENGINES
 Native Android, OpenAI Whisper, Groq, Deepgram, AssemblyAI.
@@ -106,84 +106,84 @@ Handled by Play Console's free **Machine translation** service (Grow → Store p
 
 ---
 
-## 4. What's New (v1.0.5)
+## 4. What's New (v1.0.6)
 
 **500 char hard cap per language.** Paste the entire block below into Play Console's "Release notes" field — it auto-routes each `<lang-tag>` block to the matching locale.
 
 ```
 <en-US>
-• OpenRouter now defaults to a free vision model so you can test the integration without loading credits.
-• Fewer "Could not understand the AI response" errors — better tolerance for AI responses with prose or markdown around the JSON.
+• Custom AI Instructions — optional Settings text that gets sent with every AI request. Drop region, diet, or brand context once instead of repeating it per meal.
+• Fallback AI Provider — opt-in second provider that auto-retries when your primary fails on overload or rate-limit. Pair a paid model with a free fallback for cheap reliability.
 </en-US>
 
 <ar>
-• يستخدم OpenRouter الآن نموذج رؤية مجاني افتراضيًا حتى تتمكن من تجربة التكامل دون شحن الرصيد.
-• عدد أقل من أخطاء "تعذّر فهم استجابة الذكاء الاصطناعي" — تحسين تحمّل الاستجابات التي تحتوي على نص أو تنسيق Markdown حول JSON.
+• تعليمات AI مخصصة — نص اختياري في الإعدادات يُرسل مع كل طلب إلى الذكاء الاصطناعي. أضف سياق المنطقة أو النظام الغذائي أو العلامة التجارية مرة واحدة بدلاً من تكراره مع كل وجبة.
+• مزود AI احتياطي — مزود ثانٍ اختياري يعيد المحاولة تلقائيًا عند فشل المزود الأساسي بسبب التحميل الزائد أو حد المعدل. اقرن نموذجًا مدفوعًا مع احتياطي مجاني للحصول على موثوقية بتكلفة منخفضة.
 </ar>
 
 <az-AZ>
-• OpenRouter indi standart olaraq pulsuz bir görmə modelindən istifadə edir, beləliklə kredit yükləmədən inteqrasiyanı sınaqdan keçirə bilərsiniz.
-• Daha az "Süni intellekt cavabını başa düşmək mümkün olmadı" xətası — JSON ətrafında mətn və ya Markdown olan AI cavablarına daha yaxşı uyğunluq.
+• Fərdi AI Təlimatları — hər AI sorğusu ilə göndərilən isteğe bağlı Ayarlar mətni. Region, pəhriz və ya brend kontekstini hər yemək üçün təkrarlamaq əvəzinə bir dəfə əlavə edin.
+• Ehtiyat AI Provayderi — əsas provayder yüklənmə və ya sürət limiti səbəbindən uğursuz olduqda avtomatik təkrar cəhd edən isteğe bağlı ikinci provayder. Ucuz etibarlılıq üçün pullu modeli pulsuz ehtiyatla cütləşdirin.
 </az-AZ>
 
 <de-DE>
-• OpenRouter verwendet jetzt standardmäßig ein kostenloses Vision-Modell, sodass du die Integration testen kannst, ohne Guthaben aufzuladen.
-• Weniger „KI-Antwort konnte nicht verstanden werden"-Fehler — bessere Verarbeitung von KI-Antworten mit Text oder Markdown um das JSON.
+• Benutzerdefinierte AI-Anweisungen — optionaler Einstellungstext, der mit jeder AI-Anfrage gesendet wird. Region, Ernährung oder Markenkontext einmal hinterlegen, statt es bei jeder Mahlzeit zu wiederholen.
+• Fallback-AI-Anbieter — optionaler zweiter Anbieter, der automatisch erneut versucht, wenn dein Hauptanbieter wegen Überlastung oder Ratenbegrenzung ausfällt. Kombiniere ein kostenpflichtiges Modell mit einem kostenlosen Fallback für günstige Zuverlässigkeit.
 </de-DE>
 
 <es-ES>
-• OpenRouter ahora usa un modelo de visión gratuito por defecto, para que puedas probar la integración sin cargar créditos.
-• Menos errores de "No se pudo entender la respuesta de la IA" — mejor tolerancia para respuestas con texto o markdown alrededor del JSON.
+• Instrucciones de AI personalizadas — texto opcional en Ajustes que se envía con cada solicitud a la AI. Indica una vez tu región, dieta o marcas favoritas en lugar de repetirlo en cada comida.
+• Proveedor de AI de respaldo — segundo proveedor opcional que reintenta automáticamente cuando el principal falla por sobrecarga o límite de velocidad. Combina un modelo de pago con un respaldo gratuito para una fiabilidad económica.
 </es-ES>
 
 <fr-FR>
-• OpenRouter utilise désormais par défaut un modèle de vision gratuit pour tester l'intégration sans recharger de crédits.
-• Moins d'erreurs « Impossible de comprendre la réponse de l'IA » — meilleure tolérance pour les réponses contenant du texte ou du markdown autour du JSON.
+• Instructions AI personnalisées — texte optionnel dans les Paramètres envoyé avec chaque requête AI. Indique une fois ta région, ton régime ou tes marques préférées au lieu de le répéter à chaque repas.
+• Fournisseur AI de secours — second fournisseur optionnel qui réessaie automatiquement lorsque ton fournisseur principal échoue pour cause de surcharge ou de limite de débit. Associe un modèle payant à un secours gratuit pour une fiabilité à moindre coût.
 </fr-FR>
 
 <hi-IN>
-• OpenRouter अब डिफ़ॉल्ट रूप से एक मुफ़्त विज़न मॉडल का उपयोग करता है, जिससे आप क्रेडिट लोड किए बिना इंटीग्रेशन टेस्ट कर सकते हैं।
-• "AI प्रतिक्रिया समझ नहीं आई" त्रुटियाँ कम — JSON के आसपास टेक्स्ट या मार्कडाउन वाली AI प्रतिक्रियाओं के लिए बेहतर सहनशीलता।
+• कस्टम AI निर्देश — सेटिंग्स में वैकल्पिक टेक्स्ट जो हर AI अनुरोध के साथ भेजा जाता है। हर भोजन पर दोहराने के बजाय अपना क्षेत्र, डाइट या ब्रांड संदर्भ एक बार जोड़ें।
+• फ़ॉलबैक AI प्रोवाइडर — वैकल्पिक दूसरा प्रोवाइडर जो आपके मुख्य प्रोवाइडर के ओवरलोड या रेट-लिमिट पर विफल होने पर अपने आप पुनः प्रयास करता है। सस्ती विश्वसनीयता के लिए पेड मॉडल के साथ मुफ़्त फ़ॉलबैक जोड़ें।
 </hi-IN>
 
 <it-IT>
-• OpenRouter ora utilizza per impostazione predefinita un modello di visione gratuito, così puoi testare l'integrazione senza caricare crediti.
-• Meno errori "Impossibile comprendere la risposta dell'IA" — migliore tolleranza per le risposte AI con testo o markdown attorno al JSON.
+• Istruzioni AI personalizzate — testo opzionale nelle Impostazioni inviato con ogni richiesta AI. Inserisci una volta il contesto di regione, dieta o marca invece di ripeterlo a ogni pasto.
+• Provider AI di riserva — secondo provider opzionale che riprova automaticamente quando quello principale fallisce per sovraccarico o limite di velocità. Abbina un modello a pagamento a un fallback gratuito per un'affidabilità economica.
 </it-IT>
 
 <ja-JP>
-• OpenRouterはデフォルトで無料のビジョンモデルを使用するようになり、クレジットをチャージせずに統合をテストできます。
-• 「AIの応答を理解できませんでした」エラーが減少 — JSONの周りに文章やMarkdownが含まれるAI応答にもより柔軟に対応。
+• カスタムAI指示 — すべてのAIリクエストとともに送信される設定の任意テキスト。地域、食事、ブランドのコンテキストを食事ごとに繰り返す代わりに、一度だけ入力できます。
+• フォールバックAIプロバイダー — メインプロバイダーが過負荷やレート制限で失敗したときに自動で再試行するオプションの2番目のプロバイダー。有料モデルと無料のフォールバックを組み合わせて、低コストで信頼性を確保。
 </ja-JP>
 
 <ko-KR>
-• 이제 OpenRouter가 기본적으로 무료 비전 모델을 사용하므로 크레딧을 충전하지 않고도 통합을 테스트할 수 있습니다.
-• "AI 응답을 이해할 수 없습니다" 오류 감소 — JSON 주변에 텍스트나 마크다운이 있는 AI 응답을 더 잘 처리합니다.
+• 맞춤 AI 지침 — 모든 AI 요청과 함께 전송되는 설정의 선택적 텍스트입니다. 지역, 식단, 브랜드 정보를 매 식사마다 반복하는 대신 한 번만 입력하세요.
+• 대체 AI 제공자 — 기본 제공자가 과부하 또는 속도 제한으로 실패할 때 자동으로 재시도하는 선택적 두 번째 제공자입니다. 유료 모델과 무료 대체를 결합하여 저렴한 비용으로 안정성을 확보하세요.
 </ko-KR>
 
 <nl-NL>
-• OpenRouter gebruikt nu standaard een gratis visiemodel, zodat je de integratie kunt testen zonder credits op te laden.
-• Minder "Kan het AI-antwoord niet begrijpen"-fouten — betere verwerking van AI-antwoorden met tekst of markdown rond de JSON.
+• Aangepaste AI-instructies — optionele tekst in Instellingen die met elke AI-aanvraag wordt meegestuurd. Voeg regio-, dieet- of merkcontext één keer toe in plaats van het bij elke maaltijd te herhalen.
+• Reserve-AI-provider — optionele tweede provider die automatisch opnieuw probeert wanneer je primaire provider faalt door overbelasting of een rate limit. Combineer een betaald model met een gratis reserve voor goedkope betrouwbaarheid.
 </nl-NL>
 
 <pt-BR>
-• O OpenRouter agora usa por padrão um modelo de visão gratuito, para que você possa testar a integração sem carregar créditos.
-• Menos erros de "Não foi possível entender a resposta da IA" — melhor tolerância a respostas com texto ou markdown ao redor do JSON.
+• Instruções de AI personalizadas — texto opcional em Configurações enviado com cada solicitação à AI. Informe uma vez sua região, dieta ou marcas em vez de repetir a cada refeição.
+• Provedor de AI de fallback — segundo provedor opcional que tenta novamente de forma automática quando o principal falha por sobrecarga ou limite de taxa. Combine um modelo pago com um fallback gratuito para confiabilidade barata.
 </pt-BR>
 
 <ro>
-• OpenRouter folosește acum implicit un model de viziune gratuit, astfel încât poți testa integrarea fără a încărca credite.
-• Mai puține erori „Răspunsul AI nu a putut fi înțeles" — toleranță îmbunătățită pentru răspunsuri AI cu text sau markdown în jurul JSON-ului.
+• Instrucțiuni AI personalizate — text opțional în Setări trimis cu fiecare cerere AI. Adaugă o singură dată contextul de regiune, dietă sau brand în loc să-l repeți la fiecare masă.
+• Furnizor AI de rezervă — al doilea furnizor opțional care reîncearcă automat când cel principal eșuează din cauza supraîncărcării sau a limitei de viteză. Asociază un model plătit cu o rezervă gratuită pentru fiabilitate ieftină.
 </ro>
 
 <ru-RU>
-• OpenRouter теперь по умолчанию использует бесплатную модель распознавания изображений, так что вы можете протестировать интеграцию без пополнения баланса.
-• Меньше ошибок «Не удалось понять ответ ИИ» — улучшенная обработка ответов ИИ с текстом или Markdown вокруг JSON.
+• Пользовательские инструкции AI — необязательный текст в Настройках, отправляемый с каждым запросом к AI. Укажите регион, диету или бренды один раз вместо повторения для каждого приёма пищи.
+• Резервный провайдер AI — необязательный второй провайдер, автоматически повторяющий запрос при сбое основного из-за перегрузки или ограничения скорости. Сочетайте платную модель с бесплатным резервом для дешёвой надёжности.
 </ru-RU>
 
 <zh-CN>
-• OpenRouter 现在默认使用免费的视觉模型，您可以在不充值的情况下测试集成。
-• "无法理解 AI 响应"错误减少 — 对包含文本或 Markdown 的 AI 响应（JSON 前后）有更好的兼容性。
+• 自定义 AI 指令 — 设置中的可选文本，会随每次 AI 请求一起发送。一次性添加地区、饮食或品牌偏好，无需在每餐时重复输入。
+• 备用 AI 提供商 — 可选的第二个提供商，当主提供商因过载或速率限制失败时会自动重试。将付费模型与免费备用搭配，以低成本获得可靠性。
 </zh-CN>
 ```
 
