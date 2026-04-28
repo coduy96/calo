@@ -21340,6 +21340,101 @@
           }
         }
       }
+    },
+    "If your primary provider fails (overloaded, no credits, network error), the request automatically retries on this fallback. The currently selected primary is excluded from the picker.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If your primary provider fails (overloaded, no credits, network error), the request automatically retries on this fallback. The currently selected primary is excluded from the picker."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إذا فشل المزود الأساسي (مزدحم، بدون رصيد، خطأ شبكة)، تتم إعادة المحاولة تلقائيًا على هذا المزود الاحتياطي. يُستثنى المزود الأساسي المحدد حاليًا من القائمة."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Əsas təminatçınız uğursuz olsa (yüklənib, kredit yoxdur, şəbəkə xətası), sorğu avtomatik olaraq bu ehtiyatda yenidən cəhd edilir. Hazırda seçilmiş əsas siyahıdan çıxarılır."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn dein primärer Anbieter ausfällt (überlastet, keine Credits, Netzwerkfehler), wird die Anfrage automatisch über diesen Fallback wiederholt. Der aktuell ausgewählte Primäranbieter wird aus der Auswahl ausgeschlossen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si tu proveedor principal falla (sobrecargado, sin créditos, error de red), la solicitud se reintenta automáticamente en este respaldo. El proveedor principal seleccionado actualmente queda excluido de la lista."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si votre fournisseur principal échoue (surchargé, sans crédits, erreur réseau), la requête est automatiquement réessayée sur ce secours. Le fournisseur principal actuellement sélectionné est exclu de la liste."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यदि आपका प्राथमिक प्रदाता विफल हो जाता है (ओवरलोड, क्रेडिट नहीं, नेटवर्क त्रुटि), तो अनुरोध स्वचालित रूप से इस फ़ॉलबैक पर पुनः प्रयास करता है। वर्तमान में चयनित प्राथमिक प्रदाता सूची से बाहर रखा गया है।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se il tuo provider principale fallisce (sovraccarico, senza crediti, errore di rete), la richiesta viene automaticamente ritentata su questo fallback. Il provider principale attualmente selezionato è escluso dall'elenco."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プライマリプロバイダーが失敗した場合（過負荷、クレジット不足、ネットワークエラー）、リクエストは自動的にこのフォールバックで再試行されます。現在選択されているプライマリは選択肢から除外されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기본 제공업체가 실패하면(과부하, 크레딧 부족, 네트워크 오류) 요청이 자동으로 이 폴백에서 재시도됩니다. 현재 선택된 기본은 목록에서 제외됩니다."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als je primaire aanbieder faalt (overbelast, geen credits, netwerkfout), wordt het verzoek automatisch opnieuw geprobeerd op deze fallback. De momenteel geselecteerde primaire aanbieder is uitgesloten van de lijst."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se seu provedor principal falhar (sobrecarregado, sem créditos, erro de rede), a solicitação é repetida automaticamente neste fallback. O provedor principal atualmente selecionado é excluído da lista."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dacă furnizorul principal eșuează (supraîncărcat, fără credite, eroare de rețea), solicitarea se reîncearcă automat pe această rezervă. Furnizorul principal selectat în prezent este exclus din listă."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Если основной провайдер сбоит (перегружен, нет кредитов, ошибка сети), запрос автоматически повторяется на этом резерве. Выбранный сейчас основной провайдер исключён из списка."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如果您的主提供商失败（过载、无积分、网络错误），请求将自动在此备用方案上重试。当前选择的主提供商已从列表中排除。"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

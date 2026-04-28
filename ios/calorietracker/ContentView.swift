@@ -1338,6 +1338,9 @@ struct ProfileView: View {
     @State private var fallbackEnabled: Bool = AIProviderSettings.fallbackEnabled
     @State private var selectedFallbackProvider: AIProvider = AIProviderSettings.selectedFallbackProvider
     @State private var selectedFallbackModel: String = AIProviderSettings.selectedFallbackModel
+    @State private var fallbackApiKeyText: String = AIProviderSettings.apiKey(for: AIProviderSettings.selectedFallbackProvider) ?? ""
+    @State private var fallbackBaseURL: String = AIProviderSettings.customBaseURL(for: AIProviderSettings.selectedFallbackProvider) ?? ""
+    @State private var showFallbackAPIKey = false
     @State private var selectedSpeechProvider: SpeechProvider = SpeechSettings.selectedProvider
     @State private var speechApiKeyText: String = SpeechSettings.apiKey(for: SpeechSettings.selectedProvider) ?? ""
     @State private var showSpeechAPIKey = false
@@ -1826,48 +1829,143 @@ struct ProfileView: View {
                     }
 
                     if fallbackEnabled {
-                        let candidates = AIProviderSettings.providersWithSavedKeys(excluding: selectedProvider)
-                        if candidates.isEmpty {
-                            Text("Save an API key for at least one other provider above, then come back to choose it as the fallback.")
-                                .font(.system(.footnote, design: .rounded))
-                                .foregroundStyle(.secondary)
-                        } else {
-                            Picker(selection: $selectedFallbackProvider) {
-                                ForEach(candidates) { provider in
-                                    Text(provider.rawValue).tag(provider)
-                                }
-                            } label: {
-                                Label {
-                                    Text("Provider")
-                                } icon: {
-                                    Image(systemName: "sparkles")
-                                        .foregroundStyle(AppColors.calorie)
-                                }
+                        let fallbackCandidates = AIProvider.allCases.filter { $0 != selectedProvider }
+
+                        Picker(selection: $selectedFallbackProvider) {
+                            ForEach(fallbackCandidates) { provider in
+                                Text(provider.rawValue).tag(provider)
                             }
-                            .onChange(of: selectedFallbackProvider) { _, newProvider in
-                                AIProviderSettings.selectedFallbackProvider = newProvider
-                                if !newProvider.supportsCustomModelName,
-                                   !newProvider.models.contains(selectedFallbackModel) {
-                                    selectedFallbackModel = newProvider.defaultModel
+                        } label: {
+                            Label {
+                                Text("Provider")
+                            } icon: {
+                                Image(systemName: "sparkles")
+                                    .foregroundStyle(AppColors.calorie)
+                            }
+                        }
+                        .onChange(of: selectedFallbackProvider) { _, newProvider in
+                            AIProviderSettings.selectedFallbackProvider = newProvider
+                            if !newProvider.supportsCustomModelName,
+                               !newProvider.models.contains(selectedFallbackModel) {
+                                selectedFallbackModel = newProvider.defaultModel
+                                AIProviderSettings.selectedFallbackModel = selectedFallbackModel
+                            }
+                            fallbackApiKeyText = AIProviderSettings.apiKey(for: newProvider) ?? ""
+                            fallbackBaseURL = AIProviderSettings.customBaseURL(for: newProvider) ?? ""
+                        }
+                        .onAppear {
+                            // Auto-pick a provider that isn't the primary if the saved fallback collides
+                            if selectedFallbackProvider == selectedProvider,
+                               let alt = fallbackCandidates.first {
+                                selectedFallbackProvider = alt
+                                AIProviderSettings.selectedFallbackProvider = alt
+                                fallbackApiKeyText = AIProviderSettings.apiKey(for: alt) ?? ""
+                                fallbackBaseURL = AIProviderSettings.customBaseURL(for: alt) ?? ""
+                                if !alt.supportsCustomModelName,
+                                   !alt.models.contains(selectedFallbackModel) {
+                                    selectedFallbackModel = alt.defaultModel
                                     AIProviderSettings.selectedFallbackModel = selectedFallbackModel
                                 }
                             }
+                        }
 
-                            if !selectedFallbackProvider.models.isEmpty {
-                                Picker(selection: $selectedFallbackModel) {
-                                    ForEach(selectedFallbackProvider.models, id: \.self) { model in
-                                        Text(model).tag(model)
-                                    }
-                                } label: {
-                                    Label {
-                                        Text("Model")
-                                    } icon: {
-                                        Image(systemName: "cpu")
-                                            .foregroundStyle(AppColors.calorie)
-                                    }
+                        if selectedFallbackProvider.supportsCustomModelName {
+                            HStack {
+                                Label {
+                                    Text("Model")
+                                } icon: {
+                                    Image(systemName: "cpu")
+                                        .foregroundStyle(AppColors.calorie)
                                 }
+                                Spacer()
+                                TextField(
+                                    selectedFallbackProvider == .openrouter
+                                        ? "provider/model-name"
+                                        : "model-name",
+                                    text: $selectedFallbackModel
+                                )
+                                .textFieldStyle(.plain)
+                                .multilineTextAlignment(.trailing)
+                                .autocorrectionDisabled()
+                                .textInputAutocapitalization(.never)
                                 .onChange(of: selectedFallbackModel) { _, newModel in
                                     AIProviderSettings.selectedFallbackModel = newModel
+                                }
+                            }
+                        } else if !selectedFallbackProvider.models.isEmpty {
+                            Picker(selection: $selectedFallbackModel) {
+                                ForEach(selectedFallbackProvider.models, id: \.self) { model in
+                                    Text(model).tag(model)
+                                }
+                            } label: {
+                                Label {
+                                    Text("Model")
+                                } icon: {
+                                    Image(systemName: "cpu")
+                                        .foregroundStyle(AppColors.calorie)
+                                }
+                            }
+                            .onChange(of: selectedFallbackModel) { _, newModel in
+                                AIProviderSettings.selectedFallbackModel = newModel
+                            }
+                        }
+
+                        if selectedFallbackProvider.requiresAPIKey {
+                            HStack {
+                                Label {
+                                    Text("API Key")
+                                } icon: {
+                                    Image(systemName: "key.fill")
+                                        .foregroundStyle(AppColors.calorie)
+                                }
+                                Spacer()
+                                Group {
+                                    if showFallbackAPIKey {
+                                        TextField(selectedFallbackProvider.apiKeyPlaceholder, text: $fallbackApiKeyText)
+                                    } else {
+                                        SecureField(selectedFallbackProvider.apiKeyPlaceholder, text: $fallbackApiKeyText)
+                                    }
+                                }
+                                .textFieldStyle(.plain)
+                                .multilineTextAlignment(.trailing)
+                                .autocorrectionDisabled()
+                                .textInputAutocapitalization(.never)
+                                .onChange(of: fallbackApiKeyText) { _, newValue in
+                                    AIProviderSettings.setAPIKey(newValue.isEmpty ? nil : newValue, for: selectedFallbackProvider)
+                                }
+                                Button {
+                                    showFallbackAPIKey.toggle()
+                                } label: {
+                                    Image(systemName: showFallbackAPIKey ? "eye.fill" : "eye.slash.fill")
+                                        .foregroundStyle(.secondary)
+                                        .font(.system(size: 14))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+
+                        if selectedFallbackProvider == .ollama || selectedFallbackProvider.requiresCustomEndpoint {
+                            HStack {
+                                Label {
+                                    Text(selectedFallbackProvider.requiresCustomEndpoint ? "Base URL" : "Server URL")
+                                } icon: {
+                                    Image(systemName: "link")
+                                        .foregroundStyle(AppColors.calorie)
+                                }
+                                Spacer()
+                                TextField(
+                                    selectedFallbackProvider.requiresCustomEndpoint
+                                        ? "https://your-endpoint.com/v1"
+                                        : selectedFallbackProvider.baseURL,
+                                    text: $fallbackBaseURL
+                                )
+                                .textFieldStyle(.plain)
+                                .multilineTextAlignment(.trailing)
+                                .autocorrectionDisabled()
+                                .textInputAutocapitalization(.never)
+                                .keyboardType(.URL)
+                                .onChange(of: fallbackBaseURL) { _, newValue in
+                                    AIProviderSettings.setCustomBaseURL(newValue.isEmpty ? nil : newValue, for: selectedFallbackProvider)
                                 }
                             }
                         }
@@ -1875,7 +1973,7 @@ struct ProfileView: View {
                 } header: {
                     Text("Fallback Provider")
                 } footer: {
-                    Text("If your primary provider fails (overloaded, no credits, network error), the request automatically retries on this fallback. Only providers with saved API keys are listed.")
+                    Text("If your primary provider fails (overloaded, no credits, network error), the request automatically retries on this fallback. The currently selected primary is excluded from the picker.")
                 }
                 .listRowBackground(AppColors.appCard)
 
