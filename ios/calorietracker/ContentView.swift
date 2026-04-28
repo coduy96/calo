@@ -1334,6 +1334,8 @@ struct ProfileView: View {
     @State private var showAPIKey = false
     @State private var customAIInstructions: String = AIProviderSettings.userContext
     @State private var savedAIInstructions: String = AIProviderSettings.userContext
+    @State private var customInstructionsSavedConfirmation = false
+    @State private var customInstructionsSaveCount = 0
     @FocusState private var customInstructionsFocused: Bool
     @State private var selectedSpeechProvider: SpeechProvider = SpeechSettings.selectedProvider
     @State private var speechApiKeyText: String = SpeechSettings.apiKey(for: SpeechSettings.selectedProvider) ?? ""
@@ -1790,16 +1792,35 @@ struct ProfileView: View {
                         customAIInstructions = canonical
                         savedAIInstructions = canonical
                         customInstructionsFocused = false
+                        customInstructionsSaveCount += 1
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            customInstructionsSavedConfirmation = true
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                customInstructionsSavedConfirmation = false
+                            }
+                        }
                     } label: {
                         HStack {
                             Spacer()
-                            Label("Save", systemImage: "checkmark.circle.fill")
-                                .font(.system(.body, design: .rounded, weight: .semibold))
-                                .foregroundStyle(customAIInstructions == savedAIInstructions ? .secondary : AppColors.calorie)
+                            if customInstructionsSavedConfirmation {
+                                Label("Saved", systemImage: "checkmark.circle.fill")
+                                    .font(.system(.body, design: .rounded, weight: .semibold))
+                                    .foregroundStyle(.green)
+                                    .symbolEffect(.bounce, value: customInstructionsSaveCount)
+                                    .transition(.opacity.combined(with: .scale(scale: 0.92)))
+                            } else {
+                                Label("Save", systemImage: "checkmark.circle.fill")
+                                    .font(.system(.body, design: .rounded, weight: .semibold))
+                                    .foregroundStyle(customAIInstructions == savedAIInstructions ? .secondary : AppColors.calorie)
+                                    .transition(.opacity)
+                            }
                             Spacer()
                         }
                     }
-                    .disabled(customAIInstructions == savedAIInstructions)
+                    .disabled(customAIInstructions == savedAIInstructions || customInstructionsSavedConfirmation)
+                    .sensoryFeedback(.success, trigger: customInstructionsSaveCount)
                 } header: {
                     Text("Custom AI Instructions")
                 } footer: {
