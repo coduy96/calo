@@ -76,7 +76,7 @@ HOW TO USE
 • Manual Entry — name + calories + macros + meal type, no AI needed
 
 13 AI PROVIDERS
-Google Gemini (incl. Gemini 3.1), OpenAI, Anthropic Claude, xAI Grok, Groq, OpenRouter, Together AI, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama (local), or any OpenAI-compatible endpoint. Switch anytime. Keys stored in iOS Keychain.
+Google Gemini (incl. Gemini 3.1), OpenAI, Anthropic Claude, xAI Grok, Groq, OpenRouter, Together AI, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama (local), or any OpenAI-compatible endpoint. Switch anytime. Keys stored in iOS Keychain. Add Custom AI Instructions to send region, diet, or brand context with every request. Set a Fallback Provider so the app auto-retries on overload or rate-limit errors.
 
 5 SPEECH-TO-TEXT ENGINES
 Native iOS, OpenAI Whisper, Groq, Deepgram, AssemblyAI.
