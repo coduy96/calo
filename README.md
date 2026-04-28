@@ -113,7 +113,7 @@ Photo / Text / Voice
   FoodStore.addEntry()  ──▶  UserDefaults (local) + Apple Health (optional)
 ```
 
-For the Coach chat, every turn builds a fresh system prompt from your live profile, BMR formula in use, computed forecast, last 10 weights, and last 7 days of calorie totals, then sends it along with the conversation history to your selected LLM.
+For the Coach chat, every turn builds a slim system prompt from your live profile, BMR formula in use, computed forecast, and a one-line snapshot of available data. Coach then pulls any date range of weight, body fat, calorie totals, or food entries on demand via tool calling — ask "what was my weight in March?" or "show me my body fat trend over the last 6 months" and it fetches exactly the slice it needs.
 
 ## Screenshots
 
