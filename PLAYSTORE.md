@@ -38,11 +38,9 @@ Snap, speak, or type a meal. AI logs the calories. Open source.
 ```
 Fud AI makes calorie tracking effortless with AI-powered food recognition. Snap a photo, speak it, or type it — get instant nutrition: calories, protein, carbs, fats, and 9 micronutrients.
 
-NEW: Body fat tracking with goal + history + Health Connect sync, Coach reaches your full history on demand, smart daily reminders that skip days you've already logged, search across Saved Meals.
+NEW in v1.0.6: Custom AI Instructions — drop region, diet, or brand context once in Settings and it ships with every AI request. Fallback AI Provider — opt-in second provider that auto-retries when your primary fails on overload or rate-limit. Plus body fat tracking, Coach with full-history tool calling, smart daily reminders, search across Saved Meals.
 
-Coach: multi-turn AI chat that sees your profile, weight history, body fat history, and full food log. Ask anything in plain English — "what was my weight in March?", "how's my protein this week?", "body fat trend over the last 60 days?".
-
-Fud AI is free, open source, privacy-first. Bring your own API key. All data stays on your device.
+Free, open source, privacy-first. Bring your own API key. All data stays on your device.
 
 HOW TO USE
 1) Set up your profile with goals + body stats
@@ -57,7 +55,7 @@ HOW TO USE
 • Manual Entry — name + calories + macros + meal type, no AI needed
 
 BODY COMPOSITION TRACKING
-Log body fat % over time, set a goal %, see it graphed alongside weight on the unified Progress chart (segmented toggle + swipe to switch). Bidirectional Health Connect sync — Withings, Renpho, Eufy, Samsung Health, Google Fit auto-import. "Use Body Fat for BMR" toggle flips between Katch-McArdle and Mifflin-St Jeor without losing the value.
+Log body fat % over time, set a goal %, see it graphed alongside weight on the unified Progress chart. Health Connect sync auto-imports samples from Withings, Renpho, Samsung Health, Google Fit. "Use Body Fat for BMR" toggles Katch-McArdle ↔ Mifflin-St Jeor without losing the value.
 
 13 AI PROVIDERS
 Google Gemini, OpenAI, Anthropic Claude, xAI Grok, Groq, OpenRouter, Together AI, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama (local), or any OpenAI-compatible endpoint. Switch anytime. OpenRouter defaults to a free vision model — test without loading credits. Keys stored encrypted (AES-256). Add Custom AI Instructions to send region, diet, or brand context with every request. Set a Fallback Provider so the app auto-retries on overload or rate-limit errors.
@@ -66,16 +64,16 @@ Google Gemini, OpenAI, Anthropic Claude, xAI Grok, Groq, OpenRouter, Together AI
 Native Android, OpenAI Whisper, Groq, Deepgram, AssemblyAI.
 
 COACH (TOOL CALLING)
-Multi-turn chat with on-demand access to your full history via 5 tools: weight history, body fat history, calorie totals, food entries, data summary — all date-range aware. Goal-aware chips for Lose / Gain / Maintain.
+Multi-turn chat that sees your profile, weight, body fat, and food log. Ask "what was my weight in March?" or "how's my protein this week?" — Coach pulls the date range it needs via 5 on-demand tools. Goal-aware chips for Lose / Gain / Maintain.
 
 SMART DAILY REMINDERS
-Log Weight, Log Body Fat, Streak, Daily Summary — all skip firing on days you've already logged the metric, so fully-tracking users get effectively zero pings.
+Log Weight, Log Body Fat, Streak, Daily Summary — all skip firing on days you've already logged, so fully-tracking users get effectively zero pings.
 
 PERSONALIZED GOALS
 BMR via Katch-McArdle (with body fat) or Mifflin-St Jeor. TDEE with 6 activity levels. Auto-calculated calorie + protein + carbs + fat targets — fully customizable.
 
 PROGRESS
-Unified Weight / Body Fat chart with trend lines and goal overlays. Calorie trend vs goal. Macro averages over 1W, 1M, 3M, 6M, 1Y, All Time.
+Unified Weight / Body Fat chart with trend lines + goal overlays. Calorie trend vs goal. Macro averages over 1W, 1M, 3M, 6M, 1Y, All Time.
 
 WIDGETS
 Calorie widget (pink-gradient ring with today's calories + macros) and Protein widget — both in Small 2x2 and Medium 4x2, refresh the moment you log a meal.
@@ -84,17 +82,17 @@ SAVED MEALS + SEARCH
 Recents, Frequent, and Favorites tabs. Search bar filters each tab separately — substring, case-insensitive, diacritic-insensitive.
 
 15 LANGUAGES
-Auto-selected by phone language. English, Spanish, French, German, Italian, Portuguese (BR), Dutch, Russian, Japanese, Korean, Chinese (Simplified), Hindi, Arabic, Romanian, Azerbaijani.
+Auto-selected by phone language: English, Spanish, French, German, Italian, Portuguese (BR), Dutch, Russian, Japanese, Korean, Chinese, Hindi, Arabic, Romanian, Azerbaijani.
 
 PRIVACY FIRST
 No account, no sign-in, no cloud sync, no analytics, no ads, no tracking. Local-only. MIT licensed.
 
 HEALTH CONNECT
-Two-way sync for nutrition, weight, body fat. Macros + 9 micronutrients written per meal. Edits and deletes sync back.
+Two-way sync for nutrition, weight, body fat. Macros + 9 micronutrients per meal. Edits and deletes sync back.
 
-I built Fud AI because tracking calories shouldn't feel like a chore. I want to make healthy eating simple for everyone. Reach out at apoorv@fud-ai.app or open an issue on GitHub.
+Built solo because tracking calories shouldn't feel like a chore. Reach out at apoorv@fud-ai.app or on GitHub.
 
-NOTE: Fud AI does not offer medical advice. All nutritional estimates are AI-generated suggestions only. Please consult a healthcare professional before significant diet changes.
+NOTE: Not medical advice. All nutritional estimates are AI-generated. Consult a healthcare professional before significant diet changes.
 
 Terms: https://fud-ai.app/terms.html
 Privacy: https://fud-ai.app/privacy.html
