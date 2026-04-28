@@ -1333,6 +1333,8 @@ struct ProfileView: View {
     @State private var customBaseURL: String = AIProviderSettings.customBaseURL(for: AIProviderSettings.selectedProvider) ?? ""
     @State private var showAPIKey = false
     @State private var customAIInstructions: String = AIProviderSettings.userContext
+    @State private var savedAIInstructions: String = AIProviderSettings.userContext
+    @FocusState private var customInstructionsFocused: Bool
     @State private var selectedSpeechProvider: SpeechProvider = SpeechSettings.selectedProvider
     @State private var speechApiKeyText: String = SpeechSettings.apiKey(for: SpeechSettings.selectedProvider) ?? ""
     @State private var showSpeechAPIKey = false
@@ -1780,9 +1782,24 @@ struct ProfileView: View {
                     )
                     .lineLimit(3...6)
                     .autocorrectionDisabled(false)
-                    .onChange(of: customAIInstructions) { _, newValue in
-                        AIProviderSettings.userContext = newValue
+                    .focused($customInstructionsFocused)
+
+                    Button {
+                        AIProviderSettings.userContext = customAIInstructions
+                        let canonical = AIProviderSettings.userContext
+                        customAIInstructions = canonical
+                        savedAIInstructions = canonical
+                        customInstructionsFocused = false
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Label("Save", systemImage: "checkmark.circle.fill")
+                                .font(.system(.body, design: .rounded, weight: .semibold))
+                                .foregroundStyle(customAIInstructions == savedAIInstructions ? .secondary : AppColors.calorie)
+                            Spacer()
+                        }
                     }
+                    .disabled(customAIInstructions == savedAIInstructions)
                 } header: {
                     Text("Custom AI Instructions")
                 } footer: {
