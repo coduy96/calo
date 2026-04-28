@@ -194,6 +194,7 @@ struct AIProviderSettings {
     private static let modelKey = "selectedAIModel"
     private static let apiKeyKeychainPrefix = "apikey_"
     private static let baseURLKey = "customBaseURL_"
+    private static let userContextKey = "aiUserContext"
 
     static var selectedProvider: AIProvider {
         get {
@@ -258,6 +259,26 @@ struct AIProviderSettings {
         customBaseURL(for: selectedProvider) ?? selectedProvider.baseURL
     }
 
+    /// Optional user-supplied context (region, diet, athletic goals, etc.)
+    /// prepended as a system instruction to every AI request when non-empty.
+    /// Empty string ⇒ nothing injected, request shape unchanged.
+    static var userContext: String {
+        get { UserDefaults.standard.string(forKey: userContextKey) ?? "" }
+        set {
+            let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty {
+                UserDefaults.standard.removeObject(forKey: userContextKey)
+            } else {
+                UserDefaults.standard.set(newValue, forKey: userContextKey)
+            }
+        }
+    }
+
+    static var currentUserContext: String? {
+        let ctx = userContext.trimmingCharacters(in: .whitespacesAndNewlines)
+        return ctx.isEmpty ? nil : ctx
+    }
+
     static func deleteAllData() {
         for provider in AIProvider.allCases {
             setAPIKey(nil, for: provider)
@@ -265,5 +286,6 @@ struct AIProviderSettings {
         }
         UserDefaults.standard.removeObject(forKey: providerKey)
         UserDefaults.standard.removeObject(forKey: modelKey)
+        UserDefaults.standard.removeObject(forKey: userContextKey)
     }
 }

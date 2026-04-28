@@ -1332,6 +1332,7 @@ struct ProfileView: View {
     @State private var apiKeyText: String = AIProviderSettings.apiKey(for: AIProviderSettings.selectedProvider) ?? ""
     @State private var customBaseURL: String = AIProviderSettings.customBaseURL(for: AIProviderSettings.selectedProvider) ?? ""
     @State private var showAPIKey = false
+    @State private var customAIInstructions: String = AIProviderSettings.userContext
     @State private var selectedSpeechProvider: SpeechProvider = SpeechSettings.selectedProvider
     @State private var speechApiKeyText: String = SpeechSettings.apiKey(for: SpeechSettings.selectedProvider) ?? ""
     @State private var showSpeechAPIKey = false
@@ -1767,6 +1768,25 @@ struct ProfileView: View {
                                 }
                         }
                     }
+                }
+                .listRowBackground(AppColors.appCard)
+
+                // Custom AI Instructions (User Context) — prepended to every AI request when non-empty
+                Section {
+                    TextField(
+                        "I live in Germany, assume European portion sizes. I'm on a bodybuilding cut.",
+                        text: $customAIInstructions,
+                        axis: .vertical
+                    )
+                    .lineLimit(3...6)
+                    .autocorrectionDisabled(false)
+                    .onChange(of: customAIInstructions) { _, newValue in
+                        AIProviderSettings.userContext = newValue
+                    }
+                } header: {
+                    Text("Custom AI Instructions")
+                } footer: {
+                    Text("Optional context sent with every AI request — region, diet, athletic goals, anything you'd otherwise repeat each time. Leave empty to disable.")
                 }
                 .listRowBackground(AppColors.appCard)
 

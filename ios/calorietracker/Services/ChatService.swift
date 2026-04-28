@@ -156,6 +156,11 @@ struct ChatService {
         lines.append("- \(weights.count) weight entries, \(bodyFats.count) body-fat readings, \(foods.count) food entries logged total. Use get_data_summary to see exact date ranges.")
         lines.append("")
         lines.append("When the user asks how to lose or gain, give a concrete calorie target and at least one actionable food or activity change. When they ask expected weight, reference the forecast numbers above.")
+        if let userContext = AIProviderSettings.currentUserContext {
+            lines.append("")
+            lines.append("## User-supplied context (Settings → AI Provider)")
+            lines.append(userContext)
+        }
         return lines.joined(separator: "\n")
     }
 

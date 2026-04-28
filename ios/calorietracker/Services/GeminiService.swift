@@ -270,9 +270,12 @@ struct GeminiService {
         }
         parts.append(["text": prompt])
 
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "contents": [["parts": parts]]
         ]
+        if let userContext = AIProviderSettings.currentUserContext {
+            body["systemInstruction"] = ["parts": [["text": userContext]]]
+        }
 
         let data = try await makeRequest(
             url: url,
@@ -305,9 +308,15 @@ struct GeminiService {
         }
         content.append(["type": "text", "text": prompt])
 
+        var messages: [[String: Any]] = []
+        if let userContext = AIProviderSettings.currentUserContext {
+            messages.append(["role": "system", "content": userContext])
+        }
+        messages.append(["role": "user", "content": content])
+
         let body: [String: Any] = [
             "model": model,
-            "messages": [["role": "user", "content": content]],
+            "messages": messages,
             "max_tokens": 1024,
         ]
 
@@ -351,11 +360,14 @@ struct GeminiService {
         }
         content.append(["type": "text", "text": prompt])
 
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "model": model,
             "max_tokens": 1024,
             "messages": [["role": "user", "content": content]],
         ]
+        if let userContext = AIProviderSettings.currentUserContext {
+            body["system"] = userContext
+        }
 
         let headers = [
             "Content-Type": "application/json",
