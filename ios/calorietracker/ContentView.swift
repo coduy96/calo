@@ -1829,10 +1829,12 @@ struct ProfileView: View {
                     }
 
                     if fallbackEnabled {
-                        let fallbackCandidates = AIProvider.allCases.filter { $0 != selectedProvider }
-
+                        // Fallback provider list shows all 13 — same provider as primary IS allowed
+                        // (so e.g. Gemini Pro primary + Gemini Flash fallback works for capacity diversity).
+                        // The collision is handled at the model layer below + at the runtime check in
+                        // AIProviderSettings.currentFallbackConfig.
                         Picker(selection: $selectedFallbackProvider) {
-                            ForEach(fallbackCandidates) { provider in
+                            ForEach(AIProvider.allCases) { provider in
                                 Text(provider.rawValue).tag(provider)
                             }
                         } label: {
@@ -1850,23 +1852,15 @@ struct ProfileView: View {
                                 selectedFallbackModel = newProvider.defaultModel
                                 AIProviderSettings.selectedFallbackModel = selectedFallbackModel
                             }
+                            // If switching fallback to same provider as primary AND model collides,
+                            // bump to first non-primary model so picker doesn't show identical config.
+                            if newProvider == selectedProvider, selectedFallbackModel == selectedModel,
+                               let alt = newProvider.models.first(where: { $0 != selectedModel }) {
+                                selectedFallbackModel = alt
+                                AIProviderSettings.selectedFallbackModel = alt
+                            }
                             fallbackApiKeyText = AIProviderSettings.apiKey(for: newProvider) ?? ""
                             fallbackBaseURL = AIProviderSettings.customBaseURL(for: newProvider) ?? ""
-                        }
-                        .onAppear {
-                            // Auto-pick a provider that isn't the primary if the saved fallback collides
-                            if selectedFallbackProvider == selectedProvider,
-                               let alt = fallbackCandidates.first {
-                                selectedFallbackProvider = alt
-                                AIProviderSettings.selectedFallbackProvider = alt
-                                fallbackApiKeyText = AIProviderSettings.apiKey(for: alt) ?? ""
-                                fallbackBaseURL = AIProviderSettings.customBaseURL(for: alt) ?? ""
-                                if !alt.supportsCustomModelName,
-                                   !alt.models.contains(selectedFallbackModel) {
-                                    selectedFallbackModel = alt.defaultModel
-                                    AIProviderSettings.selectedFallbackModel = selectedFallbackModel
-                                }
-                            }
                         }
 
                         if selectedFallbackProvider.supportsCustomModelName {
@@ -1892,21 +1886,41 @@ struct ProfileView: View {
                                     AIProviderSettings.selectedFallbackModel = newModel
                                 }
                             }
-                        } else if !selectedFallbackProvider.models.isEmpty {
-                            Picker(selection: $selectedFallbackModel) {
-                                ForEach(selectedFallbackProvider.models, id: \.self) { model in
-                                    Text(model).tag(model)
+                        } else {
+                            // Same provider as primary → exclude the primary's model from the picker so
+                            // user can't accidentally pick an identical config. Different provider →
+                            // show all models normally.
+                            let modelOptions: [String] = {
+                                if selectedFallbackProvider == selectedProvider {
+                                    return selectedFallbackProvider.models.filter { $0 != selectedModel }
                                 }
-                            } label: {
-                                Label {
-                                    Text("Model")
-                                } icon: {
-                                    Image(systemName: "cpu")
-                                        .foregroundStyle(AppColors.calorie)
+                                return selectedFallbackProvider.models
+                            }()
+                            if !modelOptions.isEmpty {
+                                Picker(selection: $selectedFallbackModel) {
+                                    ForEach(modelOptions, id: \.self) { model in
+                                        Text(model).tag(model)
+                                    }
+                                } label: {
+                                    Label {
+                                        Text("Model")
+                                    } icon: {
+                                        Image(systemName: "cpu")
+                                            .foregroundStyle(AppColors.calorie)
+                                    }
                                 }
-                            }
-                            .onChange(of: selectedFallbackModel) { _, newModel in
-                                AIProviderSettings.selectedFallbackModel = newModel
+                                .onChange(of: selectedFallbackModel) { _, newModel in
+                                    AIProviderSettings.selectedFallbackModel = newModel
+                                }
+                                .onAppear {
+                                    // If saved fallback model collides with primary model on same provider,
+                                    // bump to the first available alternative.
+                                    if !modelOptions.contains(selectedFallbackModel),
+                                       let first = modelOptions.first {
+                                        selectedFallbackModel = first
+                                        AIProviderSettings.selectedFallbackModel = first
+                                    }
+                                }
                             }
                         }
 
@@ -1973,7 +1987,7 @@ struct ProfileView: View {
                 } header: {
                     Text("Fallback Provider")
                 } footer: {
-                    Text("If your primary provider fails (overloaded, no credits, network error), the request automatically retries on this fallback. The currently selected primary is excluded from the picker.")
+                    Text("If your primary provider fails (overloaded, no credits, network error), the request automatically retries on this fallback. Same provider as primary is allowed — just pick a different model.")
                 }
                 .listRowBackground(AppColors.appCard)
 

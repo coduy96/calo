@@ -330,17 +330,20 @@ struct AIProviderSettings {
         let apiKey: String?
     }
 
-    /// Returns the resolved fallback config when (a) fallback is enabled, (b) the saved
-    /// fallback provider differs from the primary, and (c) the fallback provider has a
-    /// usable key (or doesn't require one). Returns nil otherwise so callers skip retry.
+    /// Returns the resolved fallback config when (a) fallback is enabled, (b) the fallback
+    /// provider has a usable key (or doesn't require one), and (c) the fallback config
+    /// isn't byte-for-byte identical to the primary (same provider + model = pointless retry).
+    /// Same provider with a *different* model IS allowed — common pattern is e.g. Gemini Pro
+    /// primary with Gemini Flash fallback for capacity-pool diversity within one provider.
     static func currentFallbackConfig(excludingPrimary primary: AIProvider) -> FallbackConfig? {
         guard fallbackEnabled else { return nil }
         let provider = selectedFallbackProvider
-        guard provider != primary else { return nil }
+        let model = selectedFallbackModel
+        if provider == primary, model == selectedModel { return nil }
         if provider.requiresAPIKey, apiKey(for: provider) == nil { return nil }
         return FallbackConfig(
             provider: provider,
-            model: selectedFallbackModel,
+            model: model,
             baseURL: customBaseURL(for: provider) ?? provider.baseURL,
             apiKey: apiKey(for: provider)
         )

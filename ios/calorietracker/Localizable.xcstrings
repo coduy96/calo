@@ -21435,6 +21435,101 @@
           }
         }
       }
+    },
+    "If your primary provider fails (overloaded, no credits, network error), the request automatically retries on this fallback. Same provider as primary is allowed — just pick a different model.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If your primary provider fails (overloaded, no credits, network error), the request automatically retries on this fallback. Same provider as primary is allowed — just pick a different model."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إذا فشل المزود الأساسي (مزدحم، بدون رصيد، خطأ شبكة)، تتم إعادة المحاولة تلقائيًا على هذا المزود الاحتياطي. يُسمح باستخدام نفس المزود الأساسي — فقط اختر نموذجًا مختلفًا."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Əsas təminatçınız uğursuz olsa (yüklənib, kredit yoxdur, şəbəkə xətası), sorğu avtomatik olaraq bu ehtiyatda yenidən cəhd edilir. Əsas ilə eyni təminatçıya icazə verilir — sadəcə fərqli bir model seçin."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn dein primärer Anbieter ausfällt (überlastet, keine Credits, Netzwerkfehler), wird die Anfrage automatisch über diesen Fallback wiederholt. Derselbe Anbieter wie der Primäranbieter ist erlaubt — wähle einfach ein anderes Modell."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si tu proveedor principal falla (sobrecargado, sin créditos, error de red), la solicitud se reintenta automáticamente en este respaldo. Se permite el mismo proveedor que el principal — solo elige un modelo diferente."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si votre fournisseur principal échoue (surchargé, sans crédits, erreur réseau), la requête est automatiquement réessayée sur ce secours. Le même fournisseur que le principal est autorisé — choisissez simplement un modèle différent."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यदि आपका प्राथमिक प्रदाता विफल हो जाता है (ओवरलोड, क्रेडिट नहीं, नेटवर्क त्रुटि), तो अनुरोध स्वचालित रूप से इस फ़ॉलबैक पर पुनः प्रयास करता है। प्राथमिक के समान प्रदाता की अनुमति है — बस एक अलग मॉडल चुनें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se il tuo provider principale fallisce (sovraccarico, senza crediti, errore di rete), la richiesta viene automaticamente ritentata su questo fallback. È consentito lo stesso provider del principale — basta scegliere un modello diverso."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プライマリプロバイダーが失敗した場合（過負荷、クレジット不足、ネットワークエラー）、リクエストは自動的にこのフォールバックで再試行されます。プライマリと同じプロバイダーも使用可能です — 別のモデルを選んでください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기본 제공업체가 실패하면(과부하, 크레딧 부족, 네트워크 오류) 요청이 자동으로 이 폴백에서 재시도됩니다. 기본과 같은 제공업체도 허용됩니다 — 다른 모델을 선택하세요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als je primaire aanbieder faalt (overbelast, geen credits, netwerkfout), wordt het verzoek automatisch opnieuw geprobeerd op deze fallback. Dezelfde aanbieder als de primaire is toegestaan — kies gewoon een ander model."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se seu provedor principal falhar (sobrecarregado, sem créditos, erro de rede), a solicitação é repetida automaticamente neste fallback. O mesmo provedor que o principal é permitido — basta escolher um modelo diferente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dacă furnizorul principal eșuează (supraîncărcat, fără credite, eroare de rețea), solicitarea se reîncearcă automat pe această rezervă. Același furnizor ca primarul este permis — alege doar un model diferit."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Если основной провайдер сбоит (перегружен, нет кредитов, ошибка сети), запрос автоматически повторяется на этом резерве. Тот же провайдер, что и основной, разрешён — просто выберите другую модель."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如果您的主提供商失败（过载、无积分、网络错误），请求将自动在此备用方案上重试。允许与主提供商相同 — 只需选择不同的模型。"
+          }
+        }
+      }
     }
   },
   "version": "1.1"
