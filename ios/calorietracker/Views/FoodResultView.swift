@@ -222,7 +222,7 @@ struct FoodResultView: View {
                 .background(KeyboardDismissTapInstaller())
                 .safeAreaInset(edge: .bottom) {
                     if isQuantityEditing {
-                        Color.clear.frame(height: 56)
+                        Color.clear.frame(height: 12)
                     }
                 }
                 .onChange(of: isQuantityEditing) { _, editing in
@@ -248,7 +248,7 @@ struct FoodResultView: View {
     private func scrollQuantityIntoView(_ proxy: ScrollViewProxy) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             withAnimation(.easeInOut(duration: 0.2)) {
-                proxy.scrollTo(ScrollTarget.quantity, anchor: .center)
+                proxy.scrollTo(ScrollTarget.quantity, anchor: .bottom)
             }
         }
     }
@@ -351,10 +351,7 @@ private struct EndEditingDecimalTextField: UIViewRepresentable {
         textField.placeholder = "0"
         textField.font = .preferredFont(forTextStyle: .body)
         textField.adjustsFontForContentSizeCategory = true
-        textField.inputAccessoryView = ReviewFoodKeyboardAccessoryView(
-            target: context.coordinator,
-            action: #selector(Coordinator.doneTapped)
-        )
+        textField.inputAccessoryView = context.coordinator.makeToolbar()
         textField.addTarget(context.coordinator, action: #selector(Coordinator.textDidChange(_:)), for: .editingChanged)
         return textField
     }
@@ -396,6 +393,20 @@ private struct EndEditingDecimalTextField: UIViewRepresentable {
             text = textField.text ?? ""
         }
 
+        func makeToolbar() -> UIToolbar {
+            let doneItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneTapped))
+            doneItem.tintColor = Self.calorieTint
+
+            let toolbar = UIToolbar()
+            toolbar.tintColor = Self.calorieTint
+            toolbar.items = [
+                UIBarButtonItem(systemItem: .flexibleSpace),
+                doneItem
+            ]
+            toolbar.sizeToFit()
+            return toolbar
+        }
+
         @objc func doneTapped() {
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
@@ -410,44 +421,8 @@ private struct EndEditingDecimalTextField: UIViewRepresentable {
         func textFieldDidEndEditing(_ textField: UITextField) {
             onEditingChanged(false)
         }
-    }
-}
 
-private final class ReviewFoodKeyboardAccessoryView: UIInputView {
-    private static let height: CGFloat = 50
-    private static let calorieTint = UIColor(red: 1.0, green: 55.0 / 255.0, blue: 95.0 / 255.0, alpha: 1.0)
-
-    init(target: Any?, action: Selector) {
-        super.init(frame: CGRect(x: 0, y: 0, width: 0, height: Self.height), inputViewStyle: .keyboard)
-        autoresizingMask = [.flexibleWidth]
-        backgroundColor = .clear
-
-        let button = UIButton(type: .system)
-        var configuration = UIButton.Configuration.filled()
-        configuration.title = "Done"
-        configuration.baseForegroundColor = Self.calorieTint
-        configuration.baseBackgroundColor = UIColor.secondarySystemFill
-        configuration.cornerStyle = .capsule
-        configuration.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20)
-        button.configuration = configuration
-        button.titleLabel?.font = .preferredFont(forTextStyle: .headline)
-        button.addTarget(target, action: action, for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-
-        addSubview(button)
-        NSLayoutConstraint.activate([
-            button.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -12),
-            button.centerYAnchor.constraint(equalTo: centerYAnchor),
-            button.heightAnchor.constraint(equalToConstant: 36)
-        ])
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override var intrinsicContentSize: CGSize {
-        CGSize(width: UIView.noIntrinsicMetric, height: Self.height)
+        private static let calorieTint = UIColor(red: 1.0, green: 55.0 / 255.0, blue: 95.0 / 255.0, alpha: 1.0)
     }
 }
 
