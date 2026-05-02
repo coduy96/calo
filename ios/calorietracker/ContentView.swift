@@ -1349,7 +1349,7 @@ struct ProfileView: View {
     @State private var fallbackBaseURL: String = AIProviderSettings.customBaseURL(for: AIProviderSettings.selectedFallbackProvider) ?? ""
     @State private var showFallbackAPIKey = false
     @State private var selectedSpeechProvider: SpeechProvider = SpeechSettings.selectedProvider
-    @State private var selectedSpeechLanguage: SpeechLanguage = SpeechSettings.selectedLanguage
+    @State private var selectedSpeechLanguage: SpeechLanguage = SpeechSettings.selectedLanguage(for: SpeechSettings.selectedProvider)
     @State private var speechApiKeyText: String = SpeechSettings.apiKey(for: SpeechSettings.selectedProvider) ?? ""
     @State private var showSpeechAPIKey = false
 
@@ -2052,6 +2052,7 @@ struct ProfileView: View {
                     .onChange(of: selectedSpeechProvider) { _, newProvider in
                         SpeechSettings.selectedProvider = newProvider
                         speechApiKeyText = SpeechSettings.apiKey(for: newProvider) ?? ""
+                        selectedSpeechLanguage = SpeechSettings.selectedLanguage(for: newProvider)
                     }
 
                     Text(selectedSpeechProvider.description)
@@ -2074,7 +2075,7 @@ struct ProfileView: View {
                     .pickerStyle(.menu)
                     .tint(.secondary)
                     .onChange(of: selectedSpeechLanguage) { _, newLanguage in
-                        SpeechSettings.selectedLanguage = newLanguage
+                        SpeechSettings.setLanguage(newLanguage, for: selectedSpeechProvider)
                     }
 
                     if selectedSpeechProvider.requiresAPIKey {
@@ -2113,7 +2114,7 @@ struct ProfileView: View {
                 } header: {
                     Text("Speech-to-Text")
                 } footer: {
-                    Text("Used when you tap the voice icon to log a meal. Auto uses your iPhone language for Native iOS and the provider default for API providers; choose a language to send an explicit hint.")
+                    Text("Used when you tap the voice icon to log a meal. Each provider remembers its own language. Provider Auto keeps the provider default; Use iPhone Language sends your current iPhone language when supported.")
                 }
                 .listRowBackground(AppColors.appCard)
 

@@ -72,8 +72,8 @@ enum SpeechLanguage: String, CaseIterable, Codable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .automatic: "Auto"
-        case .device: "iPhone Language"
+        case .automatic: "Provider Auto"
+        case .device: "Use iPhone Language"
         case .english: "English"
         case .german: "German"
         case .spanish: "Spanish"
@@ -154,6 +154,7 @@ enum SpeechLanguage: String, CaseIterable, Codable, Identifiable {
 struct SpeechSettings {
     private static let providerKey = "selectedSpeechProvider"
     private static let languageKey = "selectedSpeechLanguage"
+    private static let languageKeyPrefix = "selectedSpeechLanguage_"
     private static let apiKeyKeychainPrefix = "speechApiKey_"
 
     static var selectedProvider: SpeechProvider {
@@ -169,12 +170,36 @@ struct SpeechSettings {
 
     static var selectedLanguage: SpeechLanguage {
         get {
-            guard let raw = UserDefaults.standard.string(forKey: languageKey),
-                  let language = SpeechLanguage(rawValue: raw) else { return .automatic }
-            return language
+            selectedLanguage(for: selectedProvider)
         }
         set {
-            UserDefaults.standard.set(newValue.rawValue, forKey: languageKey)
+            setLanguage(newValue, for: selectedProvider)
+        }
+    }
+
+    static func selectedLanguage(for provider: SpeechProvider) -> SpeechLanguage {
+        let key = languageKeyPrefix + provider.rawValue
+        guard let raw = UserDefaults.standard.string(forKey: key),
+              let language = SpeechLanguage(rawValue: raw) else {
+            return defaultLanguage(for: provider)
+        }
+        return language
+    }
+
+    static func setLanguage(_ language: SpeechLanguage, for provider: SpeechProvider) {
+        UserDefaults.standard.set(language.rawValue, forKey: languageKeyPrefix + provider.rawValue)
+    }
+
+    static func defaultLanguage(for provider: SpeechProvider) -> SpeechLanguage {
+        switch provider {
+        case .nativeIOS:
+            .device
+        case .openai, .groq:
+            .automatic
+        case .deepgram:
+            .device
+        case .assemblyai:
+            .automatic
         }
     }
 
@@ -201,5 +226,8 @@ struct SpeechSettings {
         }
         UserDefaults.standard.removeObject(forKey: providerKey)
         UserDefaults.standard.removeObject(forKey: languageKey)
+        for provider in SpeechProvider.allCases {
+            UserDefaults.standard.removeObject(forKey: languageKeyPrefix + provider.rawValue)
+        }
     }
 }

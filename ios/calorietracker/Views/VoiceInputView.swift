@@ -202,7 +202,7 @@ struct VoiceInputView: View {
     }
 
     private func beginNativeAudioSession() {
-        speechRecognizer = Self.makeNativeSpeechRecognizer(for: SpeechSettings.selectedLanguage)
+        speechRecognizer = Self.makeNativeSpeechRecognizer(for: SpeechSettings.selectedLanguage(for: .nativeIOS))
         guard let speechRecognizer, speechRecognizer.isAvailable else {
             permissionError = "Native speech recognition unavailable on this device."
             return
