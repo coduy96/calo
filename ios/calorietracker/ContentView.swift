@@ -51,15 +51,8 @@ private enum AppUpdateChecker {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
     }
 
-    static var currentBuild: String {
-        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
-    }
-
     static var currentVersionDisplay: String {
-        guard !currentBuild.isEmpty, currentBuild != currentVersion else {
-            return currentVersion
-        }
-        return "\(currentVersion) (\(currentBuild))"
+        currentVersion
     }
 
     static func check() async -> AppUpdateState {
