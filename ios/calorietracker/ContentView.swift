@@ -12,8 +12,111 @@ enum CameraMode {
     case nutritionLabel
 }
 
+private let fudAIAppStoreID = "6758935726"
+private let fudAIAppStoreURL = URL(string: "https://apps.apple.com/us/app/fud-ai-calorie-tracker/id6758935726")!
+
+private enum AppUpdateState: Equatable {
+    case idle
+    case checking
+    case upToDate(current: String, latest: String?)
+    case available(current: String, latest: String, url: URL)
+    case failed(current: String)
+
+    var isUpdateAvailable: Bool {
+        if case .available = self {
+            return true
+        }
+        return false
+    }
+
+    var hasStartedCheck: Bool {
+        if case .idle = self {
+            return false
+        }
+        return true
+    }
+}
+
+private struct AppStoreLookupResponse: Decodable {
+    let results: [AppStoreLookupResult]
+}
+
+private struct AppStoreLookupResult: Decodable {
+    let version: String
+    let trackViewUrl: String?
+}
+
+private enum AppUpdateChecker {
+    static var currentVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
+    }
+
+    static var currentBuild: String {
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
+    }
+
+    static var currentVersionDisplay: String {
+        guard !currentBuild.isEmpty, currentBuild != currentVersion else {
+            return currentVersion
+        }
+        return "\(currentVersion) (\(currentBuild))"
+    }
+
+    static func check() async -> AppUpdateState {
+        let current = currentVersion
+
+        guard let url = URL(string: "https://itunes.apple.com/lookup?id=\(fudAIAppStoreID)&country=us") else {
+            return .failed(current: current)
+        }
+
+        do {
+            let (data, response) = try await URLSession.shared.data(from: url)
+            guard let httpResponse = response as? HTTPURLResponse,
+                  (200..<300).contains(httpResponse.statusCode) else {
+                return .failed(current: current)
+            }
+
+            let lookup = try JSONDecoder().decode(AppStoreLookupResponse.self, from: data)
+            guard let result = lookup.results.first else {
+                return .upToDate(current: current, latest: nil)
+            }
+
+            let updateURL = result.trackViewUrl.flatMap(URL.init(string:)) ?? fudAIAppStoreURL
+            if isVersion(result.version, newerThan: current) {
+                return .available(current: current, latest: result.version, url: updateURL)
+            }
+
+            return .upToDate(current: current, latest: result.version)
+        } catch {
+            return .failed(current: current)
+        }
+    }
+
+    private static func isVersion(_ latest: String, newerThan current: String) -> Bool {
+        let latestParts = latest.split(separator: ".").map { Int($0) ?? 0 }
+        let currentParts = current.split(separator: ".").map { Int($0) ?? 0 }
+        let count = max(latestParts.count, currentParts.count)
+
+        for index in 0..<count {
+            let latestValue = index < latestParts.count ? latestParts[index] : 0
+            let currentValue = index < currentParts.count ? currentParts[index] : 0
+
+            if latestValue > currentValue {
+                return true
+            }
+            if latestValue < currentValue {
+                return false
+            }
+        }
+
+        return false
+    }
+}
+
 // MARK: - Main Content View
 struct ContentView: View {
+    @State private var appUpdateState: AppUpdateState = .idle
+
     var body: some View {
         TabView {
             HomeView()
@@ -40,29 +143,57 @@ struct ContentView: View {
                     Text("Settings")
                 }
 
-            AboutView()
+            AboutView(
+                updateState: $appUpdateState,
+                refreshUpdateState: {
+                    await refreshAppUpdateState(force: true)
+                }
+            )
                 .tabItem {
                     Image(systemName: "info.circle.fill")
                     Text("About")
                 }
+                .badge(appUpdateState.isUpdateAvailable ? "!" : nil)
         }
         .tint(AppColors.calorie)
+        .task {
+            await refreshAppUpdateState()
+        }
+    }
+
+    @MainActor
+    private func refreshAppUpdateState(force: Bool = false) async {
+        if !force && appUpdateState.hasStartedCheck {
+            return
+        }
+
+        appUpdateState = .checking
+        appUpdateState = await AppUpdateChecker.check()
     }
 }
 
 // MARK: - About View
-struct AboutView: View {
+private struct AboutView: View {
+    @Binding private var updateState: AppUpdateState
+    private let refreshUpdateState: () async -> Void
+
     @State private var showShareSheet = false
+
+    init(updateState: Binding<AppUpdateState>, refreshUpdateState: @escaping () async -> Void) {
+        self._updateState = updateState
+        self.refreshUpdateState = refreshUpdateState
+    }
 
     private var shareMessage: String {
         String(localized: "I've been tracking my meals with Fud AI — snap a photo, speak it, or type it, and the AI logs the calories. It's free, open source, and your data stays on your device.\n\nDownload: https://fud-ai.app")
     }
-    private let appStoreURL = URL(string: "https://apps.apple.com/us/app/fud-ai-calorie-tracker/id6758935726")!
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
+                    updateRow
+
                     // Rate the App
                     Button {
                         requestNativeReview()
@@ -225,8 +356,107 @@ struct AboutView: View {
             .background(AppColors.appBackground)
             .navigationBarHidden(true)
             .sheet(isPresented: $showShareSheet) {
-                ActivityShareSheet(activityItems: [shareMessage, appStoreURL])
+                ActivityShareSheet(activityItems: [shareMessage, fudAIAppStoreURL])
             }
+        }
+    }
+
+    @ViewBuilder
+    private var updateRow: some View {
+        switch updateState {
+        case .checking:
+            HStack {
+                Label {
+                    Text("Checking for Updates")
+                } icon: {
+                    Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
+                        .foregroundStyle(AppColors.calorie)
+                }
+
+                Spacer()
+
+                ProgressView()
+                    .tint(AppColors.calorie)
+            }
+
+        case .available(let current, let latest, let url):
+            Button {
+                UIApplication.shared.open(url)
+            } label: {
+                HStack(spacing: 12) {
+                    Label {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Update Available")
+                            Text("Current \(current) -> Latest \(latest)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    } icon: {
+                        ZStack(alignment: .topTrailing) {
+                            Image(systemName: "arrow.down.circle.fill")
+                                .foregroundStyle(AppColors.calorie)
+
+                            Circle()
+                                .fill(AppColors.calorie)
+                                .frame(width: 8, height: 8)
+                                .offset(x: 3, y: -3)
+                        }
+                    }
+
+                    Spacer()
+
+                    Text("Update")
+                        .fontWeight(.semibold)
+                        .foregroundStyle(AppColors.calorie)
+                }
+            }
+            .tint(.primary)
+
+        case .failed:
+            Button {
+                Task {
+                    await refreshUpdateState()
+                }
+            } label: {
+                HStack {
+                    Label {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Check for Updates")
+                            Text("Version \(AppUpdateChecker.currentVersionDisplay)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    } icon: {
+                        Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
+                            .foregroundStyle(AppColors.calorie)
+                    }
+
+                    Spacer()
+                }
+            }
+            .tint(.primary)
+
+        case .idle, .upToDate:
+            Button {
+                Task {
+                    await refreshUpdateState()
+                }
+            } label: {
+                HStack {
+                    Label {
+                        Text("App Version")
+                    } icon: {
+                        Image(systemName: "checkmark.seal.fill")
+                            .foregroundStyle(AppColors.calorie)
+                    }
+
+                    Spacer()
+
+                    Text(AppUpdateChecker.currentVersionDisplay)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .tint(.primary)
         }
     }
 
