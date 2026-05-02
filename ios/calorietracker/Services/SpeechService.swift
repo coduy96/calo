@@ -31,6 +31,7 @@ struct SpeechService {
     /// Caller should only invoke this for non-native providers.
     static func transcribe(audioURL: URL) async throws -> String {
         let provider = SpeechSettings.selectedProvider
+        let languageCode = SpeechSettings.selectedLanguage.apiLanguageCode
         guard provider.requiresAPIKey else {
             // Native iOS handled directly by VoiceInputView.
             throw SpeechError.apiError("Native iOS transcription is handled in-view, not via SpeechService.")
@@ -49,26 +50,28 @@ struct SpeechService {
                 baseURL: "https://api.openai.com/v1",
                 model: provider.defaultModel,
                 audioData: audioData,
-                apiKey: apiKey
+                apiKey: apiKey,
+                languageCode: languageCode
             )
         case .groq:
             return try await callOpenAIWhisper(
                 baseURL: "https://api.groq.com/openai/v1",
                 model: provider.defaultModel,
                 audioData: audioData,
-                apiKey: apiKey
+                apiKey: apiKey,
+                languageCode: languageCode
             )
         case .deepgram:
-            return try await callDeepgram(model: provider.defaultModel, audioData: audioData, apiKey: apiKey)
+            return try await callDeepgram(model: provider.defaultModel, audioData: audioData, apiKey: apiKey, languageCode: languageCode)
         case .assemblyai:
-            return try await callAssemblyAI(audioData: audioData, apiKey: apiKey)
+            return try await callAssemblyAI(audioData: audioData, apiKey: apiKey, languageCode: languageCode)
         }
     }
 
     // MARK: - OpenAI-compatible (OpenAI + Groq)
 
     /// OpenAI's /v1/audio/transcriptions spec. Groq implements the same endpoint on their host.
-    private static func callOpenAIWhisper(baseURL: String, model: String, audioData: Data, apiKey: String) async throws -> String {
+    private static func callOpenAIWhisper(baseURL: String, model: String, audioData: Data, apiKey: String, languageCode: String?) async throws -> String {
         guard let url = URL(string: "\(baseURL)/audio/transcriptions") else {
             throw SpeechError.apiError("Invalid URL.")
         }
@@ -77,10 +80,14 @@ struct SpeechService {
         request.httpMethod = "POST"
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        request.httpBody = multipartBody(boundary: boundary, fields: [
+        var fields = [
             "model": model,
             "response_format": "text",
-        ], file: (fieldName: "file", filename: "audio.m4a", mimeType: "audio/m4a", data: audioData))
+        ]
+        if let languageCode {
+            fields["language"] = languageCode
+        }
+        request.httpBody = multipartBody(boundary: boundary, fields: fields, file: (fieldName: "file", filename: "audio.m4a", mimeType: "audio/m4a", data: audioData))
 
         let (data, response) = try await send(request)
         guard let http = response as? HTTPURLResponse else { throw SpeechError.invalidResponse }
@@ -96,9 +103,20 @@ struct SpeechService {
 
     // MARK: - Deepgram
 
-    private static func callDeepgram(model: String, audioData: Data, apiKey: String) async throws -> String {
+    private static func callDeepgram(model: String, audioData: Data, apiKey: String, languageCode: String?) async throws -> String {
         // Deepgram pre-recorded endpoint — no multipart, raw audio body.
-        guard let url = URL(string: "https://api.deepgram.com/v1/listen?model=\(model)&smart_format=true&punctuate=true") else {
+        var components = URLComponents(string: "https://api.deepgram.com/v1/listen")
+        var queryItems = [
+            URLQueryItem(name: "model", value: model),
+            URLQueryItem(name: "smart_format", value: "true"),
+            URLQueryItem(name: "punctuate", value: "true")
+        ]
+        if let languageCode {
+            queryItems.append(URLQueryItem(name: "language", value: languageCode))
+        }
+        components?.queryItems = queryItems
+
+        guard let url = components?.url else {
             throw SpeechError.apiError("Invalid URL.")
         }
         var request = URLRequest(url: url)
@@ -127,7 +145,7 @@ struct SpeechService {
 
     // MARK: - AssemblyAI (2-step: upload then transcribe-and-poll)
 
-    private static func callAssemblyAI(audioData: Data, apiKey: String) async throws -> String {
+    private static func callAssemblyAI(audioData: Data, apiKey: String, languageCode: String?) async throws -> String {
         // 1. Upload raw audio, get a temporary upload URL.
         guard let uploadURL = URL(string: "https://api.assemblyai.com/v2/upload") else {
             throw SpeechError.apiError("Invalid URL.")
@@ -153,7 +171,11 @@ struct SpeechService {
         submitReq.httpMethod = "POST"
         submitReq.setValue(apiKey, forHTTPHeaderField: "Authorization")
         submitReq.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        submitReq.httpBody = try JSONSerialization.data(withJSONObject: ["audio_url": audioRef])
+        var submitBody: [String: Any] = ["audio_url": audioRef]
+        if let languageCode {
+            submitBody["language_code"] = languageCode
+        }
+        submitReq.httpBody = try JSONSerialization.data(withJSONObject: submitBody)
         let (submitData, submitResp) = try await send(submitReq)
         guard let submitHttp = submitResp as? HTTPURLResponse, submitHttp.statusCode == 200,
               let submitJson = try? JSONSerialization.jsonObject(with: submitData) as? [String: Any],

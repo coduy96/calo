@@ -13,7 +13,7 @@ struct VoiceInputView: View {
     @State private var pulseScale: CGFloat = 1.0
 
     // Native path
-    @State private var speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+    @State private var speechRecognizer: SFSpeechRecognizer?
     @State private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     @State private var recognitionTask: SFSpeechRecognitionTask?
     @State private var audioEngine = AVAudioEngine()
@@ -202,6 +202,7 @@ struct VoiceInputView: View {
     }
 
     private func beginNativeAudioSession() {
+        speechRecognizer = Self.makeNativeSpeechRecognizer(for: SpeechSettings.selectedLanguage)
         guard let speechRecognizer, speechRecognizer.isAvailable else {
             permissionError = "Native speech recognition unavailable on this device."
             return
@@ -256,6 +257,30 @@ struct VoiceInputView: View {
         recognitionTask = nil
         isRecording = false
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
+
+    private static func makeNativeSpeechRecognizer(for language: SpeechLanguage) -> SFSpeechRecognizer? {
+        let supportedLocales = SFSpeechRecognizer.supportedLocales()
+        let preferredLocale = language.preferredNativeLocale
+        let locale = supportedNativeLocale(preferredLocale, from: supportedLocales)
+        return SFSpeechRecognizer(locale: locale)
+    }
+
+    private static func supportedNativeLocale(_ preferredLocale: Locale, from supportedLocales: Set<Locale>) -> Locale {
+        if let exactMatch = supportedLocales.first(where: { normalizedLocaleID($0.identifier) == normalizedLocaleID(preferredLocale.identifier) }) {
+            return exactMatch
+        }
+
+        if let languageCode = preferredLocale.languageCode?.lowercased(),
+           let languageMatch = supportedLocales.first(where: { $0.languageCode?.lowercased() == languageCode }) {
+            return languageMatch
+        }
+
+        return Locale(identifier: "en-US")
+    }
+
+    private static func normalizedLocaleID(_ identifier: String) -> String {
+        identifier.replacingOccurrences(of: "_", with: "-").lowercased()
     }
 
     // MARK: - Remote (record to file, upload on stop)

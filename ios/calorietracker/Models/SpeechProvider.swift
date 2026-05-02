@@ -53,10 +53,107 @@ enum SpeechProvider: String, CaseIterable, Codable, Identifiable {
     }
 }
 
+enum SpeechLanguage: String, CaseIterable, Codable, Identifiable {
+    case automatic
+    case device
+    case english
+    case german
+    case spanish
+    case french
+    case italian
+    case portuguese
+    case dutch
+    case hindi
+    case japanese
+    case chinese
+    case korean
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .automatic: "Auto"
+        case .device: "iPhone Language"
+        case .english: "English"
+        case .german: "German"
+        case .spanish: "Spanish"
+        case .french: "French"
+        case .italian: "Italian"
+        case .portuguese: "Portuguese"
+        case .dutch: "Dutch"
+        case .hindi: "Hindi"
+        case .japanese: "Japanese"
+        case .chinese: "Chinese"
+        case .korean: "Korean"
+        }
+    }
+
+    var apiLanguageCode: String? {
+        switch self {
+        case .automatic:
+            nil
+        case .device:
+            Locale.autoupdatingCurrent.languageCode?.lowercased()
+        case .english:
+            "en"
+        case .german:
+            "de"
+        case .spanish:
+            "es"
+        case .french:
+            "fr"
+        case .italian:
+            "it"
+        case .portuguese:
+            "pt"
+        case .dutch:
+            "nl"
+        case .hindi:
+            "hi"
+        case .japanese:
+            "ja"
+        case .chinese:
+            "zh"
+        case .korean:
+            "ko"
+        }
+    }
+
+    var preferredNativeLocale: Locale {
+        switch self {
+        case .automatic, .device:
+            Locale.autoupdatingCurrent
+        case .english:
+            Locale(identifier: "en-US")
+        case .german:
+            Locale(identifier: "de-DE")
+        case .spanish:
+            Locale(identifier: "es-ES")
+        case .french:
+            Locale(identifier: "fr-FR")
+        case .italian:
+            Locale(identifier: "it-IT")
+        case .portuguese:
+            Locale(identifier: "pt-BR")
+        case .dutch:
+            Locale(identifier: "nl-NL")
+        case .hindi:
+            Locale(identifier: "hi-IN")
+        case .japanese:
+            Locale(identifier: "ja-JP")
+        case .chinese:
+            Locale(identifier: "zh-Hans")
+        case .korean:
+            Locale(identifier: "ko-KR")
+        }
+    }
+}
+
 // MARK: - Settings Persistence
 
 struct SpeechSettings {
     private static let providerKey = "selectedSpeechProvider"
+    private static let languageKey = "selectedSpeechLanguage"
     private static let apiKeyKeychainPrefix = "speechApiKey_"
 
     static var selectedProvider: SpeechProvider {
@@ -67,6 +164,17 @@ struct SpeechSettings {
         }
         set {
             UserDefaults.standard.set(newValue.rawValue, forKey: providerKey)
+        }
+    }
+
+    static var selectedLanguage: SpeechLanguage {
+        get {
+            guard let raw = UserDefaults.standard.string(forKey: languageKey),
+                  let language = SpeechLanguage(rawValue: raw) else { return .automatic }
+            return language
+        }
+        set {
+            UserDefaults.standard.set(newValue.rawValue, forKey: languageKey)
         }
     }
 
@@ -92,5 +200,6 @@ struct SpeechSettings {
             setAPIKey(nil, for: provider)
         }
         UserDefaults.standard.removeObject(forKey: providerKey)
+        UserDefaults.standard.removeObject(forKey: languageKey)
     }
 }

@@ -1349,6 +1349,7 @@ struct ProfileView: View {
     @State private var fallbackBaseURL: String = AIProviderSettings.customBaseURL(for: AIProviderSettings.selectedFallbackProvider) ?? ""
     @State private var showFallbackAPIKey = false
     @State private var selectedSpeechProvider: SpeechProvider = SpeechSettings.selectedProvider
+    @State private var selectedSpeechLanguage: SpeechLanguage = SpeechSettings.selectedLanguage
     @State private var speechApiKeyText: String = SpeechSettings.apiKey(for: SpeechSettings.selectedProvider) ?? ""
     @State private var showSpeechAPIKey = false
 
@@ -2058,6 +2059,24 @@ struct ProfileView: View {
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
 
+                    Picker(selection: $selectedSpeechLanguage) {
+                        ForEach(SpeechLanguage.allCases) { language in
+                            Text(language.displayName).tag(language)
+                        }
+                    } label: {
+                        Label {
+                            Text("Language")
+                        } icon: {
+                            Image(systemName: "globe")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .tint(.secondary)
+                    .onChange(of: selectedSpeechLanguage) { _, newLanguage in
+                        SpeechSettings.selectedLanguage = newLanguage
+                    }
+
                     if selectedSpeechProvider.requiresAPIKey {
                         HStack {
                             Label {
@@ -2094,7 +2113,7 @@ struct ProfileView: View {
                 } header: {
                     Text("Speech-to-Text")
                 } footer: {
-                    Text("Used when you tap the voice icon to log a meal. Native iOS runs on-device for free; third-party providers often have better accuracy on food terms and accents.")
+                    Text("Used when you tap the voice icon to log a meal. Auto uses your iPhone language for Native iOS and the provider default for API providers; choose a language to send an explicit hint.")
                 }
                 .listRowBackground(AppColors.appCard)
 
