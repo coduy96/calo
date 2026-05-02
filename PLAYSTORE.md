@@ -38,7 +38,7 @@ Snap, speak, or type a meal. AI logs the calories. Open source.
 ```
 Fud AI makes calorie tracking effortless with AI-powered food recognition. Snap a photo, speak it, or type it — get instant nutrition: calories, protein, carbs, fats, and 9 micronutrients.
 
-NEW in v1.0.7: Per-provider speech languages, richer Coach context, Play Store update checks in About, plus a tab dot when an update is available.
+NEW in v1.0.7: Per-provider speech languages, richer Coach context, Play Store update checks in About, update tab dot, plus keyboard, bottom nav, and rate-link polish.
 
 Free, open source, privacy-first. Bring your own API key. All data stays on your device.
 
@@ -110,93 +110,108 @@ English-only on Play Console — non-English Play Store browsers (ar, az-AZ, de-
 
 ```
 <en-US>
-• Pick a speech language per STT provider: Provider Auto, Use Device Language, or a fixed language.
-• Coach now has today/timezone plus richer meal details for better answers.
-• About checks Play Store updates and shows a tab dot when one is available.
+• Speech language per STT provider: Provider Auto, Use Device Language, or fixed.
+• Coach has today/timezone plus richer meal details.
+• About checks Play Store updates with a tab dot.
+• Fixes: Coach tap-to-hide keyboard, bottom-nav spacing, release Play Store links from debug/onboarding.
 </en-US>
 
 <ar>
-• اختر لغة الكلام لكل مزود STT: تلقائي من المزود، لغة الجهاز، أو لغة ثابتة.
-• Coach يعرف الآن تاريخ اليوم والمنطقة الزمنية وتفاصيل وجبات أكثر لإجابات أدق.
-• About يتحقق من تحديثات Play Store ويعرض نقطة عند توفر تحديث.
+• لغة كلام لكل مزود STT: تلقائي، لغة الجهاز، أو لغة ثابتة.
+• Coach يستخدم تاريخ اليوم والمنطقة الزمنية وتفاصيل وجبات أكثر.
+• About يتحقق من تحديثات Play Store مع نقطة في التبويب.
+• إصلاحات: إخفاء لوحة Coach بالنقر، تباعد الشريط السفلي، وروابط Play Store الصحيحة.
 </ar>
 
 <az-AZ>
-• Hər STT provayderi üçün nitq dili seçin: Provider Auto, Device Language və ya sabit dil.
-• Coach daha yaxşı cavablar üçün bugünkü tarix/saat qurşağı və daha zəngin yemək detalları görür.
-• About Play Store yeniləmələrini yoxlayır və yeniləmə olanda tab nöqtəsi göstərir.
+• Hər STT provayderi üçün dil: Provider Auto, Device Language və ya sabit dil.
+• Coach bugünkü tarix/saat qurşağı və daha zəngin yemək detallarından istifadə edir.
+• About Play Store yeniləmələrini tab nöqtəsi ilə göstərir.
+• Düzəlişlər: Coach klaviaturasını toxunuşla gizlətmə, alt naviqasiya aralığı, Play Store linkləri.
 </az-AZ>
 
 <de-DE>
-• Sprache pro STT-Anbieter wählen: Provider Auto, Gerätesprache oder feste Sprache.
-• Coach kennt jetzt Datum/Zeitzone und mehr Mahlzeitdetails für bessere Antworten.
-• About prüft Play Store-Updates und zeigt einen Punkt im Tab, wenn ein Update verfügbar ist.
+• Sprache pro STT-Anbieter: Provider Auto, Gerätesprache oder feste Sprache.
+• Coach nutzt jetzt Datum/Zeitzone und mehr Mahlzeitdetails.
+• About prüft Play Store-Updates mit Tab-Punkt.
+• Fixes: Coach-Tastatur per Tippen ausblenden, Bottom-Nav-Abstand, echte Play Store-Links aus Debug/Onboarding.
 </de-DE>
 
 <es-ES>
-• Elige idioma por proveedor STT: automático del proveedor, idioma del dispositivo o idioma fijo.
-• Coach ahora usa fecha/zona horaria y más detalles de comidas para mejores respuestas.
-• About busca actualizaciones de Play Store y muestra un punto en la pestaña si hay una.
+• Idioma por proveedor STT: automático, idioma del dispositivo o fijo.
+• Coach usa fecha/zona horaria y más detalles de comidas.
+• About busca actualizaciones de Play Store con punto en la pestaña.
+• Correcciones: ocultar teclado de Coach al tocar, espaciado de barra inferior y enlaces reales de Play Store.
 </es-ES>
 
 <fr-FR>
-• Choisis la langue par fournisseur STT : auto fournisseur, langue de l'appareil ou langue fixe.
-• Coach utilise maintenant la date, le fuseau horaire et plus de détails repas pour mieux répondre.
-• About vérifie les mises à jour Play Store et affiche un point dans l'onglet si disponible.
+• Langue par fournisseur STT : auto, langue de l'appareil ou langue fixe.
+• Coach utilise date/fuseau horaire et plus de détails repas.
+• About vérifie les mises à jour Play Store avec point d'onglet.
+• Correctifs : masquer le clavier Coach au toucher, espacement nav bas, vrais liens Play Store.
 </fr-FR>
 
 <hi-IN>
-• हर STT प्रोवाइडर के लिए भाषा चुनें: Provider Auto, Device Language, या fixed language.
-• Coach अब बेहतर जवाबों के लिए आज की तारीख/टाइमज़ोन और ज्यादा meal details समझता है.
-• About Play Store updates जांचता है और update available होने पर tab dot दिखाता है.
+• हर STT provider के लिए language: Provider Auto, Device Language, या fixed.
+• Coach अब today/timezone और richer meal details use करता है.
+• About Play Store updates और tab dot दिखाता है.
+• Fixes: Coach keyboard tap से hide, bottom-nav spacing, debug/onboarding में real Play Store links.
 </hi-IN>
 
 <it-IT>
-• Scegli la lingua per ogni provider STT: Provider Auto, lingua del dispositivo o lingua fissa.
-• Coach ora usa data/fuso orario e più dettagli sui pasti per risposte migliori.
-• About controlla gli aggiornamenti Play Store e mostra un punto nella scheda se disponibili.
+• Lingua per ogni provider STT: Provider Auto, lingua dispositivo o fissa.
+• Coach usa data/fuso orario e più dettagli sui pasti.
+• About controlla Play Store con punto nella scheda.
+• Fix: nascondi tastiera Coach al tocco, spaziatura nav inferiore, link Play Store reali.
 </it-IT>
 
 <ja-JP>
-• STTプロバイダーごとに音声言語を選択：Provider Auto、端末の言語、固定言語。
-• Coachは今日の日付/タイムゾーンと詳しい食事情報を使い、回答精度が向上。
-• AboutでPlay Store更新を確認し、更新があるとタブにドットを表示。
+• STTごとに音声言語を選択：Provider Auto、端末の言語、固定言語。
+• Coachが今日/タイムゾーンと詳しい食事情報を使用。
+• AboutでPlay Store更新確認とタブのドット表示。
+• 修正：Coachキーボード非表示、下部ナビ間隔、debug/onboardingの実Play Storeリンク。
 </ja-JP>
 
 <ko-KR>
-• STT 제공자별 음성 언어 선택: Provider Auto, 기기 언어, 고정 언어.
-• Coach가 오늘 날짜/시간대와 더 자세한 식사 정보를 사용해 답변을 개선합니다.
-• About에서 Play Store 업데이트를 확인하고, 업데이트가 있으면 탭에 점을 표시합니다.
+• STT 제공자별 언어: Provider Auto, 기기 언어, 고정 언어.
+• Coach가 오늘/시간대와 더 자세한 식사 정보를 사용합니다.
+• About에서 Play Store 업데이트와 탭 점을 표시합니다.
+• 수정: Coach 키보드 탭 숨김, 하단 내비 간격, debug/onboarding 실제 Play Store 링크.
 </ko-KR>
 
 <nl-NL>
-• Kies per STT-provider een taal: Provider Auto, apparaattaal of vaste taal.
-• Coach gebruikt nu datum/tijdzone en rijkere maaltijdgegevens voor betere antwoorden.
-• About controleert Play Store-updates en toont een tabpunt wanneer er een update is.
+• Taal per STT-provider: Provider Auto, apparaattaal of vaste taal.
+• Coach gebruikt datum/tijdzone en rijkere maaltijdgegevens.
+• About controleert Play Store-updates met tabpunt.
+• Fixes: Coach-toetsenbord verbergen bij tik, bottom-nav spacing, echte Play Store-links.
 </nl-NL>
 
 <pt-BR>
-• Escolha idioma por provedor STT: Provider Auto, idioma do dispositivo ou idioma fixo.
-• Coach agora usa data/fuso horário e mais detalhes das refeições para responder melhor.
-• About verifica atualizações da Play Store e mostra um ponto na aba quando houver uma.
+• Idioma por provedor STT: Provider Auto, idioma do dispositivo ou fixo.
+• Coach usa data/fuso horário e mais detalhes das refeições.
+• About verifica Play Store com ponto na aba.
+• Correções: esconder teclado do Coach ao tocar, espaçamento da barra inferior, links reais da Play Store.
 </pt-BR>
 
 <ro>
-• Alege limba pentru fiecare furnizor STT: Provider Auto, limba dispozitivului sau limbă fixă.
-• Coach folosește acum data/fusul orar și detalii mai bogate despre mese pentru răspunsuri mai bune.
-• About verifică actualizări Play Store și afișează un punct pe tab când există una.
+• Limbă pentru fiecare furnizor STT: Provider Auto, limba dispozitivului sau fixă.
+• Coach folosește data/fusul orar și detalii mai bogate despre mese.
+• About verifică Play Store cu punct pe tab.
+• Fixuri: ascunde tastatura Coach la atingere, spațiere nav jos, linkuri reale Play Store.
 </ro>
 
 <ru-RU>
-• Выбирайте язык для каждого STT-провайдера: Provider Auto, язык устройства или фиксированный язык.
-• Coach теперь учитывает дату/часовой пояс и больше деталей еды для лучших ответов.
-• About проверяет обновления Play Store и показывает точку на вкладке, если есть обновление.
+• Язык для каждого STT: Provider Auto, язык устройства или фиксированный.
+• Coach учитывает дату/часовой пояс и больше деталей еды.
+• About проверяет Play Store и показывает точку на вкладке.
+• Исправления: скрытие клавиатуры Coach по тапу, отступы нижней навигации, реальные Play Store ссылки.
 </ru-RU>
 
 <zh-CN>
-• 可为每个 STT 提供商选择语音语言：Provider Auto、设备语言或固定语言。
-• Coach 现在使用当天日期/时区和更丰富的餐食细节，回答更准确。
-• About 会检查 Play Store 更新，有更新时在标签栏显示圆点。
+• 每个 STT 提供商可选语言：Provider Auto、设备语言或固定语言。
+• Coach 使用当天/时区和更丰富的餐食细节。
+• About 检查 Play Store 更新并显示标签圆点。
+• 修复：点击隐藏 Coach 键盘、底部导航间距、debug/onboarding 使用真实 Play Store 链接。
 </zh-CN>
 ```
 
