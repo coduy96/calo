@@ -1,6 +1,6 @@
 # App Store Listing
 
-App Store Connect submission details for Fud AI v3.2. Each field is in a code block for easy copy-paste.
+App Store Connect submission details for Fud AI v3.3. Each field is in a code block for easy copy-paste.
 
 ## App Name
 ```
@@ -14,7 +14,7 @@ Food & Macro Tracker
 
 ## Promotional Text (170 chars max)
 ```
-Track body fat alongside weight, see every metric on one chart, and ask Coach anything from your full history — months of data, not just last week. Free.
+Choose STT language per provider, edit food quantities faster, and check for App Store updates from About. Free, open source, local-first.
 ```
 
 ## Keywords (100 chars max)
@@ -28,40 +28,30 @@ Primary: Health & Fitness
 Secondary: Food & Drink
 ```
 
-## What's New (v3.2)
+## What's New (v3.3)
 ```
-Fud AI 3.2 — body fat tracking, Coach reaches your full history, and smart daily reminders.
+Fud AI 3.3 — better voice language control, smoother food edits, and in-app update checking.
 
 NEW
-• Body fat tracking — log readings over time, set a goal %, see your composition trend on the Progress chart alongside weight. Optional: only shown if you opt in during onboarding or set a value in Settings → Profile.
-• Apple Health body fat sync — readings flow both ways with Apple Health. Smart-scale data (Withings, Renpho, Eufy, etc.) auto-imports into Fud AI. First time you enable HK sync, years of historical scale data backfills into the chart.
-• Unified Weight / Body Fat chart — segmented toggle on the Progress card lets you flip between metrics. Swipe horizontally on the chart to switch.
-• Coach gets your full history — instead of seeing only the last 10 weights or 14 days of food, Coach can now fetch any date range on demand. Ask "what was my weight in March?" or "show me my body fat trend over the last 6 months" and it pulls exactly what it needs.
-• Use Body Fat for BMR toggle — non-destructive escape hatch in Settings → Profile. When your body fat reading is stale, flip off to fall back to Mifflin-St Jeor without losing the value.
-• Log Weight + Log Body Fat reminders — two new smart daily nudges (Settings → Notifications). Skip firing on days you've already logged. Body fat default off (most people don't measure daily).
-• Search saved meals — search bar in the Saved Meals sheet filters Recents / Frequent / Favorites separately.
-• Decimal weight pickers — pick 72.4 kg or 158.3 lbs without typing in onboarding's Height & Weight + Goal Weight steps.
-• Custom AI Instructions — optional text box in Settings → AI Provider. Anything you put there (region, dietary preferences, athletic goals, brand preferences) is sent with every AI request, so you don't have to repeat context for every meal.
-• Fallback AI Provider — opt-in toggle in Settings → AI Provider. If your primary provider fails (overload, rate limit, network error), the app auto-retries with a second provider you configure. Pair a paid model as primary with a free model as fallback for cheap reliability.
-• Calculation Methods — every formula behind your calorie target, BMR, TDEE, and macro split is now documented in-app with peer-reviewed citations (Mifflin-St Jeor, Katch-McArdle, FAO/WHO/UNU activity multipliers, Hall 2011 energy balance, Morton 2018 protein meta-analysis). Reachable from the Plan onboarding step or Settings → Goals & Nutrition.
-• AI Analysis Notice — clear in-app prompt before any food photo, voice transcript, or text description is sent to your selected AI provider. Names the provider, lists what's sent, and gives an explicit Allow / Not Now choice.
+• Speech-to-text language selection — each STT provider now has its own language setting. Native iOS defaults to Use iPhone Language; AI providers keep Provider Auto unless a specific language is selected.
+• Provider-specific voice hints — OpenAI Whisper, Groq Whisper, Deepgram, and AssemblyAI receive the selected language where their API supports it, helping non-English meal dictation land closer to what you said.
+• About update check — About now shows your installed version, checks the App Store version, shows a dot when an update is available, and opens the App Store update page from the app.
 
 Polish
-• Onboarding loader is now a single brand-pink gradient (was pink → blue).
-• Restacked Onboarding Height & Weight imperial layout so the lbs wheel stops collapsing on narrow columns.
-• OpenRouter now defaults to a free vision model so you can test the integration without loading credits.
+• Faster quantity correction in Review Food — the cursor starts at the end of the amount, the clear button keeps the field focused, and the numeric keyboard gets a Done button.
+• The Edit Food screen gets the same quantity keyboard polish as Review Food.
+• Tapping outside the food quantity field dismisses the keyboard without closing the food card.
 
 Bug fixes
-• Favorites no longer lose their image when the source food log entry is deleted.
-• Gender no longer flips to "Other" for users without a HealthKit biological sex value.
-• Photo + text analysis is more reliable — better tolerance for AI responses with prose or markdown around the JSON, fewer "Could not understand the AI response" errors.
+• Reduces accidental card dismissals while correcting serving size or quantity.
+• Coach gets richer food context for common meal questions.
 ```
 
 ## Description
 ```
 Effortless calorie tracking with AI-powered food recognition. Snap, speak, or type a meal — get instant nutrition: calories, protein, carbs, fats, and 9 micronutrients.
 
-NEW in v3.2: body fat tracking with goal + history + Apple Health sync, Coach can access your full history (not just the last 14 days), and smart daily reminders.
+NEW in v3.3: speech-to-text language selection per provider, smoother quantity editing with Done keyboard controls, and an About update check that opens the App Store when a newer version is available.
 
 Free, open source, privacy-first. Bring your own API key. All data on-device.
 
@@ -73,7 +63,7 @@ HOW TO USE
 
 4 WAYS TO LOG A MEAL
 • Photo — AI identifies the food and returns nutrition
-• Voice — 5 STT engines (native iOS or remote)
+• Voice — 5 STT engines with per-provider language selection
 • Text — describe in plain language, AI parses it
 • Manual Entry — name + calories + macros + meal type, no AI needed
 
@@ -82,6 +72,7 @@ Google Gemini (incl. Gemini 3.1), OpenAI, Anthropic Claude, xAI Grok, Groq, Open
 
 5 SPEECH-TO-TEXT ENGINES
 Native iOS, OpenAI Whisper, Groq, Deepgram, AssemblyAI.
+Choose Provider Auto, Use iPhone Language, or a specific language per provider where supported.
 
 COACH
 • Multi-turn chat with on-demand access to your full history via tool calling

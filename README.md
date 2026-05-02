@@ -39,7 +39,7 @@ Open-source, privacy-first calorie tracker for iOS and Android. Bring your own A
 - **Nutrition label scan** — reads packaging for precise per-serving data
 - **Photo library** — analyze existing photos
 - **Text input** — type food descriptions
-- **Voice input** — speak your meals hands-free (5 STT providers, see below)
+- **Voice input** — speak your meals hands-free (5 STT providers with per-provider language selection, see below)
 - **Saved Meals** — Recents, Frequent, and Favorites with swipe-to-delete and drag-to-reorder
 
 ### Intelligence
@@ -59,6 +59,7 @@ Open-source, privacy-first calorie tracker for iOS and Android. Bring your own A
 - **Apple Health** — bidirectional sync for body measurements + 12 nutrition types written per meal
 - **Widgets** — Home Screen (small / medium with calorie ring + macro bars) and Lock Screen (circular / rectangular / inline). Update live whenever you add or delete a meal — no tap-to-open-app needed
 - **Share the App** — native iOS share sheet from About → forwards App Store URL plus a personalized message and `fud-ai.app` link; message body localized into all 15 languages
+- **Update check** — About shows the installed app version and opens the App Store when a newer iOS version is available
 - **15 languages** — Arabic, Azerbaijani, Dutch, English, French, German, Hindi, Italian, Japanese, Korean, Portuguese (Brazil), Romanian, Russian, Simplified Chinese, Spanish (auto-selected by iPhone's Language setting)
 - **Meal reminders** — customizable breakfast, lunch, dinner notifications
 - **Dark mode** — system, light, or dark
@@ -86,7 +87,7 @@ Pick any of the **13 LLM providers** for both food analysis and the Coach chat. 
 
 ## Speech-to-Text Providers
 
-Pick how voice input is transcribed. Native iOS is the default — free, on-device, real-time.
+Pick how voice input is transcribed. Native iOS is the default — free, on-device, real-time. Each provider has its own language setting: use Provider Auto, Use iPhone Language, or an explicit language hint where supported.
 
 | Provider | Notes |
 |----------|-------|
@@ -210,7 +211,7 @@ All values can be manually overridden in Settings, with a **Recalculate Goals** 
 
 ```
 fud-ai/
-├── ios/          # SwiftUI iOS app (shipping on App Store, v3.2)
+├── ios/          # SwiftUI iOS app (shipping on App Store, v3.3)
 ├── android/      # Kotlin + Jetpack Compose app (min SDK 26 / Android 8.0, v1.0.6)
 ├── web/          # Marketing site — https://fud-ai.app (static HTML/CSS, Vercel)
 ├── APPSTORE.md   # App Store Connect listing copy (iOS)
