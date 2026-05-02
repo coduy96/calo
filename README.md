@@ -43,7 +43,7 @@ Open-source, privacy-first calorie tracker for iOS and Android. Bring your own A
 - **Saved Meals** — Recents, Frequent, and Favorites with swipe-to-delete and drag-to-reorder
 
 ### Intelligence
-- **AI Coach tab** — multi-turn chat with memory. Coach sees your profile, weight history, and food log and answers questions like "what's my expected weight in 30 days?" or "how do I lose 2 kg?". Memory persists across launches; Reset button starts a fresh conversation. Long-press any reply to copy.
+- **AI Coach tab** — multi-turn chat with memory. Coach sees your profile, weight history, food log, today's date/timezone, and richer meal details, then answers questions like "what's my expected weight in 30 days?" or "how do I lose 2 kg?". Memory persists across launches; Reset button starts a fresh conversation. Long-press any reply to copy.
 - **Goal-aware prompt chips** — suggested questions change based on whether your goal is Lose / Gain / Maintain
 - **Thermodynamic weight forecast** — expected weight at 30/60/90 days, predicted vs observed weekly change, days-to-goal, under-logging detection. Surfaced through Coach as live context on every turn.
 - **Resilient requests** — transient provider overloads (503 / 529 / 429) auto-retry with 1s / 2s / 4s exponential backoff across both food analysis and Coach chat, so short spikes resolve invisibly
@@ -59,8 +59,8 @@ Open-source, privacy-first calorie tracker for iOS and Android. Bring your own A
 - **Apple Health** — bidirectional sync for body measurements + 12 nutrition types written per meal
 - **Widgets** — Home Screen (small / medium with calorie ring + macro bars) and Lock Screen (circular / rectangular / inline). Update live whenever you add or delete a meal — no tap-to-open-app needed
 - **Share the App** — native iOS share sheet from About → forwards App Store URL plus a personalized message and `fud-ai.app` link; message body localized into all 15 languages
-- **Update check** — About shows the installed app version and opens the App Store when a newer iOS version is available
-- **15 languages** — Arabic, Azerbaijani, Dutch, English, French, German, Hindi, Italian, Japanese, Korean, Portuguese (Brazil), Romanian, Russian, Simplified Chinese, Spanish (auto-selected by iPhone's Language setting)
+- **Update check** — About shows the installed app version, opens the App Store / Play Store when a newer version is available, and shows a tab dot for pending updates
+- **15 languages** — Arabic, Azerbaijani, Dutch, English, French, German, Hindi, Italian, Japanese, Korean, Portuguese (Brazil), Romanian, Russian, Simplified Chinese, Spanish (auto-selected by the phone's Language setting)
 - **Meal reminders** — customizable breakfast, lunch, dinner notifications
 - **Dark mode** — system, light, or dark
 - **Metric & imperial** units
@@ -114,7 +114,7 @@ Photo / Text / Voice
   FoodStore.addEntry()  ──▶  UserDefaults (local) + Apple Health (optional)
 ```
 
-For the Coach chat, every turn builds a slim system prompt from your live profile, BMR formula in use, computed forecast, and a one-line snapshot of available data. Coach then pulls any date range of weight, body fat, calorie totals, or food entries on demand via tool calling — ask "what was my weight in March?" or "show me my body fat trend over the last 6 months" and it fetches exactly the slice it needs.
+For the Coach chat, every turn builds a slim system prompt from your live profile, BMR formula in use, computed forecast, today's date/timezone, and a one-line snapshot of available data. Coach then pulls any date range of weight, body fat, calorie totals, or food entries on demand via tool calling — ask "what was my weight in March?" or "show me my body fat trend over the last 6 months" and it fetches exactly the slice it needs, including meal source, meal type, serving size, and micronutrients.
 
 ## Screenshots
 
@@ -212,7 +212,7 @@ All values can be manually overridden in Settings, with a **Recalculate Goals** 
 ```
 fud-ai/
 ├── ios/          # SwiftUI iOS app (shipping on App Store, v3.3)
-├── android/      # Kotlin + Jetpack Compose app (min SDK 26 / Android 8.0, v1.0.6)
+├── android/      # Kotlin + Jetpack Compose app (min SDK 26 / Android 8.0, v1.0.7)
 ├── web/          # Marketing site — https://fud-ai.app (static HTML/CSS, Vercel)
 ├── APPSTORE.md   # App Store Connect listing copy (iOS)
 ├── PLAYSTORE.md  # Google Play Console listing copy (Android)
