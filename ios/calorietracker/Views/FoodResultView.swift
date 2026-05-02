@@ -145,15 +145,23 @@ struct FoodResultView: View {
                     HStack {
                         Text("Quantity")
                         Spacer()
-                        TextField("0", text: $servingSizeText)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
+                        EndEditingDecimalTextField(text: $servingSizeText)
                             .frame(width: 80)
                             .onChange(of: servingSizeText) { _, newValue in
                                 if let parsed = Double(newValue), parsed > 0 {
                                     servingSizeGrams = parsed
                                 }
                             }
+                        if !servingSizeText.isEmpty {
+                            Button {
+                                servingSizeText = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Clear quantity")
+                        }
                         Text("g")
                             .foregroundStyle(.secondary)
                             .frame(width: 36, alignment: .leading)
@@ -236,6 +244,51 @@ struct FoodResultView: View {
         )
         onLog(entry)
         dismiss()
+    }
+}
+
+private struct EndEditingDecimalTextField: UIViewRepresentable {
+    @Binding var text: String
+
+    func makeUIView(context: Context) -> UITextField {
+        let textField = UITextField()
+        textField.delegate = context.coordinator
+        textField.keyboardType = .decimalPad
+        textField.textAlignment = .right
+        textField.placeholder = "0"
+        textField.font = .preferredFont(forTextStyle: .body)
+        textField.adjustsFontForContentSizeCategory = true
+        textField.addTarget(context.coordinator, action: #selector(Coordinator.textDidChange(_:)), for: .editingChanged)
+        return textField
+    }
+
+    func updateUIView(_ textField: UITextField, context: Context) {
+        if textField.text != text {
+            textField.text = text
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text)
+    }
+
+    final class Coordinator: NSObject, UITextFieldDelegate {
+        @Binding private var text: String
+
+        init(text: Binding<String>) {
+            self._text = text
+        }
+
+        @objc func textDidChange(_ textField: UITextField) {
+            text = textField.text ?? ""
+        }
+
+        func textFieldDidBeginEditing(_ textField: UITextField) {
+            DispatchQueue.main.async {
+                let end = textField.endOfDocument
+                textField.selectedTextRange = textField.textRange(from: end, to: end)
+            }
+        }
     }
 }
 
