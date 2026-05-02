@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.models.AIProvider
+import com.apoorvdarshan.calorietracker.models.SpeechLanguage
 import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.WeightEntry
@@ -21,6 +22,7 @@ data class SettingsUiState(
     val selectedAI: AIProvider = AIProvider.GEMINI,
     val selectedModel: String = AIProvider.GEMINI.defaultModel,
     val selectedSpeech: SpeechProvider = SpeechProvider.NATIVE,
+    val selectedSpeechLanguage: SpeechLanguage = SpeechLanguage.defaultFor(SpeechProvider.NATIVE),
     val useMetric: Boolean = true,
     val profile: UserProfile? = null,
     val notificationsEnabled: Boolean = false,
@@ -45,6 +47,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             val provider = container.prefs.selectedAIProvider.first()
             val model = container.prefs.selectedAIModel.first() ?: provider.defaultModel
             val speech = container.prefs.selectedSpeechProvider.first()
+            val speechLanguage = container.prefs.selectedSpeechLanguage(speech).first()
             val useMetric = container.prefs.useMetric.first()
             val profile = container.profileRepository.current()
             val notif = container.prefs.notificationsEnabled.first()
@@ -62,6 +65,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 selectedAI = provider,
                 selectedModel = model,
                 selectedSpeech = speech,
+                selectedSpeechLanguage = speechLanguage,
                 useMetric = useMetric,
                 profile = profile,
                 notificationsEnabled = notif,
@@ -164,7 +168,20 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             // Re-pull the masked key for the new provider so the API Key row
             // reflects whether the freshly selected provider has a key saved.
             val masked = maskKey(container.keyStore.speechApiKey(p))
-            _ui.value = _ui.value.copy(selectedSpeech = p, speechApiKeyMasked = masked)
+            val language = container.prefs.selectedSpeechLanguage(p).first()
+            _ui.value = _ui.value.copy(
+                selectedSpeech = p,
+                selectedSpeechLanguage = language,
+                speechApiKeyMasked = masked
+            )
+        }
+    }
+
+    fun selectSpeechLanguage(language: SpeechLanguage) {
+        viewModelScope.launch {
+            val provider = _ui.value.selectedSpeech
+            container.prefs.setSelectedSpeechLanguage(provider, language)
+            _ui.value = _ui.value.copy(selectedSpeechLanguage = language)
         }
     }
 

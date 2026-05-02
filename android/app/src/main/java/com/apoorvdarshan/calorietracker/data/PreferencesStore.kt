@@ -11,6 +11,7 @@ import com.apoorvdarshan.calorietracker.models.AIProvider
 import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.ChatMessage
 import com.apoorvdarshan.calorietracker.models.FoodEntry
+import com.apoorvdarshan.calorietracker.models.SpeechLanguage
 import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.WeightEntry
@@ -156,6 +157,16 @@ class PreferencesStore(private val context: Context) {
         ds.edit { it[Keys.SELECTED_SPEECH_PROVIDER] = p.name }
     }
 
+    fun selectedSpeechLanguage(provider: SpeechProvider): Flow<SpeechLanguage> = ds.data.map {
+        val raw = it[Keys.selectedSpeechLanguage(provider)]
+        SpeechLanguage.values().firstOrNull { language -> language.name == raw }
+            ?: SpeechLanguage.defaultFor(provider)
+    }
+
+    suspend fun setSelectedSpeechLanguage(provider: SpeechProvider, language: SpeechLanguage) {
+        ds.edit { it[Keys.selectedSpeechLanguage(provider)] = language.name }
+    }
+
     // -- Food entries -----------------------------------------------------
     val foodEntries: Flow<List<FoodEntry>> = ds.data.map { prefs ->
         prefs[Keys.FOOD_ENTRIES]?.let {
@@ -278,6 +289,8 @@ class PreferencesStore(private val context: Context) {
         val FALLBACK_PROVIDER = stringPreferencesKey("selectedFallbackAIProvider")
         val FALLBACK_MODEL = stringPreferencesKey("selectedFallbackAIModel")
         val SELECTED_SPEECH_PROVIDER = stringPreferencesKey("selectedSpeechProvider")
+        fun selectedSpeechLanguage(provider: SpeechProvider) =
+            stringPreferencesKey("selectedSpeechLanguage_${provider.name}")
         val FOOD_ENTRIES = stringPreferencesKey("foodEntries")
         val FAVORITE_KEYS = stringPreferencesKey("favorites")
         val FAVORITE_ENTRIES = stringPreferencesKey("favoriteFoodEntries")

@@ -20,6 +20,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -81,6 +82,9 @@ class ChatService(
         useMetric: Boolean
     ): String {
         val forecast: WeightForecast = WeightAnalysisService.compute(weights, foods, profile)
+        val zone = ZoneId.systemDefault()
+        val currentDate = LocalDate.now(zone).format(DateTimeFormatter.ISO_LOCAL_DATE)
+        val currentTimeZone = zone.id
 
         fun wUnit(kg: Double): String =
             if (useMetric) String.format(Locale.US, "%.1f kg", kg)
@@ -98,6 +102,10 @@ class ChatService(
 
         val lines = mutableListOf<String>()
         lines.add("You are Coach, an AI nutrition and weight-change assistant inside a calorie tracking app. Answer in plain English, be specific and factual, and ground your recommendations in the user's own data. Avoid medical advice; when relevant, suggest consulting a doctor. Be concise — 2–5 sentences per response unless the user asks for detail.")
+        lines.add("")
+        lines.add("## Current date")
+        lines.add("- Today: $currentDate ($currentTimeZone)")
+        lines.add("- Treat \"today\" as $currentDate when choosing tool date ranges.")
         lines.add("")
         lines.add("## How to use the data tools")
         lines.add("You have access to functions that fetch the user's history on demand. The user profile + formulas + forecast below cover what's needed for most questions. Call a tool ONLY when the user asks about specific past dates, longer time ranges, individual meals, or trends that need raw data. Examples:")

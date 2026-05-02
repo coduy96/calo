@@ -517,6 +517,7 @@
 
     <string name="settings_ai_provider">Provider</string>
     <string name="settings_ai_model">Model</string>
+    <string name="settings_speech_language">Language</string>
     <string name="settings_ai_model_unset">(set one below)</string>
     <string name="settings_api_key">API Key</string>
     <string name="settings_base_url">Base URL</string>
@@ -602,8 +603,31 @@
     <string name="sheet_macro_pinned">pinned</string>
     <string name="sheet_macro_auto">auto</string>
     <string name="sheet_macro_label_format">%1$s (%2$s)</string>
+    <string name="sheet_speech_language">Speech Language</string>
+    <string name="speech_language_provider_auto">Provider Auto</string>
+    <string name="speech_language_provider_auto_subtitle">Let the provider detect the language.</string>
+    <string name="speech_language_device">Use Device Language</string>
+    <string name="speech_language_device_subtitle">Use this phone\'s current language.</string>
+    <string name="speech_language_english">English</string>
+    <string name="speech_language_german">German</string>
+    <string name="speech_language_spanish">Spanish</string>
+    <string name="speech_language_french">French</string>
+    <string name="speech_language_italian">Italian</string>
+    <string name="speech_language_portuguese">Portuguese</string>
+    <string name="speech_language_dutch">Dutch</string>
+    <string name="speech_language_hindi">Hindi</string>
+    <string name="speech_language_japanese">Japanese</string>
+    <string name="speech_language_chinese">Chinese</string>
+    <string name="speech_language_korean">Korean</string>
 
     <!-- About -->
+    <string name="about_update_checking">Checking for Updates</string>
+    <string name="about_update_available">Update Available</string>
+    <string name="about_update_details_format">Current %1$s -&gt; Latest %2$s</string>
+    <string name="about_update_action">Update</string>
+    <string name="about_check_updates">Check for Updates</string>
+    <string name="about_app_version">App Version</string>
+    <string name="about_version_format">Version %1$s</string>
     <string name="about_rate">Rate the App</string>
     <string name="about_share">Share the App</string>
     <string name="about_open_source">Open Source (MIT)</string>

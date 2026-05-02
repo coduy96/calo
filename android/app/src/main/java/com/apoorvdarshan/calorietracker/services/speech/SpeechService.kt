@@ -22,6 +22,7 @@ class SpeechService(
     /** Returns the transcript text. Throws [SttApiError] on any failure. */
     suspend fun transcribeRemote(audio: File): String {
         val provider = prefs.selectedSpeechProvider.first()
+        val languageCode = prefs.selectedSpeechLanguage(provider).first().remoteLanguageCode()
         val apiKey = keyStore.speechApiKey(provider)
 
         if (provider.requiresApiKey && apiKey.isNullOrEmpty()) throw SttApiError.NoApiKey
@@ -32,25 +33,29 @@ class SpeechService(
                 baseUrl = "https://api.openai.com/v1",
                 apiKey = apiKey!!,
                 model = provider.defaultModel,
-                audio = audio
+                audio = audio,
+                languageCode = languageCode
             )
             SpeechProvider.GROQ -> WhisperClient.transcribe(
                 client = okHttp,
                 baseUrl = "https://api.groq.com/openai/v1",
                 apiKey = apiKey!!,
                 model = provider.defaultModel,
-                audio = audio
+                audio = audio,
+                languageCode = languageCode
             )
             SpeechProvider.DEEPGRAM -> DeepgramClient.transcribe(
                 client = okHttp,
                 apiKey = apiKey!!,
                 model = provider.defaultModel,
-                audio = audio
+                audio = audio,
+                languageCode = languageCode
             )
             SpeechProvider.ASSEMBLY_AI -> AssemblyAIClient.transcribe(
                 client = okHttp,
                 apiKey = apiKey!!,
-                audio = audio
+                audio = audio,
+                languageCode = languageCode
             )
             SpeechProvider.NATIVE ->
                 error("NATIVE speech should use NativeSpeechRecognizer, not transcribeRemote().")

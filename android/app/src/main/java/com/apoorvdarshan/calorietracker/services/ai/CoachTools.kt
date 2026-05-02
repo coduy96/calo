@@ -2,6 +2,8 @@ package com.apoorvdarshan.calorietracker.services.ai
 
 import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.FoodEntry
+import com.apoorvdarshan.calorietracker.models.FoodSource
+import com.apoorvdarshan.calorietracker.models.MealType
 import com.apoorvdarshan.calorietracker.models.WeightEntry
 import org.json.JSONArray
 import org.json.JSONObject
@@ -147,6 +149,18 @@ class CoachTools(
                 put("protein_g", f.protein)
                 put("carbs_g", f.carbs)
                 put("fat_g", f.fat)
+                put("meal_type", mealTypeName(f.mealType))
+                put("source", sourceName(f.source))
+                putDoubleIfPresent("serving_size_g", f.servingSizeGrams)
+                putDoubleIfPresent("sugar_g", f.sugar)
+                putDoubleIfPresent("added_sugar_g", f.addedSugar)
+                putDoubleIfPresent("fiber_g", f.fiber)
+                putDoubleIfPresent("saturated_fat_g", f.saturatedFat)
+                putDoubleIfPresent("monounsaturated_fat_g", f.monounsaturatedFat)
+                putDoubleIfPresent("polyunsaturated_fat_g", f.polyunsaturatedFat)
+                putDoubleIfPresent("cholesterol_mg", f.cholesterol)
+                putDoubleIfPresent("sodium_mg", f.sodium)
+                putDoubleIfPresent("potassium_mg", f.potassium)
             })
         }
         return JSONObject().apply {
@@ -175,6 +189,25 @@ class CoachTools(
 
     private fun jsonError(message: String): String =
         JSONObject().apply { put("error", message) }.toString()
+
+    private fun JSONObject.putDoubleIfPresent(key: String, value: Double?) {
+        if (value != null) put(key, value)
+    }
+
+    private fun sourceName(source: FoodSource): String = when (source) {
+        FoodSource.SNAP_FOOD -> "snapFood"
+        FoodSource.NUTRITION_LABEL -> "nutritionLabel"
+        FoodSource.TEXT_INPUT -> "textInput"
+        FoodSource.MANUAL -> "manual"
+    }
+
+    private fun mealTypeName(mealType: MealType): String = when (mealType) {
+        MealType.BREAKFAST -> "breakfast"
+        MealType.LUNCH -> "lunch"
+        MealType.DINNER -> "dinner"
+        MealType.SNACK -> "snack"
+        MealType.OTHER -> "other"
+    }
 
     private fun iso(instant: Instant): String =
         ISO_FMT.format(instant.atZone(ZoneId.systemDefault()).toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant())

@@ -34,7 +34,7 @@ class NativeSpeechRecognizer(private val context: Context) {
         ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
                 PackageManager.PERMISSION_GRANTED
 
-    fun listen(locale: String = "en-US"): Flow<SttEvent> = callbackFlow {
+    fun listen(locale: String? = null): Flow<SttEvent> = callbackFlow {
         val recognizer = SpeechRecognizer.createSpeechRecognizer(context)
         val listener = object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) { trySend(SttEvent.Ready) }
@@ -61,7 +61,9 @@ class NativeSpeechRecognizer(private val context: Context) {
 
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale)
+            if (!locale.isNullOrBlank()) {
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale)
+            }
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
             putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)

@@ -125,6 +125,7 @@ import com.apoorvdarshan.calorietracker.models.ActivityLevel
 import com.apoorvdarshan.calorietracker.models.AIProvider
 import com.apoorvdarshan.calorietracker.models.AutoBalanceMacro
 import com.apoorvdarshan.calorietracker.models.Gender
+import com.apoorvdarshan.calorietracker.models.SpeechLanguage
 import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.WeightGoal
@@ -143,7 +144,7 @@ import kotlinx.coroutines.runBlocking
 import java.util.Locale
 
 private enum class SettingsSheet {
-    AI_PROVIDER, AI_MODEL, API_KEY, CUSTOM_BASE_URL, SPEECH_PROVIDER, SPEECH_KEY,
+    AI_PROVIDER, AI_MODEL, API_KEY, CUSTOM_BASE_URL, SPEECH_PROVIDER, SPEECH_LANGUAGE, SPEECH_KEY,
     FALLBACK_PROVIDER, FALLBACK_MODEL, FALLBACK_KEY, FALLBACK_BASE_URL,
     GENDER, BIRTHDAY, HEIGHT, WEIGHT, BODY_FAT, GOAL_BODY_FAT, ACTIVITY, GOAL, GOAL_WEIGHT, GOAL_SPEED,
     CALORIES, PROTEIN, CARBS, FAT,
@@ -508,6 +509,12 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
             SectionCard(title = stringResource(R.string.settings_section_speech)) {
                 SettingRow(stringResource(R.string.settings_ai_provider), stringResource(ui.selectedSpeech.displayNameRes), icon = Icons.Outlined.Mic) { sheet = SettingsSheet.SPEECH_PROVIDER }
                 HorizontalDivider()
+                SettingRow(
+                    stringResource(R.string.settings_speech_language),
+                    stringResource(ui.selectedSpeechLanguage.displayNameRes),
+                    icon = Icons.Outlined.Language
+                ) { sheet = SettingsSheet.SPEECH_LANGUAGE }
+                HorizontalDivider()
                 Text(
                     stringResource(ui.selectedSpeech.descriptionRes),
                     fontSize = 12.sp,
@@ -692,6 +699,20 @@ private fun SettingsSheets(
                     label = { stringResource(it.displayNameRes) },
                     selected = { it == ui.selectedSpeech },
                     onSelect = { vm.selectSpeech(it); onDismiss() }
+                )
+                SettingsSheet.SPEECH_LANGUAGE -> ListSheet(
+                    title = stringResource(R.string.sheet_speech_language),
+                    items = SpeechLanguage.optionsFor(ui.selectedSpeech),
+                    label = { stringResource(it.displayNameRes) },
+                    selected = { it == ui.selectedSpeechLanguage },
+                    onSelect = { vm.selectSpeechLanguage(it); onDismiss() },
+                    subtitle = {
+                        when (it) {
+                            SpeechLanguage.PROVIDER_AUTO -> stringResource(R.string.speech_language_provider_auto_subtitle)
+                            SpeechLanguage.DEVICE -> stringResource(R.string.speech_language_device_subtitle)
+                            else -> null
+                        }
+                    }
                 )
                 SettingsSheet.SPEECH_KEY -> ApiKeySheet(
                     title = stringResource(R.string.sheet_speech_api_key_format, stringResource(ui.selectedSpeech.displayNameRes)),

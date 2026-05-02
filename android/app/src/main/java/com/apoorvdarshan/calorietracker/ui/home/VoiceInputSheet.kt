@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.R
+import com.apoorvdarshan.calorietracker.models.SpeechLanguage
 import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.services.speech.AudioRecorder
 import com.apoorvdarshan.calorietracker.services.speech.NativeSpeechRecognizer
@@ -86,6 +87,8 @@ fun VoiceInputSheet(
     val scope = rememberCoroutineScope()
 
     val provider by container.prefs.selectedSpeechProvider.collectAsState(initial = SpeechProvider.NATIVE)
+    val speechLanguage by container.prefs.selectedSpeechLanguage(provider)
+        .collectAsState(initial = SpeechLanguage.defaultFor(provider))
     val micDeniedMsg = stringResource(R.string.voice_mic_permission_denied)
     val micStartFailedMsg = stringResource(R.string.voice_mic_start_failed)
     val transcriptionFailedMsg = stringResource(R.string.voice_transcription_failed)
@@ -117,7 +120,7 @@ fun VoiceInputSheet(
     fun launchNativeListenerLoop() {
         nativeJob?.cancel()
         nativeJob = scope.launch {
-            native.listen().collectLatest { event ->
+            native.listen(locale = speechLanguage.nativeLocaleTag()).collectLatest { event ->
                 when (event) {
                     is SttEvent.Partial -> {
                         transcript = (committed + " " + event.text).trim()

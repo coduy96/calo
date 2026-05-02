@@ -30,13 +30,17 @@ object WhisperClient {
         baseUrl: String,
         apiKey: String,
         model: String,
-        audio: File
+        audio: File,
+        languageCode: String? = null
     ): String = withContext(Dispatchers.IO) {
-        val body = MultipartBody.Builder()
+        val bodyBuilder = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart("model", model)
             .addFormDataPart("file", audio.name, audio.asRequestBody("audio/m4a".toMediaType()))
-            .build()
+        if (!languageCode.isNullOrBlank()) {
+            bodyBuilder.addFormDataPart("language", languageCode)
+        }
+        val body = bodyBuilder.build()
         val req = Request.Builder()
             .url("$baseUrl/audio/transcriptions")
             .addHeader("Authorization", "Bearer $apiKey")
@@ -54,10 +58,12 @@ object DeepgramClient {
         client: OkHttpClient,
         apiKey: String,
         model: String,
-        audio: File
+        audio: File,
+        languageCode: String? = null
     ): String = withContext(Dispatchers.IO) {
+        val languageQuery = if (!languageCode.isNullOrBlank()) "&language=$languageCode" else ""
         val req = Request.Builder()
-            .url("https://api.deepgram.com/v1/listen?model=$model&punctuate=true&smart_format=true")
+            .url("https://api.deepgram.com/v1/listen?model=$model&punctuate=true&smart_format=true$languageQuery")
             .addHeader("Authorization", "Token $apiKey")
             .addHeader("Content-Type", "audio/m4a")
             .post(audio.asRequestBody("audio/m4a".toMediaType()))
@@ -82,7 +88,8 @@ object AssemblyAIClient {
     suspend fun transcribe(
         client: OkHttpClient,
         apiKey: String,
-        audio: File
+        audio: File,
+        languageCode: String? = null
     ): String = withContext(Dispatchers.IO) {
         // 1. Upload
         val uploadReq = Request.Builder()
@@ -95,8 +102,11 @@ object AssemblyAIClient {
             ?: throw SttApiError.InvalidResponse
 
         // 2. Submit
-        val submitBody = JSONObject().put("audio_url", audioUrl).toString()
-            .toRequestBody("application/json".toMediaType())
+        val submitPayload = JSONObject().put("audio_url", audioUrl)
+        if (!languageCode.isNullOrBlank()) {
+            submitPayload.put("language_code", languageCode)
+        }
+        val submitBody = submitPayload.toString().toRequestBody("application/json".toMediaType())
         val submitReq = Request.Builder()
             .url("https://api.assemblyai.com/v2/transcript")
             .addHeader("authorization", apiKey)
