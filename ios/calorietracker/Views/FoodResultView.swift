@@ -280,12 +280,9 @@ struct FoodResultView: View {
         dismiss()
     }
 
-    fileprivate static func dismissKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
 }
 
-private struct KeyboardDismissTapInstaller: UIViewRepresentable {
+struct KeyboardDismissTapInstaller: UIViewRepresentable {
     func makeUIView(context: Context) -> KeyboardDismissTapView {
         KeyboardDismissTapView()
     }
@@ -299,7 +296,7 @@ private struct KeyboardDismissTapInstaller: UIViewRepresentable {
     }
 }
 
-private final class KeyboardDismissTapView: UIView, UIGestureRecognizerDelegate {
+final class KeyboardDismissTapView: UIView, UIGestureRecognizerDelegate {
     private weak var installedWindow: UIWindow?
     private var tapGesture: UITapGestureRecognizer?
 
@@ -330,7 +327,7 @@ private final class KeyboardDismissTapView: UIView, UIGestureRecognizerDelegate 
     }
 
     @objc private func handleTap() {
-        FoodResultView.dismissKeyboard()
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
@@ -338,7 +335,7 @@ private final class KeyboardDismissTapView: UIView, UIGestureRecognizerDelegate 
     }
 }
 
-private struct EndEditingDecimalTextField: UIViewRepresentable {
+struct EndEditingDecimalTextField: UIViewRepresentable {
     @Binding var text: String
     let focusRequest: Int
     var onEditingChanged: (Bool) -> Void

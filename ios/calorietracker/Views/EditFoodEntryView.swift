@@ -1,6 +1,10 @@
 import SwiftUI
 
 struct EditFoodEntryView: View {
+    private enum ScrollTarget: Hashable {
+        case quantity
+    }
+
     let entry: FoodEntry
     @Environment(FoodStore.self) private var foodStore
     @Environment(\.dismiss) private var dismiss
@@ -24,6 +28,8 @@ struct EditFoodEntryView: View {
     @State private var name: String
     @State private var servingSizeGrams: Double
     @State private var servingSizeText: String
+    @State private var quantityFocusRequest = 0
+    @State private var isQuantityEditing = false
     @State private var mealType: MealType
 
     private var scale: Double {
@@ -77,107 +83,143 @@ struct EditFoodEntryView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                if let imageData = entry.imageData, let uiImage = UIImage(data: imageData) {
-                    Section {
-                        HStack {
-                            Spacer()
-                            Image(uiImage: uiImage)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxHeight: 200)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                            Spacer()
+            ScrollViewReader { scrollProxy in
+                List {
+                    if let imageData = entry.imageData, let uiImage = UIImage(data: imageData) {
+                        Section {
+                            HStack {
+                                Spacer()
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(maxHeight: 200)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                Spacer()
+                            }
+                            .listRowBackground(Color.clear)
                         }
-                        .listRowBackground(Color.clear)
-                    }
-                } else if let emoji = entry.emoji {
-                    Section {
-                        HStack {
-                            Spacer()
-                            Text(emoji)
-                                .font(.system(size: 80))
-                            Spacer()
+                    } else if let emoji = entry.emoji {
+                        Section {
+                            HStack {
+                                Spacer()
+                                Text(emoji)
+                                    .font(.system(size: 80))
+                                Spacer()
+                            }
+                            .listRowBackground(Color.clear)
                         }
-                        .listRowBackground(Color.clear)
                     }
-                }
 
-                Section("Food Details") {
-                    HStack {
-                        Text("Name")
-                        Spacer()
-                        TextField("Food name", text: $name)
-                            .multilineTextAlignment(.trailing)
+                    Section("Food Details") {
+                        HStack {
+                            Text("Name")
+                            Spacer()
+                            TextField("Food name", text: $name)
+                                .multilineTextAlignment(.trailing)
+                        }
                     }
-                }
 
-                Section("Serving") {
-                    HStack {
-                        Text("Quantity")
-                        Spacer()
-                        TextField("0", text: $servingSizeText)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
+                    Section("Serving") {
+                        HStack {
+                            Text("Quantity")
+                            Spacer()
+                            EndEditingDecimalTextField(
+                                text: $servingSizeText,
+                                focusRequest: quantityFocusRequest,
+                                onEditingChanged: { editing in
+                                    isQuantityEditing = editing
+                                }
+                            )
                             .frame(width: 80)
                             .onChange(of: servingSizeText) { _, newValue in
                                 if let parsed = Double(newValue), parsed > 0 {
                                     servingSizeGrams = parsed
                                 }
                             }
-                        Text("g")
-                            .foregroundStyle(.secondary)
-                            .frame(width: 36, alignment: .leading)
-                    }
-                }
-
-                Section("Nutrition") {
-                    NutritionDisplayRow(label: "Calories", value: "\(scaledCalories)", unit: "kcal")
-                    NutritionDisplayRow(label: "Protein", value: "\(scaledProtein)", unit: "g")
-                    NutritionDisplayRow(label: "Carbs", value: "\(scaledCarbs)", unit: "g")
-                    NutritionDisplayRow(label: "Fat", value: "\(scaledFat)", unit: "g")
-                }
-
-                Section {
-                    DisclosureGroup("More Nutrition") {
-                        OptionalNutritionDisplayRow(label: "Sugar", value: scaledSugar, unit: "g")
-                        OptionalNutritionDisplayRow(label: "Added Sugar", value: scaledAddedSugar, unit: "g")
-                        OptionalNutritionDisplayRow(label: "Fiber", value: scaledFiber, unit: "g")
-                        OptionalNutritionDisplayRow(label: "Saturated Fat", value: scaledSaturatedFat, unit: "g")
-                        OptionalNutritionDisplayRow(label: "Mono Fat", value: scaledMonounsaturatedFat, unit: "g")
-                        OptionalNutritionDisplayRow(label: "Poly Fat", value: scaledPolyunsaturatedFat, unit: "g")
-                        OptionalNutritionDisplayRow(label: "Cholesterol", value: scaledCholesterol, unit: "mg")
-                        OptionalNutritionDisplayRow(label: "Sodium", value: scaledSodium, unit: "mg")
-                        OptionalNutritionDisplayRow(label: "Potassium", value: scaledPotassium, unit: "mg")
-                    }
-                    .tint(AppColors.calorie)
-                }
-
-                Section("Meal") {
-                    Picker("Meal Type", selection: $mealType) {
-                        ForEach(MealType.allCases, id: \.self) { meal in
-                            Label(meal.displayName, systemImage: meal.icon)
-                                .tag(meal)
+                            if !servingSizeText.isEmpty {
+                                Button {
+                                    servingSizeText = ""
+                                    quantityFocusRequest += 1
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Clear quantity")
+                            }
+                            Text("g")
+                                .foregroundStyle(.secondary)
+                                .frame(width: 36, alignment: .leading)
                         }
+                        .id(ScrollTarget.quantity)
                     }
-                    .pickerStyle(.menu)
-                    .tint(AppColors.calorie)
-                }
 
-            }
-            .scrollContentBackground(.hidden)
-            .background(AppColors.appBackground)
-            .navigationTitle("Edit Food")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: saveChanges)
-                        .font(.system(.body, design: .rounded, weight: .semibold))
+                    Section("Nutrition") {
+                        NutritionDisplayRow(label: "Calories", value: "\(scaledCalories)", unit: "kcal")
+                        NutritionDisplayRow(label: "Protein", value: "\(scaledProtein)", unit: "g")
+                        NutritionDisplayRow(label: "Carbs", value: "\(scaledCarbs)", unit: "g")
+                        NutritionDisplayRow(label: "Fat", value: "\(scaledFat)", unit: "g")
+                    }
+
+                    Section {
+                        DisclosureGroup("More Nutrition") {
+                            OptionalNutritionDisplayRow(label: "Sugar", value: scaledSugar, unit: "g")
+                            OptionalNutritionDisplayRow(label: "Added Sugar", value: scaledAddedSugar, unit: "g")
+                            OptionalNutritionDisplayRow(label: "Fiber", value: scaledFiber, unit: "g")
+                            OptionalNutritionDisplayRow(label: "Saturated Fat", value: scaledSaturatedFat, unit: "g")
+                            OptionalNutritionDisplayRow(label: "Mono Fat", value: scaledMonounsaturatedFat, unit: "g")
+                            OptionalNutritionDisplayRow(label: "Poly Fat", value: scaledPolyunsaturatedFat, unit: "g")
+                            OptionalNutritionDisplayRow(label: "Cholesterol", value: scaledCholesterol, unit: "mg")
+                            OptionalNutritionDisplayRow(label: "Sodium", value: scaledSodium, unit: "mg")
+                            OptionalNutritionDisplayRow(label: "Potassium", value: scaledPotassium, unit: "mg")
+                        }
                         .tint(AppColors.calorie)
+                    }
+
+                    Section("Meal") {
+                        Picker("Meal Type", selection: $mealType) {
+                            ForEach(MealType.allCases, id: \.self) { meal in
+                                Label(meal.displayName, systemImage: meal.icon)
+                                    .tag(meal)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .tint(AppColors.calorie)
+                    }
+
                 }
+                .scrollContentBackground(.hidden)
+                .background(AppColors.appBackground)
+                .background(KeyboardDismissTapInstaller())
+                .safeAreaInset(edge: .bottom) {
+                    if isQuantityEditing {
+                        Color.clear.frame(height: 12)
+                    }
+                }
+                .onChange(of: isQuantityEditing) { _, editing in
+                    guard editing else { return }
+                    scrollQuantityIntoView(scrollProxy)
+                }
+                .navigationTitle("Edit Food")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { dismiss() }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Save", action: saveChanges)
+                            .font(.system(.body, design: .rounded, weight: .semibold))
+                            .tint(AppColors.calorie)
+                    }
+                }
+            }
+        }
+    }
+
+    private func scrollQuantityIntoView(_ proxy: ScrollViewProxy) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                proxy.scrollTo(ScrollTarget.quantity, anchor: .bottom)
             }
         }
     }
