@@ -24,6 +24,7 @@ struct FoodResultView: View {
     @State var name: String
     @State var servingSizeGrams: Double
     @State private var servingSizeText: String
+    @State private var quantityFocusRequest = 0
     @State var mealType: MealType = .currentMeal
 
     let logDate: Date
@@ -145,7 +146,7 @@ struct FoodResultView: View {
                     HStack {
                         Text("Quantity")
                         Spacer()
-                        EndEditingDecimalTextField(text: $servingSizeText)
+                        EndEditingDecimalTextField(text: $servingSizeText, focusRequest: quantityFocusRequest)
                             .frame(width: 80)
                             .onChange(of: servingSizeText) { _, newValue in
                                 if let parsed = Double(newValue), parsed > 0 {
@@ -155,6 +156,7 @@ struct FoodResultView: View {
                         if !servingSizeText.isEmpty {
                             Button {
                                 servingSizeText = ""
+                                quantityFocusRequest += 1
                             } label: {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundStyle(.secondary)
@@ -249,6 +251,7 @@ struct FoodResultView: View {
 
 private struct EndEditingDecimalTextField: UIViewRepresentable {
     @Binding var text: String
+    let focusRequest: Int
 
     func makeUIView(context: Context) -> UITextField {
         let textField = UITextField()
@@ -266,17 +269,31 @@ private struct EndEditingDecimalTextField: UIViewRepresentable {
         if textField.text != text {
             textField.text = text
         }
+        if context.coordinator.lastFocusRequest != focusRequest {
+            context.coordinator.lastFocusRequest = focusRequest
+            DispatchQueue.main.async {
+                textField.becomeFirstResponder()
+                Self.moveCaretToEnd(in: textField)
+            }
+        }
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(text: $text)
+        Coordinator(text: $text, focusRequest: focusRequest)
+    }
+
+    private static func moveCaretToEnd(in textField: UITextField) {
+        let end = textField.endOfDocument
+        textField.selectedTextRange = textField.textRange(from: end, to: end)
     }
 
     final class Coordinator: NSObject, UITextFieldDelegate {
         @Binding private var text: String
+        var lastFocusRequest: Int
 
-        init(text: Binding<String>) {
+        init(text: Binding<String>, focusRequest: Int) {
             self._text = text
+            self.lastFocusRequest = focusRequest
         }
 
         @objc func textDidChange(_ textField: UITextField) {
@@ -285,8 +302,7 @@ private struct EndEditingDecimalTextField: UIViewRepresentable {
 
         func textFieldDidBeginEditing(_ textField: UITextField) {
             DispatchQueue.main.async {
-                let end = textField.endOfDocument
-                textField.selectedTextRange = textField.textRange(from: end, to: end)
+                EndEditingDecimalTextField.moveCaretToEnd(in: textField)
             }
         }
     }
