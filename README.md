@@ -334,6 +334,10 @@ You can also help by [voting on Product Hunt](https://www.producthunt.com/produc
 
 Thanks to everyone who has contributed to making Fud AI better:
 
+- [@apoorvdarshan](https://github.com/apoorvdarshan) — creator and maintainer
+- [@phspman](https://github.com/phspman)
+- [@purva-8](https://github.com/purva-8)
+
 <a href="https://github.com/apoorvdarshan/fud-ai/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=apoorvdarshan/fud-ai" alt="Contributors" />
 </a>
