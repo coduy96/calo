@@ -161,14 +161,32 @@ struct CoachTools {
             .sorted { $0.timestamp < $1.timestamp }
             .prefix(limit)
         let entries = filtered.map { entry -> [String: Any] in
-            [
+            var payload: [String: Any] = [
                 "date": Self.iso(entry.timestamp),
                 "name": entry.name,
                 "kcal": entry.calories,
                 "protein_g": entry.protein,
                 "carbs_g": entry.carbs,
                 "fat_g": entry.fat,
+                "meal_type": entry.mealType.rawValue,
+                "source": entry.source.rawValue,
             ]
+            func add(_ key: String, _ value: Double?) {
+                if let value {
+                    payload[key] = value
+                }
+            }
+            add("serving_size_g", entry.servingSizeGrams)
+            add("sugar_g", entry.sugar)
+            add("added_sugar_g", entry.addedSugar)
+            add("fiber_g", entry.fiber)
+            add("saturated_fat_g", entry.saturatedFat)
+            add("monounsaturated_fat_g", entry.monounsaturatedFat)
+            add("polyunsaturated_fat_g", entry.polyunsaturatedFat)
+            add("cholesterol_mg", entry.cholesterol)
+            add("sodium_mg", entry.sodium)
+            add("potassium_mg", entry.potassium)
+            return payload
         }
         return jsonString([
             "from": Self.iso(from),

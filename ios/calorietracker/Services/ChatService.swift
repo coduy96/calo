@@ -79,6 +79,12 @@ struct ChatService {
     /// history (not just the previously-hardcoded last 10/14 entries).
     private static func buildSystemPrompt(profile: UserProfile, weights: [WeightEntry], bodyFats: [BodyFatEntry], foods: [FoodEntry], useMetric: Bool) -> String {
         let forecast = WeightAnalysisService.compute(weights: weights, foods: foods, profile: profile)
+        let currentDateFormatter = DateFormatter()
+        currentDateFormatter.dateFormat = "yyyy-MM-dd"
+        currentDateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        currentDateFormatter.timeZone = .current
+        let currentDate = currentDateFormatter.string(from: Date())
+        let currentTimeZone = TimeZone.current.identifier
 
         let wUnit: (Double) -> String = { kg in
             useMetric ? String(format: "%.1f kg", kg) : String(format: "%.1f lbs", kg * 2.20462)
@@ -98,6 +104,10 @@ struct ChatService {
 
         var lines: [String] = []
         lines.append("You are Coach, an AI nutrition and weight-change assistant inside a calorie tracking app. Answer in plain English, be specific and factual, and ground your recommendations in the user's own data. Avoid medical advice; when relevant, suggest consulting a doctor. Be concise — 2–5 sentences per response unless the user asks for detail.")
+        lines.append("")
+        lines.append("## Current date")
+        lines.append("- Today: \(currentDate) (\(currentTimeZone))")
+        lines.append("- Treat \"today\" as \(currentDate) when choosing tool date ranges.")
         lines.append("")
         lines.append("## How to use the data tools")
         lines.append("You have access to functions that fetch the user's history on demand. The user profile + formulas + forecast below cover what's needed for most questions. Call a tool ONLY when the user asks about specific past dates, longer time ranges, individual meals, or trends that need raw data. Examples:")
