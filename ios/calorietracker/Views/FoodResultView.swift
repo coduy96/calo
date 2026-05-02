@@ -1,6 +1,10 @@
 import SwiftUI
 
 struct FoodResultView: View {
+    private enum ScrollTarget: Hashable {
+        case quantity
+    }
+
     let image: UIImage?
     let emoji: String?
     let source: FoodSource
@@ -25,6 +29,7 @@ struct FoodResultView: View {
     @State var servingSizeGrams: Double
     @State private var servingSizeText: String
     @State private var quantityFocusRequest = 0
+    @State private var isQuantityEditing = false
     @State var mealType: MealType = .currentMeal
 
     let logDate: Date
@@ -107,117 +112,143 @@ struct FoodResultView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                if let image {
-                    Section {
-                        HStack {
-                            Spacer()
-                            Image(uiImage: image)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxHeight: 200)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                            Spacer()
+            ScrollViewReader { scrollProxy in
+                List {
+                    if let image {
+                        Section {
+                            HStack {
+                                Spacer()
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(maxHeight: 200)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                Spacer()
+                            }
+                            .listRowBackground(Color.clear)
                         }
-                        .listRowBackground(Color.clear)
-                    }
-                } else if let emoji {
-                    Section {
-                        HStack {
-                            Spacer()
-                            Text(emoji)
-                                .font(.system(size: 80))
-                            Spacer()
+                    } else if let emoji {
+                        Section {
+                            HStack {
+                                Spacer()
+                                Text(emoji)
+                                    .font(.system(size: 80))
+                                Spacer()
+                            }
+                            .listRowBackground(Color.clear)
                         }
-                        .listRowBackground(Color.clear)
                     }
-                }
 
-                Section("Food Details") {
-                    HStack {
-                        Text("Name")
-                        Spacer()
-                        TextField("Food name", text: $name)
-                            .multilineTextAlignment(.trailing)
+                    Section("Food Details") {
+                        HStack {
+                            Text("Name")
+                            Spacer()
+                            TextField("Food name", text: $name)
+                                .multilineTextAlignment(.trailing)
+                        }
                     }
-                }
 
-                Section("Serving") {
-                    HStack {
-                        Text("Quantity")
-                        Spacer()
-                        EndEditingDecimalTextField(text: $servingSizeText, focusRequest: quantityFocusRequest)
+                    Section("Serving") {
+                        HStack {
+                            Text("Quantity")
+                            Spacer()
+                            EndEditingDecimalTextField(
+                                text: $servingSizeText,
+                                focusRequest: quantityFocusRequest,
+                                onEditingChanged: { editing in
+                                    isQuantityEditing = editing
+                                }
+                            )
                             .frame(width: 80)
                             .onChange(of: servingSizeText) { _, newValue in
                                 if let parsed = Double(newValue), parsed > 0 {
                                     servingSizeGrams = parsed
                                 }
                             }
-                        if !servingSizeText.isEmpty {
-                            Button {
-                                servingSizeText = ""
-                                quantityFocusRequest += 1
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(.secondary)
+                            if !servingSizeText.isEmpty {
+                                Button {
+                                    servingSizeText = ""
+                                    quantityFocusRequest += 1
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Clear quantity")
                             }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("Clear quantity")
+                            Text("g")
+                                .foregroundStyle(.secondary)
+                                .frame(width: 36, alignment: .leading)
                         }
-                        Text("g")
-                            .foregroundStyle(.secondary)
-                            .frame(width: 36, alignment: .leading)
+                        .id(ScrollTarget.quantity)
                     }
-                }
 
-                Section("Nutrition") {
-                    NutritionDisplayRow(label: "Calories", value: "\(scaledCalories)", unit: "kcal")
-                    NutritionDisplayRow(label: "Protein", value: "\(scaledProtein)", unit: "g")
-                    NutritionDisplayRow(label: "Carbs", value: "\(scaledCarbs)", unit: "g")
-                    NutritionDisplayRow(label: "Fat", value: "\(scaledFat)", unit: "g")
-                }
-
-                Section {
-                    DisclosureGroup("More Nutrition") {
-                        OptionalNutritionDisplayRow(label: "Sugar", value: scaledSugar, unit: "g")
-                        OptionalNutritionDisplayRow(label: "Added Sugar", value: scaledAddedSugar, unit: "g")
-                        OptionalNutritionDisplayRow(label: "Fiber", value: scaledFiber, unit: "g")
-                        OptionalNutritionDisplayRow(label: "Saturated Fat", value: scaledSaturatedFat, unit: "g")
-                        OptionalNutritionDisplayRow(label: "Mono Fat", value: scaledMonounsaturatedFat, unit: "g")
-                        OptionalNutritionDisplayRow(label: "Poly Fat", value: scaledPolyunsaturatedFat, unit: "g")
-                        OptionalNutritionDisplayRow(label: "Cholesterol", value: scaledCholesterol, unit: "mg")
-                        OptionalNutritionDisplayRow(label: "Sodium", value: scaledSodium, unit: "mg")
-                        OptionalNutritionDisplayRow(label: "Potassium", value: scaledPotassium, unit: "mg")
+                    Section("Nutrition") {
+                        NutritionDisplayRow(label: "Calories", value: "\(scaledCalories)", unit: "kcal")
+                        NutritionDisplayRow(label: "Protein", value: "\(scaledProtein)", unit: "g")
+                        NutritionDisplayRow(label: "Carbs", value: "\(scaledCarbs)", unit: "g")
+                        NutritionDisplayRow(label: "Fat", value: "\(scaledFat)", unit: "g")
                     }
-                    .tint(AppColors.calorie)
-                }
 
-                Section("Meal") {
-                    Picker("Meal Type", selection: $mealType) {
-                        ForEach(MealType.allCases, id: \.self) { meal in
-                            Label(meal.displayName, systemImage: meal.icon)
-                                .tag(meal)
+                    Section {
+                        DisclosureGroup("More Nutrition") {
+                            OptionalNutritionDisplayRow(label: "Sugar", value: scaledSugar, unit: "g")
+                            OptionalNutritionDisplayRow(label: "Added Sugar", value: scaledAddedSugar, unit: "g")
+                            OptionalNutritionDisplayRow(label: "Fiber", value: scaledFiber, unit: "g")
+                            OptionalNutritionDisplayRow(label: "Saturated Fat", value: scaledSaturatedFat, unit: "g")
+                            OptionalNutritionDisplayRow(label: "Mono Fat", value: scaledMonounsaturatedFat, unit: "g")
+                            OptionalNutritionDisplayRow(label: "Poly Fat", value: scaledPolyunsaturatedFat, unit: "g")
+                            OptionalNutritionDisplayRow(label: "Cholesterol", value: scaledCholesterol, unit: "mg")
+                            OptionalNutritionDisplayRow(label: "Sodium", value: scaledSodium, unit: "mg")
+                            OptionalNutritionDisplayRow(label: "Potassium", value: scaledPotassium, unit: "mg")
                         }
-                    }
-                    .pickerStyle(.menu)
-                    .tint(AppColors.calorie)
-                }
-
-            }
-            .scrollContentBackground(.hidden)
-            .background(AppColors.appBackground)
-            .background(KeyboardDismissTapInstaller())
-            .navigationTitle("Review Food")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Log", action: logFood)
-                        .font(.system(.body, design: .rounded, weight: .semibold))
                         .tint(AppColors.calorie)
+                    }
+
+                    Section("Meal") {
+                        Picker("Meal Type", selection: $mealType) {
+                            ForEach(MealType.allCases, id: \.self) { meal in
+                                Label(meal.displayName, systemImage: meal.icon)
+                                    .tag(meal)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .tint(AppColors.calorie)
+                    }
+
                 }
+                .scrollContentBackground(.hidden)
+                .background(AppColors.appBackground)
+                .background(KeyboardDismissTapInstaller())
+                .safeAreaInset(edge: .bottom) {
+                    if isQuantityEditing {
+                        Color.clear.frame(height: 56)
+                    }
+                }
+                .onChange(of: isQuantityEditing) { _, editing in
+                    guard editing else { return }
+                    scrollQuantityIntoView(scrollProxy)
+                }
+                .navigationTitle("Review Food")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { dismiss() }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Log", action: logFood)
+                            .font(.system(.body, design: .rounded, weight: .semibold))
+                            .tint(AppColors.calorie)
+                    }
+                }
+            }
+        }
+    }
+
+    private func scrollQuantityIntoView(_ proxy: ScrollViewProxy) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                proxy.scrollTo(ScrollTarget.quantity, anchor: .center)
             }
         }
     }
@@ -310,6 +341,7 @@ private final class KeyboardDismissTapView: UIView, UIGestureRecognizerDelegate 
 private struct EndEditingDecimalTextField: UIViewRepresentable {
     @Binding var text: String
     let focusRequest: Int
+    var onEditingChanged: (Bool) -> Void
 
     func makeUIView(context: Context) -> UITextField {
         let textField = UITextField()
@@ -319,7 +351,10 @@ private struct EndEditingDecimalTextField: UIViewRepresentable {
         textField.placeholder = "0"
         textField.font = .preferredFont(forTextStyle: .body)
         textField.adjustsFontForContentSizeCategory = true
-        textField.inputAccessoryView = context.coordinator.makeToolbar()
+        textField.inputAccessoryView = ReviewFoodKeyboardAccessoryView(
+            target: context.coordinator,
+            action: #selector(Coordinator.doneTapped)
+        )
         textField.addTarget(context.coordinator, action: #selector(Coordinator.textDidChange(_:)), for: .editingChanged)
         return textField
     }
@@ -338,7 +373,7 @@ private struct EndEditingDecimalTextField: UIViewRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(text: $text, focusRequest: focusRequest)
+        Coordinator(text: $text, focusRequest: focusRequest, onEditingChanged: onEditingChanged)
     }
 
     private static func moveCaretToEnd(in textField: UITextField) {
@@ -349,35 +384,70 @@ private struct EndEditingDecimalTextField: UIViewRepresentable {
     final class Coordinator: NSObject, UITextFieldDelegate {
         @Binding private var text: String
         var lastFocusRequest: Int
+        private let onEditingChanged: (Bool) -> Void
 
-        init(text: Binding<String>, focusRequest: Int) {
+        init(text: Binding<String>, focusRequest: Int, onEditingChanged: @escaping (Bool) -> Void) {
             self._text = text
             self.lastFocusRequest = focusRequest
+            self.onEditingChanged = onEditingChanged
         }
 
         @objc func textDidChange(_ textField: UITextField) {
             text = textField.text ?? ""
         }
 
-        func makeToolbar() -> UIToolbar {
-            let toolbar = UIToolbar()
-            toolbar.items = [
-                UIBarButtonItem(systemItem: .flexibleSpace),
-                UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneTapped))
-            ]
-            toolbar.sizeToFit()
-            return toolbar
-        }
-
-        @objc private func doneTapped() {
+        @objc func doneTapped() {
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
 
         func textFieldDidBeginEditing(_ textField: UITextField) {
+            onEditingChanged(true)
             DispatchQueue.main.async {
                 EndEditingDecimalTextField.moveCaretToEnd(in: textField)
             }
         }
+
+        func textFieldDidEndEditing(_ textField: UITextField) {
+            onEditingChanged(false)
+        }
+    }
+}
+
+private final class ReviewFoodKeyboardAccessoryView: UIInputView {
+    private static let height: CGFloat = 50
+    private static let calorieTint = UIColor(red: 1.0, green: 55.0 / 255.0, blue: 95.0 / 255.0, alpha: 1.0)
+
+    init(target: Any?, action: Selector) {
+        super.init(frame: CGRect(x: 0, y: 0, width: 0, height: Self.height), inputViewStyle: .keyboard)
+        autoresizingMask = [.flexibleWidth]
+        backgroundColor = .clear
+
+        let button = UIButton(type: .system)
+        var configuration = UIButton.Configuration.filled()
+        configuration.title = "Done"
+        configuration.baseForegroundColor = Self.calorieTint
+        configuration.baseBackgroundColor = UIColor.secondarySystemFill
+        configuration.cornerStyle = .capsule
+        configuration.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20)
+        button.configuration = configuration
+        button.titleLabel?.font = .preferredFont(forTextStyle: .headline)
+        button.addTarget(target, action: action, for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+
+        addSubview(button)
+        NSLayoutConstraint.activate([
+            button.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -12),
+            button.centerYAnchor.constraint(equalTo: centerYAnchor),
+            button.heightAnchor.constraint(equalToConstant: 36)
+        ])
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override var intrinsicContentSize: CGSize {
+        CGSize(width: UIView.noIntrinsicMetric, height: Self.height)
     }
 }
 
