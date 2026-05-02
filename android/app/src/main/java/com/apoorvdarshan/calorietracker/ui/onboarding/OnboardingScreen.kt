@@ -95,6 +95,7 @@ import com.apoorvdarshan.calorietracker.models.ActivityLevel
 import com.apoorvdarshan.calorietracker.models.AIProvider
 import com.apoorvdarshan.calorietracker.models.Gender
 import com.apoorvdarshan.calorietracker.models.WeightGoal
+import com.apoorvdarshan.calorietracker.services.update.AndroidUpdateChecker
 import com.apoorvdarshan.calorietracker.ui.components.DateWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.DecimalWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.SplitDecimalWheelPicker
@@ -278,12 +279,12 @@ fun OnboardingScreen(container: AppContainer, onComplete: () -> Unit) {
             OnboardingStep.REVIEW -> {
                 // iOS review step: pink-gradient "Rate fud" primary + "Maybe Later"
                 // secondary text button. "Rate fud" opens the Play Store listing
-                // (market://details?id=<pkg> with web fallback) and then completes
+                // (real release package even from debug) and then completes
                 // onboarding so the user lands on Home regardless of whether they
                 // actually rate.
                 val ctx = LocalContext.current
                 fun openPlayStore() {
-                    val market = Uri.parse("market://details?id=${ctx.packageName}")
+                    val market = Uri.parse(AndroidUpdateChecker.PLAY_STORE_MARKET_URL)
                     runCatching {
                         ctx.startActivity(
                             Intent(Intent.ACTION_VIEW, market)
@@ -293,7 +294,7 @@ fun OnboardingScreen(container: AppContainer, onComplete: () -> Unit) {
                         ctx.startActivity(
                             Intent(
                                 Intent.ACTION_VIEW,
-                                Uri.parse("https://play.google.com/store/apps/details?id=${ctx.packageName}")
+                                Uri.parse(AndroidUpdateChecker.PLAY_STORE_WEB_URL)
                             ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         )
                     }
@@ -1756,7 +1757,7 @@ private fun ChoiceRow(label: String, subtitle: String? = null, selected: Boolean
     }
 }
 
-private enum class PlanField(@androidx.annotation.StringRes val titleRes: Int, @androidx.annotation.StringRes val unitRes: Int) {
+private enum class PlanField(@get:androidx.annotation.StringRes val titleRes: Int, @get:androidx.annotation.StringRes val unitRes: Int) {
     CALORIES(R.string.onboarding_plan_field_calories, R.string.unit_kcal),
     PROTEIN(R.string.onboarding_plan_field_protein, R.string.unit_g),
     CARBS(R.string.onboarding_plan_field_carbs, R.string.unit_g),
