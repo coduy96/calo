@@ -394,11 +394,10 @@ private struct EndEditingDecimalTextField: UIViewRepresentable {
         }
 
         func makeToolbar() -> UIToolbar {
-            let doneItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneTapped))
+            let doneItem = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(doneTapped))
             doneItem.tintColor = Self.calorieTint
 
             let toolbar = UIToolbar()
-            toolbar.tintColor = Self.calorieTint
             toolbar.items = [
                 UIBarButtonItem(systemItem: .flexibleSpace),
                 doneItem
