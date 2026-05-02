@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
@@ -66,7 +67,7 @@ import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import kotlinx.coroutines.launch
 
-data class BottomTab(val route: String, val icon: ImageVector, @StringRes val labelRes: Int)
+data class BottomTab(val route: String, val icon: ImageVector, @get:StringRes val labelRes: Int)
 
 val BottomTabs = listOf(
     BottomTab(FudAIRoutes.HOME, Icons.Filled.Home, R.string.nav_home),
@@ -96,6 +97,7 @@ private val PillInsetV = 6.dp
 @Composable
 fun FudAIBottomNavBar(
     currentRoute: String?,
+    showAboutBadge: Boolean = false,
     onTap: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -256,6 +258,7 @@ fun FudAIBottomNavBar(
                     TabItem(
                         tab = tab,
                         selected = selected,
+                        showBadge = showAboutBadge && tab.route == FudAIRoutes.ABOUT,
                         isDark = isDark,
                         modifier = Modifier
                             .width(tabWidthDp)
@@ -320,6 +323,7 @@ private fun ActivePill(tabWidth: Dp, isDark: Boolean, modifier: Modifier = Modif
 private fun TabItem(
     tab: BottomTab,
     selected: Boolean,
+    showBadge: Boolean,
     isDark: Boolean,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
@@ -348,12 +352,23 @@ private fun TabItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            tab.icon,
-            contentDescription = label,
-            tint = tint,
-            modifier = Modifier.size(if (selected) 26.dp else 24.dp).scale(iconScale)
-        )
+        Box {
+            Icon(
+                tab.icon,
+                contentDescription = label,
+                tint = tint,
+                modifier = Modifier.size(if (selected) 26.dp else 24.dp).scale(iconScale)
+            )
+            if (showBadge) {
+                Box(
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(AppColors.Calorie)
+                )
+            }
+        }
         Spacer(Modifier.height(3.dp))
         Text(
             label,

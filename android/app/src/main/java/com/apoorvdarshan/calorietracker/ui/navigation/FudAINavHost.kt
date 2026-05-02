@@ -5,15 +5,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.apoorvdarshan.calorietracker.AppContainer
+import com.apoorvdarshan.calorietracker.services.update.AndroidUpdateChecker
+import com.apoorvdarshan.calorietracker.services.update.AndroidUpdateState
 import com.apoorvdarshan.calorietracker.ui.about.AboutScreen
 import com.apoorvdarshan.calorietracker.ui.coach.CoachScreen
 import com.apoorvdarshan.calorietracker.ui.home.HomeScreen
@@ -34,12 +41,20 @@ fun FudAINavHost(
     // covers the tab bar.
     val analyzing by container.analyzingFood.collectAsState()
     val showTabs = currentRoute in FudAIRoutes.bottomTabs && !analyzing
+    val context = LocalContext.current
+    val currentVersion = remember(context) { AndroidUpdateChecker.currentVersion(context) }
+    var updateAvailable by remember { mutableStateOf(false) }
+
+    LaunchedEffect(currentVersion) {
+        updateAvailable = AndroidUpdateChecker.check(currentVersion) is AndroidUpdateState.Available
+    }
 
     Scaffold(
         bottomBar = {
             if (showTabs) {
                 FudAIBottomNavBar(
                     currentRoute = currentRoute,
+                    showAboutBadge = updateAvailable,
                     onTap = { target ->
                         if (target == currentRoute) return@FudAIBottomNavBar
                         // Tapping HOME (the start destination) needs popBackStack
