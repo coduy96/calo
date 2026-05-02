@@ -206,6 +206,7 @@ struct FoodResultView: View {
             }
             .scrollContentBackground(.hidden)
             .background(AppColors.appBackground)
+            .background(KeyboardDismissTapInstaller())
             .navigationTitle("Review Food")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -247,6 +248,63 @@ struct FoodResultView: View {
         onLog(entry)
         dismiss()
     }
+
+    fileprivate static func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+
+private struct KeyboardDismissTapInstaller: UIViewRepresentable {
+    func makeUIView(context: Context) -> KeyboardDismissTapView {
+        KeyboardDismissTapView()
+    }
+
+    func updateUIView(_ uiView: KeyboardDismissTapView, context: Context) {
+        uiView.installIfNeeded()
+    }
+
+    static func dismantleUIView(_ uiView: KeyboardDismissTapView, coordinator: ()) {
+        uiView.removeGesture()
+    }
+}
+
+private final class KeyboardDismissTapView: UIView, UIGestureRecognizerDelegate {
+    private weak var installedWindow: UIWindow?
+    private var tapGesture: UITapGestureRecognizer?
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        installIfNeeded()
+    }
+
+    func installIfNeeded() {
+        guard let window, installedWindow !== window else { return }
+        removeGesture()
+
+        let gesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
+        gesture.cancelsTouchesInView = false
+        gesture.delegate = self
+        window.addGestureRecognizer(gesture)
+
+        installedWindow = window
+        tapGesture = gesture
+    }
+
+    func removeGesture() {
+        if let tapGesture, let installedWindow {
+            installedWindow.removeGestureRecognizer(tapGesture)
+        }
+        tapGesture = nil
+        installedWindow = nil
+    }
+
+    @objc private func handleTap() {
+        FoodResultView.dismissKeyboard()
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        !touch.viewContainsInputOrControl
+    }
 }
 
 private struct EndEditingDecimalTextField: UIViewRepresentable {
@@ -261,6 +319,7 @@ private struct EndEditingDecimalTextField: UIViewRepresentable {
         textField.placeholder = "0"
         textField.font = .preferredFont(forTextStyle: .body)
         textField.adjustsFontForContentSizeCategory = true
+        textField.inputAccessoryView = context.coordinator.makeToolbar()
         textField.addTarget(context.coordinator, action: #selector(Coordinator.textDidChange(_:)), for: .editingChanged)
         return textField
     }
@@ -300,11 +359,38 @@ private struct EndEditingDecimalTextField: UIViewRepresentable {
             text = textField.text ?? ""
         }
 
+        func makeToolbar() -> UIToolbar {
+            let toolbar = UIToolbar()
+            toolbar.items = [
+                UIBarButtonItem(systemItem: .flexibleSpace),
+                UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneTapped))
+            ]
+            toolbar.sizeToFit()
+            return toolbar
+        }
+
+        @objc private func doneTapped() {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        }
+
         func textFieldDidBeginEditing(_ textField: UITextField) {
             DispatchQueue.main.async {
                 EndEditingDecimalTextField.moveCaretToEnd(in: textField)
             }
         }
+    }
+}
+
+private extension UITouch {
+    var viewContainsInputOrControl: Bool {
+        var currentView = view
+        while let view = currentView {
+            if view is UITextField || view is UITextView || view is UIControl {
+                return true
+            }
+            currentView = view.superview
+        }
+        return false
     }
 }
 
