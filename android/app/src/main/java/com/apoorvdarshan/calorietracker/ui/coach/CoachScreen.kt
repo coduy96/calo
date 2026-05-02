@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -62,6 +63,9 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
@@ -95,6 +99,13 @@ fun CoachScreen(container: AppContainer) {
     var input by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     var showResetConfirm by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+
+    fun hideKeyboard() {
+        focusManager.clearFocus()
+        keyboard?.hide()
+    }
 
     LaunchedEffect(ui.messages.size, ui.sending) {
         if (ui.messages.isNotEmpty()) listState.animateScrollToItem(ui.messages.size - 1)
@@ -136,17 +147,26 @@ fun CoachScreen(container: AppContainer) {
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             // Top region — empty state OR message list
-            if (ui.messages.isEmpty()) {
-                EmptyState(modifier = Modifier.weight(1f))
-            } else {
-                val resolvedError = ui.error ?: ui.errorRes?.let { stringResource(it) }
-                MessageList(
-                    messages = ui.messages,
-                    sending = ui.sending,
-                    error = resolvedError,
-                    listState = listState,
-                    modifier = Modifier.weight(1f)
-                )
+            Box(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = { hideKeyboard() })
+                    }
+            ) {
+                if (ui.messages.isEmpty()) {
+                    EmptyState(modifier = Modifier.fillMaxSize())
+                } else {
+                    val resolvedError = ui.error ?: ui.errorRes?.let { stringResource(it) }
+                    MessageList(
+                        messages = ui.messages,
+                        sending = ui.sending,
+                        error = resolvedError,
+                        listState = listState,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
 
             // promptChips — horizontal scrolling, ALWAYS visible (matches iOS)
@@ -155,6 +175,7 @@ fun CoachScreen(container: AppContainer) {
                 chips = resolvedChips,
                 enabled = !ui.sending,
                 onTap = { chip ->
+                    hideKeyboard()
                     input = ""
                     vm.send(chip)
                 }
@@ -168,6 +189,7 @@ fun CoachScreen(container: AppContainer) {
                 onSend = {
                     val trimmed = input.trim()
                     if (trimmed.isNotEmpty() && !ui.sending) {
+                        hideKeyboard()
                         input = ""
                         vm.send(trimmed)
                     }
