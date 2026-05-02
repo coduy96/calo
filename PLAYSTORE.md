@@ -1,6 +1,6 @@
 # Play Store Listing
 
-Google Play Console listing copy for Fud AI Android (current: v1.0.6 / versionCode 7). Each field is in a code block for easy copy-paste. Char counts are tracked because Play Console enforces hard caps and silently truncates anything over.
+Google Play Console listing copy for Fud AI Android (current: v1.0.7 / versionCode 8). Each field is in a code block for easy copy-paste. Char counts are tracked because Play Console enforces hard caps and silently truncates anything over.
 
 **Where to paste each field in Play Console:**
 - App name / Short description / Full description → Grow → Store presence → **Main store listing** (default English) and Grow → Store presence → **Custom store listings** → Manage translations (per-language overrides)
@@ -38,7 +38,7 @@ Snap, speak, or type a meal. AI logs the calories. Open source.
 ```
 Fud AI makes calorie tracking effortless with AI-powered food recognition. Snap a photo, speak it, or type it — get instant nutrition: calories, protein, carbs, fats, and 9 micronutrients.
 
-NEW in v1.0.6: Custom AI Instructions — drop region, diet, or brand context once in Settings and it ships with every AI request. Fallback AI Provider — opt-in second provider that auto-retries when your primary fails on overload or rate-limit. Plus body fat tracking, Coach with full-history tool calling, smart daily reminders, search across Saved Meals.
+NEW in v1.0.7: Per-provider speech languages, richer Coach context, Play Store update checks in About, plus a tab dot when an update is available.
 
 Free, open source, privacy-first. Bring your own API key. All data stays on your device.
 
@@ -50,7 +50,7 @@ HOW TO USE
 
 4 WAYS TO LOG A MEAL
 • Photo — AI identifies the food and returns nutrition
-• Voice — 5 STT engines (native Android or remote)
+• Voice — 5 STT engines with per-provider language selection
 • Text — describe in plain language, AI parses it
 • Manual Entry — name + calories + macros + meal type, no AI needed
 
@@ -61,10 +61,10 @@ Log body fat % over time, set a goal %, see it graphed alongside weight on the u
 Google Gemini, OpenAI, Anthropic Claude, xAI Grok, Groq, OpenRouter, Together AI, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama (local), or any OpenAI-compatible endpoint. Switch anytime. OpenRouter defaults to a free vision model — test without loading credits. Keys stored encrypted (AES-256). Add Custom AI Instructions to send region, diet, or brand context with every request. Set a Fallback Provider so the app auto-retries on overload or rate-limit errors.
 
 5 SPEECH-TO-TEXT ENGINES
-Native Android, OpenAI Whisper, Groq, Deepgram, AssemblyAI.
+Native Android, OpenAI Whisper, Groq, Deepgram, AssemblyAI. Choose Provider Auto, Use Device Language, or a fixed language.
 
 COACH (TOOL CALLING)
-Multi-turn chat that sees your profile, weight, body fat, and food log. Ask "what was my weight in March?" or "how's my protein this week?" — Coach pulls the date range it needs via 5 on-demand tools. Goal-aware chips for Lose / Gain / Maintain.
+Multi-turn chat that sees your profile, weight, body fat, and food log. Ask "what was my weight in March?" or "how's my protein this week?" — Coach pulls the date range it needs via 5 on-demand tools. It now understands today's date/timezone and richer meal details. Goal-aware chips for Lose / Gain / Maintain.
 
 SMART DAILY REMINDERS
 Log Weight, Log Body Fat, Streak, Daily Summary — all skip firing on days you've already logged, so fully-tracking users get effectively zero pings.
@@ -104,84 +104,99 @@ English-only on Play Console — non-English Play Store browsers (ar, az-AZ, de-
 
 ---
 
-## 4. What's New (v1.0.6)
+## 4. What's New (v1.0.7)
 
 **500 char hard cap per language.** Paste the entire block below into Play Console's "Release notes" field — it auto-routes each `<lang-tag>` block to the matching locale.
 
 ```
 <en-US>
-• Custom AI Instructions — optional Settings text that gets sent with every AI request. Drop region, diet, or brand context once instead of repeating it per meal.
-• Fallback AI Provider — opt-in second provider that auto-retries when your primary fails on overload or rate-limit. Pair a paid model with a free fallback for cheap reliability.
+• Pick a speech language per STT provider: Provider Auto, Use Device Language, or a fixed language.
+• Coach now has today/timezone plus richer meal details for better answers.
+• About checks Play Store updates and shows a tab dot when one is available.
 </en-US>
 
 <ar>
-• تعليمات AI مخصصة — نص اختياري في الإعدادات يُرسل مع كل طلب إلى الذكاء الاصطناعي. أضف سياق المنطقة أو النظام الغذائي أو العلامة التجارية مرة واحدة بدلاً من تكراره مع كل وجبة.
-• مزود AI احتياطي — مزود ثانٍ اختياري يعيد المحاولة تلقائيًا عند فشل المزود الأساسي بسبب التحميل الزائد أو حد المعدل. اقرن نموذجًا مدفوعًا مع احتياطي مجاني للحصول على موثوقية بتكلفة منخفضة.
+• اختر لغة الكلام لكل مزود STT: تلقائي من المزود، لغة الجهاز، أو لغة ثابتة.
+• Coach يعرف الآن تاريخ اليوم والمنطقة الزمنية وتفاصيل وجبات أكثر لإجابات أدق.
+• About يتحقق من تحديثات Play Store ويعرض نقطة عند توفر تحديث.
 </ar>
 
 <az-AZ>
-• Fərdi AI Təlimatları — hər AI sorğusu ilə göndərilən isteğe bağlı Ayarlar mətni. Region, pəhriz və ya brend kontekstini hər yemək üçün təkrarlamaq əvəzinə bir dəfə əlavə edin.
-• Ehtiyat AI Provayderi — əsas provayder yüklənmə və ya sürət limiti səbəbindən uğursuz olduqda avtomatik təkrar cəhd edən isteğe bağlı ikinci provayder. Ucuz etibarlılıq üçün pullu modeli pulsuz ehtiyatla cütləşdirin.
+• Hər STT provayderi üçün nitq dili seçin: Provider Auto, Device Language və ya sabit dil.
+• Coach daha yaxşı cavablar üçün bugünkü tarix/saat qurşağı və daha zəngin yemək detalları görür.
+• About Play Store yeniləmələrini yoxlayır və yeniləmə olanda tab nöqtəsi göstərir.
 </az-AZ>
 
 <de-DE>
-• Benutzerdefinierte AI-Anweisungen — optionaler Einstellungstext, der mit jeder AI-Anfrage gesendet wird. Region, Ernährung oder Markenkontext einmal hinterlegen, statt es bei jeder Mahlzeit zu wiederholen.
-• Fallback-AI-Anbieter — optionaler zweiter Anbieter, der automatisch erneut versucht, wenn dein Hauptanbieter wegen Überlastung oder Ratenbegrenzung ausfällt. Kombiniere ein kostenpflichtiges Modell mit einem kostenlosen Fallback für günstige Zuverlässigkeit.
+• Sprache pro STT-Anbieter wählen: Provider Auto, Gerätesprache oder feste Sprache.
+• Coach kennt jetzt Datum/Zeitzone und mehr Mahlzeitdetails für bessere Antworten.
+• About prüft Play Store-Updates und zeigt einen Punkt im Tab, wenn ein Update verfügbar ist.
 </de-DE>
 
 <es-ES>
-• Instrucciones de AI personalizadas — texto opcional en Ajustes que se envía con cada solicitud a la AI. Indica una vez tu región, dieta o marcas favoritas en lugar de repetirlo en cada comida.
-• Proveedor de AI de respaldo — segundo proveedor opcional que reintenta automáticamente cuando el principal falla por sobrecarga o límite de velocidad. Combina un modelo de pago con un respaldo gratuito para una fiabilidad económica.
+• Elige idioma por proveedor STT: automático del proveedor, idioma del dispositivo o idioma fijo.
+• Coach ahora usa fecha/zona horaria y más detalles de comidas para mejores respuestas.
+• About busca actualizaciones de Play Store y muestra un punto en la pestaña si hay una.
 </es-ES>
 
 <fr-FR>
-• Instructions AI personnalisées — texte optionnel dans les Paramètres envoyé avec chaque requête AI. Indique une fois ta région, ton régime ou tes marques préférées au lieu de le répéter à chaque repas.
-• Fournisseur AI de secours — second fournisseur optionnel qui réessaie automatiquement lorsque ton fournisseur principal échoue pour cause de surcharge ou de limite de débit. Associe un modèle payant à un secours gratuit pour une fiabilité à moindre coût.
+• Choisis la langue par fournisseur STT : auto fournisseur, langue de l'appareil ou langue fixe.
+• Coach utilise maintenant la date, le fuseau horaire et plus de détails repas pour mieux répondre.
+• About vérifie les mises à jour Play Store et affiche un point dans l'onglet si disponible.
 </fr-FR>
 
 <hi-IN>
-• कस्टम AI निर्देश — सेटिंग्स में वैकल्पिक टेक्स्ट जो हर AI अनुरोध के साथ भेजा जाता है। हर भोजन पर दोहराने के बजाय अपना क्षेत्र, डाइट या ब्रांड संदर्भ एक बार जोड़ें।
-• फ़ॉलबैक AI प्रोवाइडर — वैकल्पिक दूसरा प्रोवाइडर जो आपके मुख्य प्रोवाइडर के ओवरलोड या रेट-लिमिट पर विफल होने पर अपने आप पुनः प्रयास करता है। सस्ती विश्वसनीयता के लिए पेड मॉडल के साथ मुफ़्त फ़ॉलबैक जोड़ें।
+• हर STT प्रोवाइडर के लिए भाषा चुनें: Provider Auto, Device Language, या fixed language.
+• Coach अब बेहतर जवाबों के लिए आज की तारीख/टाइमज़ोन और ज्यादा meal details समझता है.
+• About Play Store updates जांचता है और update available होने पर tab dot दिखाता है.
 </hi-IN>
 
 <it-IT>
-• Istruzioni AI personalizzate — testo opzionale nelle Impostazioni inviato con ogni richiesta AI. Inserisci una volta il contesto di regione, dieta o marca invece di ripeterlo a ogni pasto.
-• Provider AI di riserva — secondo provider opzionale che riprova automaticamente quando quello principale fallisce per sovraccarico o limite di velocità. Abbina un modello a pagamento a un fallback gratuito per un'affidabilità economica.
+• Scegli la lingua per ogni provider STT: Provider Auto, lingua del dispositivo o lingua fissa.
+• Coach ora usa data/fuso orario e più dettagli sui pasti per risposte migliori.
+• About controlla gli aggiornamenti Play Store e mostra un punto nella scheda se disponibili.
 </it-IT>
 
 <ja-JP>
-• カスタムAI指示 — すべてのAIリクエストとともに送信される設定の任意テキスト。地域、食事、ブランドのコンテキストを食事ごとに繰り返す代わりに、一度だけ入力できます。
-• フォールバックAIプロバイダー — メインプロバイダーが過負荷やレート制限で失敗したときに自動で再試行するオプションの2番目のプロバイダー。有料モデルと無料のフォールバックを組み合わせて、低コストで信頼性を確保。
+• STTプロバイダーごとに音声言語を選択：Provider Auto、端末の言語、固定言語。
+• Coachは今日の日付/タイムゾーンと詳しい食事情報を使い、回答精度が向上。
+• AboutでPlay Store更新を確認し、更新があるとタブにドットを表示。
 </ja-JP>
 
 <ko-KR>
-• 맞춤 AI 지침 — 모든 AI 요청과 함께 전송되는 설정의 선택적 텍스트입니다. 지역, 식단, 브랜드 정보를 매 식사마다 반복하는 대신 한 번만 입력하세요.
-• 대체 AI 제공자 — 기본 제공자가 과부하 또는 속도 제한으로 실패할 때 자동으로 재시도하는 선택적 두 번째 제공자입니다. 유료 모델과 무료 대체를 결합하여 저렴한 비용으로 안정성을 확보하세요.
+• STT 제공자별 음성 언어 선택: Provider Auto, 기기 언어, 고정 언어.
+• Coach가 오늘 날짜/시간대와 더 자세한 식사 정보를 사용해 답변을 개선합니다.
+• About에서 Play Store 업데이트를 확인하고, 업데이트가 있으면 탭에 점을 표시합니다.
 </ko-KR>
 
 <nl-NL>
-• Aangepaste AI-instructies — optionele tekst in Instellingen die met elke AI-aanvraag wordt meegestuurd. Voeg regio-, dieet- of merkcontext één keer toe in plaats van het bij elke maaltijd te herhalen.
-• Reserve-AI-provider — optionele tweede provider die automatisch opnieuw probeert wanneer je primaire provider faalt door overbelasting of een rate limit. Combineer een betaald model met een gratis reserve voor goedkope betrouwbaarheid.
+• Kies per STT-provider een taal: Provider Auto, apparaattaal of vaste taal.
+• Coach gebruikt nu datum/tijdzone en rijkere maaltijdgegevens voor betere antwoorden.
+• About controleert Play Store-updates en toont een tabpunt wanneer er een update is.
 </nl-NL>
 
 <pt-BR>
-• Instruções de AI personalizadas — texto opcional em Configurações enviado com cada solicitação à AI. Informe uma vez sua região, dieta ou marcas em vez de repetir a cada refeição.
-• Provedor de AI de fallback — segundo provedor opcional que tenta novamente de forma automática quando o principal falha por sobrecarga ou limite de taxa. Combine um modelo pago com um fallback gratuito para confiabilidade barata.
+• Escolha idioma por provedor STT: Provider Auto, idioma do dispositivo ou idioma fixo.
+• Coach agora usa data/fuso horário e mais detalhes das refeições para responder melhor.
+• About verifica atualizações da Play Store e mostra um ponto na aba quando houver uma.
 </pt-BR>
 
 <ro>
-• Instrucțiuni AI personalizate — text opțional în Setări trimis cu fiecare cerere AI. Adaugă o singură dată contextul de regiune, dietă sau brand în loc să-l repeți la fiecare masă.
-• Furnizor AI de rezervă — al doilea furnizor opțional care reîncearcă automat când cel principal eșuează din cauza supraîncărcării sau a limitei de viteză. Asociază un model plătit cu o rezervă gratuită pentru fiabilitate ieftină.
+• Alege limba pentru fiecare furnizor STT: Provider Auto, limba dispozitivului sau limbă fixă.
+• Coach folosește acum data/fusul orar și detalii mai bogate despre mese pentru răspunsuri mai bune.
+• About verifică actualizări Play Store și afișează un punct pe tab când există una.
 </ro>
 
 <ru-RU>
-• Пользовательские инструкции AI — необязательный текст в Настройках, отправляемый с каждым запросом к AI. Укажите регион, диету или бренды один раз вместо повторения для каждого приёма пищи.
-• Резервный провайдер AI — необязательный второй провайдер, автоматически повторяющий запрос при сбое основного из-за перегрузки или ограничения скорости. Сочетайте платную модель с бесплатным резервом для дешёвой надёжности.
+• Выбирайте язык для каждого STT-провайдера: Provider Auto, язык устройства или фиксированный язык.
+• Coach теперь учитывает дату/часовой пояс и больше деталей еды для лучших ответов.
+• About проверяет обновления Play Store и показывает точку на вкладке, если есть обновление.
 </ru-RU>
 
 <zh-CN>
-• 自定义 AI 指令 — 设置中的可选文本，会随每次 AI 请求一起发送。一次性添加地区、饮食或品牌偏好，无需在每餐时重复输入。
-• 备用 AI 提供商 — 可选的第二个提供商，当主提供商因过载或速率限制失败时会自动重试。将付费模型与免费备用搭配，以低成本获得可靠性。
+• 可为每个 STT 提供商选择语音语言：Provider Auto、设备语言或固定语言。
+• Coach 现在使用当天日期/时区和更丰富的餐食细节，回答更准确。
+• About 会检查 Play Store 更新，有更新时在标签栏显示圆点。
 </zh-CN>
 ```
 
