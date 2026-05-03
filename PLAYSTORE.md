@@ -1,6 +1,6 @@
 # Play Store Listing
 
-Google Play Console listing copy for Fud AI Android (current: v1.0.7 / versionCode 9). Each field is in a code block for easy copy-paste. Char counts are tracked because Play Console enforces hard caps and silently truncates anything over.
+Google Play Console listing copy for Fud AI Android (current: v1.0.8 / versionCode 10). Each field is in a code block for easy copy-paste. Char counts are tracked because Play Console enforces hard caps and silently truncates anything over.
 
 **Where to paste each field in Play Console:**
 - App name / Short description / Full description → Grow → Store presence → **Main store listing** (default English) and Grow → Store presence → **Custom store listings** → Manage translations (per-language overrides)
@@ -38,7 +38,7 @@ Snap, speak, or type a meal. AI logs the calories. Open source.
 ```
 Fud AI makes calorie tracking effortless with AI-powered food recognition. Snap a photo, speak it, or type it — get instant nutrition: calories, protein, carbs, fats, and 9 micronutrients.
 
-NEW in v1.0.7: Per-provider speech languages, richer Coach context, Play Store update checks in About, update tab dot, plus keyboard, bottom nav, and rate-link polish.
+NEW in v1.0.8: About now includes the official Instagram link for Fud AI updates and support.
 
 Free, open source, privacy-first. Bring your own API key. All data stays on your device.
 
@@ -90,7 +90,7 @@ No account, no sign-in, no cloud sync, no analytics, no ads, no tracking. Local-
 HEALTH CONNECT
 Two-way sync for nutrition, weight, body fat. Macros + 9 micronutrients per meal. Edits and deletes sync back.
 
-Built solo because tracking calories shouldn't feel like a chore. Reach out at apoorv@fud-ai.app or on GitHub.
+Built solo because tracking calories shouldn't feel like a chore. Reach out at apoorv@fud-ai.app, GitHub, or Instagram @fudai.app.
 
 NOTE: Not medical advice. All nutritional estimates are AI-generated. Consult a healthcare professional before significant diet changes.
 
@@ -104,114 +104,84 @@ English-only on Play Console — non-English Play Store browsers (ar, az-AZ, de-
 
 ---
 
-## 4. What's New (v1.0.7)
+## 4. What's New (v1.0.8)
 
 **500 char hard cap per language.** Paste the entire block below into Play Console's "Release notes" field — it auto-routes each `<lang-tag>` block to the matching locale.
 
 ```
 <en-US>
-• Speech language per STT provider: Provider Auto, Use Device Language, or fixed.
-• Coach has today/timezone plus richer meal details.
-• About checks Play Store updates with a tab dot.
-• Fixes: Coach tap-to-hide keyboard, bottom-nav spacing, release Play Store links from debug/onboarding.
+• About now includes Follow on Instagram for Fud AI updates and support.
+• Keeps the v1.0.7 improvements: STT language controls, richer Coach context, update badge, and keyboard/nav polish.
 </en-US>
 
 <ar>
-• لغة كلام لكل مزود STT: تلقائي، لغة الجهاز، أو لغة ثابتة.
-• Coach يستخدم تاريخ اليوم والمنطقة الزمنية وتفاصيل وجبات أكثر.
-• About يتحقق من تحديثات Play Store مع نقطة في التبويب.
-• إصلاحات: إخفاء لوحة Coach بالنقر، تباعد الشريط السفلي، وروابط Play Store الصحيحة.
+• About يتضمن الآن رابط المتابعة على Instagram لتحديثات ودعم Fud AI.
+• يتضمن أيضًا تحسينات v1.0.7: لغات STT، سياق Coach أفضل، شارة التحديث، وتحسينات لوحة المفاتيح والتنقل.
 </ar>
 
 <az-AZ>
-• Hər STT provayderi üçün dil: Provider Auto, Device Language və ya sabit dil.
-• Coach bugünkü tarix/saat qurşağı və daha zəngin yemək detallarından istifadə edir.
-• About Play Store yeniləmələrini tab nöqtəsi ilə göstərir.
-• Düzəlişlər: Coach klaviaturasını toxunuşla gizlətmə, alt naviqasiya aralığı, Play Store linkləri.
+• About indi Fud AI yenilikləri və dəstək üçün Instagram izləmə linkini göstərir.
+• v1.0.7 təkmilləşdirmələri də var: STT dilləri, daha yaxşı Coach konteksti, yeniləmə nişanı, klaviatura/nav düzəlişləri.
 </az-AZ>
 
 <de-DE>
-• Sprache pro STT-Anbieter: Provider Auto, Gerätesprache oder feste Sprache.
-• Coach nutzt jetzt Datum/Zeitzone und mehr Mahlzeitdetails.
-• About prüft Play Store-Updates mit Tab-Punkt.
-• Fixes: Coach-Tastatur per Tippen ausblenden, Bottom-Nav-Abstand, echte Play Store-Links aus Debug/Onboarding.
+• About enthält jetzt "Auf Instagram folgen" für Fud AI-Updates und Support.
+• Enthält weiter v1.0.7: STT-Sprachen, besseren Coach-Kontext, Update-Punkt sowie Tastatur/Nav-Polish.
 </de-DE>
 
 <es-ES>
-• Idioma por proveedor STT: automático, idioma del dispositivo o fijo.
-• Coach usa fecha/zona horaria y más detalles de comidas.
-• About busca actualizaciones de Play Store con punto en la pestaña.
-• Correcciones: ocultar teclado de Coach al tocar, espaciado de barra inferior y enlaces reales de Play Store.
+• About ahora incluye "Seguir en Instagram" para novedades y soporte de Fud AI.
+• También incluye v1.0.7: idiomas STT, mejor contexto de Coach, punto de actualización y pulido de teclado/nav.
 </es-ES>
 
 <fr-FR>
-• Langue par fournisseur STT : auto, langue de l'appareil ou langue fixe.
-• Coach utilise date/fuseau horaire et plus de détails repas.
-• About vérifie les mises à jour Play Store avec point d'onglet.
-• Correctifs : masquer le clavier Coach au toucher, espacement nav bas, vrais liens Play Store.
+• About ajoute "Suivre sur Instagram" pour les actus et le support Fud AI.
+• Inclut aussi v1.0.7 : langues STT, meilleur contexte Coach, point de mise à jour et polish clavier/nav.
 </fr-FR>
 
 <hi-IN>
-• हर STT provider के लिए language: Provider Auto, Device Language, या fixed.
-• Coach अब today/timezone और richer meal details use करता है.
-• About Play Store updates और tab dot दिखाता है.
-• Fixes: Coach keyboard tap से hide, bottom-nav spacing, debug/onboarding में real Play Store links.
+• About में अब Fud AI updates/support के लिए Instagram follow link है.
+• v1.0.7 improvements भी शामिल: STT languages, better Coach context, update badge, keyboard/nav polish.
 </hi-IN>
 
 <it-IT>
-• Lingua per ogni provider STT: Provider Auto, lingua dispositivo o fissa.
-• Coach usa data/fuso orario e più dettagli sui pasti.
-• About controlla Play Store con punto nella scheda.
-• Fix: nascondi tastiera Coach al tocco, spaziatura nav inferiore, link Play Store reali.
+• About include ora "Segui su Instagram" per aggiornamenti e supporto Fud AI.
+• Include anche v1.0.7: lingue STT, contesto Coach migliore, badge update e polish tastiera/nav.
 </it-IT>
 
 <ja-JP>
-• STTごとに音声言語を選択：Provider Auto、端末の言語、固定言語。
-• Coachが今日/タイムゾーンと詳しい食事情報を使用。
-• AboutでPlay Store更新確認とタブのドット表示。
-• 修正：Coachキーボード非表示、下部ナビ間隔、debug/onboardingの実Play Storeリンク。
+• AboutにFud AI更新/サポート用のInstagramリンクを追加。
+• v1.0.7のSTT言語、Coach文脈改善、更新ドット、キーボード/nav調整も含みます。
 </ja-JP>
 
 <ko-KR>
-• STT 제공자별 언어: Provider Auto, 기기 언어, 고정 언어.
-• Coach가 오늘/시간대와 더 자세한 식사 정보를 사용합니다.
-• About에서 Play Store 업데이트와 탭 점을 표시합니다.
-• 수정: Coach 키보드 탭 숨김, 하단 내비 간격, debug/onboarding 실제 Play Store 링크.
+• About에 Fud AI 업데이트/지원용 Instagram 팔로우 링크를 추가했습니다.
+• v1.0.7의 STT 언어, Coach 컨텍스트, 업데이트 점, 키보드/nav 개선도 포함됩니다.
 </ko-KR>
 
 <nl-NL>
-• Taal per STT-provider: Provider Auto, apparaattaal of vaste taal.
-• Coach gebruikt datum/tijdzone en rijkere maaltijdgegevens.
-• About controleert Play Store-updates met tabpunt.
-• Fixes: Coach-toetsenbord verbergen bij tik, bottom-nav spacing, echte Play Store-links.
+• About bevat nu Volg op Instagram voor Fud AI-updates en support.
+• Bevat ook v1.0.7: STT-talen, betere Coach-context, updatepunt en toetsenbord/nav-polish.
 </nl-NL>
 
 <pt-BR>
-• Idioma por provedor STT: Provider Auto, idioma do dispositivo ou fixo.
-• Coach usa data/fuso horário e mais detalhes das refeições.
-• About verifica Play Store com ponto na aba.
-• Correções: esconder teclado do Coach ao tocar, espaçamento da barra inferior, links reais da Play Store.
+• About agora inclui Seguir no Instagram para novidades e suporte do Fud AI.
+• Também inclui v1.0.7: idiomas STT, Coach melhor, ponto de update e polimento teclado/nav.
 </pt-BR>
 
 <ro>
-• Limbă pentru fiecare furnizor STT: Provider Auto, limba dispozitivului sau fixă.
-• Coach folosește data/fusul orar și detalii mai bogate despre mese.
-• About verifică Play Store cu punct pe tab.
-• Fixuri: ascunde tastatura Coach la atingere, spațiere nav jos, linkuri reale Play Store.
+• About include acum Instagram pentru noutăți și suport Fud AI.
+• Include și v1.0.7: limbi STT, context Coach mai bun, punct update și polish tastatură/nav.
 </ro>
 
 <ru-RU>
-• Язык для каждого STT: Provider Auto, язык устройства или фиксированный.
-• Coach учитывает дату/часовой пояс и больше деталей еды.
-• About проверяет Play Store и показывает точку на вкладке.
-• Исправления: скрытие клавиатуры Coach по тапу, отступы нижней навигации, реальные Play Store ссылки.
+• В About добавлена ссылка Instagram для новостей и поддержки Fud AI.
+• Также включает v1.0.7: языки STT, контекст Coach, точку обновления и доработки клавиатуры/nav.
 </ru-RU>
 
 <zh-CN>
-• 每个 STT 提供商可选语言：Provider Auto、设备语言或固定语言。
-• Coach 使用当天/时区和更丰富的餐食细节。
-• About 检查 Play Store 更新并显示标签圆点。
-• 修复：点击隐藏 Coach 键盘、底部导航间距、debug/onboarding 使用真实 Play Store 链接。
+• About 现已加入 Instagram 关注链接，方便获取 Fud AI 更新和支持。
+• 也包含 v1.0.7：STT 语言、Coach 上下文、更新圆点、键盘/nav 优化。
 </zh-CN>
 ```
 

@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarRate
@@ -70,8 +71,9 @@ import kotlinx.coroutines.launch
  * ios/calorietracker/ContentView.swift.
  *
  * Two grouped sections + footer:
- *  Section 1 (10 rows): Rate / Share / Open Source / Star / Vote on PH /
- *    Support / Report Issue / Request Feature / Contact / Follow on X
+ *  Section 1: Update / Rate / Share / Open Source / Star / Vote on PH /
+ *    Support / Report Issue / Request Feature / Contact / Follow on X /
+ *    Follow on Instagram / Follow on LinkedIn
  *  Section 2 (2 rows): Privacy Policy / Terms of Service
  *  Footer: 'Made by Apoorv Darshan' / 'with care, for everyone'
  *
@@ -157,6 +159,8 @@ fun AboutScreen(container: AppContainer) {
                     AboutRow(Icons.Filled.Email, stringResource(R.string.about_contact), onClick = ::email)
                     Hairline()
                     AboutRow(Icons.Filled.AlternateEmail, stringResource(R.string.about_follow_x)) { open("https://x.com/apoorvdarshan") }
+                    Hairline()
+                    AboutRow(Icons.Filled.PhotoCamera, stringResource(R.string.about_follow_instagram)) { open("https://www.instagram.com/fudai.app/") }
                     Hairline()
                     AboutRow(Icons.Filled.Work, stringResource(R.string.about_follow_linkedin)) { open("https://www.linkedin.com/company/fud-ai-app") }
                 }
