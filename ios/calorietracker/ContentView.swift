@@ -293,6 +293,17 @@ private struct AboutView: View {
                     }
                     .tint(.primary)
 
+                    // Instagram
+                    Link(destination: URL(string: "https://www.instagram.com/fudai.app/")!) {
+                        Label {
+                            Text("Follow on Instagram")
+                        } icon: {
+                            Image(systemName: "camera.fill")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .tint(.primary)
+
                     // LinkedIn
                     Link(destination: URL(string: "https://www.linkedin.com/company/fud-ai-app")!) {
                         Label {
