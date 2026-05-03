@@ -1,6 +1,6 @@
 # App Store Listing
 
-App Store Connect submission details for Fud AI v3.3. Each field is in a code block for easy copy-paste.
+App Store Connect submission details for Fud AI v3.3.1. Each field is in a code block for easy copy-paste.
 
 ## App Name
 ```
@@ -14,7 +14,7 @@ Food & Macro Tracker
 
 ## Promotional Text (170 chars max)
 ```
-Choose STT language per provider, edit food quantities faster, and check for App Store updates from About. Free, open source, local-first.
+Follow Fud AI on Instagram from About, choose STT language per provider, edit food quantities faster, and check App Store updates in-app.
 ```
 
 ## Keywords (100 chars max)
@@ -28,30 +28,22 @@ Primary: Health & Fitness
 Secondary: Food & Drink
 ```
 
-## What's New (v3.3)
+## What's New (v3.3.1)
 ```
-Fud AI 3.3 — better voice language control, smoother food edits, and in-app update checking.
+Fud AI 3.3.1 — small About and contact polish.
 
 NEW
-• Speech-to-text language selection — each STT provider now has its own language setting. Native iOS defaults to Use iPhone Language; AI providers keep Provider Auto unless a specific language is selected.
-• Provider-specific voice hints — OpenAI Whisper, Groq Whisper, Deepgram, and AssemblyAI receive the selected language where their API supports it, helping non-English meal dictation land closer to what you said.
-• About update check — About now shows your installed version, checks the App Store version, shows a dot when an update is available, and opens the App Store update page from the app.
+• Added a Follow on Instagram link in About.
+• Updated contact links so users can find Fud AI updates more easily.
 
-Polish
-• Faster quantity correction in Review Food — the cursor starts at the end of the amount, the clear button keeps the field focused, and the numeric keyboard gets a Done button.
-• The Edit Food screen gets the same quantity keyboard polish as Review Food.
-• Tapping outside the food quantity field dismisses the keyboard without closing the food card.
-
-Bug fixes
-• Reduces accidental card dismissals while correcting serving size or quantity.
-• Coach gets richer food context for common meal questions.
+Also includes the v3.3 improvements: per-provider speech language selection, smoother quantity editing with Done keyboard controls, About update checks, and richer Coach food context.
 ```
 
 ## Description
 ```
 Effortless calorie tracking with AI-powered food recognition. Snap, speak, or type a meal — get instant nutrition: calories, protein, carbs, fats, and 9 micronutrients.
 
-NEW in v3.3: speech-to-text language selection per provider, smoother quantity editing with Done keyboard controls, and an About update check that opens the App Store when a newer version is available.
+NEW in v3.3.1: About now includes the official Instagram link for updates and support. v3.3 added speech-to-text language selection per provider, smoother quantity editing with Done keyboard controls, and an App Store update check.
 
 Free, open source, privacy-first. Bring your own API key. All data on-device.
 
