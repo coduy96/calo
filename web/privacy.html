@@ -60,7 +60,7 @@
   <div class="container">
     <div class="legal-content">
       <h2>Privacy Policy</h2>
-      <span class="legal-date">Last updated: May 3, 2026</span>
+      <span class="legal-date">Last updated: May 5, 2026</span>
 
       <p>Fud AI ("we", "our", "the app") is an open-source iOS and Android app developed by Apoorv Darshan. This privacy policy explains how your information is handled across both platforms. In short: we don't run servers, we don't have accounts, and your data stays on your device. The only things that leave your phone are the specific AI/STT requests you initiate, optional update metadata checks, and platform health sync you explicitly enable.</p>
 
@@ -75,7 +75,7 @@
         <li>Voice recordings (when using voice meal input)</li>
         <li>AI Coach chat messages (multi-turn conversation history)</li>
         <li>AI provider and speech-to-text provider API keys (stored encrypted on device — see below)</li>
-        <li>App preferences: appearance mode, units (metric / imperial), week-start day, notification times, and speech-language preferences</li>
+        <li>App preferences: appearance mode, theme color, units (metric / imperial), week-start day, notification times, and speech-language preferences</li>
       </ul>
 
       <h3>How We Use Your Information</h3>
@@ -114,6 +114,7 @@
           <tr><td>User profile (incl. goal body fat %)</td><td>UserDefaults</td><td>DataStore Preferences</td><td>You only</td></tr>
           <tr><td>Coach chat history</td><td>UserDefaults</td><td>DataStore Preferences</td><td>You only</td></tr>
           <tr><td>Widget snapshot (today's totals)</td><td>App Group container</td><td>Same DataStore</td><td>You only</td></tr>
+          <tr><td>App preferences (theme color, appearance, units, notifications)</td><td>UserDefaults</td><td>DataStore Preferences</td><td>You only</td></tr>
           <tr><td>API keys (LLM + STT)</td><td>iOS Keychain</td><td>EncryptedSharedPreferences (AES-256, AndroidKeystore-backed)</td><td>You only</td></tr>
           <tr><td>Food photos (for AI analysis)</td><td colspan="2">Sent to your chosen AI provider</td><td>Processed in transit per that provider's policy</td></tr>
           <tr><td>Voice audio (remote STT)</td><td colspan="2">Sent to your chosen STT provider</td><td>Processed in transit per that provider's policy</td></tr>
