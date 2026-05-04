@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="styles.css?v=20260428a">
+<link rel="stylesheet" href="styles.css?v=20260504a">
 <!-- Structured Data -->
 <script type="application/ld+json">
 {
@@ -47,9 +47,15 @@
   "description": "Free, open-source AI-powered calorie and nutrition tracker for iOS and Android. Snap a photo of food, speak your meal, or type it. Body fat tracking with goal + history graph alongside weight on the Progress tab. Multi-turn AI Coach with on-demand tool calling — Coach can fetch any date range of weight, body-fat, food, or calorie history (\"what was my weight in March?\", \"what did I eat Tuesday?\") and uses current date/timezone plus richer meal details for better answers. Supports 13 AI providers including Google Gemini, OpenAI GPT-5, Anthropic Claude (Sonnet 4.6, Opus 4.7, Haiku 4.5), xAI Grok, Groq, Together AI, OpenRouter, Hugging Face (open-weight Gemma, Qwen VL, Llama Vision), Fireworks AI, DeepInfra, Mistral (Pixtral), Ollama for local inference, and any custom OpenAI-compatible endpoint. Smart daily reminders for weight + body fat logging that skip on days already logged. Home Screen and Lock Screen widgets on iOS (5 families); Calorie + Protein Glance widgets on Android. 5 speech-to-text providers (Native iOS / Native Android, OpenAI Whisper, Groq, Deepgram, AssemblyAI) with per-provider language selection. App-update checks open the App Store or Play Store when a newer version is available. 15 languages with system auto-selection on both platforms. Tracks 13 nutrients per meal including calories, protein, carbs, fat, sugar, fiber, saturated fat, monounsaturated fat, polyunsaturated fat, cholesterol, sodium, and potassium. Personalized TDEE and BMR calculation using Katch-McArdle (with body-fat input) and Mifflin-St Jeor formulas — toggle which one is active in Settings. Apple Health (iOS) and Health Connect (Android) bidirectional sync for body measurements and per-meal nutrition, including a one-shot historical backfill on first enable that pulls years of past weight + body-fat scale data into the Progress chart (iOS). Privacy-first with no account, no cloud sync, no ads, no tracking. API keys stored in iOS Keychain (iOS) or EncryptedSharedPreferences with AES-256 (Android). Delete All Data is local-only and never touches Apple Health or Health Connect. MIT licensed open source. Built with SwiftUI (iOS) and Jetpack Compose (Android).",
   "author": { "@type": "Person", "name": "Apoorv Darshan" },
   "url": "https://fud-ai.app",
+  "sameAs": [
+    "https://github.com/apoorvdarshan/fud-ai",
+    "https://x.com/apoorvdarshan",
+    "https://www.instagram.com/fudai.app/",
+    "https://www.linkedin.com/company/fud-ai-app"
+  ],
   "downloadUrl": "https://apps.apple.com/us/app/fud-ai-calorie-tracker/id6758935726",
   "screenshot": "https://fud-ai.app/assets/screenshots/home.png",
-  "softwareVersion": "iOS 3.3 / Android 1.0.7",
+  "softwareVersion": "iOS 3.3.1 / Android 1.0.8",
   "aggregateRating": { "@type": "AggregateRating", "ratingValue": "5", "ratingCount": "1" }
 }
 </script>
@@ -115,6 +121,9 @@
           </a>
           <a href="https://www.linkedin.com/company/fud-ai-app" target="_blank" rel="noopener" class="chip-btn chip-linkedin" aria-label="Follow on LinkedIn">
             <i class="fa-brands fa-linkedin-in"></i><span>LinkedIn</span>
+          </a>
+          <a href="https://www.instagram.com/fudai.app/" target="_blank" rel="noopener" class="chip-btn chip-instagram" aria-label="Follow on Instagram">
+            <i class="fa-brands fa-instagram"></i><span>Instagram</span>
           </a>
           <a href="https://paypal.me/apoorvdarshan" target="_blank" rel="noopener" class="chip-btn chip-paypal" aria-label="Support on PayPal">
             <i class="fa-brands fa-paypal"></i><span>Support</span>
@@ -429,6 +438,7 @@
         <a href="https://github.com/apoorvdarshan/fud-ai" target="_blank" rel="noopener" class="chip-btn chip-github"><i class="fa-solid fa-star"></i><span>Star · GitHub</span></a>
         <a href="https://www.producthunt.com/products/fud-ai-calorie-tracker" target="_blank" rel="noopener" class="chip-btn chip-ph"><i class="fa-brands fa-product-hunt"></i><span>Vote · PH</span></a>
         <a href="https://www.linkedin.com/company/fud-ai-app" target="_blank" rel="noopener" class="chip-btn chip-linkedin"><i class="fa-brands fa-linkedin-in"></i><span>LinkedIn</span></a>
+        <a href="https://www.instagram.com/fudai.app/" target="_blank" rel="noopener" class="chip-btn chip-instagram"><i class="fa-brands fa-instagram"></i><span>Instagram</span></a>
         <a href="https://paypal.me/apoorvdarshan" target="_blank" rel="noopener" class="chip-btn chip-paypal"><i class="fa-brands fa-paypal"></i><span>Support</span></a>
         <a href="https://x.com/apoorvdarshan" target="_blank" rel="noopener" class="chip-btn chip-x"><i class="fa-brands fa-x-twitter"></i><span>Follow</span></a>
       </div>
@@ -456,6 +466,7 @@
           <a href="mailto:apoorv@fud-ai.app" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
           <a href="https://github.com/apoorvdarshan/fud-ai" target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
           <a href="https://x.com/apoorvdarshan" target="_blank" rel="noopener" aria-label="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="https://www.instagram.com/fudai.app/" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
           <a href="https://www.linkedin.com/company/fud-ai-app" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
           <a href="https://paypal.me/apoorvdarshan" target="_blank" rel="noopener" aria-label="PayPal"><i class="fa-brands fa-paypal"></i></a>
           <a href="https://www.producthunt.com/products/fud-ai-calorie-tracker" target="_blank" rel="noopener" aria-label="Product Hunt"><i class="fa-brands fa-product-hunt"></i></a>
