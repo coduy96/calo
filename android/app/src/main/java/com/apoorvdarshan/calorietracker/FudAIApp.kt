@@ -64,6 +64,7 @@ class FudAIApp : Application() {
 }
 
 class AppContainer(app: FudAIApp) {
+    val appContext = app.applicationContext
     val prefs = PreferencesStore(app)
     val keyStore = KeyStore(app)
     val imageStore = FoodImageStore(app)

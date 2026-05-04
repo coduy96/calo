@@ -3,6 +3,7 @@ package com.apoorvdarshan.calorietracker.services
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import com.apoorvdarshan.calorietracker.ui.theme.AppThemeColor
 
 object AndroidAppIconManager {
@@ -23,6 +24,23 @@ object AndroidAppIconManager {
         val selectedLauncher = launcherActivities[themeColor] ?: launcherActivities.getValue(AppThemeColor.FUD_PINK)
         val packageManager = context.packageManager
         val packageName = context.packageName
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val flags = PackageManager.DONT_KILL_APP or PackageManager.SYNCHRONOUS
+            val settings = launcherActivities.values.map { launcher ->
+                PackageManager.ComponentEnabledSetting(
+                    ComponentName(packageName, "$COMPONENT_NAMESPACE.$launcher"),
+                    if (launcher == selectedLauncher) {
+                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                    } else {
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+                    },
+                    flags
+                )
+            }
+            packageManager.setComponentEnabledSettings(settings)
+            return
+        }
 
         setLauncherState(packageManager, packageName, selectedLauncher, PackageManager.COMPONENT_ENABLED_STATE_ENABLED)
         launcherActivities.values
