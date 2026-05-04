@@ -60,6 +60,7 @@ Open-source, privacy-first calorie tracker for iOS and Android. Bring your own A
 - **Widgets** — Home Screen (small / medium with calorie ring + macro bars) and Lock Screen (circular / rectangular / inline). Update live whenever you add or delete a meal — no tap-to-open-app needed
 - **Share the App** — native iOS share sheet from About → forwards App Store URL plus a personalized message and `fud-ai.app` link; message body localized into all 15 languages
 - **Update check** — About shows the installed app version, opens the App Store / Play Store when a newer version is available, and shows a tab dot for pending updates
+- **Theme color** — iOS Settings lets users change the app accent, with matching alternate home screen icons
 - **15 languages** — Arabic, Azerbaijani, Dutch, English, French, German, Hindi, Italian, Japanese, Korean, Portuguese (Brazil), Romanian, Russian, Simplified Chinese, Spanish (auto-selected by the phone's Language setting)
 - **Meal reminders** — customizable breakfast, lunch, dinner notifications
 - **Dark mode** — system, light, or dark
@@ -211,7 +212,7 @@ All values can be manually overridden in Settings, with a **Recalculate Goals** 
 
 ```
 fud-ai/
-├── ios/          # SwiftUI iOS app (shipping on App Store, v3.3.1)
+├── ios/          # SwiftUI iOS app (shipping on App Store, v3.3.2)
 ├── android/      # Kotlin + Jetpack Compose app (min SDK 26 / Android 8.0, v1.0.8)
 ├── web/          # Marketing site — https://fud-ai.app (static HTML/CSS, Vercel)
 ├── APPSTORE.md   # App Store Connect listing copy (iOS)

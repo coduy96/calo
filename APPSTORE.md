@@ -1,6 +1,6 @@
 # App Store Listing
 
-App Store Connect submission details for Fud AI v3.3.1. Each field is in a code block for easy copy-paste.
+App Store Connect submission details for Fud AI v3.3.2. Each field is in a code block for easy copy-paste.
 
 ## App Name
 ```
@@ -14,7 +14,7 @@ Food & Macro Tracker
 
 ## Promotional Text (170 chars max)
 ```
-Follow Fud AI on Instagram from About, choose STT language per provider, edit food quantities faster, and check App Store updates in-app.
+Customize Fud AI with theme colors that also update the app icon. Plus Instagram, STT languages, smoother quantity editing, and update checks.
 ```
 
 ## Keywords (100 chars max)
@@ -28,22 +28,22 @@ Primary: Health & Fitness
 Secondary: Food & Drink
 ```
 
-## What's New (v3.3.1)
+## What's New (v3.3.2)
 ```
-Fud AI 3.3.1 — small About and contact polish.
+Fud AI 3.3.2 — personalization polish.
 
 NEW
-• Added a Follow on Instagram link in About.
-• Updated contact links so users can find Fud AI updates more easily.
+• Added theme color selection in Settings.
+• The home screen app icon now changes to match your selected theme color.
 
-Also includes the v3.3 improvements: per-provider speech language selection, smoother quantity editing with Done keyboard controls, About update checks, and richer Coach food context.
+Also includes recent improvements: Instagram link in About, per-provider speech language selection, smoother quantity editing with Done keyboard controls, About update checks, and richer Coach food context.
 ```
 
 ## Description
 ```
 Effortless calorie tracking with AI-powered food recognition. Snap, speak, or type a meal — get instant nutrition: calories, protein, carbs, fats, and 9 micronutrients.
 
-NEW in v3.3.1: About now includes the official Instagram link for updates and support. v3.3 added speech-to-text language selection per provider, smoother quantity editing with Done keyboard controls, and an App Store update check.
+NEW in v3.3.2: Choose a theme color in Settings and the app icon changes to match. Recent updates also added the official Instagram link in About, speech-to-text language selection per provider, smoother quantity editing with Done keyboard controls, and an App Store update check.
 
 Free, open source, privacy-first. Bring your own API key. All data on-device.
 
