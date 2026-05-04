@@ -1,21 +1,96 @@
 import SwiftUI
 
+enum AppThemeColor: String, CaseIterable, Identifiable {
+    case fudPink
+    case red
+    case orange
+    case green
+    case mint
+    case teal
+    case blue
+    case purple
+
+    static let storageKey = "appThemeColor"
+    static let defaultColor: AppThemeColor = .fudPink
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .fudPink: return "Fud Pink"
+        case .red: return "Red"
+        case .orange: return "Orange"
+        case .green: return "Green"
+        case .mint: return "Mint"
+        case .teal: return "Teal"
+        case .blue: return "Blue"
+        case .purple: return "Purple"
+        }
+    }
+
+    var color: Color {
+        Color(hex: startHex)
+    }
+
+    var gradientColors: [Color] {
+        [Color(hex: startHex), Color(hex: endHex)]
+    }
+
+    static var current: AppThemeColor {
+        guard let rawValue = UserDefaults.standard.string(forKey: storageKey),
+              let themeColor = AppThemeColor(rawValue: rawValue) else {
+            return defaultColor
+        }
+        return themeColor
+    }
+
+    static func color(for rawValue: String) -> AppThemeColor {
+        AppThemeColor(rawValue: rawValue) ?? defaultColor
+    }
+
+    private var startHex: UInt {
+        switch self {
+        case .fudPink: return 0xFF375F
+        case .red: return 0xFF3B30
+        case .orange: return 0xFF9500
+        case .green: return 0x34C759
+        case .mint: return 0x00C7BE
+        case .teal: return 0x30B0C7
+        case .blue: return 0x0A84FF
+        case .purple: return 0xAF52DE
+        }
+    }
+
+    private var endHex: UInt {
+        switch self {
+        case .fudPink: return 0xFF6B8A
+        case .red: return 0xFF6961
+        case .orange: return 0xFFB340
+        case .green: return 0x62D46F
+        case .mint: return 0x66D4CF
+        case .teal: return 0x64D2FF
+        case .blue: return 0x5EAEFF
+        case .purple: return 0xBF5AF2
+        }
+    }
+}
+
 enum AppColors {
     // Calorie: Red → Pink
-    static let calorieGradient: [Color] = [Color(hex: 0xFF375F), Color(hex: 0xFF6B8A)]
-    static let calorie: Color = Color(hex: 0xFF375F)
+    static var calorieGradient: [Color] { AppThemeColor.current.gradientColors }
+    static var calorie: Color { AppThemeColor.current.color }
 
     // Protein
-    static let proteinGradient: [Color] = calorieGradient
-    static let protein: Color = calorie
+    static var proteinGradient: [Color] { calorieGradient }
+    static var protein: Color { calorie }
 
     // Carbs
-    static let carbsGradient: [Color] = calorieGradient
-    static let carbs: Color = calorie
+    static var carbsGradient: [Color] { calorieGradient }
+    static var carbs: Color { calorie }
 
     // Fat
-    static let fatGradient: [Color] = calorieGradient
-    static let fat: Color = calorie
+    static var fatGradient: [Color] { calorieGradient }
+    static var fat: Color { calorie }
 
     // Background: warm cream in light, system dark in dark
     static let appBackground = Color("appBackground")

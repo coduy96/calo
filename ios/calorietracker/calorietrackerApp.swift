@@ -21,6 +21,7 @@ struct calorietrackerApp: App {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("appearanceMode") private var appearanceMode = "system"
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
+    @AppStorage(AppThemeColor.storageKey) private var appThemeColorRaw = AppThemeColor.defaultColor.rawValue
     @Environment(\.scenePhase) private var scenePhase
 
     private var colorScheme: ColorScheme? {
@@ -62,6 +63,7 @@ struct calorietrackerApp: App {
                         .environment(chatStore)
                 }
             }
+            .tint(AppThemeColor.color(for: appThemeColorRaw).color)
             .preferredColorScheme(colorScheme)
             .onReceive(NotificationCenter.default.publisher(for: .userProfileDidChange)) { _ in
                 refreshWidgetSnapshot()
