@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 enum AppThemeColor: String, CaseIterable, Identifiable {
     case fudPink
@@ -36,6 +37,19 @@ enum AppThemeColor: String, CaseIterable, Identifiable {
         [Color(hex: startHex), Color(hex: endHex)]
     }
 
+    var alternateIconName: String? {
+        switch self {
+        case .fudPink: return nil
+        case .red: return "AppIconRed"
+        case .orange: return "AppIconOrange"
+        case .green: return "AppIconGreen"
+        case .mint: return "AppIconMint"
+        case .teal: return "AppIconTeal"
+        case .blue: return "AppIconBlue"
+        case .purple: return "AppIconPurple"
+        }
+    }
+
     static var current: AppThemeColor {
         guard let rawValue = UserDefaults.standard.string(forKey: storageKey),
               let themeColor = AppThemeColor(rawValue: rawValue) else {
@@ -46,6 +60,17 @@ enum AppThemeColor: String, CaseIterable, Identifiable {
 
     static func color(for rawValue: String) -> AppThemeColor {
         AppThemeColor(rawValue: rawValue) ?? defaultColor
+    }
+
+    @MainActor
+    static func applyAppIconIfNeeded(for themeColor: AppThemeColor) {
+        let application = UIApplication.shared
+        guard application.supportsAlternateIcons,
+              application.alternateIconName != themeColor.alternateIconName else {
+            return
+        }
+
+        application.setAlternateIconName(themeColor.alternateIconName)
     }
 
     private var startHex: UInt {

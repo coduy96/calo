@@ -2774,7 +2774,7 @@ private struct ThemeColorSettingsView: View {
                     .tint(.primary)
                 }
             } footer: {
-                Text("Changes the main app color used for tabs, buttons, icons, charts, and progress rings.")
+                Text("Changes the main app color and home screen icon used for tabs, buttons, icons, charts, and progress rings.")
             }
             .listRowBackground(AppColors.appCard)
         }

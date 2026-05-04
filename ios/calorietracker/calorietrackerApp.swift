@@ -65,6 +65,12 @@ struct calorietrackerApp: App {
             }
             .tint(AppThemeColor.color(for: appThemeColorRaw).color)
             .preferredColorScheme(colorScheme)
+            .onAppear {
+                AppThemeColor.applyAppIconIfNeeded(for: AppThemeColor.color(for: appThemeColorRaw))
+            }
+            .onChange(of: appThemeColorRaw) { _, newValue in
+                AppThemeColor.applyAppIconIfNeeded(for: AppThemeColor.color(for: newValue))
+            }
             .onReceive(NotificationCenter.default.publisher(for: .userProfileDidChange)) { _ in
                 refreshWidgetSnapshot()
             }
