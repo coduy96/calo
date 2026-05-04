@@ -1,6 +1,6 @@
 # Play Store Listing
 
-Google Play Console listing copy for Fud AI Android (current: v1.0.8 / versionCode 10). Each field is in a code block for easy copy-paste. Char counts are tracked because Play Console enforces hard caps and silently truncates anything over.
+Google Play Console listing copy for Fud AI Android (current: v1.0.9 / versionCode 11). Each field is in a code block for easy copy-paste. Char counts are tracked because Play Console enforces hard caps and silently truncates anything over.
 
 **Where to paste each field in Play Console:**
 - App name / Short description / Full description → Grow → Store presence → **Main store listing** (default English) and Grow → Store presence → **Custom store listings** → Manage translations (per-language overrides)
@@ -38,7 +38,7 @@ Snap, speak, or type a meal. AI logs the calories. Open source.
 ```
 Fud AI makes calorie tracking effortless with AI-powered food recognition. Snap a photo, speak it, or type it — get instant nutrition: calories, protein, carbs, fats, and 9 micronutrients.
 
-NEW in v1.0.8: About now includes the official Instagram link for Fud AI updates and support.
+NEW in v1.0.9: Personalize Fud AI with a Theme Color setting. Pick pink/red, red, orange, green, mint, teal, blue, or purple; the Android launcher icon follows your choice.
 
 Free, open source, privacy-first. Bring your own API key. All data stays on your device.
 
@@ -104,84 +104,84 @@ English-only on Play Console — non-English Play Store browsers (ar, az-AZ, de-
 
 ---
 
-## 4. What's New (v1.0.8)
+## 4. What's New (v1.0.9)
 
 **500 char hard cap per language.** Paste the entire block below into Play Console's "Release notes" field — it auto-routes each `<lang-tag>` block to the matching locale.
 
 ```
 <en-US>
-• About now includes Follow on Instagram for Fud AI updates and support.
-• Keeps the v1.0.7 improvements: STT language controls, richer Coach context, update badge, and keyboard/nav polish.
+• New Theme Color setting: pick pink/red, red, orange, green, mint, teal, blue, or purple.
+• Android launcher icon now follows your selected theme color.
 </en-US>
 
 <ar>
-• About يتضمن الآن رابط المتابعة على Instagram لتحديثات ودعم Fud AI.
-• يتضمن أيضًا تحسينات v1.0.7: لغات STT، سياق Coach أفضل، شارة التحديث، وتحسينات لوحة المفاتيح والتنقل.
+• إعداد Theme Color جديد: اختر الوردي/الأحمر أو الأحمر أو البرتقالي أو الأخضر أو النعناعي أو الأزرق المخضر أو الأزرق أو البنفسجي.
+• أيقونة تشغيل Android تتبع لون الثيم المختار.
 </ar>
 
 <az-AZ>
-• About indi Fud AI yenilikləri və dəstək üçün Instagram izləmə linkini göstərir.
-• v1.0.7 təkmilləşdirmələri də var: STT dilləri, daha yaxşı Coach konteksti, yeniləmə nişanı, klaviatura/nav düzəlişləri.
+• Yeni Theme Color ayarı: pink/qırmızı, qırmızı, narıncı, yaşıl, mint, teal, mavi və ya bənövşəyi seçin.
+• Android launcher ikonu seçdiyiniz rəngi izləyir.
 </az-AZ>
 
 <de-DE>
-• About enthält jetzt "Auf Instagram folgen" für Fud AI-Updates und Support.
-• Enthält weiter v1.0.7: STT-Sprachen, besseren Coach-Kontext, Update-Punkt sowie Tastatur/Nav-Polish.
+• Neue Theme Color-Einstellung: Pink/Rot, Rot, Orange, Grün, Mint, Teal, Blau oder Lila wählen.
+• Das Android-Launcher-Icon folgt jetzt deiner Theme-Farbe.
 </de-DE>
 
 <es-ES>
-• About ahora incluye "Seguir en Instagram" para novedades y soporte de Fud AI.
-• También incluye v1.0.7: idiomas STT, mejor contexto de Coach, punto de actualización y pulido de teclado/nav.
+• Nuevo ajuste Theme Color: elige rosa/rojo, rojo, naranja, verde, menta, teal, azul o morado.
+• El icono launcher de Android ahora sigue tu color elegido.
 </es-ES>
 
 <fr-FR>
-• About ajoute "Suivre sur Instagram" pour les actus et le support Fud AI.
-• Inclut aussi v1.0.7 : langues STT, meilleur contexte Coach, point de mise à jour et polish clavier/nav.
+• Nouveau réglage Theme Color : rose/rouge, rouge, orange, vert, menthe, teal, bleu ou violet.
+• L'icône Android suit maintenant la couleur choisie.
 </fr-FR>
 
 <hi-IN>
-• About में अब Fud AI updates/support के लिए Instagram follow link है.
-• v1.0.7 improvements भी शामिल: STT languages, better Coach context, update badge, keyboard/nav polish.
+• नया Theme Color setting: pink/red, red, orange, green, mint, teal, blue या purple चुनें.
+• Android launcher icon अब आपके चुने हुए theme color को follow करता है.
 </hi-IN>
 
 <it-IT>
-• About include ora "Segui su Instagram" per aggiornamenti e supporto Fud AI.
-• Include anche v1.0.7: lingue STT, contesto Coach migliore, badge update e polish tastiera/nav.
+• Nuovo Theme Color: scegli rosa/rosso, rosso, arancione, verde, mint, teal, blu o viola.
+• L'icona launcher Android ora segue il colore scelto.
 </it-IT>
 
 <ja-JP>
-• AboutにFud AI更新/サポート用のInstagramリンクを追加。
-• v1.0.7のSTT言語、Coach文脈改善、更新ドット、キーボード/nav調整も含みます。
+• 新しいTheme Color設定：ピンク/赤、赤、オレンジ、緑、ミント、ティール、青、紫を選択。
+• Androidランチャーアイコンも選択色に合わせて変わります。
 </ja-JP>
 
 <ko-KR>
-• About에 Fud AI 업데이트/지원용 Instagram 팔로우 링크를 추가했습니다.
-• v1.0.7의 STT 언어, Coach 컨텍스트, 업데이트 점, 키보드/nav 개선도 포함됩니다.
+• 새 Theme Color 설정: 핑크/레드, 레드, 오렌지, 그린, 민트, 틸, 블루, 퍼플 선택.
+• Android 런처 아이콘도 선택한 테마 색상을 따릅니다.
 </ko-KR>
 
 <nl-NL>
-• About bevat nu Volg op Instagram voor Fud AI-updates en support.
-• Bevat ook v1.0.7: STT-talen, betere Coach-context, updatepunt en toetsenbord/nav-polish.
+• Nieuwe Theme Color-instelling: kies roze/rood, rood, oranje, groen, mint, teal, blauw of paars.
+• Het Android launcher-icoon volgt nu je gekozen kleur.
 </nl-NL>
 
 <pt-BR>
-• About agora inclui Seguir no Instagram para novidades e suporte do Fud AI.
-• Também inclui v1.0.7: idiomas STT, Coach melhor, ponto de update e polimento teclado/nav.
+• Novo Theme Color: escolha rosa/vermelho, vermelho, laranja, verde, menta, teal, azul ou roxo.
+• O ícone launcher do Android agora segue a cor escolhida.
 </pt-BR>
 
 <ro>
-• About include acum Instagram pentru noutăți și suport Fud AI.
-• Include și v1.0.7: limbi STT, context Coach mai bun, punct update și polish tastatură/nav.
+• Setare Theme Color nouă: roz/roșu, roșu, portocaliu, verde, mint, teal, albastru sau mov.
+• Iconița launcher Android urmează acum culoarea aleasă.
 </ro>
 
 <ru-RU>
-• В About добавлена ссылка Instagram для новостей и поддержки Fud AI.
-• Также включает v1.0.7: языки STT, контекст Coach, точку обновления и доработки клавиатуры/nav.
+• Новая настройка Theme Color: розовый/красный, красный, оранжевый, зеленый, мятный, бирюзовый, синий или фиолетовый.
+• Значок Android launcher теперь следует выбранному цвету.
 </ru-RU>
 
 <zh-CN>
-• About 现已加入 Instagram 关注链接，方便获取 Fud AI 更新和支持。
-• 也包含 v1.0.7：STT 语言、Coach 上下文、更新圆点、键盘/nav 优化。
+• 新增 Theme Color 设置：可选粉红/红、红、橙、绿、薄荷、青绿、蓝、紫。
+• Android 启动器图标现在会跟随所选主题色。
 </zh-CN>
 ```
 
