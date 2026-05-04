@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-class MainActivity : ComponentActivity() {
+open class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // Must run before super.onCreate so the system swaps the splash theme
         // back to Theme.FudAI before the first frame, preventing a white flash

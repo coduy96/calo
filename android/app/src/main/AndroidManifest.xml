@@ -44,6 +44,46 @@
             android:label="@string/app_name"
             android:theme="@style/Theme.FudAI.Splash" />
 
+        <activity
+            android:name=".FudPinkLauncherActivity"
+            android:exported="false"
+            android:theme="@style/Theme.FudAI.Splash.FudPink" />
+
+        <activity
+            android:name=".RedLauncherActivity"
+            android:exported="false"
+            android:theme="@style/Theme.FudAI.Splash.Red" />
+
+        <activity
+            android:name=".OrangeLauncherActivity"
+            android:exported="false"
+            android:theme="@style/Theme.FudAI.Splash.Orange" />
+
+        <activity
+            android:name=".GreenLauncherActivity"
+            android:exported="false"
+            android:theme="@style/Theme.FudAI.Splash.Green" />
+
+        <activity
+            android:name=".MintLauncherActivity"
+            android:exported="false"
+            android:theme="@style/Theme.FudAI.Splash.Mint" />
+
+        <activity
+            android:name=".TealLauncherActivity"
+            android:exported="false"
+            android:theme="@style/Theme.FudAI.Splash.Teal" />
+
+        <activity
+            android:name=".BlueLauncherActivity"
+            android:exported="false"
+            android:theme="@style/Theme.FudAI.Splash.Blue" />
+
+        <activity
+            android:name=".PurpleLauncherActivity"
+            android:exported="false"
+            android:theme="@style/Theme.FudAI.Splash.Purple" />
+
         <activity-alias
             android:name="com.apoorvdarshan.calorietracker.MainActivityDefaultIcon"
             android:enabled="true"
@@ -51,7 +91,7 @@
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_round"
-            android:targetActivity=".MainActivity">
+            android:targetActivity=".FudPinkLauncherActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -65,7 +105,7 @@
             android:icon="@mipmap/ic_launcher_red"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_red_round"
-            android:targetActivity=".MainActivity">
+            android:targetActivity=".RedLauncherActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -79,7 +119,7 @@
             android:icon="@mipmap/ic_launcher_orange"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_orange_round"
-            android:targetActivity=".MainActivity">
+            android:targetActivity=".OrangeLauncherActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -93,7 +133,7 @@
             android:icon="@mipmap/ic_launcher_green"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_green_round"
-            android:targetActivity=".MainActivity">
+            android:targetActivity=".GreenLauncherActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -107,7 +147,7 @@
             android:icon="@mipmap/ic_launcher_mint"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_mint_round"
-            android:targetActivity=".MainActivity">
+            android:targetActivity=".MintLauncherActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -121,7 +161,7 @@
             android:icon="@mipmap/ic_launcher_teal"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_teal_round"
-            android:targetActivity=".MainActivity">
+            android:targetActivity=".TealLauncherActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -135,7 +175,7 @@
             android:icon="@mipmap/ic_launcher_blue"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_blue_round"
-            android:targetActivity=".MainActivity">
+            android:targetActivity=".BlueLauncherActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -149,7 +189,7 @@
             android:icon="@mipmap/ic_launcher_purple"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_purple_round"
-            android:targetActivity=".MainActivity">
+            android:targetActivity=".PurpleLauncherActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
