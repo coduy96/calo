@@ -8,37 +8,37 @@ import com.apoorvdarshan.calorietracker.ui.theme.AppThemeColor
 object AndroidAppIconManager {
     private const val COMPONENT_NAMESPACE = "com.apoorvdarshan.calorietracker"
 
-    private val aliases = mapOf(
-        AppThemeColor.FUD_PINK to "MainActivityDefaultIcon",
-        AppThemeColor.RED to "MainActivityRedIcon",
-        AppThemeColor.ORANGE to "MainActivityOrangeIcon",
-        AppThemeColor.GREEN to "MainActivityGreenIcon",
-        AppThemeColor.MINT to "MainActivityMintIcon",
-        AppThemeColor.TEAL to "MainActivityTealIcon",
-        AppThemeColor.BLUE to "MainActivityBlueIcon",
-        AppThemeColor.PURPLE to "MainActivityPurpleIcon"
+    private val launcherActivities = mapOf(
+        AppThemeColor.FUD_PINK to "FudPinkLauncherActivity",
+        AppThemeColor.RED to "RedLauncherActivity",
+        AppThemeColor.ORANGE to "OrangeLauncherActivity",
+        AppThemeColor.GREEN to "GreenLauncherActivity",
+        AppThemeColor.MINT to "MintLauncherActivity",
+        AppThemeColor.TEAL to "TealLauncherActivity",
+        AppThemeColor.BLUE to "BlueLauncherActivity",
+        AppThemeColor.PURPLE to "PurpleLauncherActivity"
     )
 
     fun apply(context: Context, themeColor: AppThemeColor) {
-        val selectedAlias = aliases[themeColor] ?: aliases.getValue(AppThemeColor.FUD_PINK)
+        val selectedLauncher = launcherActivities[themeColor] ?: launcherActivities.getValue(AppThemeColor.FUD_PINK)
         val packageManager = context.packageManager
         val packageName = context.packageName
 
-        setAliasState(packageManager, packageName, selectedAlias, PackageManager.COMPONENT_ENABLED_STATE_ENABLED)
-        aliases.values
-            .filterNot { it == selectedAlias }
-            .forEach { alias ->
-                setAliasState(packageManager, packageName, alias, PackageManager.COMPONENT_ENABLED_STATE_DISABLED)
+        setLauncherState(packageManager, packageName, selectedLauncher, PackageManager.COMPONENT_ENABLED_STATE_ENABLED)
+        launcherActivities.values
+            .filterNot { it == selectedLauncher }
+            .forEach { launcher ->
+                setLauncherState(packageManager, packageName, launcher, PackageManager.COMPONENT_ENABLED_STATE_DISABLED)
             }
     }
 
-    private fun setAliasState(
+    private fun setLauncherState(
         packageManager: PackageManager,
         packageName: String,
-        alias: String,
+        launcher: String,
         desiredState: Int
     ) {
-        val component = ComponentName(packageName, "$COMPONENT_NAMESPACE.$alias")
+        val component = ComponentName(packageName, "$COMPONENT_NAMESPACE.$launcher")
         if (packageManager.getComponentEnabledSetting(component) == desiredState) return
 
         packageManager.setComponentEnabledSetting(

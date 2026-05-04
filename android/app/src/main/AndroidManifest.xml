@@ -47,163 +47,123 @@
 
         <activity
             android:name=".FudPinkLauncherActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.FudAI.Splash.FudPink" />
-
-        <activity
-            android:name=".RedLauncherActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.FudAI.Splash.Red" />
-
-        <activity
-            android:name=".OrangeLauncherActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.FudAI.Splash.Orange" />
-
-        <activity
-            android:name=".GreenLauncherActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.FudAI.Splash.Green" />
-
-        <activity
-            android:name=".MintLauncherActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.FudAI.Splash.Mint" />
-
-        <activity
-            android:name=".TealLauncherActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.FudAI.Splash.Teal" />
-
-        <activity
-            android:name=".BlueLauncherActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.FudAI.Splash.Blue" />
-
-        <activity
-            android:name=".PurpleLauncherActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.FudAI.Splash.Purple" />
-
-        <activity-alias
-            android:name="com.apoorvdarshan.calorietracker.MainActivityDefaultIcon"
             android:enabled="true"
             android:exported="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_round"
-            android:targetActivity=".FudPinkLauncherActivity">
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.FudAI.Splash.FudPink">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity-alias>
+        </activity>
 
-        <activity-alias
-            android:name="com.apoorvdarshan.calorietracker.MainActivityRedIcon"
+        <activity
+            android:name=".RedLauncherActivity"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_red"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_red_round"
-            android:targetActivity=".RedLauncherActivity">
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.FudAI.Splash.Red">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity-alias>
+        </activity>
 
-        <activity-alias
-            android:name="com.apoorvdarshan.calorietracker.MainActivityOrangeIcon"
+        <activity
+            android:name=".OrangeLauncherActivity"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_orange"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_orange_round"
-            android:targetActivity=".OrangeLauncherActivity">
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.FudAI.Splash.Orange">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity-alias>
+        </activity>
 
-        <activity-alias
-            android:name="com.apoorvdarshan.calorietracker.MainActivityGreenIcon"
+        <activity
+            android:name=".GreenLauncherActivity"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_green"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_green_round"
-            android:targetActivity=".GreenLauncherActivity">
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.FudAI.Splash.Green">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity-alias>
+        </activity>
 
-        <activity-alias
-            android:name="com.apoorvdarshan.calorietracker.MainActivityMintIcon"
+        <activity
+            android:name=".MintLauncherActivity"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_mint"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_mint_round"
-            android:targetActivity=".MintLauncherActivity">
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.FudAI.Splash.Mint">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity-alias>
+        </activity>
 
-        <activity-alias
-            android:name="com.apoorvdarshan.calorietracker.MainActivityTealIcon"
+        <activity
+            android:name=".TealLauncherActivity"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_teal"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_teal_round"
-            android:targetActivity=".TealLauncherActivity">
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.FudAI.Splash.Teal">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity-alias>
+        </activity>
 
-        <activity-alias
-            android:name="com.apoorvdarshan.calorietracker.MainActivityBlueIcon"
+        <activity
+            android:name=".BlueLauncherActivity"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_blue"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_blue_round"
-            android:targetActivity=".BlueLauncherActivity">
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.FudAI.Splash.Blue">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity-alias>
+        </activity>
 
-        <activity-alias
-            android:name="com.apoorvdarshan.calorietracker.MainActivityPurpleIcon"
+        <activity
+            android:name=".PurpleLauncherActivity"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_purple"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_purple_round"
-            android:targetActivity=".PurpleLauncherActivity">
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.FudAI.Splash.Purple">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity-alias>
+        </activity>
 
         <activity-alias
             android:name="ViewPermissionUsageActivity"
