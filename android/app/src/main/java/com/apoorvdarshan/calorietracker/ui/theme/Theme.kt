@@ -6,12 +6,12 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
-private val LightColors = lightColorScheme(
-    primary = AppColors.Calorie,
+private fun lightColors(themeColor: AppThemeColor) = lightColorScheme(
+    primary = themeColor.start,
     onPrimary = AppColors.OnDark,
-    secondary = AppColors.Calorie,
+    secondary = themeColor.start,
     onSecondary = AppColors.OnDark,
-    tertiary = AppColors.Calorie,
+    tertiary = themeColor.start,
     onTertiary = AppColors.OnDark,
     background = AppColors.AppBackgroundLight,
     onBackground = AppColors.OnLight,
@@ -22,12 +22,12 @@ private val LightColors = lightColorScheme(
     outline = AppColors.DividerLight
 )
 
-private val DarkColors = darkColorScheme(
-    primary = AppColors.Calorie,
+private fun darkColors(themeColor: AppThemeColor) = darkColorScheme(
+    primary = themeColor.start,
     onPrimary = AppColors.OnDark,
-    secondary = AppColors.Calorie,
+    secondary = themeColor.start,
     onSecondary = AppColors.OnDark,
-    tertiary = AppColors.Calorie,
+    tertiary = themeColor.start,
     onTertiary = AppColors.OnDark,
     background = AppColors.AppBackgroundDark,
     onBackground = AppColors.OnDark,
@@ -41,9 +41,11 @@ private val DarkColors = darkColorScheme(
 @Composable
 fun FudAITheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    themeColor: AppThemeColor = AppThemeColor.FUD_PINK,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColors else LightColors
+    AppColors.setThemeColor(themeColor)
+    val colorScheme = if (darkTheme) darkColors(themeColor) else lightColors(themeColor)
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,

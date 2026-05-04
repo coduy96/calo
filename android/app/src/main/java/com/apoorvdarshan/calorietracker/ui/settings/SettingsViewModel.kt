@@ -10,6 +10,7 @@ import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.WeightEntry
 import com.apoorvdarshan.calorietracker.models.WeightGoal
+import com.apoorvdarshan.calorietracker.ui.theme.AppThemeColor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +31,7 @@ data class SettingsUiState(
     val apiKeyMasked: String = "",
     val speechApiKeyMasked: String = "",
     val appearanceMode: String = "system",
+    val appThemeColor: AppThemeColor = AppThemeColor.FUD_PINK,
     val weekStartsOnMonday: Boolean = false,
     val userContext: String = "",
     val fallbackEnabled: Boolean = false,
@@ -55,6 +57,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             val masked = maskKey(container.keyStore.apiKey(provider))
             val speechMasked = maskKey(container.keyStore.speechApiKey(speech))
             val appearance = container.prefs.appearanceMode.first()
+            val appThemeColor = AppThemeColor.fromKey(container.prefs.appThemeColor.first())
             val weekMon = container.prefs.weekStartsOnMonday.first()
             val userContext = container.prefs.userContext.first()
             val fbEnabled = container.prefs.fallbackEnabled.first()
@@ -73,6 +76,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 apiKeyMasked = masked,
                 speechApiKeyMasked = speechMasked,
                 appearanceMode = appearance,
+                appThemeColor = appThemeColor,
                 weekStartsOnMonday = weekMon,
                 userContext = userContext,
                 fallbackEnabled = fbEnabled,
@@ -128,6 +132,13 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             container.prefs.setAppearanceMode(mode)
             _ui.value = _ui.value.copy(appearanceMode = mode)
+        }
+    }
+
+    fun setAppThemeColor(themeColor: AppThemeColor) {
+        viewModelScope.launch {
+            container.prefs.setAppThemeColor(themeColor.key)
+            _ui.value = _ui.value.copy(appThemeColor = themeColor)
         }
     }
 

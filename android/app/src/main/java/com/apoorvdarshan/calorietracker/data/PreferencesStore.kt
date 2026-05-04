@@ -16,6 +16,7 @@ import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.WeightEntry
 import com.apoorvdarshan.calorietracker.models.WidgetSnapshot
+import com.apoorvdarshan.calorietracker.ui.theme.AppThemeColor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.builtins.ListSerializer
@@ -87,6 +88,10 @@ class PreferencesStore(private val context: Context) {
     /** "system" | "light" | "dark". Mirrors iOS @AppStorage("appearanceMode"). */
     val appearanceMode: Flow<String> = ds.data.map { it[Keys.APPEARANCE_MODE] ?: "system" }
     suspend fun setAppearanceMode(v: String) { ds.edit { it[Keys.APPEARANCE_MODE] = v } }
+
+    /** Mirrors iOS @AppStorage("appThemeColor"). */
+    val appThemeColor: Flow<String> = ds.data.map { it[Keys.APP_THEME_COLOR] ?: AppThemeColor.DEFAULT_KEY }
+    suspend fun setAppThemeColor(v: String) { ds.edit { it[Keys.APP_THEME_COLOR] = v } }
 
     /** false = Sunday, true = Monday. Mirrors iOS @AppStorage("weekStartsOnMonday"). */
     val weekStartsOnMonday: Flow<Boolean> = ds.data.map { it[Keys.WEEK_STARTS_MONDAY] ?: false }
@@ -280,6 +285,7 @@ class PreferencesStore(private val context: Context) {
         val HEALTH_TYPES_VERSION = intPreferencesKey("healthTypesVersion")
         val USE_METRIC = booleanPreferencesKey("useMetric")
         val APPEARANCE_MODE = stringPreferencesKey("appearanceMode")
+        val APP_THEME_COLOR = stringPreferencesKey("appThemeColor")
         val WEEK_STARTS_MONDAY = booleanPreferencesKey("weekStartsOnMonday")
         val LAST_SAVED_MEALS_SEGMENT = stringPreferencesKey("lastRecentsSegment")
         val SELECTED_AI_PROVIDER = stringPreferencesKey("selectedAIProvider")

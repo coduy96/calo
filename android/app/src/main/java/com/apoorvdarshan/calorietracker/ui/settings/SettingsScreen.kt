@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -67,6 +68,7 @@ import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.MonitorWeight
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Calculate
 import androidx.compose.material.icons.outlined.Percent
 import androidx.compose.material.icons.outlined.TrackChanges
@@ -139,6 +141,7 @@ import com.apoorvdarshan.calorietracker.ui.components.NumericWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.SplitDecimalWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.UnitToggle
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
+import com.apoorvdarshan.calorietracker.ui.theme.AppThemeColor
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import java.util.Locale
@@ -148,7 +151,7 @@ private enum class SettingsSheet {
     FALLBACK_PROVIDER, FALLBACK_MODEL, FALLBACK_KEY, FALLBACK_BASE_URL,
     GENDER, BIRTHDAY, HEIGHT, WEIGHT, BODY_FAT, GOAL_BODY_FAT, ACTIVITY, GOAL, GOAL_WEIGHT, GOAL_SPEED,
     CALORIES, PROTEIN, CARBS, FAT,
-    APPEARANCE, WEEK_START
+    APPEARANCE, THEME_COLOR, WEEK_START
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -405,6 +408,12 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                     },
                     icon = Icons.Outlined.Brightness6
                 ) { sheet = SettingsSheet.APPEARANCE }
+                HorizontalDivider()
+                SettingRow(
+                    stringResource(R.string.settings_theme_color),
+                    stringResource(ui.appThemeColor.displayNameRes),
+                    icon = Icons.Outlined.Palette
+                ) { sheet = SettingsSheet.THEME_COLOR }
                 HorizontalDivider()
                 ToggleRow(stringResource(R.string.settings_metric_units), ui.useMetric, icon = Icons.Outlined.Straighten, onChange = vm::setUseMetric)
                 HorizontalDivider()
@@ -911,6 +920,10 @@ private fun SettingsSheets(
                     onSelect = { vm.setAppearanceMode(it.first); onDismiss() },
                     icon = { appearanceIcon(it.first) }
                 )
+                SettingsSheet.THEME_COLOR -> ThemeColorSheet(
+                    selected = ui.appThemeColor,
+                    onSelect = { vm.setAppThemeColor(it); onDismiss() }
+                )
                 SettingsSheet.WEEK_START -> ListSheet(
                     title = stringResource(R.string.sheet_week_starts),
                     items = listOf(
@@ -979,6 +992,61 @@ private fun SettingsSheets(
             Spacer(Modifier.height(14.dp))
         }
     }
+}
+
+@Composable
+private fun ThemeColorSheet(
+    selected: AppThemeColor,
+    onSelect: (AppThemeColor) -> Unit
+) {
+    Text(stringResource(R.string.sheet_theme_color), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Spacer(Modifier.height(12.dp))
+    LazyColumn(Modifier.fillMaxWidth().heightIn(max = 420.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(AppThemeColor.values().toList()) { themeColor ->
+            val isSel = selected == themeColor
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+                    .clickable { onSelect(themeColor) }
+                    .padding(horizontal = 14.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ThemeColorSwatch(themeColor, Modifier.size(30.dp))
+                Spacer(Modifier.width(14.dp))
+                Text(
+                    stringResource(themeColor.displayNameRes),
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+                if (isSel) {
+                    Icon(
+                        Icons.Filled.Check,
+                        contentDescription = stringResource(R.string.sheet_selected_a11y),
+                        tint = AppColors.Calorie,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+    }
+    Spacer(Modifier.height(8.dp))
+    Text(
+        stringResource(R.string.sheet_theme_color_footer),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+    )
+}
+
+@Composable
+private fun ThemeColorSwatch(themeColor: AppThemeColor, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .clip(CircleShape)
+            .background(Brush.linearGradient(listOf(themeColor.start, themeColor.end)))
+    )
 }
 
 @Composable
