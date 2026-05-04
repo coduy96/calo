@@ -26,9 +26,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // Must run before super.onCreate so the system swaps the splash theme
         // back to Theme.FudAI before the first frame, preventing a white flash
-        // on cold start. The splash icon is intentionally left to the active
-        // launcher alias so it matches the saved app theme color before
-        // DataStore has loaded.
+        // on cold start. The splash uses a transparent foreground mark over
+        // the app's light/dark splash background.
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
