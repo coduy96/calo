@@ -864,6 +864,9 @@ struct HomeView: View {
                             cholesterol: result.cholesterol,
                             sodium: result.sodium,
                             potassium: result.potassium,
+                            servingUnitOptions: result.servingUnitOptions,
+                            selectedServingUnit: result.selectedServingUnit,
+                            selectedServingQuantity: result.selectedServingQuantity,
                             logDate: selectedDate,
                             onLog: { entry in
                                 foodStore.addEntry(entry)
@@ -900,7 +903,10 @@ struct HomeView: View {
                         polyunsaturatedFat: entry.polyunsaturatedFat,
                         cholesterol: entry.cholesterol,
                         sodium: entry.sodium,
-                        potassium: entry.potassium
+                        potassium: entry.potassium,
+                        servingUnitOptions: entry.servingUnitOptions,
+                        selectedServingUnit: entry.selectedServingUnit,
+                        selectedServingQuantity: entry.selectedServingQuantity
                     )
                     activeSheet = .foodResult
                 })
@@ -1281,6 +1287,15 @@ struct FoodRow: View {
     private var servingText: String? {
         guard let grams = entry.servingSizeGrams else { return nil }
         let formatted = grams == grams.rounded() ? "\(Int(grams))" : String(format: "%.1f", grams)
+        if let selectedUnit = entry.selectedServingUnit,
+           let quantity = entry.selectedServingQuantity,
+           quantity > 0 {
+            let option = ServingUnitOption.option(matching: selectedUnit, in: entry.servingUnitOptions)
+            if !option.isGramUnit {
+                let quantityText = ServingUnitEditor.formatQuantity(quantity)
+                return "\(quantityText) \(option.displayUnit(for: quantity)) (~\(formatted)g)"
+            }
+        }
         return "\(formatted)g"
     }
 

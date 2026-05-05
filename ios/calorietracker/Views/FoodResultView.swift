@@ -24,10 +24,12 @@ struct FoodResultView: View {
     let baseCholesterol: Double?
     let baseSodium: Double?
     let basePotassium: Double?
+    let servingUnitOptions: [ServingUnitOption]
 
     @State var name: String
     @State var servingSizeGrams: Double
     @State private var servingSizeText: String
+    @State private var selectedServingUnitID: String
     @State private var quantityFocusRequest = 0
     @State private var isQuantityEditing = false
     @State var mealType: MealType = .currentMeal
@@ -56,6 +58,12 @@ struct FoodResultView: View {
     private var scaledCholesterol: Double? { baseCholesterol.map { round($0 * scale * 10) / 10 } }
     private var scaledSodium: Double? { baseSodium.map { round($0 * scale * 10) / 10 } }
     private var scaledPotassium: Double? { basePotassium.map { round($0 * scale * 10) / 10 } }
+    private var selectedServingOption: ServingUnitOption {
+        ServingUnitOption.option(matching: selectedServingUnitID, in: servingUnitOptions)
+    }
+    private var selectedServingQuantity: Double? {
+        Double(servingSizeText)
+    }
 
     init(
         image: UIImage?,
@@ -76,9 +84,17 @@ struct FoodResultView: View {
         cholesterol: Double? = nil,
         sodium: Double? = nil,
         potassium: Double? = nil,
+        servingUnitOptions: [ServingUnitOption] = [],
+        selectedServingUnit: String? = nil,
+        selectedServingQuantity: Double? = nil,
         logDate: Date = .now,
         onLog: @escaping (FoodEntry) -> Void
     ) {
+        let normalizedServingUnitOptions = ServingUnitOption.normalizedOptions(servingUnitOptions, totalGrams: servingSizeGrams)
+        let initialServingUnitID = ServingUnitOption.initialUnitID(
+            preferredUnit: selectedServingUnit,
+            options: normalizedServingUnitOptions
+        )
         self.image = image
         self.emoji = emoji
         self.source = source
@@ -96,9 +112,16 @@ struct FoodResultView: View {
         self.baseCholesterol = cholesterol
         self.baseSodium = sodium
         self.basePotassium = potassium
+        self.servingUnitOptions = normalizedServingUnitOptions
         self._name = State(initialValue: name)
         self._servingSizeGrams = State(initialValue: servingSizeGrams)
-        self._servingSizeText = State(initialValue: Self.formatGrams(servingSizeGrams))
+        self._servingSizeText = State(initialValue: ServingUnitOption.initialQuantityText(
+            totalGrams: servingSizeGrams,
+            selectedUnitID: initialServingUnitID,
+            selectedQuantity: selectedServingQuantity,
+            options: normalizedServingUnitOptions
+        ))
+        self._selectedServingUnitID = State(initialValue: initialServingUnitID)
         self.logDate = logDate
         self.onLog = onLog
     }
@@ -152,35 +175,30 @@ struct FoodResultView: View {
                         HStack {
                             Text("Quantity")
                             Spacer()
-                            EndEditingDecimalTextField(
-                                text: $servingSizeText,
+                            ServingUnitEditor(
+                                quantityText: $servingSizeText,
+                                servingSizeGrams: $servingSizeGrams,
+                                selectedUnitID: $selectedServingUnitID,
+                                unitOptions: servingUnitOptions,
                                 focusRequest: quantityFocusRequest,
                                 onEditingChanged: { editing in
                                     isQuantityEditing = editing
-                                }
-                            )
-                            .frame(width: 80)
-                            .onChange(of: servingSizeText) { _, newValue in
-                                if let parsed = Double(newValue), parsed > 0 {
-                                    servingSizeGrams = parsed
-                                }
-                            }
-                            if !servingSizeText.isEmpty {
-                                Button {
+                                },
+                                onClear: {
                                     servingSizeText = ""
                                     quantityFocusRequest += 1
-                                } label: {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundStyle(.secondary)
                                 }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("Clear quantity")
-                            }
-                            Text("g")
-                                .foregroundStyle(.secondary)
-                                .frame(width: 36, alignment: .leading)
+                            )
                         }
                         .id(ScrollTarget.quantity)
+                        if !selectedServingOption.isGramUnit {
+                            HStack {
+                                Text("Total")
+                                Spacer()
+                                Text("~\(Self.formatGrams(servingSizeGrams)) g")
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
 
                     Section("Nutrition") {
@@ -274,7 +292,10 @@ struct FoodResultView: View {
             cholesterol: scaledCholesterol,
             sodium: scaledSodium,
             potassium: scaledPotassium,
-            servingSizeGrams: servingSizeGrams
+            servingSizeGrams: servingSizeGrams,
+            servingUnitOptions: servingUnitOptions,
+            selectedServingUnit: servingUnitOptions.isEmpty ? nil : selectedServingOption.unit,
+            selectedServingQuantity: servingUnitOptions.isEmpty ? nil : selectedServingQuantity
         )
         onLog(entry)
         dismiss()

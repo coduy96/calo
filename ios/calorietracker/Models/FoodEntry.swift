@@ -45,6 +45,48 @@ enum MealType: String, Codable, CaseIterable {
     }
 }
 
+struct ServingUnitOption: Codable, Hashable, Identifiable {
+    var unit: String
+    var gramsPerUnit: Double
+    var quantity: Double?
+
+    var id: String { normalizedUnit }
+
+    var normalizedUnit: String {
+        unit.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    var isGramUnit: Bool {
+        ["g", "gram", "grams"].contains(normalizedUnit)
+    }
+
+    var isValid: Bool {
+        !normalizedUnit.isEmpty && gramsPerUnit > 0
+    }
+
+    static let grams = ServingUnitOption(unit: "g", gramsPerUnit: 1)
+
+    func quantity(for totalGrams: Double) -> Double {
+        if let quantity, quantity > 0 {
+            return quantity
+        }
+        guard gramsPerUnit > 0 else { return totalGrams }
+        return totalGrams / gramsPerUnit
+    }
+
+    func displayUnit(for quantity: Double?) -> String {
+        guard let quantity, abs(quantity - 1) > 0.0001 else { return unit }
+        switch normalizedUnit {
+        case "g", "gram", "grams", "kg", "mg", "ml", "l", "oz", "fl oz", "tbsp", "tsp":
+            return unit
+        case "piece":
+            return "pieces"
+        default:
+            return unit.hasSuffix("s") ? unit : "\(unit)s"
+        }
+    }
+}
+
 struct FoodEntry: Identifiable, Codable {
     let id: UUID
     var name: String
@@ -76,6 +118,9 @@ struct FoodEntry: Identifiable, Codable {
     var sodium: Double?         // milligrams
     var potassium: Double?      // milligrams
     var servingSizeGrams: Double? // grams (nil for old entries)
+    var servingUnitOptions: [ServingUnitOption]
+    var selectedServingUnit: String?
+    var selectedServingQuantity: Double?
 
     init(
         id: UUID = UUID(),
@@ -99,7 +144,10 @@ struct FoodEntry: Identifiable, Codable {
         cholesterol: Double? = nil,
         sodium: Double? = nil,
         potassium: Double? = nil,
-        servingSizeGrams: Double? = nil
+        servingSizeGrams: Double? = nil,
+        servingUnitOptions: [ServingUnitOption] = [],
+        selectedServingUnit: String? = nil,
+        selectedServingQuantity: Double? = nil
     ) {
         self.id = id
         self.name = name
@@ -123,6 +171,9 @@ struct FoodEntry: Identifiable, Codable {
         self.sodium = sodium
         self.potassium = potassium
         self.servingSizeGrams = servingSizeGrams
+        self.servingUnitOptions = servingUnitOptions
+        self.selectedServingUnit = selectedServingUnit
+        self.selectedServingQuantity = selectedServingQuantity
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -133,6 +184,7 @@ struct FoodEntry: Identifiable, Codable {
         case sugar, addedSugar, fiber, saturatedFat
         case monounsaturatedFat, polyunsaturatedFat
         case cholesterol, sodium, potassium, servingSizeGrams
+        case servingUnitOptions, selectedServingUnit, selectedServingQuantity
     }
 
     init(from decoder: Decoder) throws {
@@ -168,6 +220,9 @@ struct FoodEntry: Identifiable, Codable {
         sodium = try container.decodeIfPresent(Double.self, forKey: .sodium)
         potassium = try container.decodeIfPresent(Double.self, forKey: .potassium)
         servingSizeGrams = try container.decodeIfPresent(Double.self, forKey: .servingSizeGrams)
+        servingUnitOptions = try container.decodeIfPresent([ServingUnitOption].self, forKey: .servingUnitOptions) ?? []
+        selectedServingUnit = try container.decodeIfPresent(String.self, forKey: .selectedServingUnit)
+        selectedServingQuantity = try container.decodeIfPresent(Double.self, forKey: .selectedServingQuantity)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -195,6 +250,11 @@ struct FoodEntry: Identifiable, Codable {
         try container.encodeIfPresent(sodium, forKey: .sodium)
         try container.encodeIfPresent(potassium, forKey: .potassium)
         try container.encodeIfPresent(servingSizeGrams, forKey: .servingSizeGrams)
+        if !servingUnitOptions.isEmpty {
+            try container.encode(servingUnitOptions, forKey: .servingUnitOptions)
+        }
+        try container.encodeIfPresent(selectedServingUnit, forKey: .selectedServingUnit)
+        try container.encodeIfPresent(selectedServingQuantity, forKey: .selectedServingQuantity)
     }
 
     var timeString: String {
@@ -233,7 +293,10 @@ struct FoodEntry: Identifiable, Codable {
             cholesterol: cholesterol,
             sodium: sodium,
             potassium: potassium,
-            servingSizeGrams: servingSizeGrams
+            servingSizeGrams: servingSizeGrams,
+            servingUnitOptions: servingUnitOptions,
+            selectedServingUnit: selectedServingUnit,
+            selectedServingQuantity: selectedServingQuantity
         )
     }
 }

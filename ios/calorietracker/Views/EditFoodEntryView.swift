@@ -24,10 +24,12 @@ struct EditFoodEntryView: View {
     private let baseCholesterol: Double?
     private let baseSodium: Double?
     private let basePotassium: Double?
+    private let servingUnitOptions: [ServingUnitOption]
 
     @State private var name: String
     @State private var servingSizeGrams: Double
     @State private var servingSizeText: String
+    @State private var selectedServingUnitID: String
     @State private var quantityFocusRequest = 0
     @State private var isQuantityEditing = false
     @State private var mealType: MealType
@@ -50,10 +52,21 @@ struct EditFoodEntryView: View {
     private var scaledCholesterol: Double? { baseCholesterol.map { round($0 * scale * 10) / 10 } }
     private var scaledSodium: Double? { baseSodium.map { round($0 * scale * 10) / 10 } }
     private var scaledPotassium: Double? { basePotassium.map { round($0 * scale * 10) / 10 } }
+    private var selectedServingOption: ServingUnitOption {
+        ServingUnitOption.option(matching: selectedServingUnitID, in: servingUnitOptions)
+    }
+    private var selectedServingQuantity: Double? {
+        Double(servingSizeText)
+    }
 
     init(entry: FoodEntry) {
         self.entry = entry
         let serving = entry.servingSizeGrams ?? 100
+        let normalizedServingUnitOptions = ServingUnitOption.normalizedOptions(entry.servingUnitOptions, totalGrams: serving)
+        let initialServingUnitID = ServingUnitOption.initialUnitID(
+            preferredUnit: entry.selectedServingUnit,
+            options: normalizedServingUnitOptions
+        )
         self.baseCalories = entry.calories
         self.baseProtein = entry.protein
         self.baseCarbs = entry.carbs
@@ -68,9 +81,16 @@ struct EditFoodEntryView: View {
         self.baseCholesterol = entry.cholesterol
         self.baseSodium = entry.sodium
         self.basePotassium = entry.potassium
+        self.servingUnitOptions = normalizedServingUnitOptions
         self._name = State(initialValue: entry.name)
         self._servingSizeGrams = State(initialValue: serving)
-        self._servingSizeText = State(initialValue: Self.formatGrams(serving))
+        self._servingSizeText = State(initialValue: ServingUnitOption.initialQuantityText(
+            totalGrams: serving,
+            selectedUnitID: initialServingUnitID,
+            selectedQuantity: entry.selectedServingQuantity,
+            options: normalizedServingUnitOptions
+        ))
+        self._selectedServingUnitID = State(initialValue: initialServingUnitID)
         self._mealType = State(initialValue: entry.mealType)
     }
 
@@ -123,35 +143,30 @@ struct EditFoodEntryView: View {
                         HStack {
                             Text("Quantity")
                             Spacer()
-                            EndEditingDecimalTextField(
-                                text: $servingSizeText,
+                            ServingUnitEditor(
+                                quantityText: $servingSizeText,
+                                servingSizeGrams: $servingSizeGrams,
+                                selectedUnitID: $selectedServingUnitID,
+                                unitOptions: servingUnitOptions,
                                 focusRequest: quantityFocusRequest,
                                 onEditingChanged: { editing in
                                     isQuantityEditing = editing
-                                }
-                            )
-                            .frame(width: 80)
-                            .onChange(of: servingSizeText) { _, newValue in
-                                if let parsed = Double(newValue), parsed > 0 {
-                                    servingSizeGrams = parsed
-                                }
-                            }
-                            if !servingSizeText.isEmpty {
-                                Button {
+                                },
+                                onClear: {
                                     servingSizeText = ""
                                     quantityFocusRequest += 1
-                                } label: {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundStyle(.secondary)
                                 }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("Clear quantity")
-                            }
-                            Text("g")
-                                .foregroundStyle(.secondary)
-                                .frame(width: 36, alignment: .leading)
+                            )
                         }
                         .id(ScrollTarget.quantity)
+                        if !selectedServingOption.isGramUnit {
+                            HStack {
+                                Text("Total")
+                                Spacer()
+                                Text("~\(Self.formatGrams(servingSizeGrams)) g")
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
 
                     Section("Nutrition") {
@@ -246,7 +261,10 @@ struct EditFoodEntryView: View {
             cholesterol: scaledCholesterol,
             sodium: scaledSodium,
             potassium: scaledPotassium,
-            servingSizeGrams: servingSizeGrams
+            servingSizeGrams: servingSizeGrams,
+            servingUnitOptions: servingUnitOptions,
+            selectedServingUnit: servingUnitOptions.isEmpty ? nil : selectedServingOption.unit,
+            selectedServingQuantity: servingUnitOptions.isEmpty ? nil : selectedServingQuantity
         )
         foodStore.updateEntry(updated)
         dismiss()

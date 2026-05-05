@@ -19,6 +19,9 @@ struct GeminiService {
         var cholesterol: Double?
         var sodium: Double?
         var potassium: Double?
+        var servingUnitOptions: [ServingUnitOption] = []
+        var selectedServingUnit: String?
+        var selectedServingQuantity: Double?
     }
 
     struct NutritionLabelAnalysis {
@@ -37,8 +40,10 @@ struct GeminiService {
         var cholesterolPer100g: Double?
         var sodiumPer100g: Double?
         var potassiumPer100g: Double?
+        var servingUnitOptions: [ServingUnitOption] = []
 
         func scaled(to grams: Double) -> FoodAnalysis {
+            let selectedOption = servingUnitOptions.first
             let scale = grams / 100
             return FoodAnalysis(
                 name: name,
@@ -55,7 +60,10 @@ struct GeminiService {
                 polyunsaturatedFat: polyunsaturatedFatPer100g.map { round($0 * scale * 10) / 10 },
                 cholesterol: cholesterolPer100g.map { round($0 * scale * 10) / 10 },
                 sodium: sodiumPer100g.map { round($0 * scale * 10) / 10 },
-                potassium: potassiumPer100g.map { round($0 * scale * 10) / 10 }
+                potassium: potassiumPer100g.map { round($0 * scale * 10) / 10 },
+                servingUnitOptions: servingUnitOptions,
+                selectedServingUnit: selectedOption?.unit,
+                selectedServingQuantity: selectedOption?.quantity(for: grams)
             )
         }
     }
@@ -90,8 +98,9 @@ struct GeminiService {
         Estimate the nutritional content for: \(description)
         Parse any quantities, brands, and multiple items from the text. If a brand is mentioned, use that brand's known nutritional data. If multiple items are described, sum up the total nutrition.
         Respond ONLY with JSON:
-        {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"emoji":"🍽️","sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0}
+        {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"emoji":"🍽️","sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0,"unit_options":[{"unit":"slice","quantity":1.0,"grams_per_unit":30.0}]}
         Calories/protein/carbs/fat are integers. serving_size_grams is the estimated total weight in grams. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
+        unit_options is optional. Include only obvious non-gram units from the user's text or food itself (slice, piece, tbsp, cup, ml, fl oz, can, packet). Omit it or use [] if grams are the only reliable unit. Do not include g/grams in unit_options.
         Include a single food emoji that best represents the food. Use null for any nutrient you cannot estimate.
         """
         let text = try await callAI(prompt: prompt, image: nil)
@@ -106,8 +115,9 @@ struct GeminiService {
         If it's a nutrition label: read the values and calculate for one serving size as listed on the label.
 
         Respond ONLY with JSON:
-        {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0}
+        {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0,"unit_options":[{"unit":"slice","quantity":1.0,"grams_per_unit":30.0}]}
         Calories/protein/carbs/fat are integers. serving_size_grams is the estimated weight in grams of the serving. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
+        unit_options is optional. Include only obvious non-gram units from the image or label (slice, piece, tbsp, cup, ml, fl oz, can, packet). If only grams are reliable, use [] or omit it. Do not include g/grams in unit_options.
         Use null for any nutrient you cannot estimate.
         """
         let text = try await callAI(prompt: prompt, image: image)
@@ -119,9 +129,10 @@ struct GeminiService {
         Analyze this food image. Identify the food and estimate its nutritional content.
 
         Respond ONLY with a JSON object in this exact format, no other text:
-        {"name":"Food Name","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0}
+        {"name":"Food Name","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0,"unit_options":[{"unit":"slice","quantity":1.0,"grams_per_unit":30.0}]}
 
         Calories/protein/carbs/fat are integers. serving_size_grams is the estimated weight in grams of the serving shown. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
+        unit_options is optional. Include only obvious non-gram units visible in the food (slice, piece, tbsp, cup, ml, fl oz, can, packet). For a pizza portion, for example, use the visible slice count and derive grams_per_unit from serving_size_grams / slice count. If only grams are reliable, use [] or omit it. Do not include g/grams in unit_options.
         Give your best estimate for a typical serving size shown in the image. Use null for any nutrient you cannot estimate.
         """
 
@@ -142,9 +153,9 @@ struct GeminiService {
         If no name is visible, describe the food type (e.g. "Protein Bar", "Yogurt", "Cereal").
 
         Respond ONLY with JSON:
-        {"name":"Product Name","calories_per_100g":0.0,"protein_per_100g":0.0,"carbs_per_100g":0.0,"fat_per_100g":0.0,"serving_size_grams":0.0,"sugar_per_100g":0.0,"added_sugar_per_100g":0.0,"fiber_per_100g":0.0,"saturated_fat_per_100g":0.0,"monounsaturated_fat_per_100g":0.0,"polyunsaturated_fat_per_100g":0.0,"cholesterol_per_100g":0.0,"sodium_per_100g":0.0,"potassium_per_100g":0.0}
+        {"name":"Product Name","calories_per_100g":0.0,"protein_per_100g":0.0,"carbs_per_100g":0.0,"fat_per_100g":0.0,"serving_size_grams":0.0,"sugar_per_100g":0.0,"added_sugar_per_100g":0.0,"fiber_per_100g":0.0,"saturated_fat_per_100g":0.0,"monounsaturated_fat_per_100g":0.0,"polyunsaturated_fat_per_100g":0.0,"cholesterol_per_100g":0.0,"sodium_per_100g":0.0,"potassium_per_100g":0.0,"unit_options":[{"unit":"slice","quantity":1.0,"grams_per_unit":30.0}]}
 
-        All values should be numbers. If serving size or any nutrient is not available, use null.
+        All values should be numbers. If serving size or any nutrient is not available, use null. unit_options is optional. Include non-gram label serving units when visible, such as slice, piece, tbsp, cup, ml, fl oz, can, or packet. Do not include g/grams in unit_options.
         """
         let text = try await callAI(prompt: prompt, image: image)
         return try parseNutritionLabel(from: text)
@@ -531,9 +542,12 @@ struct GeminiService {
               let carbs = (json["carbs"] as? NSNumber)?.intValue,
               let fat = (json["fat"] as? NSNumber)?.intValue
         else { throw AnalysisError.invalidResponse }
+        let servingSizeGrams = (json["serving_size_grams"] as? NSNumber)?.doubleValue ?? 100
+        let unitOptions = parseServingUnitOptions(from: json, servingSizeGrams: servingSizeGrams)
+        let selectedOption = unitOptions.first
         return FoodAnalysis(
             name: name, calories: calories, protein: protein, carbs: carbs, fat: fat,
-            servingSizeGrams: (json["serving_size_grams"] as? NSNumber)?.doubleValue ?? 100,
+            servingSizeGrams: servingSizeGrams,
             emoji: json["emoji"] as? String,
             sugar: (json["sugar"] as? NSNumber)?.doubleValue,
             addedSugar: (json["added_sugar"] as? NSNumber)?.doubleValue,
@@ -543,7 +557,10 @@ struct GeminiService {
             polyunsaturatedFat: (json["polyunsaturated_fat"] as? NSNumber)?.doubleValue,
             cholesterol: (json["cholesterol"] as? NSNumber)?.doubleValue,
             sodium: (json["sodium"] as? NSNumber)?.doubleValue,
-            potassium: (json["potassium"] as? NSNumber)?.doubleValue
+            potassium: (json["potassium"] as? NSNumber)?.doubleValue,
+            servingUnitOptions: unitOptions,
+            selectedServingUnit: selectedOption?.unit,
+            selectedServingQuantity: selectedOption?.quantity(for: servingSizeGrams)
         )
     }
 
@@ -557,10 +574,11 @@ struct GeminiService {
               let carbsPer100g = (json["carbs_per_100g"] as? NSNumber)?.doubleValue,
               let fatPer100g = (json["fat_per_100g"] as? NSNumber)?.doubleValue
         else { throw AnalysisError.invalidResponse }
+        let servingSizeGrams = (json["serving_size_grams"] as? NSNumber)?.doubleValue
         return NutritionLabelAnalysis(
             name: name, caloriesPer100g: caloriesPer100g, proteinPer100g: proteinPer100g,
             carbsPer100g: carbsPer100g, fatPer100g: fatPer100g,
-            servingSizeGrams: (json["serving_size_grams"] as? NSNumber)?.doubleValue,
+            servingSizeGrams: servingSizeGrams,
             sugarPer100g: (json["sugar_per_100g"] as? NSNumber)?.doubleValue,
             addedSugarPer100g: (json["added_sugar_per_100g"] as? NSNumber)?.doubleValue,
             fiberPer100g: (json["fiber_per_100g"] as? NSNumber)?.doubleValue,
@@ -569,7 +587,46 @@ struct GeminiService {
             polyunsaturatedFatPer100g: (json["polyunsaturated_fat_per_100g"] as? NSNumber)?.doubleValue,
             cholesterolPer100g: (json["cholesterol_per_100g"] as? NSNumber)?.doubleValue,
             sodiumPer100g: (json["sodium_per_100g"] as? NSNumber)?.doubleValue,
-            potassiumPer100g: (json["potassium_per_100g"] as? NSNumber)?.doubleValue
+            potassiumPer100g: (json["potassium_per_100g"] as? NSNumber)?.doubleValue,
+            servingUnitOptions: parseServingUnitOptions(from: json, servingSizeGrams: servingSizeGrams)
         )
+    }
+
+    private static func parseServingUnitOptions(from json: [String: Any], servingSizeGrams: Double?) -> [ServingUnitOption] {
+        let rawOptions = json["unit_options"] as? [[String: Any]]
+            ?? json["serving_unit_options"] as? [[String: Any]]
+            ?? []
+
+        var seen = Set<String>()
+        var options: [ServingUnitOption] = []
+        for raw in rawOptions {
+            guard let unit = raw["unit"] as? String,
+                  let gramsPerUnit = doubleValue(raw["grams_per_unit"] ?? raw["gramsPerUnit"])
+            else { continue }
+
+            var option = ServingUnitOption(
+                unit: unit,
+                gramsPerUnit: gramsPerUnit,
+                quantity: doubleValue(raw["quantity"])
+            )
+            if option.quantity == nil, let servingSizeGrams, gramsPerUnit > 0 {
+                option.quantity = servingSizeGrams / gramsPerUnit
+            }
+
+            guard option.isValid, !option.isGramUnit, !seen.contains(option.id) else { continue }
+            seen.insert(option.id)
+            options.append(option)
+        }
+        return Array(options.prefix(4))
+    }
+
+    private static func doubleValue(_ value: Any?) -> Double? {
+        if let number = value as? NSNumber {
+            return number.doubleValue
+        }
+        if let string = value as? String {
+            return Double(string)
+        }
+        return nil
     }
 }
