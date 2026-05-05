@@ -98,9 +98,9 @@ struct GeminiService {
         Estimate the nutritional content for: \(description)
         Parse any quantities, brands, and multiple items from the text. If a brand is mentioned, use that brand's known nutritional data. If multiple items are described, sum up the total nutrition.
         Respond ONLY with JSON:
-        {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"emoji":"🍽️","sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0,"unit_options":[{"unit":"slice","quantity":6.0,"grams_per_unit":50.0}]}
+        {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"emoji":"🍽️","sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0,"unit_options":[]}
         Calories/protein/carbs/fat are integers. serving_size_grams is the estimated total weight in grams. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
-        unit_options is optional. Include only obvious non-gram units from the user's text or food itself (slice, piece, tbsp, cup, ml, fl oz, can, packet). Its quantity must describe the whole analyzed amount, not always 1. For example, a 300g cake described as 6 slices should use quantity 6 and grams_per_unit 50. Omit it or use [] if grams are the only reliable unit. Do not include g/grams in unit_options.
+        unit_options is optional. Include only obvious non-gram units from the user's text or food itself (slice, piece, tbsp, cup, ml, fl oz, can, packet). Its quantity must describe the whole analyzed amount, not always 1. Do not copy any sample number; use the quantity stated or clearly implied by the meal. Omit it or use [] if grams are the only reliable unit. Do not include g/grams in unit_options.
         Include a single food emoji that best represents the food. Use null for any nutrient you cannot estimate.
         """
         let text = try await callAI(prompt: prompt, image: nil)
@@ -115,9 +115,9 @@ struct GeminiService {
         If it's a nutrition label: read the values and calculate for one serving size as listed on the label.
 
         Respond ONLY with JSON:
-        {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0,"unit_options":[{"unit":"slice","quantity":6.0,"grams_per_unit":50.0}]}
+        {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0,"unit_options":[]}
         Calories/protein/carbs/fat are integers. serving_size_grams is the estimated weight in grams of the serving. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
-        unit_options is optional. Include only obvious non-gram units from the image or label (slice, piece, tbsp, cup, ml, fl oz, can, packet). Its quantity must describe the whole analyzed amount, not always 1. For a whole or mostly-whole divisible food like cake, pie, or pizza, estimate the visible total count (for example 6 slices) and derive grams_per_unit from serving_size_grams / quantity. Use quantity 1 only when a single piece/slice is actually the analyzed portion. If only grams are reliable, use [] or omit it. Do not include g/grams in unit_options.
+        unit_options is optional. Include only obvious non-gram units from the image or label (slice, piece, tbsp, cup, ml, fl oz, can, packet). Its quantity must describe the whole analyzed amount, not always 1. For a whole or mostly-whole divisible food like cake, pie, or pizza, count the visible pieces/slices and derive grams_per_unit from serving_size_grams / quantity. If N slices are visible, return quantity N. Use quantity 1 only when a single piece/slice is actually the analyzed portion. If only grams are reliable, use [] or omit it. Do not include g/grams in unit_options.
         Use null for any nutrient you cannot estimate.
         """
         let text = try await callAI(prompt: prompt, image: image)
@@ -129,10 +129,10 @@ struct GeminiService {
         Analyze this food image. Identify the food and estimate its nutritional content.
 
         Respond ONLY with a JSON object in this exact format, no other text:
-        {"name":"Food Name","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0,"unit_options":[{"unit":"slice","quantity":6.0,"grams_per_unit":50.0}]}
+        {"name":"Food Name","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0,"unit_options":[]}
 
         Calories/protein/carbs/fat are integers. serving_size_grams is the estimated weight in grams of the serving shown. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
-        unit_options is optional. Include only obvious non-gram units visible in the food (slice, piece, tbsp, cup, ml, fl oz, can, packet). Its quantity must describe the whole analyzed amount, not always 1. For a whole or mostly-whole divisible food like cake, pie, or pizza, estimate the total visible count (for example 6 slices) and derive grams_per_unit from serving_size_grams / quantity. Use quantity 1 only when a single piece/slice is actually the analyzed portion. If only grams are reliable, use [] or omit it. Do not include g/grams in unit_options.
+        unit_options is optional. Include only obvious non-gram units visible in the food (slice, piece, tbsp, cup, ml, fl oz, can, packet). Its quantity must describe the whole analyzed amount, not always 1. For a whole or mostly-whole divisible food like cake, pie, or pizza, count the visible pieces/slices and derive grams_per_unit from serving_size_grams / quantity. If N slices are visible, return quantity N. Use quantity 1 only when a single piece/slice is actually the analyzed portion. If only grams are reliable, use [] or omit it. Do not include g/grams in unit_options.
         Give your best estimate for the visible food amount shown in the image. For whole/mostly-whole cakes, pizzas, pies, loaves, or similar foods, estimate the total visible item/remaining item weight rather than defaulting to one slice. Use null for any nutrient you cannot estimate.
         """
 
@@ -153,9 +153,9 @@ struct GeminiService {
         If no name is visible, describe the food type (e.g. "Protein Bar", "Yogurt", "Cereal").
 
         Respond ONLY with JSON:
-        {"name":"Product Name","calories_per_100g":0.0,"protein_per_100g":0.0,"carbs_per_100g":0.0,"fat_per_100g":0.0,"serving_size_grams":0.0,"sugar_per_100g":0.0,"added_sugar_per_100g":0.0,"fiber_per_100g":0.0,"saturated_fat_per_100g":0.0,"monounsaturated_fat_per_100g":0.0,"polyunsaturated_fat_per_100g":0.0,"cholesterol_per_100g":0.0,"sodium_per_100g":0.0,"potassium_per_100g":0.0,"unit_options":[{"unit":"slice","quantity":1.0,"grams_per_unit":30.0}]}
+        {"name":"Product Name","calories_per_100g":0.0,"protein_per_100g":0.0,"carbs_per_100g":0.0,"fat_per_100g":0.0,"serving_size_grams":0.0,"sugar_per_100g":0.0,"added_sugar_per_100g":0.0,"fiber_per_100g":0.0,"saturated_fat_per_100g":0.0,"monounsaturated_fat_per_100g":0.0,"polyunsaturated_fat_per_100g":0.0,"cholesterol_per_100g":0.0,"sodium_per_100g":0.0,"potassium_per_100g":0.0,"unit_options":[]}
 
-        All values should be numbers. If serving size or any nutrient is not available, use null. unit_options is optional. Include non-gram label serving units when visible, such as slice, piece, tbsp, cup, ml, fl oz, can, or packet. Do not include g/grams in unit_options.
+        All values should be numbers. If serving size or any nutrient is not available, use null. unit_options is optional. Include non-gram label serving units when visible, such as slice, piece, tbsp, cup, ml, fl oz, can, or packet. Do not copy any sample number; use the quantity shown on the label. Do not include g/grams in unit_options.
         """
         let text = try await callAI(prompt: prompt, image: image)
         return try parseNutritionLabel(from: text)
