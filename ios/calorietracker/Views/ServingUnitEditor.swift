@@ -116,6 +116,7 @@ extension ServingUnitOption {
     static func normalizedOptions(_ options: [ServingUnitOption], totalGrams: Double) -> [ServingUnitOption] {
         var seen = Set<String>()
         var normalized: [ServingUnitOption] = []
+        var liquidGramsPerMilliliter: Double?
 
         for rawOption in options {
             var option = rawOption
@@ -125,9 +126,24 @@ extension ServingUnitOption {
             guard option.isValid, !option.isGramUnit, !seen.contains(option.id) else { continue }
             seen.insert(option.id)
             normalized.append(option)
+
+            if liquidGramsPerMilliliter == nil,
+               let milliliters = millilitersPerLiquidUnit(option.normalizedUnit),
+               milliliters > 0 {
+                liquidGramsPerMilliliter = option.gramsPerUnit / milliliters
+            }
         }
 
-        return Array(normalized.prefix(4))
+        if let liquidGramsPerMilliliter {
+            appendCommonLiquidUnits(
+                gramsPerMilliliter: liquidGramsPerMilliliter,
+                totalGrams: totalGrams,
+                seen: &seen,
+                options: &normalized
+            )
+        }
+
+        return Array(normalized.prefix(9))
     }
 
     static func pickerOptions(for options: [ServingUnitOption]) -> [ServingUnitOption] {
@@ -168,5 +184,60 @@ extension ServingUnitOption {
         }
         let quantity = option.gramsPerUnit > 0 ? totalGrams / option.gramsPerUnit : totalGrams
         return ServingUnitEditor.formatQuantity(quantity)
+    }
+
+    private static func millilitersPerLiquidUnit(_ unit: String) -> Double? {
+        switch unit {
+        case "ml", "milliliter", "milliliters", "millilitre", "millilitres":
+            return 1
+        case "l", "liter", "liters", "litre", "litres":
+            return 1_000
+        case "fl oz", "fluid ounce", "fluid ounces", "floz", "oz":
+            return 29.5735
+        case "cup", "cups":
+            return 240
+        case "tbsp", "tablespoon", "tablespoons":
+            return 15
+        case "tsp", "teaspoon", "teaspoons":
+            return 5
+        case "pint", "pints":
+            return 473.176
+        case "quart", "quarts":
+            return 946.353
+        case "gallon", "gallons", "gal":
+            return 3_785.412
+        default:
+            return nil
+        }
+    }
+
+    private static func appendCommonLiquidUnits(
+        gramsPerMilliliter: Double,
+        totalGrams: Double,
+        seen: inout Set<String>,
+        options: inout [ServingUnitOption]
+    ) {
+        let commonUnits: [(unit: String, milliliters: Double)] = [
+            ("ml", 1),
+            ("fl oz", 29.5735),
+            ("cup", 240),
+            ("tbsp", 15),
+            ("tsp", 5),
+            ("l", 1_000),
+            ("pint", 473.176),
+            ("quart", 946.353),
+            ("gallon", 3_785.412)
+        ]
+
+        for commonUnit in commonUnits {
+            let gramsPerUnit = gramsPerMilliliter * commonUnit.milliliters
+            let option = ServingUnitOption(
+                unit: commonUnit.unit,
+                gramsPerUnit: gramsPerUnit,
+                quantity: totalGrams / gramsPerUnit
+            )
+            guard option.isValid, seen.insert(option.id).inserted else { continue }
+            options.append(option)
+        }
     }
 }
