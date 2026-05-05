@@ -105,7 +105,8 @@ struct GeminiService {
         Include a single food emoji that best represents the food. Use null for any nutrient you cannot estimate.
         """
         let text = try await callAI(prompt: prompt, image: nil)
-        return try parseFoodAnalysis(from: text)
+        let analysis = try parseFoodAnalysis(from: text)
+        return await addingFallbackServingUnits(to: analysis, image: nil, description: description)
     }
 
     static func autoAnalyze(image: UIImage) async throws -> FoodAnalysis {
@@ -123,7 +124,8 @@ struct GeminiService {
         Use null for any nutrient you cannot estimate.
         """
         let text = try await callAI(prompt: prompt, image: image)
-        return try parseFoodAnalysis(from: text)
+        let analysis = try parseFoodAnalysis(from: text)
+        return await addingFallbackServingUnits(to: analysis, image: image, description: nil)
     }
 
     static func analyzeFood(image: UIImage, description: String? = nil) async throws -> FoodAnalysis {
@@ -144,7 +146,8 @@ struct GeminiService {
         }
 
         let text = try await callAI(prompt: prompt, image: image)
-        return try parseFoodAnalysis(from: text)
+        let analysis = try parseFoodAnalysis(from: text)
+        return await addingFallbackServingUnits(to: analysis, image: image, description: description)
     }
 
     static func analyzeNutritionLabel(image: UIImage) async throws -> NutritionLabelAnalysis {
@@ -162,7 +165,8 @@ struct GeminiService {
         All values should be numbers. If serving size or any nutrient is not available, use null. unit_options is required when a non-gram label serving unit is visible, such as slice, piece, tbsp, cup, ml, fl oz, can, or packet. Do not copy any sample number; use the quantity shown on the label. Use [] only when no non-gram unit is visible. Do not include g/grams in unit_options.
         """
         let text = try await callAI(prompt: prompt, image: image)
-        return try parseNutritionLabel(from: text)
+        let analysis = try parseNutritionLabel(from: text)
+        return await addingFallbackServingUnits(to: analysis, image: image)
     }
 
     // MARK: - Weight Forecast Insight
@@ -594,6 +598,94 @@ struct GeminiService {
             potassiumPer100g: (json["potassium_per_100g"] as? NSNumber)?.doubleValue,
             servingUnitOptions: parseServingUnitOptions(from: json, servingSizeGrams: servingSizeGrams)
         )
+    }
+
+    private static func addingFallbackServingUnits(
+        to analysis: FoodAnalysis,
+        image: UIImage?,
+        description: String?
+    ) async -> FoodAnalysis {
+        guard analysis.servingUnitOptions.isEmpty else { return analysis }
+        guard let options = try? await inferServingUnitOptions(
+            name: analysis.name,
+            servingSizeGrams: analysis.servingSizeGrams,
+            image: image,
+            description: description
+        ), !options.isEmpty else {
+            return analysis
+        }
+
+        var updated = analysis
+        updated.servingUnitOptions = options
+        updated.selectedServingUnit = options.first?.unit
+        updated.selectedServingQuantity = options.first?.quantity(for: analysis.servingSizeGrams)
+        return updated
+    }
+
+    private static func addingFallbackServingUnits(
+        to analysis: NutritionLabelAnalysis,
+        image: UIImage
+    ) async -> NutritionLabelAnalysis {
+        guard analysis.servingUnitOptions.isEmpty else { return analysis }
+        guard let servingSizeGrams = analysis.servingSizeGrams,
+              let options = try? await inferServingUnitOptions(
+                name: analysis.name,
+                servingSizeGrams: servingSizeGrams,
+                image: image,
+                description: nil
+              ), !options.isEmpty else {
+            return analysis
+        }
+
+        var updated = analysis
+        updated.servingUnitOptions = options
+        return updated
+    }
+
+    private static func inferServingUnitOptions(
+        name: String,
+        servingSizeGrams: Double,
+        image: UIImage?,
+        description: String?
+    ) async throws -> [ServingUnitOption] {
+        let context = description?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let contextLine = context.map { "\nUser context: \($0)" } ?? ""
+        let prompt = """
+        The previous food analysis returned grams only. Infer non-gram serving unit options for the same food and amount.
+
+        Food: \(name)
+        Total grams for the analyzed amount: \(String(format: "%.1f", servingSizeGrams))\(contextLine)
+
+        Return ONLY JSON:
+        {"unit_options":[{"unit":"slice","quantity":8.0,"grams_per_unit":45.0}]}
+
+        Rules:
+        - Replace the sample numbers with the actual best estimate. Do not copy 8 or 45 unless they fit the food.
+        - If the image shows countable portions, count visible pieces/slices. For pizza, cake, pie, bread, cookies, fruit pieces, nuggets, or sweets, use slice or piece.
+        - For liquids or pourable foods like milk, juice, soup, smoothies, dal, sauces, or yogurt, use ml when the volume is clearer than a count.
+        - For spooned foods like peanut butter, honey, oil, chutney, or ghee, use tbsp or tsp.
+        - For packaged foods/drinks, use can, packet, bar, scoop, or bowl only when that unit is visible or strongly implied.
+        - grams_per_unit is grams for one unit. For countable units, use total grams / visible quantity. For ml, use grams per ml.
+        - Return [] only if no non-gram unit is apparent.
+
+        Good outputs:
+        {"unit_options":[{"unit":"slice","quantity":8.0,"grams_per_unit":45.0}]}
+        {"unit_options":[{"unit":"ml","quantity":250.0,"grams_per_unit":1.03},{"unit":"cup","quantity":1.0,"grams_per_unit":250.0}]}
+        {"unit_options":[{"unit":"tbsp","quantity":2.0,"grams_per_unit":16.0}]}
+        {"unit_options":[{"unit":"can","quantity":1.0,"grams_per_unit":330.0}]}
+        {"unit_options":[{"unit":"piece","quantity":5.0,"grams_per_unit":18.0}]}
+        """
+
+        let text = try await callAI(prompt: prompt, image: image)
+        return try parseServingUnitOptions(from: text, servingSizeGrams: servingSizeGrams)
+    }
+
+    private static func parseServingUnitOptions(from text: String, servingSizeGrams: Double?) throws -> [ServingUnitOption] {
+        let jsonString = extractJSON(from: text)
+        guard let data = jsonString.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { throw AnalysisError.invalidResponse }
+        return parseServingUnitOptions(from: json, servingSizeGrams: servingSizeGrams)
     }
 
     private static func parseServingUnitOptions(from json: [String: Any], servingSizeGrams: Double?) -> [ServingUnitOption] {
