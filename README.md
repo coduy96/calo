@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="appicon.png" width="120" height="120" alt="Fud AI Logo" style="border-radius: 22px;">
+  <img src="web/assets/calorie%20logo%20transparent.png" width="120" height="120" alt="Fud AI Logo">
 </p>
 
 <h1 align="center">Fud AI</h1>
