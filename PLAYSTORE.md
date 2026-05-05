@@ -1,6 +1,6 @@
 # Play Store Listing
 
-Google Play Console listing copy for Fud AI Android (current: v1.0.10 / versionCode 12). Each field is in a code block for easy copy-paste. Char counts are tracked because Play Console enforces hard caps and silently truncates anything over.
+Google Play Console listing copy for Fud AI Android (current: v1.0.10 / versionCode 13). Each field is in a code block for easy copy-paste. Char counts are tracked because Play Console enforces hard caps and silently truncates anything over.
 
 **Where to paste each field in Play Console:**
 - App name / Short description / Full description → Grow → Store presence → **Main store listing** (default English) and Grow → Store presence → **Custom store listings** → Manage translations (per-language overrides)
@@ -38,7 +38,7 @@ Snap, speak, or type a meal. AI logs the calories. Open source.
 ```
 Fud AI makes calorie tracking effortless with AI-powered food recognition. Snap a photo, speak it, or type it — get instant nutrition: calories, protein, carbs, fats, and 9 micronutrients.
 
-NEW in v1.0.10: Theme color launchers are more reliable after switching colors, the cold-start splash better matches the selected color, and Android stays portrait-only for a consistent layout.
+NEW in v1.0.10: Theme color launchers are more reliable after switching colors, and the cold-start splash better matches the selected color.
 
 Free, open source, privacy-first. Bring your own API key. All data stays on your device.
 
@@ -112,91 +112,76 @@ English-only on Play Console — non-English Play Store browsers (ar, az-AZ, de-
 <en-US>
 • Theme color launcher switching is more reliable after changing colors.
 • Cold start splash better matches the selected launcher color.
-• Android now stays portrait-only for a consistent layout.
 </en-US>
 
 <ar>
 • تبديل لون أيقونة التشغيل أصبح أكثر موثوقية بعد تغيير اللون.
 • شاشة البدء أصبحت تطابق لون الأيقونة المختار بشكل أفضل.
-• Android يعمل الآن بوضع portrait فقط لتخطيط أكثر ثباتاً.
 </ar>
 
 <az-AZ>
 • Rəng dəyişəndən sonra launcher rəng keçidi daha etibarlıdır.
 • Soyuq başlanğıc ekranı seçilmiş launcher rənginə daha yaxşı uyğunlaşır.
-• Android sabit görünüş üçün yalnız portrait rejimində qalır.
 </az-AZ>
 
 <de-DE>
 • Der Launcher-Farbwechsel ist nach Änderungen zuverlässiger.
 • Der Kaltstart-Splash passt besser zur gewählten Launcher-Farbe.
-• Android bleibt jetzt im Hochformat für ein konsistentes Layout.
 </de-DE>
 
 <es-ES>
 • El cambio de color del launcher es más fiable tras cambiarlo.
 • El splash de inicio coincide mejor con el color elegido.
-• Android ahora se mantiene en vertical para un diseño estable.
 </es-ES>
 
 <fr-FR>
 • Le changement de couleur du launcher est plus fiable.
 • L'écran de démarrage correspond mieux à la couleur choisie.
-• Android reste maintenant en portrait pour une mise en page stable.
 </fr-FR>
 
 <hi-IN>
 • Color बदलने के बाद launcher color switching अब ज्यादा reliable है.
 • Cold start splash अब selected launcher color से बेहतर match करता है.
-• Stable layout के लिए Android अब portrait-only रहता है.
 </hi-IN>
 
 <it-IT>
 • Il cambio colore del launcher è più affidabile dopo le modifiche.
 • Lo splash iniziale segue meglio il colore scelto.
-• Android ora resta in verticale per un layout coerente.
 </it-IT>
 
 <ja-JP>
 • 色変更後のランチャーカラー切り替えがより安定しました。
 • コールドスタートのスプラッシュが選択色により近くなりました。
-• Androidは安定した表示のため縦向き固定になりました。
 </ja-JP>
 
 <ko-KR>
 • 색상 변경 후 런처 색상 전환이 더 안정적입니다.
 • 콜드 스타트 스플래시가 선택한 색상과 더 잘 맞습니다.
-• Android는 안정적인 레이아웃을 위해 세로 모드로 고정됩니다.
 </ko-KR>
 
 <nl-NL>
 • Launcher-kleur wisselt betrouwbaarder na kleurwijzigingen.
 • De koude-start splash past beter bij de gekozen kleur.
-• Android blijft nu in portretstand voor een stabiele layout.
 </nl-NL>
 
 <pt-BR>
 • A troca de cor do launcher ficou mais confiável.
 • A tela de abertura combina melhor com a cor escolhida.
-• Android agora fica em modo retrato para um layout consistente.
 </pt-BR>
 
 <ro>
 • Schimbarea culorii launcherului este mai fiabilă.
 • Splash-ul la pornire se potrivește mai bine cu culoarea aleasă.
-• Android rămâne acum în portrait pentru un layout stabil.
 </ro>
 
 <ru-RU>
 • Переключение цвета launcher стало надежнее после смены цвета.
 • Экран холодного старта лучше совпадает с выбранным цветом.
-• Android теперь работает только в портретном режиме для стабильной верстки.
 </ru-RU>
 
 <zh-CN>
 • 更改颜色后，启动器颜色切换更可靠。
 • 冷启动画面更贴近所选启动器颜色。
-• Android 现在固定竖屏，布局更稳定。
 </zh-CN>
 ```
 
