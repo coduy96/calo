@@ -18,14 +18,22 @@ struct ServingUnitEditor: View {
         pickerOptions.first { $0.id == selectedUnitID } ?? .grams
     }
 
+    private var selectedQuantity: Double? {
+        Double(quantityText)
+    }
+
+    private var selectedUnitLabel: String {
+        selectedOption.displayUnit(for: selectedQuantity)
+    }
+
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             EndEditingDecimalTextField(
                 text: $quantityText,
                 focusRequest: focusRequest,
                 onEditingChanged: onEditingChanged
             )
-            .frame(width: 80)
+            .frame(width: 72)
             .onChange(of: quantityText) { _, newValue in
                 guard let parsed = Double(newValue), parsed > 0 else { return }
                 servingSizeGrams = parsed * selectedOption.gramsPerUnit
@@ -44,16 +52,28 @@ struct ServingUnitEditor: View {
             }
 
             if pickerOptions.count > 1 {
-                Picker("Unit", selection: $selectedUnitID) {
+                Menu {
                     ForEach(pickerOptions) { option in
-                        Text(option.displayUnit(for: option.id == selectedUnitID ? Double(quantityText) : nil))
-                            .tag(option.id)
+                        Button {
+                            selectedUnitID = option.id
+                        } label: {
+                            Text(option.displayUnit(for: option.id == selectedUnitID ? selectedQuantity : nil))
+                        }
                     }
+                } label: {
+                    HStack(spacing: 3) {
+                        Text(selectedUnitLabel)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.78)
+                            .allowsTightening(true)
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .foregroundStyle(AppColors.calorie)
+                    .frame(width: 90, alignment: .trailing)
                 }
-                .pickerStyle(.menu)
-                .labelsHidden()
-                .tint(AppColors.calorie)
-                .frame(minWidth: 48, alignment: .leading)
+                .buttonStyle(.plain)
+                .fixedSize(horizontal: true, vertical: false)
             } else {
                 Text("g")
                     .foregroundStyle(.secondary)
