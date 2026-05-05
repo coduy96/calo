@@ -662,7 +662,7 @@ struct GeminiService {
         Rules:
         - Replace the sample numbers with the actual best estimate. Do not copy 8 or 45 unless they fit the food.
         - If the image shows countable portions, count visible pieces/slices. For pizza, cake, pie, bread, cookies, fruit pieces, nuggets, or sweets, use slice or piece.
-        - For liquids or pourable foods like milk, juice, soup, smoothies, dal, sauces, or yogurt, use ml when the volume is clearer than a count. Include common volume alternatives when useful, such as fl oz, cup, l, pint, quart, or gallon.
+        - For liquids or pourable foods like milk, juice, soup, smoothies, dal, sauces, or yogurt, use ml when the volume is clearer than a count.
         - For spooned foods like peanut butter, honey, oil, chutney, or ghee, use tbsp or tsp.
         - For packaged foods/drinks, use can, packet, bar, scoop, or bowl only when that unit is visible or strongly implied.
         - grams_per_unit is grams for one unit. For countable units, use total grams / visible quantity. For ml, use grams per ml.
@@ -670,7 +670,7 @@ struct GeminiService {
 
         Good outputs:
         {"unit_options":[{"unit":"slice","quantity":8.0,"grams_per_unit":45.0}]}
-        {"unit_options":[{"unit":"ml","quantity":250.0,"grams_per_unit":1.03},{"unit":"fl oz","quantity":8.5,"grams_per_unit":30.45},{"unit":"cup","quantity":1.0,"grams_per_unit":250.0}]}
+        {"unit_options":[{"unit":"ml","quantity":250.0,"grams_per_unit":1.03},{"unit":"cup","quantity":1.0,"grams_per_unit":250.0}]}
         {"unit_options":[{"unit":"tbsp","quantity":2.0,"grams_per_unit":16.0}]}
         {"unit_options":[{"unit":"can","quantity":1.0,"grams_per_unit":330.0}]}
         {"unit_options":[{"unit":"piece","quantity":5.0,"grams_per_unit":18.0}]}
