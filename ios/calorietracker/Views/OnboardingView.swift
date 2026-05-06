@@ -13,6 +13,7 @@ struct OnboardingView: View {
     @State private var step = 0
     @State private var selectedAccessMode: AIAccessMode = AIAccessSettings.mode
     @State private var showPaywall = false
+    @State private var shouldAdvanceAfterPlusPurchase = false
     @State private var gender: Gender = .male
     @State private var birthday: Date = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     @AppStorage("useMetric") private var useMetric = false
@@ -145,6 +146,13 @@ struct OnboardingView: View {
             }
             .sheet(isPresented: $showPaywall) {
                 PaywallView()
+            }
+            .onChange(of: storeManager.isSubscribed) { _, isSubscribed in
+                guard isSubscribed, shouldAdvanceAfterPlusPurchase, step == 11 else { return }
+                shouldAdvanceAfterPlusPurchase = false
+                showPaywall = false
+                AIAccessSettings.mode = .fudAIPlus
+                withAnimation(.snappy) { step += 1 }
             }
     }
 
@@ -812,6 +820,7 @@ struct OnboardingView: View {
                     if selectedAccessMode == .fudAIPlus && !storeManager.isSubscribed {
                         Button {
                             AIAccessSettings.mode = .fudAIPlus
+                            shouldAdvanceAfterPlusPurchase = true
                             showPaywall = true
                         } label: {
                             Text("See Plans")
@@ -836,6 +845,7 @@ struct OnboardingView: View {
             Button {
                 AIAccessSettings.mode = selectedAccessMode
                 if selectedAccessMode == .fudAIPlus && !storeManager.isSubscribed {
+                    shouldAdvanceAfterPlusPurchase = true
                     showPaywall = true
                 } else {
                     withAnimation(.snappy) { step += 1 }
