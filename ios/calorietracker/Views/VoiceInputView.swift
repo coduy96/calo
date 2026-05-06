@@ -271,8 +271,8 @@ struct VoiceInputView: View {
             return exactMatch
         }
 
-        if let languageCode = preferredLocale.languageCode?.lowercased(),
-           let languageMatch = supportedLocales.first(where: { $0.languageCode?.lowercased() == languageCode }) {
+        if let languageCode = preferredLocale.language.languageCode?.identifier.lowercased(),
+           let languageMatch = supportedLocales.first(where: { $0.language.languageCode?.identifier.lowercased() == languageCode }) {
             return languageMatch
         }
 

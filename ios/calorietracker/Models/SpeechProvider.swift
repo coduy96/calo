@@ -98,7 +98,7 @@ enum SpeechLanguage: String, CaseIterable, Codable, Identifiable {
         case .automatic:
             nil
         case .device:
-            Locale.autoupdatingCurrent.languageCode?.lowercased()
+            Locale.autoupdatingCurrent.language.languageCode?.identifier.lowercased()
         case .english:
             "en"
         case .german:
