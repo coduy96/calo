@@ -9,9 +9,11 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
+import java.util.Base64
 
 sealed class SttApiError(message: String) : Exception(message) {
     object NoApiKey : SttApiError("No STT API key configured.")
@@ -47,6 +49,65 @@ object WhisperClient {
             .post(body)
             .build()
         runRequest(client, req)
+    }
+}
+
+/**
+ * Gemini API audio understanding via generateContent. This is batch audio
+ * transcription, not Google Cloud Speech-to-Text's dedicated real-time STT API.
+ */
+object GeminiAudioClient {
+    suspend fun transcribe(
+        client: OkHttpClient,
+        apiKey: String,
+        model: String,
+        audio: File,
+        languageCode: String? = null
+    ): String = withContext(Dispatchers.IO) {
+        val languageInstruction = if (!languageCode.isNullOrBlank()) {
+            " Prefer language code $languageCode when interpreting speech, but preserve the spoken language if it is clearly different."
+        } else {
+            ""
+        }
+        val prompt = """
+            Transcribe this audio to text for a food logging app.$languageInstruction
+            Return only the transcript text. Do not add summaries, labels, markdown, timestamps, or quotes.
+        """.trimIndent()
+
+        val parts = JSONArray()
+            .put(
+                JSONObject().put(
+                    "inlineData",
+                    JSONObject()
+                        .put("mimeType", "audio/m4a")
+                        .put("data", Base64.getEncoder().encodeToString(audio.readBytes()))
+                )
+            )
+            .put(JSONObject().put("text", prompt))
+
+        val body = JSONObject()
+            .put("contents", JSONArray().put(JSONObject().put("parts", parts)))
+            .toString()
+            .toRequestBody("application/json; charset=utf-8".toMediaType())
+
+        val req = Request.Builder()
+            .url("https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent")
+            .addHeader("Content-Type", "application/json")
+            .addHeader("X-goog-api-key", apiKey)
+            .post(body)
+            .build()
+
+        val responseBody = runRequestRaw(client, req)
+        runCatching {
+            val partsJson = JSONObject(responseBody)
+                .getJSONArray("candidates")
+                .getJSONObject(0)
+                .getJSONObject("content")
+                .getJSONArray("parts")
+            (0 until partsJson.length()).firstNotNullOfOrNull { index ->
+                partsJson.getJSONObject(index).optString("text").takeIf { it.isNotBlank() }
+            }?.trim()
+        }.getOrNull()?.takeIf { it.isNotBlank() } ?: throw SttApiError.InvalidResponse
     }
 }
 

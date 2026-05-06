@@ -28,6 +28,13 @@ class SpeechService(
         if (provider.requiresApiKey && apiKey.isNullOrEmpty()) throw SttApiError.NoApiKey
 
         return when (provider) {
+            SpeechProvider.GEMINI -> GeminiAudioClient.transcribe(
+                client = okHttp,
+                apiKey = apiKey!!,
+                model = provider.defaultModel,
+                audio = audio,
+                languageCode = languageCode
+            )
             SpeechProvider.OPENAI -> WhisperClient.transcribe(
                 client = okHttp,
                 baseUrl = "https://api.openai.com/v1",

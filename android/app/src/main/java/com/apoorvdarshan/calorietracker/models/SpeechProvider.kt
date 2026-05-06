@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 enum class SpeechProvider {
     @SerialName("Native (On-Device)") NATIVE,
+    @SerialName("Gemini Audio") GEMINI,
     @SerialName("OpenAI Whisper") OPENAI,
     @SerialName("Groq (Whisper)") GROQ,
     @SerialName("Deepgram") DEEPGRAM,
@@ -16,6 +17,7 @@ enum class SpeechProvider {
     @get:StringRes
     val displayNameRes: Int get() = when (this) {
         NATIVE -> R.string.speech_provider_native
+        GEMINI -> R.string.speech_provider_gemini
         OPENAI -> R.string.speech_provider_openai
         GROQ -> R.string.speech_provider_groq
         DEEPGRAM -> R.string.speech_provider_deepgram
@@ -27,6 +29,7 @@ enum class SpeechProvider {
     @get:StringRes
     val apiKeyPlaceholderRes: Int get() = when (this) {
         NATIVE -> R.string.speech_key_placeholder_native
+        GEMINI -> R.string.speech_key_placeholder_gemini
         OPENAI -> R.string.speech_key_placeholder_openai
         GROQ -> R.string.speech_key_placeholder_groq
         DEEPGRAM -> R.string.speech_key_placeholder_deepgram
@@ -35,6 +38,7 @@ enum class SpeechProvider {
 
     val defaultModel: String get() = when (this) {
         NATIVE -> ""
+        GEMINI -> "gemini-2.5-flash"
         OPENAI -> "whisper-1"
         GROQ -> "whisper-large-v3"
         DEEPGRAM -> "nova-3"
@@ -44,6 +48,7 @@ enum class SpeechProvider {
     @get:StringRes
     val descriptionRes: Int get() = when (this) {
         NATIVE -> R.string.speech_description_native
+        GEMINI -> R.string.speech_description_gemini
         OPENAI -> R.string.speech_description_openai
         GROQ -> R.string.speech_description_groq
         DEEPGRAM -> R.string.speech_description_deepgram
