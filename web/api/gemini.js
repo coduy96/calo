@@ -1,6 +1,11 @@
 const DEFAULT_LIMIT = 80;
 const FALLBACK_MODELS = {
-  food: ["gemini-2.5-flash-lite", "gemini-2.5-flash"],
+  food: [
+    "gemini-3.1-flash-lite-preview",
+    "gemini-3-flash-preview",
+    "gemini-2.5-flash-lite",
+    "gemini-2.5-flash",
+  ],
   coach: ["gemini-2.5-flash-lite", "gemini-2.5-flash"],
   speech: ["gemini-2.5-flash-lite", "gemini-2.5-flash"],
 };
