@@ -15,7 +15,10 @@ struct WidgetSnapshot: Codable, Equatable {
     let fat: Int
     let fatGoal: Int
 
-    static let appGroupID = "group.com.apoorvdarshan.calorietracker"
+    static var appGroupID: String {
+        Bundle.main.object(forInfoDictionaryKey: "AppGroupIdentifier") as? String
+            ?? "group.com.apoorvdarshan.calorietracker"
+    }
     private static let key = "widget_snapshot_v1"
 
     static var sharedDefaults: UserDefaults? {

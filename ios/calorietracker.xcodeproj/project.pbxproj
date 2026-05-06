@@ -400,6 +400,7 @@
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconRed AppIconOrange AppIconGreen AppIconMint AppIconTeal AppIconBlue AppIconPurple";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				APP_GROUP_IDENTIFIER = group.com.apoorvdarshan.calorietracker.debug;
 				CODE_SIGN_ENTITLEMENTS = calorietracker/calorietracker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 10;
@@ -407,7 +408,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = calorietracker/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Fud AI";
+				INFOPLIST_KEY_AppGroupIdentifier = "$(APP_GROUP_IDENTIFIER)";
+				INFOPLIST_KEY_CFBundleDisplayName = "Fud AI Debug";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Cal AI needs camera access to scan your food and calculate calories.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Read your weight, height, and body composition to keep your profile accurate.";
@@ -425,7 +427,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 3.3.2;
-				PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietracker;
+				PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietracker.debug;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -448,6 +450,7 @@
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconRed AppIconOrange AppIconGreen AppIconMint AppIconTeal AppIconBlue AppIconPurple";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				APP_GROUP_IDENTIFIER = group.com.apoorvdarshan.calorietracker;
 				CODE_SIGN_ENTITLEMENTS = calorietracker/calorietracker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 10;
@@ -455,6 +458,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = calorietracker/Info.plist;
+				INFOPLIST_KEY_AppGroupIdentifier = "$(APP_GROUP_IDENTIFIER)";
 				INFOPLIST_KEY_CFBundleDisplayName = "Fud AI";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Cal AI needs camera access to scan your food and calculate calories.";
@@ -701,13 +705,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				APP_GROUP_IDENTIFIER = group.com.apoorvdarshan.calorietracker.debug;
 				CODE_SIGN_ENTITLEMENTS = FudAIWidgets/FudAIWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 23RV7FYH36;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FudAIWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Fud AI";
+				INFOPLIST_KEY_AppGroupIdentifier = "$(APP_GROUP_IDENTIFIER)";
+				INFOPLIST_KEY_CFBundleDisplayName = "Fud AI Debug";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -716,7 +722,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 3.3.2;
-				PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietracker.FudAIWidgets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietracker.debug.FudAIWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -737,12 +743,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				APP_GROUP_IDENTIFIER = group.com.apoorvdarshan.calorietracker;
 				CODE_SIGN_ENTITLEMENTS = FudAIWidgets/FudAIWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 23RV7FYH36;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FudAIWidgets/Info.plist;
+				INFOPLIST_KEY_AppGroupIdentifier = "$(APP_GROUP_IDENTIFIER)";
 				INFOPLIST_KEY_CFBundleDisplayName = "Fud AI";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
