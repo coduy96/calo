@@ -137,7 +137,9 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
         name: String? = null,
         servingGrams: Double? = null,
         scale: Double = 1.0,
-        mealType: MealType = MealType.currentMeal
+        mealType: MealType = MealType.currentMeal,
+        selectedServingUnit: String? = null,
+        selectedServingQuantity: Double? = null
     ) {
         val analysis = _ui.value.pendingAnalysis ?: return
         val reviewSource = _ui.value.pendingReviewSource
@@ -166,6 +168,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
                     ?: if (imageBytes != null) FoodSource.SNAP_FOOD else FoodSource.TEXT_INPUT,
                 mealType = mealType,
                 sugar = s(analysis.sugar),
+                addedSugar = s(analysis.addedSugar),
                 fiber = s(analysis.fiber),
                 saturatedFat = s(analysis.saturatedFat),
                 monounsaturatedFat = s(analysis.monounsaturatedFat),
@@ -173,7 +176,10 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
                 cholesterol = s(analysis.cholesterol),
                 sodium = s(analysis.sodium),
                 potassium = s(analysis.potassium),
-                servingSizeGrams = servingGrams ?: analysis.servingSizeGrams
+                servingSizeGrams = servingGrams ?: analysis.servingSizeGrams,
+                servingUnitOptions = analysis.servingUnitOptions,
+                selectedServingUnit = if (analysis.servingUnitOptions.isEmpty()) null else selectedServingUnit,
+                selectedServingQuantity = if (analysis.servingUnitOptions.isEmpty()) null else selectedServingQuantity
             )
             container.foodRepository.addEntry(entry)
             _ui.value = _ui.value.copy(
@@ -305,5 +311,8 @@ private fun FoodEntry.toAnalysis(): FoodAnalysis = FoodAnalysis(
     polyunsaturatedFat = polyunsaturatedFat,
     cholesterol = cholesterol,
     sodium = sodium,
-    potassium = potassium
+    potassium = potassium,
+    servingUnitOptions = servingUnitOptions,
+    selectedServingUnit = selectedServingUnit,
+    selectedServingQuantity = selectedServingQuantity
 )

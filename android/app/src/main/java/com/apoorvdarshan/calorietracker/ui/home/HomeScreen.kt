@@ -530,8 +530,15 @@ fun HomeScreen(container: AppContainer) {
         FoodResultSheet(
             analysis = analysis,
             imageBytes = ui.pendingImageBytes,
-            onSave = { name, grams, scale, mealType ->
-                vm.saveAnalysis(name = name, servingGrams = grams, scale = scale, mealType = mealType)
+            onSave = { name, grams, scale, mealType, selectedServingUnit, selectedServingQuantity ->
+                vm.saveAnalysis(
+                    name = name,
+                    servingGrams = grams,
+                    scale = scale,
+                    mealType = mealType,
+                    selectedServingUnit = selectedServingUnit,
+                    selectedServingQuantity = selectedServingQuantity
+                )
             },
             onDismiss = { vm.dismissPending() }
         )

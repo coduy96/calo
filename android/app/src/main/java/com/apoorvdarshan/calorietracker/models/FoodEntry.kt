@@ -29,7 +29,10 @@ data class FoodEntry(
     val cholesterol: Double? = null,
     val sodium: Double? = null,
     val potassium: Double? = null,
-    val servingSizeGrams: Double? = null
+    val servingSizeGrams: Double? = null,
+    val servingUnitOptions: List<ServingUnitOption> = emptyList(),
+    val selectedServingUnit: String? = null,
+    val selectedServingQuantity: Double? = null
 ) {
     /** Unique key for favorite deduplication (name + calorie combo). */
     val favoriteKey: String get() = "${name.lowercase()}|$calories"
@@ -59,6 +62,9 @@ data class FoodEntry(
         cholesterol = cholesterol,
         sodium = sodium,
         potassium = potassium,
-        servingSizeGrams = servingSizeGrams
+        servingSizeGrams = servingSizeGrams,
+        servingUnitOptions = servingUnitOptions,
+        selectedServingUnit = selectedServingUnit,
+        selectedServingQuantity = selectedServingQuantity
     )
 }

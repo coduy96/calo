@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.services.ai
 
+import com.apoorvdarshan.calorietracker.models.ServingUnitOption
+import org.json.JSONArray
 import org.json.JSONObject
 import kotlin.math.round
 
@@ -20,7 +22,10 @@ data class FoodAnalysis(
     val polyunsaturatedFat: Double? = null,
     val cholesterol: Double? = null,
     val sodium: Double? = null,
-    val potassium: Double? = null
+    val potassium: Double? = null,
+    val servingUnitOptions: List<ServingUnitOption> = emptyList(),
+    val selectedServingUnit: String? = null,
+    val selectedServingQuantity: Double? = null
 )
 
 /** Per-100g nutrition-label reading. Scaled to a real serving via [scaled]. */
@@ -39,11 +44,13 @@ data class NutritionLabelAnalysis(
     val polyunsaturatedFatPer100g: Double? = null,
     val cholesterolPer100g: Double? = null,
     val sodiumPer100g: Double? = null,
-    val potassiumPer100g: Double? = null
+    val potassiumPer100g: Double? = null,
+    val servingUnitOptions: List<ServingUnitOption> = emptyList()
 ) {
     fun scaled(toGrams: Double): FoodAnalysis {
         val scale = toGrams / 100.0
         fun s(v: Double?) = v?.let { round(it * scale * 10) / 10 }
+        val selectedOption = servingUnitOptions.firstOrNull()
         return FoodAnalysis(
             name = name,
             calories = (caloriesPer100g * scale).toInt(),
@@ -59,7 +66,10 @@ data class NutritionLabelAnalysis(
             polyunsaturatedFat = s(polyunsaturatedFatPer100g),
             cholesterol = s(cholesterolPer100g),
             sodium = s(sodiumPer100g),
-            potassium = s(potassiumPer100g)
+            potassium = s(potassiumPer100g),
+            servingUnitOptions = servingUnitOptions,
+            selectedServingUnit = selectedOption?.unit,
+            selectedServingQuantity = selectedOption?.quantityFor(toGrams)
         )
     }
 }
@@ -105,15 +115,18 @@ internal object FoodJsonParser {
         val json = runCatching { JSONObject(extractJson(text)) }.getOrNull()
             ?: throw AiError.InvalidResponse
         val name = json.optString("name").takeIf { it.isNotEmpty() } ?: throw AiError.InvalidResponse
+        val servingSizeGrams = optDouble(json, "serving_size_grams") ?: 100.0
+        val unitOptions = parseServingUnitOptions(json, servingSizeGrams)
+        val selectedOption = unitOptions.firstOrNull()
         fun optDouble(key: String): Double? =
-            if (json.has(key) && !json.isNull(key)) json.optDouble(key) else null
+            optDouble(json, key)
         return FoodAnalysis(
             name = name,
             calories = json.optInt("calories"),
             protein = json.optInt("protein"),
             carbs = json.optInt("carbs"),
             fat = json.optInt("fat"),
-            servingSizeGrams = optDouble("serving_size_grams") ?: 100.0,
+            servingSizeGrams = servingSizeGrams,
             emoji = json.optString("emoji").takeIf { it.isNotEmpty() },
             sugar = optDouble("sugar"),
             addedSugar = optDouble("added_sugar"),
@@ -123,7 +136,10 @@ internal object FoodJsonParser {
             polyunsaturatedFat = optDouble("polyunsaturated_fat"),
             cholesterol = optDouble("cholesterol"),
             sodium = optDouble("sodium"),
-            potassium = optDouble("potassium")
+            potassium = optDouble("potassium"),
+            servingUnitOptions = unitOptions,
+            selectedServingUnit = selectedOption?.unit,
+            selectedServingQuantity = selectedOption?.quantityFor(servingSizeGrams)
         )
     }
 
@@ -132,14 +148,15 @@ internal object FoodJsonParser {
             ?: throw AiError.InvalidResponse
         val name = json.optString("name").takeIf { it.isNotEmpty() } ?: throw AiError.InvalidResponse
         fun optDouble(key: String): Double? =
-            if (json.has(key) && !json.isNull(key)) json.optDouble(key) else null
+            optDouble(json, key)
+        val servingSizeGrams = optDouble("serving_size_grams")
         return NutritionLabelAnalysis(
             name = name,
             caloriesPer100g = optDouble("calories_per_100g") ?: throw AiError.InvalidResponse,
             proteinPer100g = optDouble("protein_per_100g") ?: throw AiError.InvalidResponse,
             carbsPer100g = optDouble("carbs_per_100g") ?: throw AiError.InvalidResponse,
             fatPer100g = optDouble("fat_per_100g") ?: throw AiError.InvalidResponse,
-            servingSizeGrams = optDouble("serving_size_grams"),
+            servingSizeGrams = servingSizeGrams,
             sugarPer100g = optDouble("sugar_per_100g"),
             addedSugarPer100g = optDouble("added_sugar_per_100g"),
             fiberPer100g = optDouble("fiber_per_100g"),
@@ -148,7 +165,53 @@ internal object FoodJsonParser {
             polyunsaturatedFatPer100g = optDouble("polyunsaturated_fat_per_100g"),
             cholesterolPer100g = optDouble("cholesterol_per_100g"),
             sodiumPer100g = optDouble("sodium_per_100g"),
-            potassiumPer100g = optDouble("potassium_per_100g")
+            potassiumPer100g = optDouble("potassium_per_100g"),
+            servingUnitOptions = parseServingUnitOptions(json, servingSizeGrams)
         )
+    }
+
+    fun parseServingUnitOptions(text: String, servingSizeGrams: Double?): List<ServingUnitOption> {
+        val json = runCatching { JSONObject(extractJson(text)) }.getOrNull()
+            ?: throw AiError.InvalidResponse
+        return parseServingUnitOptions(json, servingSizeGrams)
+    }
+
+    private fun parseServingUnitOptions(
+        json: JSONObject,
+        servingSizeGrams: Double?
+    ): List<ServingUnitOption> {
+        val rawOptions = json.optJSONArray("unit_options")
+            ?: json.optJSONArray("serving_unit_options")
+            ?: JSONArray()
+        val seen = mutableSetOf<String>()
+        val options = mutableListOf<ServingUnitOption>()
+        for (i in 0 until rawOptions.length()) {
+            val raw = rawOptions.optJSONObject(i) ?: continue
+            val unit = raw.optString("unit").takeIf { it.isNotBlank() } ?: continue
+            val gramsPerUnit = optDouble(raw, "grams_per_unit")
+                ?: optDouble(raw, "gramsPerUnit")
+                ?: continue
+            val quantity = optDouble(raw, "quantity")
+            val option = ServingUnitOption(
+                unit = unit,
+                gramsPerUnit = gramsPerUnit,
+                quantity = quantity ?: servingSizeGrams
+                    ?.takeIf { gramsPerUnit > 0 }
+                    ?.let { it / gramsPerUnit }
+            )
+            if (!option.isValid || option.isGramUnit || option.id in seen) continue
+            seen.add(option.id)
+            options.add(option)
+        }
+        return options.take(4)
+    }
+
+    private fun optDouble(json: JSONObject, key: String): Double? {
+        if (!json.has(key) || json.isNull(key)) return null
+        return when (val value = json.opt(key)) {
+            is Number -> value.toDouble()
+            is String -> value.toDoubleOrNull()
+            else -> null
+        }?.takeUnless { it.isNaN() || it.isInfinite() }
     }
 }

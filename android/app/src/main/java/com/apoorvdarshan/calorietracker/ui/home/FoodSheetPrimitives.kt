@@ -12,25 +12,38 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.LocalCafe
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.filled.WbTwilight
 import com.apoorvdarshan.calorietracker.models.MealType
+import com.apoorvdarshan.calorietracker.models.ServingUnitOption
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 
 // Shared visual primitives for the food review/edit sheets. Names are
@@ -112,6 +125,116 @@ internal fun SheetPillCard(content: @Composable ColumnScope.() -> Unit) {
             .padding(vertical = 4.dp),
         content = content
     )
+}
+
+@Composable
+internal fun ServingQuantityCard(
+    quantityText: String,
+    onQuantityChange: (String) -> Unit,
+    selectedUnitId: String,
+    onSelectedUnitChange: (String) -> Unit,
+    servingSizeGrams: Double,
+    unitOptions: List<ServingUnitOption>,
+    menuExpanded: Boolean,
+    onMenuExpandedChange: (Boolean) -> Unit,
+    gramUnit: String
+) {
+    val pickerOptions = ServingUnitOption.pickerOptions(unitOptions)
+    val selectedOption = ServingUnitOption.optionMatching(selectedUnitId, unitOptions)
+    val parsedQuantity = quantityText.toDoubleOrNull()
+    val selectedUnitLabel = selectedOption.displayUnit(parsedQuantity)
+
+    SheetPillCard {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Quantity", fontSize = 17.sp, modifier = Modifier.padding(end = 8.dp))
+            Spacer(Modifier.weight(1f))
+            BasicTextField(
+                value = quantityText,
+                onValueChange = onQuantityChange,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                textStyle = TextStyle(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 17.sp,
+                    textAlign = TextAlign.End
+                ),
+                cursorBrush = SolidColor(AppColors.Calorie),
+                modifier = Modifier.width(80.dp)
+            )
+            Spacer(Modifier.width(6.dp))
+            if (pickerOptions.size > 1) {
+                Box {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { onMenuExpandedChange(true) }
+                            .padding(horizontal = 4.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            selectedUnitLabel,
+                            fontSize = 17.sp,
+                            color = AppColors.Calorie,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.widthIn(min = 32.dp, max = 88.dp)
+                        )
+                        Icon(
+                            Icons.Filled.UnfoldMore,
+                            contentDescription = null,
+                            tint = AppColors.Calorie
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { onMenuExpandedChange(false) }
+                    ) {
+                        for (option in pickerOptions) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        option.displayUnit(
+                                            if (option.id == selectedUnitId) parsedQuantity else null
+                                        )
+                                    )
+                                },
+                                onClick = {
+                                    onSelectedUnitChange(option.id)
+                                    onMenuExpandedChange(false)
+                                }
+                            )
+                        }
+                    }
+                }
+            } else {
+                Text(
+                    gramUnit,
+                    fontSize = 17.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    modifier = Modifier.width(24.dp)
+                )
+            }
+        }
+
+        if (!selectedOption.isGramUnit) {
+            SheetHairline()
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Total", fontSize = 17.sp, modifier = Modifier.weight(1f))
+                Text(
+                    "~${sheetFormatGrams(servingSizeGrams)} $gramUnit",
+                    fontSize = 17.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                )
+            }
+        }
+    }
 }
 
 @Composable

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -34,12 +33,12 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.MealType
+import com.apoorvdarshan.calorietracker.models.ServingUnitOption
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import kotlin.math.roundToInt
 
@@ -60,13 +59,31 @@ fun EditFoodEntrySheet(
 ) {
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val baseServing = entry.servingSizeGrams ?: 100.0
+    val servingUnitOptions = remember(entry.servingUnitOptions, baseServing) {
+        ServingUnitOption.normalizedOptions(entry.servingUnitOptions, baseServing)
+    }
     var name by remember { mutableStateOf(entry.name) }
-    var servingGramsText by remember { mutableStateOf(sheetFormatGrams(baseServing)) }
-    val servingGrams = servingGramsText.toDoubleOrNull()?.takeIf { it > 0 } ?: baseServing
+    var selectedServingUnitId by remember {
+        mutableStateOf(ServingUnitOption.initialUnitId(entry.selectedServingUnit, servingUnitOptions))
+    }
+    var servingGrams by remember { mutableStateOf(baseServing) }
+    var servingQuantityText by remember {
+        mutableStateOf(
+            ServingUnitOption.initialQuantityText(
+                totalGrams = baseServing,
+                selectedUnitId = selectedServingUnitId,
+                selectedQuantity = entry.selectedServingQuantity,
+                options = servingUnitOptions
+            )
+        )
+    }
+    val selectedServingOption = ServingUnitOption.optionMatching(selectedServingUnitId, servingUnitOptions)
+    val selectedServingQuantity = servingQuantityText.toDoubleOrNull()?.takeIf { it > 0 }
     val scale = if (baseServing > 0) servingGrams / baseServing else 1.0
     var mealType by remember { mutableStateOf(entry.mealType) }
     var moreNutritionExpanded by remember { mutableStateOf(false) }
     var mealMenuExpanded by remember { mutableStateOf(false) }
+    var servingMenuExpanded by remember { mutableStateOf(false) }
 
     fun scaledInt(v: Int) = (v * scale).roundToInt()
     fun scaledD(v: Double?) = v?.let { ((it * scale) * 10).roundToInt() / 10.0 }
@@ -87,7 +104,10 @@ fun EditFoodEntrySheet(
         cholesterol = scaledD(entry.cholesterol),
         sodium = scaledD(entry.sodium),
         potassium = scaledD(entry.potassium),
-        servingSizeGrams = servingGrams
+        servingSizeGrams = servingGrams,
+        servingUnitOptions = servingUnitOptions,
+        selectedServingUnit = if (servingUnitOptions.isEmpty()) null else selectedServingOption.unit,
+        selectedServingQuantity = if (servingUnitOptions.isEmpty()) null else selectedServingQuantity
     )
 
     ModalBottomSheet(
@@ -172,30 +192,27 @@ fun EditFoodEntrySheet(
 
             item { SheetSectionHeader(stringResource(R.string.sheet_serving)) }
             item {
-                SheetPillRow {
-                    Text(stringResource(R.string.sheet_quantity), fontSize = 17.sp, modifier = Modifier.padding(end = 8.dp))
-                    Spacer(Modifier.weight(1f))
-                    androidx.compose.foundation.text.BasicTextField(
-                        value = servingGramsText,
-                        onValueChange = { servingGramsText = it },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        textStyle = androidx.compose.ui.text.TextStyle(
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 17.sp,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.End
-                        ),
-                        cursorBrush = androidx.compose.ui.graphics.SolidColor(AppColors.Calorie),
-                        modifier = Modifier.width(80.dp)
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        stringResource(R.string.unit_g),
-                        fontSize = 17.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        modifier = Modifier.width(20.dp)
-                    )
-                }
+                ServingQuantityCard(
+                    quantityText = servingQuantityText,
+                    onQuantityChange = { newValue ->
+                        servingQuantityText = newValue
+                        newValue.toDoubleOrNull()?.takeIf { it > 0 }?.let {
+                            servingGrams = it * selectedServingOption.gramsPerUnit
+                        }
+                    },
+                    selectedUnitId = selectedServingUnitId,
+                    onSelectedUnitChange = { optionId ->
+                        selectedServingUnitId = optionId
+                        val option = ServingUnitOption.optionMatching(optionId, servingUnitOptions)
+                        val quantity = if (option.gramsPerUnit > 0) servingGrams / option.gramsPerUnit else servingGrams
+                        servingQuantityText = ServingUnitOption.formatQuantity(quantity)
+                    },
+                    servingSizeGrams = servingGrams,
+                    unitOptions = servingUnitOptions,
+                    menuExpanded = servingMenuExpanded,
+                    onMenuExpandedChange = { servingMenuExpanded = it },
+                    gramUnit = stringResource(R.string.unit_g)
+                )
             }
 
             item { SheetSectionHeader(stringResource(R.string.sheet_nutrition)) }

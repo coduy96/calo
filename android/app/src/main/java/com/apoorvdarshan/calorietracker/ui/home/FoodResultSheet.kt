@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -33,11 +32,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.MealType
+import com.apoorvdarshan.calorietracker.models.ServingUnitOption
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import kotlin.math.roundToInt
@@ -53,7 +52,14 @@ import kotlin.math.roundToInt
 fun FoodResultSheet(
     analysis: FoodAnalysis,
     imageBytes: ByteArray? = null,
-    onSave: (name: String, servingGrams: Double, scale: Double, mealType: MealType) -> Unit,
+    onSave: (
+        name: String,
+        servingGrams: Double,
+        scale: Double,
+        mealType: MealType,
+        selectedServingUnit: String?,
+        selectedServingQuantity: Double?
+    ) -> Unit,
     onDismiss: () -> Unit
 ) {
     val bitmap = remember(imageBytes) {
@@ -61,12 +67,30 @@ fun FoodResultSheet(
     }
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var name by remember { mutableStateOf(analysis.name) }
-    var servingGramsText by remember { mutableStateOf(sheetFormatGrams(analysis.servingSizeGrams)) }
-    val servingGrams = servingGramsText.toDoubleOrNull()?.takeIf { it > 0 } ?: analysis.servingSizeGrams
+    val servingUnitOptions = remember(analysis.servingUnitOptions, analysis.servingSizeGrams) {
+        ServingUnitOption.normalizedOptions(analysis.servingUnitOptions, analysis.servingSizeGrams)
+    }
+    var selectedServingUnitId by remember {
+        mutableStateOf(ServingUnitOption.initialUnitId(analysis.selectedServingUnit, servingUnitOptions))
+    }
+    var servingGrams by remember { mutableStateOf(analysis.servingSizeGrams) }
+    var servingQuantityText by remember {
+        mutableStateOf(
+            ServingUnitOption.initialQuantityText(
+                totalGrams = analysis.servingSizeGrams,
+                selectedUnitId = selectedServingUnitId,
+                selectedQuantity = analysis.selectedServingQuantity,
+                options = servingUnitOptions
+            )
+        )
+    }
+    val selectedServingOption = ServingUnitOption.optionMatching(selectedServingUnitId, servingUnitOptions)
+    val selectedServingQuantity = servingQuantityText.toDoubleOrNull()?.takeIf { it > 0 }
     val scale = if (analysis.servingSizeGrams > 0) servingGrams / analysis.servingSizeGrams else 1.0
     var mealType by remember { mutableStateOf(MealType.currentMeal) }
     var moreNutritionExpanded by remember { mutableStateOf(false) }
     var mealMenuExpanded by remember { mutableStateOf(false) }
+    var servingMenuExpanded by remember { mutableStateOf(false) }
 
     fun scaledInt(v: Int) = (v * scale).roundToInt()
     fun scaledD(v: Double?) = v?.let { ((it * scale) * 10).roundToInt() / 10.0 }
@@ -82,7 +106,14 @@ fun FoodResultSheet(
             primaryLabel = stringResource(R.string.action_log),
             onCancel = onDismiss,
             onPrimary = {
-                onSave(name.trim().ifEmpty { analysis.name }, servingGrams, scale, mealType)
+                onSave(
+                    name.trim().ifEmpty { analysis.name },
+                    servingGrams,
+                    scale,
+                    mealType,
+                    if (servingUnitOptions.isEmpty()) null else selectedServingOption.unit,
+                    if (servingUnitOptions.isEmpty()) null else selectedServingQuantity
+                )
             }
         )
 
@@ -133,30 +164,27 @@ fun FoodResultSheet(
 
             item { SheetSectionHeader(stringResource(R.string.sheet_serving)) }
             item {
-                SheetPillRow {
-                    Text(stringResource(R.string.sheet_quantity), fontSize = 17.sp, modifier = Modifier.padding(end = 8.dp))
-                    Spacer(Modifier.weight(1f))
-                    androidx.compose.foundation.text.BasicTextField(
-                        value = servingGramsText,
-                        onValueChange = { servingGramsText = it },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        textStyle = androidx.compose.ui.text.TextStyle(
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 17.sp,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.End
-                        ),
-                        cursorBrush = androidx.compose.ui.graphics.SolidColor(AppColors.Calorie),
-                        modifier = Modifier.width(80.dp)
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        stringResource(R.string.unit_g),
-                        fontSize = 17.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        modifier = Modifier.width(20.dp)
-                    )
-                }
+                ServingQuantityCard(
+                    quantityText = servingQuantityText,
+                    onQuantityChange = { newValue ->
+                        servingQuantityText = newValue
+                        newValue.toDoubleOrNull()?.takeIf { it > 0 }?.let {
+                            servingGrams = it * selectedServingOption.gramsPerUnit
+                        }
+                    },
+                    selectedUnitId = selectedServingUnitId,
+                    onSelectedUnitChange = { optionId ->
+                        selectedServingUnitId = optionId
+                        val option = ServingUnitOption.optionMatching(optionId, servingUnitOptions)
+                        val quantity = if (option.gramsPerUnit > 0) servingGrams / option.gramsPerUnit else servingGrams
+                        servingQuantityText = ServingUnitOption.formatQuantity(quantity)
+                    },
+                    servingSizeGrams = servingGrams,
+                    unitOptions = servingUnitOptions,
+                    menuExpanded = servingMenuExpanded,
+                    onMenuExpandedChange = { servingMenuExpanded = it },
+                    gramUnit = stringResource(R.string.unit_g)
+                )
             }
 
             item { SheetSectionHeader(stringResource(R.string.sheet_nutrition)) }
