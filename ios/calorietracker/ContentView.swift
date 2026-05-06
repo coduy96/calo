@@ -2891,20 +2891,40 @@ struct ProfileView: View {
 }
 
 private struct FudAIPlusManagedSettingsSection: View {
+    @State private var quotaSnapshot: AIAccessQuotaSnapshot = .fallback
+    @State private var quotaError: String?
+    @State private var isLoadingQuota = false
+
     var body: some View {
         Section {
-            managedRow(icon: "fork.knife", title: "Food Analysis", value: "Managed Gemini")
-            managedRow(icon: "waveform", title: "Speech-to-Text", value: "Managed Gemini")
-            managedRow(icon: "message.fill", title: "Coach", value: "Managed Gemini")
+            quotaRow(icon: "fork.knife", title: "Food Analysis", bucket: quotaSnapshot.food)
+            quotaRow(icon: "waveform", title: "Speech-to-Text", bucket: quotaSnapshot.speech)
+            quotaRow(icon: "message.fill", title: "Coach", bucket: quotaSnapshot.coach)
+            quotaRow(icon: "shield.lefthalf.filled", title: "Daily Safety Limit", bucket: quotaSnapshot.global)
+
+            if isLoadingQuota {
+                HStack {
+                    ProgressView()
+                    Text("Refreshing usage")
+                        .foregroundStyle(.secondary)
+                }
+            } else if let quotaError {
+                Text(quotaError)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         } header: {
             Text("Fud AI Plus")
         } footer: {
-            Text("Provider, model, fallback, and speech API key settings are managed by Plus. Switch Mode to Bring Your Own Key above to edit your own providers.")
+            Text("Remaining daily Plus usage is refreshed from Fud AI's server. Provider, model, fallback, and speech API key settings are managed by Plus.")
         }
         .listRowBackground(AppColors.appCard)
+        .task {
+            await refreshQuota()
+        }
     }
 
-    private func managedRow(icon: String, title: String, value: String) -> some View {
+    private func quotaRow(icon: String, title: String, bucket: AIAccessQuotaSnapshot.Bucket) -> some View {
         HStack {
             Label {
                 Text(title)
@@ -2913,9 +2933,21 @@ private struct FudAIPlusManagedSettingsSection: View {
                     .foregroundStyle(AppColors.calorie)
             }
             Spacer()
-            Text(value)
+            Text("\(bucket.remaining)/\(bucket.limit) left")
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private func refreshQuota() async {
+        guard AIAccessSettings.hasActivePlusEntitlement else { return }
+        isLoadingQuota = true
+        quotaError = nil
+        do {
+            quotaSnapshot = try await FudAIProxyClient.quotaSnapshot()
+        } catch {
+            quotaError = "Could not refresh usage right now."
+        }
+        isLoadingQuota = false
     }
 }
 

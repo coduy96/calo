@@ -19,19 +19,23 @@ const memoryUsage = globalThis.__fudAIUsage ?? new Map();
 globalThis.__fudAIUsage = memoryUsage;
 
 export default async function handler(request, response) {
-  if (request.method !== "POST") {
-    response.setHeader("Allow", "POST");
+  if (request.method !== "POST" && request.method !== "GET") {
+    response.setHeader("Allow", "GET, POST");
     return response.status(405).json({ error: "Method not allowed." });
-  }
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return response.status(500).json({ error: "Server is missing GEMINI_API_KEY." });
   }
 
   const installID = String(request.headers["x-fudai-install-id"] || "").trim();
   if (!installID) {
     return response.status(400).json({ error: "Missing install ID." });
+  }
+
+  if (request.method === "GET") {
+    return response.status(200).json(await usageSnapshot(installID));
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return response.status(500).json({ error: "Server is missing GEMINI_API_KEY." });
   }
 
   const task = normalizeTask(request.body?.task);
@@ -65,7 +69,8 @@ export default async function handler(request, response) {
 
     const text = await upstream.text();
     if (upstream.ok) {
-      await recordSuccessfulUsage(installID, task);
+      const usage = await recordSuccessfulUsage(installID, task);
+      setUsageHeaders(response, usage, task);
       response.setHeader("X-FudAI-Model", model);
       return response.status(200).send(text);
     }
@@ -142,6 +147,50 @@ async function readUsage(installID, task) {
   };
 }
 
+async function usageSnapshot(installID) {
+  const [food, speech, coach, global] = await Promise.all([
+    readTaskUsage(installID, "food"),
+    readTaskUsage(installID, "speech"),
+    readTaskUsage(installID, "coach"),
+    readGlobalUsage(installID),
+  ]);
+  return {
+    date: todayKey(),
+    food,
+    speech,
+    coach,
+    global,
+  };
+}
+
+async function readTaskUsage(installID, task) {
+  const key = quotaKey(installID, task);
+  const used = await readCount(key);
+  const limit = taskDailyLimit(task);
+  return {
+    used,
+    limit,
+    remaining: Math.max(0, limit - used),
+  };
+}
+
+async function readGlobalUsage(installID) {
+  const used = await readCount(quotaKey(installID));
+  const limit = globalDailyLimit();
+  return {
+    used,
+    limit,
+    remaining: Math.max(0, limit - used),
+  };
+}
+
+async function readCount(key) {
+  if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+    return kvCommand(["GET", key]);
+  }
+  return memoryUsage.get(key) || 0;
+}
+
 async function recordSuccessfulUsage(installID, task) {
   const globalKey = quotaKey(installID);
   const taskKey = quotaKey(installID, task);
@@ -156,11 +205,34 @@ async function recordSuccessfulUsage(installID, task) {
       taskCount === 1 ? kvCommand(["EXPIRE", taskKey, ttl]) : Promise.resolve(),
       globalCount === 1 ? kvCommand(["EXPIRE", globalKey, ttl]) : Promise.resolve(),
     ]);
-    return;
+    return {
+      taskCount,
+      globalCount,
+      taskLimit: taskDailyLimit(task),
+      globalLimit: globalDailyLimit(),
+    };
   }
 
-  memoryUsage.set(taskKey, (memoryUsage.get(taskKey) || 0) + 1);
-  memoryUsage.set(globalKey, (memoryUsage.get(globalKey) || 0) + 1);
+  const taskCount = (memoryUsage.get(taskKey) || 0) + 1;
+  const globalCount = (memoryUsage.get(globalKey) || 0) + 1;
+  memoryUsage.set(taskKey, taskCount);
+  memoryUsage.set(globalKey, globalCount);
+  return {
+    taskCount,
+    globalCount,
+    taskLimit: taskDailyLimit(task),
+    globalLimit: globalDailyLimit(),
+  };
+}
+
+function setUsageHeaders(response, usage, task) {
+  response.setHeader("X-FudAI-Quota-Task", task);
+  response.setHeader("X-FudAI-Quota-Task-Used", String(usage.taskCount));
+  response.setHeader("X-FudAI-Quota-Task-Limit", String(usage.taskLimit));
+  response.setHeader("X-FudAI-Quota-Task-Remaining", String(Math.max(0, usage.taskLimit - usage.taskCount)));
+  response.setHeader("X-FudAI-Quota-Global-Used", String(usage.globalCount));
+  response.setHeader("X-FudAI-Quota-Global-Limit", String(usage.globalLimit));
+  response.setHeader("X-FudAI-Quota-Global-Remaining", String(Math.max(0, usage.globalLimit - usage.globalCount)));
 }
 
 function quotaKey(installID, task) {

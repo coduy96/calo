@@ -28,6 +28,30 @@ enum AIAccessMode: String, CaseIterable, Codable, Identifiable {
     }
 }
 
+struct AIAccessQuotaSnapshot: Codable, Equatable {
+    struct Bucket: Codable, Equatable {
+        var used: Int
+        var limit: Int
+        var remaining: Int
+    }
+
+    var date: String
+    var food: Bucket
+    var speech: Bucket
+    var coach: Bucket
+    var global: Bucket
+
+    static var fallback: AIAccessQuotaSnapshot {
+        AIAccessQuotaSnapshot(
+            date: "",
+            food: .init(used: 0, limit: AIAccessSettings.paidFoodDailyRequestLimit, remaining: AIAccessSettings.paidFoodDailyRequestLimit),
+            speech: .init(used: 0, limit: AIAccessSettings.paidSpeechDailyRequestLimit, remaining: AIAccessSettings.paidSpeechDailyRequestLimit),
+            coach: .init(used: 0, limit: AIAccessSettings.paidCoachDailyRequestLimit, remaining: AIAccessSettings.paidCoachDailyRequestLimit),
+            global: .init(used: 0, limit: AIAccessSettings.paidGlobalDailyRequestLimit, remaining: AIAccessSettings.paidGlobalDailyRequestLimit)
+        )
+    }
+}
+
 struct AIAccessSettings {
     static let paidFoodDailyRequestLimit = 30
     static let paidSpeechDailyRequestLimit = 40

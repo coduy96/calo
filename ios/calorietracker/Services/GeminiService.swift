@@ -31,6 +31,33 @@ enum FudAIProxyClient {
         }
     }
 
+    static func quotaSnapshot() async throws -> AIAccessQuotaSnapshot {
+        guard AIAccessSettings.hasActivePlusEntitlement else {
+            throw ProxyError.subscriptionRequired
+        }
+
+        var request = URLRequest(url: AIAccessSettings.proxyEndpoint)
+        request.httpMethod = "GET"
+        request.setValue("ios", forHTTPHeaderField: "X-FudAI-Platform")
+        request.setValue(AIAccessSettings.installID, forHTTPHeaderField: "X-FudAI-Install-ID")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse else { throw ProxyError.invalidResponse }
+            guard (200..<300).contains(http.statusCode) else {
+                let message = parseProxyMessage(from: data) ?? "Fud AI Plus usage failed with HTTP \(http.statusCode)."
+                throw ProxyError.apiError(message)
+            }
+            return try JSONDecoder().decode(AIAccessQuotaSnapshot.self, from: data)
+        } catch let error as ProxyError {
+            throw error
+        } catch let error as DecodingError {
+            throw ProxyError.apiError(error.localizedDescription)
+        } catch {
+            throw ProxyError.networkError(error)
+        }
+    }
+
     static func generateContent(task: ProxyTask, body: [String: Any]) async throws -> Data {
         guard AIAccessSettings.hasActivePlusEntitlement else {
             throw ProxyError.subscriptionRequired
