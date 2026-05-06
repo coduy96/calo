@@ -2039,8 +2039,11 @@ struct ProfileView: View {
                     showFudAIPlusPaywall: $showFudAIPlusPaywall
                 )
 
-                // Section 4: AI Provider
-                Section("AI Provider") {
+                if selectedAccessMode == .fudAIPlus {
+                    FudAIPlusManagedSettingsSection()
+                } else {
+                    // Section 4: AI Provider
+                    Section("AI Provider") {
                     Picker(selection: $selectedProvider) {
                         ForEach(AIProvider.allCases) { provider in
                             Label(provider.rawValue, systemImage: provider.icon).tag(provider)
@@ -2187,7 +2190,8 @@ struct ProfileView: View {
                         }
                     }
                 }
-                .listRowBackground(AppColors.appCard)
+                    .listRowBackground(AppColors.appCard)
+                }
 
                 // Custom AI Instructions (User Context) — prepended to every AI request when non-empty
                 Section {
@@ -2223,8 +2227,9 @@ struct ProfileView: View {
                 }
                 .listRowBackground(AppColors.appCard)
 
-                // Fallback Provider — retry on a second provider when the primary fails
-                Section {
+                if selectedAccessMode == .bringYourOwnKey {
+                    // Fallback Provider — retry on a second provider when the primary fails
+                    Section {
                     Toggle(isOn: $fallbackEnabled) {
                         Label {
                             Text("Enable Fallback")
@@ -2421,10 +2426,10 @@ struct ProfileView: View {
                 } footer: {
                     Text("If your primary provider fails (overloaded, no credits, network error), the request automatically retries on this fallback. Same provider as primary is allowed — just pick a different model.")
                 }
-                .listRowBackground(AppColors.appCard)
+                    .listRowBackground(AppColors.appCard)
 
-                // Speech-to-Text Provider
-                Section {
+                    // Speech-to-Text Provider
+                    Section {
                     Picker(selection: $selectedSpeechProvider) {
                         ForEach(SpeechProvider.allCases) { provider in
                             Text(provider.rawValue).tag(provider)
@@ -2506,7 +2511,8 @@ struct ProfileView: View {
                 } footer: {
                     Text("Used when you tap the voice icon to log a meal. Each provider remembers its own language. Provider Auto keeps the provider default; Use iPhone Language sends your current iPhone language when supported.")
                 }
-                .listRowBackground(AppColors.appCard)
+                    .listRowBackground(AppColors.appCard)
+                }
 
                 // Section 5: Health & Data
                 Section("Health & Data") {
@@ -2882,6 +2888,35 @@ struct ProfileView: View {
         }
     }
 
+}
+
+private struct FudAIPlusManagedSettingsSection: View {
+    var body: some View {
+        Section {
+            managedRow(icon: "fork.knife", title: "Food Analysis", value: "Managed Gemini")
+            managedRow(icon: "waveform", title: "Speech-to-Text", value: "Managed Gemini")
+            managedRow(icon: "message.fill", title: "Coach", value: "Managed Gemini")
+        } header: {
+            Text("Fud AI Plus")
+        } footer: {
+            Text("Provider, model, fallback, and speech API key settings are managed by Plus. Switch Mode to Bring Your Own Key above to edit your own providers.")
+        }
+        .listRowBackground(AppColors.appCard)
+    }
+
+    private func managedRow(icon: String, title: String, value: String) -> some View {
+        HStack {
+            Label {
+                Text(title)
+            } icon: {
+                Image(systemName: icon)
+                    .foregroundStyle(AppColors.calorie)
+            }
+            Spacer()
+            Text(value)
+                .foregroundStyle(.secondary)
+        }
+    }
 }
 
 private struct AIAccessSettingsSection: View {
