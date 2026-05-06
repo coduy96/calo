@@ -2923,6 +2923,7 @@ private struct AIAccessSettingsSection: View {
     @Environment(StoreManager.self) private var storeManager
     @Binding var selectedAccessMode: AIAccessMode
     @Binding var showFudAIPlusPaywall: Bool
+    @State private var isManagingSubscription = false
 
     var body: some View {
         Section {
@@ -2950,13 +2951,16 @@ private struct AIAccessSettingsSection: View {
             if selectedAccessMode == .fudAIPlus {
                 plusStatusRow
                 plusActionButton
+                if storeManager.isSubscribed {
+                    switchToBYOKButton
+                }
             } else {
                 upgradeButton
             }
         } header: {
             Text("AI Access")
         } footer: {
-            Text("BYOK is the free route if you can create your own Gemini/API key. Plus is optional no-setup access for non-technical users and helps support Fud AI development.")
+            Text("BYOK is the free route if you can create your own Gemini/API key. Plus is optional no-setup access and supports development. Switching to BYOK does not cancel a subscription; use Cancel or Manage Subscription for that.")
         }
         .listRowBackground(AppColors.appCard)
     }
@@ -2977,12 +2981,32 @@ private struct AIAccessSettingsSection: View {
 
     private var plusActionButton: some View {
         Button {
-            showFudAIPlusPaywall = true
+            if storeManager.isSubscribed {
+                Task { await openSubscriptionManagement() }
+            } else {
+                showFudAIPlusPaywall = true
+            }
         } label: {
             Label {
-                Text(storeManager.isSubscribed ? "Manage Plan" : "Upgrade to Plus")
+                Text(storeManager.isSubscribed ? "Cancel or Manage Subscription" : "Upgrade to Plus")
             } icon: {
-                Image(systemName: "sparkles")
+                Image(systemName: storeManager.isSubscribed ? "creditcard.fill" : "sparkles")
+                    .foregroundStyle(AppColors.calorie)
+            }
+        }
+        .tint(.primary)
+        .disabled(isManagingSubscription)
+    }
+
+    private var switchToBYOKButton: some View {
+        Button {
+            selectedAccessMode = .bringYourOwnKey
+            AIAccessSettings.mode = .bringYourOwnKey
+        } label: {
+            Label {
+                Text("Switch to BYOK")
+            } icon: {
+                Image(systemName: "key.fill")
                     .foregroundStyle(AppColors.calorie)
             }
         }
@@ -3003,6 +3027,32 @@ private struct AIAccessSettingsSection: View {
             }
         }
         .tint(.primary)
+    }
+
+    @MainActor
+    private func openSubscriptionManagement() async {
+        isManagingSubscription = true
+        defer { isManagingSubscription = false }
+
+        guard let scene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first(where: { $0.activationState == .foregroundActive }) else {
+            openAppleSubscriptionsURL()
+            return
+        }
+
+        do {
+            try await AppStore.showManageSubscriptions(in: scene)
+            await storeManager.checkEntitlements()
+        } catch {
+            openAppleSubscriptionsURL()
+        }
+    }
+
+    private func openAppleSubscriptionsURL() {
+        if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+            UIApplication.shared.open(url)
+        }
     }
 }
 
