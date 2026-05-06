@@ -36,7 +36,7 @@ struct SpeechService {
             // Native iOS handled directly by VoiceInputView.
             throw SpeechError.apiError("Native iOS transcription is handled in-view, not via SpeechService.")
         }
-        guard let apiKey = SpeechSettings.apiKey(for: provider), !apiKey.isEmpty else {
+        guard let apiKey = SpeechSettings.effectiveAPIKey(for: provider), !apiKey.isEmpty else {
             throw SpeechError.noAPIKey
         }
         guard let audioData = try? Data(contentsOf: audioURL) else {
@@ -45,6 +45,13 @@ struct SpeechService {
         switch provider {
         case .nativeIOS:
             throw SpeechError.apiError("Native iOS transcription is handled in-view.")
+        case .gemini:
+            return try await callGeminiAudio(
+                model: provider.defaultModel,
+                audioData: audioData,
+                apiKey: apiKey,
+                languageCode: languageCode
+            )
         case .openai:
             return try await callOpenAIWhisper(
                 baseURL: "https://api.openai.com/v1",
@@ -66,6 +73,67 @@ struct SpeechService {
         case .assemblyai:
             return try await callAssemblyAI(audioData: audioData, apiKey: apiKey, languageCode: languageCode)
         }
+    }
+
+    // MARK: - Gemini Audio
+
+    /// Gemini API audio understanding via generateContent. This is batch audio transcription,
+    /// not Google Cloud Speech-to-Text's dedicated real-time STT product.
+    private static func callGeminiAudio(model: String, audioData: Data, apiKey: String, languageCode: String?) async throws -> String {
+        guard let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent") else {
+            throw SpeechError.apiError("Invalid Gemini URL.")
+        }
+
+        let languageInstruction: String
+        if let languageCode {
+            languageInstruction = " Prefer language code \(languageCode) when interpreting speech, but preserve the spoken language if it is clearly different."
+        } else {
+            languageInstruction = ""
+        }
+
+        let prompt = """
+        Transcribe this audio to text for a food logging app.\(languageInstruction)
+        Return only the transcript text. Do not add summaries, labels, markdown, timestamps, or quotes.
+        """
+
+        let body: [String: Any] = [
+            "contents": [
+                [
+                    "parts": [
+                        [
+                            "inlineData": [
+                                "mimeType": "audio/m4a",
+                                "data": audioData.base64EncodedString()
+                            ]
+                        ],
+                        ["text": prompt]
+                    ]
+                ]
+            ]
+        ]
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(apiKey, forHTTPHeaderField: "X-goog-api-key")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await send(request)
+        guard let http = response as? HTTPURLResponse else { throw SpeechError.invalidResponse }
+        if http.statusCode != 200 {
+            throw SpeechError.apiError(decodeErrorMessage(data) ?? "HTTP \(http.statusCode)")
+        }
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let candidates = json["candidates"] as? [[String: Any]],
+              let content = candidates.first?["content"] as? [String: Any],
+              let parts = content["parts"] as? [[String: Any]],
+              let text = parts.compactMap({ $0["text"] as? String }).first
+        else {
+            throw SpeechError.invalidResponse
+        }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { throw SpeechError.invalidResponse }
+        return trimmed
     }
 
     // MARK: - OpenAI-compatible (OpenAI + Groq)
