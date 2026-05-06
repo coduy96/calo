@@ -71,7 +71,7 @@ Open-source, privacy-first calorie tracker for iOS and Android. Bring your own A
 
 Pick any of the **13 LLM providers** for both food analysis and the Coach chat. Free Gemini keys are available at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). On iOS, Fud AI Plus can be selected instead of BYOK; Plus uses Gemini models behind a serverless proxy, retries fallback Gemini models, and uses separate daily limits for food analysis, speech-to-text, and Coach.
 
-Fud AI Plus proxy env vars: `GEMINI_API_KEY` is required. Optional quota overrides are `FUD_AI_PLUS_FOOD_DAILY_LIMIT`, `FUD_AI_PLUS_SPEECH_DAILY_LIMIT`, `FUD_AI_PLUS_COACH_DAILY_LIMIT`, and `FUD_AI_PLUS_GLOBAL_DAILY_LIMIT`. Defaults are 30 food analyses, 60 speech transcriptions, 100 Coach messages, and 200 total successful Plus calls per day.
+Fud AI Plus proxy env vars: `GEMINI_API_KEY` is required. Optional quota overrides are `FUD_AI_PLUS_FOOD_DAILY_LIMIT`, `FUD_AI_PLUS_SPEECH_DAILY_LIMIT`, `FUD_AI_PLUS_COACH_DAILY_LIMIT`, and `FUD_AI_PLUS_GLOBAL_DAILY_LIMIT`. Defaults are 30 food analyses, 40 speech transcriptions, 50 Coach messages, and 120 total successful Plus calls per day.
 
 | Provider | Format | Highlight | Needs API Key |
 |----------|--------|-----------|:---:|

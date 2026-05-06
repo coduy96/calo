@@ -1,9 +1,9 @@
 const DEFAULT_TASK_LIMITS = {
   food: 30,
-  speech: 60,
-  coach: 100,
+  speech: 40,
+  coach: 50,
 };
-const DEFAULT_GLOBAL_LIMIT = 200;
+const DEFAULT_GLOBAL_LIMIT = 120;
 const FALLBACK_MODELS = {
   food: [
     "gemini-3.1-flash-lite-preview",
