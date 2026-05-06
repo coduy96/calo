@@ -20,3 +20,4 @@ ios/calorietracker/Resources/Secrets.plist
 # Claude Code runtime
 .claude/
 ios/build-sim/
+.vercel
