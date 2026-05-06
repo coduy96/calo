@@ -1,6 +1,6 @@
 # App Store Listing
 
-App Store Connect submission details for Fud AI v3.3.2. Each field is in a code block for easy copy-paste.
+App Store Connect submission details for Fud AI v3.4.0. Each field is in a code block for easy copy-paste.
 
 ## App Name
 ```
@@ -28,22 +28,23 @@ Primary: Health & Fitness
 Secondary: Food & Drink
 ```
 
-## What's New (v3.3.2)
+## What's New (v3.4.0)
 ```
-Fud AI 3.3.2 — personalization polish.
+Fud AI 3.4.0 — Fud AI Plus.
 
 NEW
-• Added theme color selection in Settings.
-• The home screen app icon now changes to match your selected theme color.
+• Added optional Fud AI Plus for no-key food scans, voice logging, and Coach.
+• Bring Your Own Key remains available as the free default mode.
+• Added daily Plus usage limits in Settings.
 
-Also includes recent improvements: Instagram link in About, per-provider speech language selection, smoother quantity editing with Done keyboard controls, About update checks, and richer Coach food context.
+Also includes theme colors with matching app icons, Instagram in About, per-provider speech language selection, smoother quantity editing, update checks, and richer Coach food context.
 ```
 
 ## Description
 ```
 Effortless calorie tracking with AI-powered food recognition. Snap, speak, or type a meal — get instant nutrition: calories, protein, carbs, fats, and 9 micronutrients.
 
-NEW in v3.3.2: Choose a theme color in Settings and the app icon changes to match. Recent updates also added the official Instagram link in About, speech-to-text language selection per provider, smoother quantity editing with Done keyboard controls, and an App Store update check.
+NEW in v3.4.0: Optional Fud AI Plus gives no-key access to food scans, voice logging, and Coach through Fud AI's Gemini proxy. Bring Your Own Key remains available as the free default mode.
 
 Free, open source, privacy-first. Bring your own API key, or use optional Fud AI Plus if you do not want to set up APIs.
 
