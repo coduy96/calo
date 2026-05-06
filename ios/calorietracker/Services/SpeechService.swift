@@ -36,7 +36,7 @@ struct SpeechService {
             // Native iOS handled directly by VoiceInputView.
             throw SpeechError.apiError("Native iOS transcription is handled in-view, not via SpeechService.")
         }
-        guard let apiKey = SpeechSettings.effectiveAPIKey(for: provider), !apiKey.isEmpty else {
+        guard let apiKey = SpeechSettings.apiKey(for: provider), !apiKey.isEmpty else {
             throw SpeechError.noAPIKey
         }
         guard let audioData = try? Data(contentsOf: audioURL) else {

@@ -167,7 +167,7 @@ struct VoiceInputView: View {
         if isNative {
             startNativeRecording()
         } else {
-            guard SpeechSettings.effectiveAPIKey(for: provider) != nil else {
+            guard SpeechSettings.apiKey(for: provider) != nil else {
                 permissionError = "No API key configured for \(provider.rawValue). Add one in Settings → Speech-to-Text."
                 return
             }

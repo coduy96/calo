@@ -49,7 +49,7 @@ enum SpeechProvider: String, CaseIterable, Codable, Identifiable {
     var description: String {
         switch self {
         case .nativeIOS: "Apple's on-device speech recognition. Free, works offline on modern iPhones, real-time partial results. Recommended default."
-        case .gemini: "Gemini API audio transcription. Uses batch audio understanding, not Google Cloud's real-time Speech-to-Text API. Can reuse your Google Gemini AI key."
+        case .gemini: "Gemini API audio transcription. Uses batch audio understanding, not Google Cloud's real-time Speech-to-Text API."
         case .openai: "OpenAI Whisper API. High accuracy, 99+ languages, paid per minute."
         case .groq: "Groq-hosted Whisper Large v3. Very fast inference, has a free tier."
         case .deepgram: "Deepgram Nova. Real-time and batch modes, fast and accurate."
@@ -210,16 +210,6 @@ struct SpeechSettings {
 
     static func apiKey(for provider: SpeechProvider) -> String? {
         KeychainHelper.load(key: apiKeyKeychainPrefix + provider.rawValue)
-    }
-
-    static func effectiveAPIKey(for provider: SpeechProvider) -> String? {
-        if let key = apiKey(for: provider), !key.isEmpty {
-            return key
-        }
-        if provider == .gemini {
-            return AIProviderSettings.apiKey(for: .gemini)
-        }
-        return nil
     }
 
     static func setAPIKey(_ key: String?, for provider: SpeechProvider) {
