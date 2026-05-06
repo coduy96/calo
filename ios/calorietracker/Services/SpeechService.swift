@@ -10,6 +10,7 @@ struct SpeechService {
         case networkError(Error)
         case apiError(String)
         case invalidResponse
+        case subscriptionRequired
 
         var errorDescription: String? {
             switch self {
@@ -23,6 +24,8 @@ struct SpeechService {
                 return "Speech API error: \(msg)"
             case .invalidResponse:
                 return "Unexpected response from the speech provider."
+            case .subscriptionRequired:
+                return "Fud AI Plus is not active. Subscribe or switch back to Bring Your Own Key in Settings."
             }
         }
     }
@@ -30,18 +33,23 @@ struct SpeechService {
     /// Transcribe an audio file using the currently-selected speech provider.
     /// Caller should only invoke this for non-native providers.
     static func transcribe(audioURL: URL) async throws -> String {
-        let provider = SpeechSettings.selectedProvider
+        let provider: SpeechProvider = AIAccessSettings.isUsingFudAIPlus ? .gemini : SpeechSettings.selectedProvider
         let languageCode = SpeechSettings.selectedLanguage(for: provider).apiLanguageCode
         guard provider.requiresAPIKey else {
             // Native iOS handled directly by VoiceInputView.
             throw SpeechError.apiError("Native iOS transcription is handled in-view, not via SpeechService.")
         }
-        guard let apiKey = SpeechSettings.apiKey(for: provider), !apiKey.isEmpty else {
+        if AIAccessSettings.isUsingFudAIPlus, !AIAccessSettings.hasActivePlusEntitlement {
+            throw SpeechError.subscriptionRequired
+        }
+        let apiKey = SpeechSettings.apiKey(for: provider)
+        if !AIAccessSettings.isUsingFudAIPlus, (apiKey == nil || apiKey?.isEmpty == true) {
             throw SpeechError.noAPIKey
         }
         guard let audioData = try? Data(contentsOf: audioURL) else {
             throw SpeechError.fileReadFailed
         }
+        let resolvedAPIKey = apiKey ?? ""
         switch provider {
         case .nativeIOS:
             throw SpeechError.apiError("Native iOS transcription is handled in-view.")
@@ -57,7 +65,7 @@ struct SpeechService {
                 baseURL: "https://api.openai.com/v1",
                 model: provider.defaultModel,
                 audioData: audioData,
-                apiKey: apiKey,
+                apiKey: resolvedAPIKey,
                 languageCode: languageCode
             )
         case .groq:
@@ -65,13 +73,13 @@ struct SpeechService {
                 baseURL: "https://api.groq.com/openai/v1",
                 model: provider.defaultModel,
                 audioData: audioData,
-                apiKey: apiKey,
+                apiKey: resolvedAPIKey,
                 languageCode: languageCode
             )
         case .deepgram:
-            return try await callDeepgram(model: provider.defaultModel, audioData: audioData, apiKey: apiKey, languageCode: languageCode)
+            return try await callDeepgram(model: provider.defaultModel, audioData: audioData, apiKey: resolvedAPIKey, languageCode: languageCode)
         case .assemblyai:
-            return try await callAssemblyAI(audioData: audioData, apiKey: apiKey, languageCode: languageCode)
+            return try await callAssemblyAI(audioData: audioData, apiKey: resolvedAPIKey, languageCode: languageCode)
         }
     }
 
@@ -79,11 +87,7 @@ struct SpeechService {
 
     /// Gemini API audio understanding via generateContent. This is batch audio transcription,
     /// not Google Cloud Speech-to-Text's dedicated real-time STT product.
-    private static func callGeminiAudio(model: String, audioData: Data, apiKey: String, languageCode: String?) async throws -> String {
-        guard let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent") else {
-            throw SpeechError.apiError("Invalid Gemini URL.")
-        }
-
+    private static func callGeminiAudio(model: String, audioData: Data, apiKey: String?, languageCode: String?) async throws -> String {
         let languageInstruction: String
         if let languageCode {
             languageInstruction = " Prefer language code \(languageCode) when interpreting speech, but preserve the spoken language if it is clearly different."
@@ -112,16 +116,26 @@ struct SpeechService {
             ]
         ]
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(apiKey, forHTTPHeaderField: "X-goog-api-key")
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let data: Data
+        if AIAccessSettings.isUsingFudAIPlus {
+            data = try await FudAIProxyClient.generateContent(task: .speech, body: body)
+        } else {
+            guard let apiKey else { throw SpeechError.noAPIKey }
+            guard let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent") else {
+                throw SpeechError.apiError("Invalid Gemini URL.")
+            }
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue(apiKey, forHTTPHeaderField: "X-goog-api-key")
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await send(request)
-        guard let http = response as? HTTPURLResponse else { throw SpeechError.invalidResponse }
-        if http.statusCode != 200 {
-            throw SpeechError.apiError(decodeErrorMessage(data) ?? "HTTP \(http.statusCode)")
+            let (responseData, response) = try await send(request)
+            guard let http = response as? HTTPURLResponse else { throw SpeechError.invalidResponse }
+            if http.statusCode != 200 {
+                throw SpeechError.apiError(decodeErrorMessage(responseData) ?? "HTTP \(http.statusCode)")
+            }
+            data = responseData
         }
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let candidates = json["candidates"] as? [[String: Any]],

@@ -12,7 +12,9 @@ class StoreManager {
 
     // MARK: - StoreKit State
     var products: [Product] = []
-    var isSubscribed = false
+    var isSubscribed = false {
+        didSet { AIAccessSettings.setActivePlusEntitlement(isSubscribed) }
+    }
     var currentSubscriptionProductID: String?
 
     // MARK: - Scan Tracking (UserDefaults-backed)
@@ -38,7 +40,7 @@ class StoreManager {
     var canScan: Bool {
         if isSubscribed {
             resetDailyCounterIfNeeded()
-            return dailyScansUsed < 25
+            return dailyScansUsed < AIAccessSettings.paidDailyRequestLimit
         }
         return freeScansUsed < 4
     }
@@ -50,7 +52,7 @@ class StoreManager {
     var remainingScans: Int {
         if isSubscribed {
             resetDailyCounterIfNeeded()
-            return max(0, 25 - dailyScansUsed)
+            return max(0, AIAccessSettings.paidDailyRequestLimit - dailyScansUsed)
         }
         return max(0, 3 - freeScansUsed)
     }

@@ -3,13 +3,13 @@ import StoreKit
 
 struct PaywallView: View {
     @Environment(StoreManager.self) private var storeManager
+    @Environment(\.dismiss) private var dismiss
     @State private var selectedProduct: Product?
 
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
 
-            // Header
             VStack(spacing: 8) {
                 Image(systemName: "star.fill")
                     .font(.system(size: 44))
@@ -20,7 +20,7 @@ struct PaywallView: View {
                 Text("Unlock Premium")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
 
-                Text("Unlimited scans, detailed insights,\nand personalized plans")
+                Text("No API key needed.\nAI food scans, voice logging, and Coach run through Fud AI Plus.")
                     .font(.system(.callout, design: .rounded))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -47,6 +47,15 @@ struct PaywallView: View {
                         detail: "per month"
                     )
                 }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    featureRow("Uses Fud AI's Gemini models with automatic fallback")
+                    featureRow("\(AIAccessSettings.paidDailyRequestLimit) AI requests per day included")
+                    featureRow("Switch back to BYOK anytime")
+                }
+                .font(.system(.footnote, design: .rounded))
+                .foregroundStyle(.secondary)
+                .padding(.top, 4)
             }
             .padding(.horizontal, 24)
 
@@ -102,6 +111,9 @@ struct PaywallView: View {
         .onAppear {
             // Default to yearly discount if available
             selectedProduct = storeManager.yearlyDiscountProduct ?? storeManager.yearlyProduct ?? storeManager.monthlyProduct
+        }
+        .onChange(of: storeManager.isSubscribed) { _, isSubscribed in
+            if isSubscribed { dismiss() }
         }
     }
 
@@ -159,5 +171,14 @@ struct PaywallView: View {
             )
         }
         .buttonStyle(.plain)
+    }
+
+    private func featureRow(_ text: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(AppColors.calorie)
+            Text(text)
+            Spacer(minLength: 0)
+        }
     }
 }

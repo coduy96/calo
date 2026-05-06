@@ -1,6 +1,84 @@
 import Foundation
 import UIKit
 
+enum FudAIProxyClient {
+    enum ProxyTask: String {
+        case food
+        case coach
+        case speech
+    }
+
+    enum ProxyError: LocalizedError {
+        case subscriptionRequired
+        case quotaExceeded(String)
+        case apiError(String)
+        case invalidResponse
+        case networkError(Error)
+
+        var errorDescription: String? {
+            switch self {
+            case .subscriptionRequired:
+                return "Fud AI Plus is not active. Subscribe or switch back to Bring Your Own Key in Settings."
+            case .quotaExceeded(let message):
+                return message
+            case .apiError(let message):
+                return message
+            case .invalidResponse:
+                return "Unexpected response from Fud AI Plus."
+            case .networkError(let error):
+                return "Network error: \(error.localizedDescription)"
+            }
+        }
+    }
+
+    static func generateContent(task: ProxyTask, body: [String: Any]) async throws -> Data {
+        guard AIAccessSettings.hasActivePlusEntitlement else {
+            throw ProxyError.subscriptionRequired
+        }
+
+        let payload: [String: Any] = [
+            "task": task.rawValue,
+            "body": body,
+        ]
+
+        var request = URLRequest(url: AIAccessSettings.proxyEndpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("ios", forHTTPHeaderField: "X-FudAI-Platform")
+        request.setValue(AIAccessSettings.installID, forHTTPHeaderField: "X-FudAI-Install-ID")
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse else { throw ProxyError.invalidResponse }
+            guard (200..<300).contains(http.statusCode) else {
+                let message = parseProxyMessage(from: data) ?? "Fud AI Plus request failed with HTTP \(http.statusCode)."
+                if http.statusCode == 402 || http.statusCode == 429 {
+                    throw ProxyError.quotaExceeded(message)
+                }
+                throw ProxyError.apiError(message)
+            }
+            return data
+        } catch let error as ProxyError {
+            throw error
+        } catch {
+            throw ProxyError.networkError(error)
+        }
+    }
+
+    private static func parseProxyMessage(from data: Data) -> String? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        if let error = json["error"] as? String {
+            return error
+        }
+        if let error = json["error"] as? [String: Any],
+           let message = error["message"] as? String {
+            return message
+        }
+        return nil
+    }
+}
+
 struct GeminiService {
     struct FoodAnalysis {
         var name: String
@@ -74,6 +152,7 @@ struct GeminiService {
         case networkError(Error)
         case invalidResponse
         case apiError(String)
+        case subscriptionRequired
 
         var errorDescription: String? {
             switch self {
@@ -87,6 +166,8 @@ struct GeminiService {
                 return "Could not understand the AI response. Please try again."
             case .apiError(let message):
                 return "API error: \(message)"
+            case .subscriptionRequired:
+                return "Fud AI Plus is not active. Subscribe or switch back to Bring Your Own Key in Settings."
             }
         }
     }
@@ -240,8 +321,13 @@ struct GeminiService {
     // MARK: - Unified AI Call Router
 
     private static func callAI(prompt: String, image: UIImage?) async throws -> String {
+        let usingFudAIPlus = AIAccessSettings.isUsingFudAIPlus
+        if usingFudAIPlus, !AIAccessSettings.hasActivePlusEntitlement {
+            throw AnalysisError.subscriptionRequired
+        }
+
         let primaryProvider = AIProviderSettings.selectedProvider
-        if primaryProvider.requiresAPIKey, AIProviderSettings.currentAPIKey == nil {
+        if !usingFudAIPlus, primaryProvider.requiresAPIKey, AIProviderSettings.currentAPIKey == nil {
             throw AnalysisError.noAPIKey
         }
 
@@ -251,6 +337,17 @@ struct GeminiService {
                 throw AnalysisError.imageConversionFailed
             }
             imageData = data
+        }
+
+        if usingFudAIPlus {
+            return try await dispatch(
+                provider: .gemini,
+                model: "gemini-2.5-flash-lite",
+                baseURL: AIProvider.gemini.baseURL,
+                apiKey: nil,
+                prompt: prompt,
+                imageData: imageData
+            )
         }
 
         do {
@@ -283,6 +380,9 @@ struct GeminiService {
     private static func dispatch(provider: AIProvider, model: String, baseURL: String, apiKey: String?, prompt: String, imageData: Data?) async throws -> String {
         switch provider.apiFormat {
         case .gemini:
+            if AIAccessSettings.isUsingFudAIPlus {
+                return try await callGemini(baseURL: baseURL, model: model, apiKey: nil, prompt: prompt, imageData: imageData)
+            }
             guard let key = apiKey else { throw AnalysisError.noAPIKey }
             return try await callGemini(baseURL: baseURL, model: model, apiKey: key, prompt: prompt, imageData: imageData)
         case .openaiCompatible:
@@ -295,13 +395,9 @@ struct GeminiService {
 
     // MARK: - Gemini Format
 
-    private static func callGemini(baseURL: String, model: String, apiKey: String, prompt: String, imageData: Data?) async throws -> String {
+    private static func callGemini(baseURL: String, model: String, apiKey: String?, prompt: String, imageData: Data?) async throws -> String {
         // Send the API key in the X-goog-api-key header, not the URL query string,
         // so it doesn't end up in server logs / proxies (CodeQL: cleartext transmission).
-        guard let url = URL(string: "\(baseURL)/models/\(model):generateContent") else {
-            throw AnalysisError.apiError("Invalid API URL. Check your provider settings.")
-        }
-
         var parts: [[String: Any]] = []
         if let imageData {
             parts.append([
@@ -320,11 +416,20 @@ struct GeminiService {
             body["systemInstruction"] = ["parts": [["text": userContext]]]
         }
 
-        let data = try await makeRequest(
-            url: url,
-            headers: ["Content-Type": "application/json", "X-goog-api-key": apiKey],
-            body: body
-        )
+        let data: Data
+        if AIAccessSettings.isUsingFudAIPlus {
+            data = try await FudAIProxyClient.generateContent(task: .food, body: body)
+        } else {
+            guard let apiKey else { throw AnalysisError.noAPIKey }
+            guard let url = URL(string: "\(baseURL)/models/\(model):generateContent") else {
+                throw AnalysisError.apiError("Invalid API URL. Check your provider settings.")
+            }
+            data = try await makeRequest(
+                url: url,
+                headers: ["Content-Type": "application/json", "X-goog-api-key": apiKey],
+                body: body
+            )
+        }
 
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let candidates = json["candidates"] as? [[String: Any]],

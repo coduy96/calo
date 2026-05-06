@@ -14,7 +14,7 @@ Food & Macro Tracker
 
 ## Promotional Text (170 chars max)
 ```
-Customize Fud AI with theme colors that also update the app icon. Plus Instagram, STT languages, smoother quantity editing, and update checks.
+New AI Access mode: bring your own key, or use optional Fud AI Plus with no API setup. Theme colors, voice languages, and smoother editing included.
 ```
 
 ## Keywords (100 chars max)
@@ -45,7 +45,7 @@ Effortless calorie tracking with AI-powered food recognition. Snap, speak, or ty
 
 NEW in v3.3.2: Choose a theme color in Settings and the app icon changes to match. Recent updates also added the official Instagram link in About, speech-to-text language selection per provider, smoother quantity editing with Done keyboard controls, and an App Store update check.
 
-Free, open source, privacy-first. Bring your own API key. All data on-device.
+Free, open source, privacy-first. Bring your own API key, or use optional Fud AI Plus if you do not want to set up APIs.
 
 HOW TO USE
 1) Set your profile and goals
@@ -61,6 +61,9 @@ HOW TO USE
 
 13 AI PROVIDERS
 Google Gemini (incl. Gemini 3.1), OpenAI, Anthropic Claude, xAI Grok, Groq, OpenRouter, Together AI, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama (local), or any OpenAI-compatible endpoint. Switch anytime. Keys stored in iOS Keychain. Add Custom AI Instructions to send region, diet, or brand context with every request. Set a Fallback Provider so the app auto-retries on overload or rate-limit errors.
+
+AI ACCESS MODES
+Bring Your Own Key remains available for full provider control. Fud AI Plus is optional and uses Fud AI's Gemini proxy for no-key food scan, voice, and Coach access with daily limits.
 
 5 SPEECH-TO-TEXT ENGINES
 Native iOS, OpenAI Whisper, Groq, Deepgram, AssemblyAI.
@@ -93,7 +96,7 @@ Calorie and Protein widgets in all 5 families — Small, Medium, Circular, Recta
 English, Spanish, French, German, Italian, Portuguese (BR), Dutch, Russian, Japanese, Korean, Chinese (Simplified), Hindi, Arabic, Romanian, Azerbaijani.
 
 PRIVACY
-No account, no sign-in, no cloud sync, no analytics, no ads, no tracking. Local-only. MIT licensed.
+No account, no sign-in, no cloud sync, no analytics, no ads, no tracking. BYOK keys stay on-device. Plus sends only active AI requests through Fud AI's Gemini proxy. MIT licensed.
 
 APPLE HEALTH
 Two-way sync for nutrition, weight, height, body fat. External samples (Apple Watch, scales, Health app) auto-import. One-shot backfill of years of past weight + body fat data on first enable.
@@ -130,8 +133,8 @@ https://fud-ai.app
 ## Reviewer Notes
 ```
 1) iPhone only — not optimized for iPad. Please review on iPhone.
-2) App is now free and open source — no subscriptions, no sign-in required.
-3) Users bring their own AI API key (e.g. Google Gemini). To test: go to Settings → AI Provider → enter any valid Gemini API key. A free key can be obtained at https://aistudio.google.com/apikey
-4) API keys are stored locally in iOS Keychain. No data leaves the device except AI analysis requests.
+2) App is free and open source. Subscription is optional for Fud AI Plus; BYOK mode works without purchase or sign-in.
+3) BYOK test path: go to Settings → AI Provider → enter any valid Gemini API key. A free key can be obtained at https://aistudio.google.com/apikey
+4) Plus test path: use StoreKit subscription products in the included Products.storekit file, then select Settings → AI Access → Fud AI Plus.
 5) No test account needed — app works immediately after onboarding.
 ```

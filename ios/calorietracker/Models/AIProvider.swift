@@ -1,5 +1,96 @@
 import Foundation
 
+enum AIAccessMode: String, CaseIterable, Codable, Identifiable {
+    case bringYourOwnKey = "Bring Your Own Key"
+    case fudAIPlus = "Fud AI Plus"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .bringYourOwnKey: "Bring Your Own Key"
+        case .fudAIPlus: "Fud AI Plus"
+        }
+    }
+
+    var shortName: String {
+        switch self {
+        case .bringYourOwnKey: "BYOK"
+        case .fudAIPlus: "Plus"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .bringYourOwnKey: "key.fill"
+        case .fudAIPlus: "sparkles"
+        }
+    }
+}
+
+struct AIAccessSettings {
+    static let paidDailyRequestLimit = 80
+    static let defaultProxyEndpoint = "https://fud-ai.app/api/gemini"
+
+    private static let modeKey = "aiAccessMode"
+    private static let plusEntitlementCacheKey = "fudAIPlusEntitlementCached"
+    private static let plusIntroSeenKey = "fudAIPlusIntroSeen_3_4"
+    private static let installIDKey = "fudAIInstallID"
+    private static let proxyEndpointKey = "fudAIProxyEndpoint"
+
+    static var mode: AIAccessMode {
+        get {
+            guard let raw = UserDefaults.standard.string(forKey: modeKey),
+                  let mode = AIAccessMode(rawValue: raw) else {
+                // Existing users keep the old BYOK behavior after updating.
+                return .bringYourOwnKey
+            }
+            return mode
+        }
+        set {
+            UserDefaults.standard.set(newValue.rawValue, forKey: modeKey)
+        }
+    }
+
+    static var isUsingFudAIPlus: Bool {
+        mode == .fudAIPlus
+    }
+
+    static var hasActivePlusEntitlement: Bool {
+        UserDefaults.standard.bool(forKey: plusEntitlementCacheKey)
+    }
+
+    static func setActivePlusEntitlement(_ active: Bool) {
+        UserDefaults.standard.set(active, forKey: plusEntitlementCacheKey)
+    }
+
+    static var hasSeenPlusIntro: Bool {
+        get { UserDefaults.standard.bool(forKey: plusIntroSeenKey) }
+        set { UserDefaults.standard.set(newValue, forKey: plusIntroSeenKey) }
+    }
+
+    static var installID: String {
+        if let existing = UserDefaults.standard.string(forKey: installIDKey), !existing.isEmpty {
+            return existing
+        }
+        let newID = UUID().uuidString
+        UserDefaults.standard.set(newID, forKey: installIDKey)
+        return newID
+    }
+
+    static var proxyEndpoint: URL {
+        let raw = UserDefaults.standard.string(forKey: proxyEndpointKey) ?? defaultProxyEndpoint
+        return URL(string: raw) ?? URL(string: defaultProxyEndpoint)!
+    }
+
+    static func resetForDeleteAllData() {
+        UserDefaults.standard.removeObject(forKey: modeKey)
+        UserDefaults.standard.removeObject(forKey: plusEntitlementCacheKey)
+        UserDefaults.standard.removeObject(forKey: plusIntroSeenKey)
+        UserDefaults.standard.removeObject(forKey: proxyEndpointKey)
+    }
+}
+
 enum AIProvider: String, CaseIterable, Codable, Identifiable {
     case gemini = "Google Gemini"
     case openai = "OpenAI"

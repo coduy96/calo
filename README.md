@@ -25,7 +25,7 @@
 
 ---
 
-Open-source, privacy-first calorie tracker for iOS and Android. Bring your own AI provider — 13 supported including Gemini, OpenAI, Claude, Grok, Groq, Hugging Face, Fireworks AI, DeepInfra, Mistral, and any custom OpenAI-compatible endpoint. Open-weight models (Gemma, Llama Vision, Qwen VL, Pixtral) work out of the box. Snap a meal, ask your AI coach how to hit your goal, speak your lunch. All data stays on your device. No accounts, no cloud sync, no tracking, no subscriptions.
+Open-source, privacy-first calorie tracker for iOS and Android. Bring your own AI provider — 13 supported including Gemini, OpenAI, Claude, Grok, Groq, Hugging Face, Fireworks AI, DeepInfra, Mistral, and any custom OpenAI-compatible endpoint. iOS also supports Fud AI Plus, an optional paid no-key mode that routes food scan, voice, and Coach requests through a Gemini proxy with daily limits. Snap a meal, ask your AI coach how to hit your goal, speak your lunch. No accounts, no cloud sync, no tracking.
 
 [App Store](https://apps.apple.com/us/app/fud-ai-calorie-tracker/id6758935726) · [Google Play](https://play.google.com/store/apps/details?id=com.apoorvdarshan.calorietracker) · [Website](https://fud-ai.app) · [Report an Issue](https://github.com/apoorvdarshan/fud-ai/issues/new?labels=bug&title=Bug:%20) · [Request a Feature](https://github.com/apoorvdarshan/fud-ai/issues/new?labels=enhancement&title=Feature:%20)
 
@@ -44,6 +44,7 @@ Open-source, privacy-first calorie tracker for iOS and Android. Bring your own A
 
 ### Intelligence
 - **AI Coach tab** — multi-turn chat with memory. Coach sees your profile, weight history, food log, today's date/timezone, and richer meal details, then answers questions like "what's my expected weight in 30 days?" or "how do I lose 2 kg?". Memory persists across launches; Reset button starts a fresh conversation. Long-press any reply to copy.
+- **AI Access modes** — Bring Your Own Key remains the default; iOS users can optionally subscribe to Fud AI Plus for no-key Gemini food scan, voice, and Coach access.
 - **Goal-aware prompt chips** — suggested questions change based on whether your goal is Lose / Gain / Maintain
 - **Thermodynamic weight forecast** — expected weight at 30/60/90 days, predicted vs observed weekly change, days-to-goal, under-logging detection. Surfaced through Coach as live context on every turn.
 - **Resilient requests** — transient provider overloads (503 / 529 / 429) auto-retry with 1s / 2s / 4s exponential backoff across both food analysis and Coach chat, so short spikes resolve invisibly
@@ -68,7 +69,7 @@ Open-source, privacy-first calorie tracker for iOS and Android. Bring your own A
 
 ## AI Providers
 
-Pick any of the **13 LLM providers** for both food analysis and the Coach chat. Free Gemini keys are available at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
+Pick any of the **13 LLM providers** for both food analysis and the Coach chat. Free Gemini keys are available at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). On iOS, Fud AI Plus can be selected instead of BYOK; Plus uses Gemini models behind a serverless proxy, retries fallback Gemini models, and includes 80 AI requests/day by default.
 
 | Provider | Format | Highlight | Needs API Key |
 |----------|--------|-----------|:---:|
@@ -106,7 +107,7 @@ All API keys are stored in **iOS Keychain** — encrypted, on-device only.
 Photo / Text / Voice
         │
         ▼
-  AI Provider API  ──▶  JSON nutrition response
+  BYOK provider API or Fud AI Plus proxy  ──▶  JSON nutrition response
         │
         ▼
   User reviews & edits
@@ -294,7 +295,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb shell am start -n com.apoorvdarshan.calorietracker/.MainActivity
 ```
 
-First launch walks you through a 15-step onboarding (gender, birthday, height/weight with metric/imperial toggle, body fat %, activity, goal, goal speed, notifications, Health Connect, AI provider + API key, plan preview, review). A free Gemini key is available at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). You can switch providers anytime in **Settings → AI Provider**.
+First launch walks you through a 15-step onboarding (gender, birthday, height/weight with metric/imperial toggle, body fat %, activity, goal, goal speed, notifications, Health Connect, AI access mode, plan preview, review). A free Gemini key is available at [aistudio.google.com/apikey](https://aistudio.google.com/apikey), or iOS users can choose Fud AI Plus. You can switch anytime in **Settings → AI Access**.
 
 ## Contributing
 
@@ -308,7 +309,7 @@ See [SECURITY.md](SECURITY.md). Use [private vulnerability reporting](https://gi
 
 ## Privacy
 
-All data stays on your device. No accounts, no cloud sync, no analytics. API keys are stored in iOS Keychain. **Delete All Data** is local-only — it wipes the app's storage (food log, weight log, profile, Coach chat, API keys, widget snapshot) but never touches Apple Health. Samples you've synced are yours; if you want them cleaned up, do it from Health → Sources → Fud AI. See [Privacy Policy](https://fud-ai.app/privacy.html).
+No accounts, no cloud sync, no analytics. BYOK API keys are stored in iOS Keychain and requests go directly to the provider you choose. Fud AI Plus sends only the active AI/STT request through the Gemini proxy for processing and quota enforcement. **Delete All Data** is local-only — it wipes the app's storage (food log, weight log, profile, Coach chat, API keys, widget snapshot) but never touches Apple Health. Samples you've synced are yours; if you want them cleaned up, do it from Health → Sources → Fud AI. See [Privacy Policy](https://fud-ai.app/privacy.html).
 
 ## License
 

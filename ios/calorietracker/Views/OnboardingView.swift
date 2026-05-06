@@ -8,8 +8,11 @@ struct OnboardingView: View {
     @Environment(FoodStore.self) private var foodStore
     @Environment(WeightStore.self) private var weightStore
     @Environment(HealthKitManager.self) private var healthKitManager
+    @Environment(StoreManager.self) private var storeManager
 
     @State private var step = 0
+    @State private var selectedAccessMode: AIAccessMode = AIAccessSettings.mode
+    @State private var showPaywall = false
     @State private var gender: Gender = .male
     @State private var birthday: Date = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     @AppStorage("useMetric") private var useMetric = false
@@ -139,6 +142,9 @@ struct OnboardingView: View {
                     removal: .move(edge: .leading).combined(with: .opacity)
                 ))
                 .animation(.snappy, value: step)
+            }
+            .sheet(isPresented: $showPaywall) {
+                PaywallView()
             }
     }
 
@@ -778,63 +784,48 @@ struct OnboardingView: View {
                 }
 
                 VStack(spacing: 8) {
-                    Text("Bring Your Own AI")
+                    Text("Choose Your AI")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .multilineTextAlignment(.center)
 
-                    Text("Fud AI needs an AI provider key to\nanalyze your food. You bring your own.")
+                    Text("Use your own API key, or let Fud AI handle Gemini for you.")
                         .font(.system(.callout, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
 
-                // Recommended provider card (Liquid Glass)
                 VStack(spacing: 12) {
-                    HStack(spacing: 12) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(.ultraThinMaterial)
-                                .frame(width: 44, height: 44)
-                            Image(systemName: "star.fill")
-                                .font(.system(size: 18))
-                                .foregroundStyle(AppColors.calorie)
-                        }
+                    aiAccessCard(
+                        mode: .fudAIPlus,
+                        title: "Fud AI Plus",
+                        subtitle: "No setup. Gemini food scans, voice, and Coach with automatic fallback.",
+                        badge: storeManager.isSubscribed ? "Active" : "Paid"
+                    )
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Recommended: Google Gemini")
+                    aiAccessCard(
+                        mode: .bringYourOwnKey,
+                        title: "Bring Your Own Key",
+                        subtitle: "Free app mode. Add Gemini, OpenAI, Groq, or another provider in Settings.",
+                        badge: "Default"
+                    )
+
+                    if selectedAccessMode == .fudAIPlus && !storeManager.isSubscribed {
+                        Button {
+                            AIAccessSettings.mode = .fudAIPlus
+                            showPaywall = true
+                        } label: {
+                            Text("See Plans")
                                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                            Text("Free tier available, fast & accurate")
-                                .font(.system(.caption, design: .rounded))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 44)
+                                .background(AppColors.calorie, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                         }
-
-                        Spacer(minLength: 0)
                     }
-                    .padding(14)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(.ultraThinMaterial)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(AppColors.calorie.opacity(0.25), lineWidth: 1)
-                    )
-
-                    // Steps
-                    VStack(alignment: .leading, spacing: 10) {
-                        aiSetupRow(number: "1", text: "Get a free key at aistudio.google.com/apikey")
-                        aiSetupRow(number: "2", text: "Open Settings → AI Provider")
-                        aiSetupRow(number: "3", text: "Paste your key — done")
-                    }
-                    .padding(14)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(.ultraThinMaterial)
-                    )
                 }
                 .padding(.horizontal, 24)
 
-                Text("8 providers supported. Your key stays\non this device, encrypted in iOS Keychain.")
+                Text("BYOK stays fully local. Plus sends AI requests through Fud AI's secure Gemini proxy.")
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
@@ -843,9 +834,14 @@ struct OnboardingView: View {
             Spacer()
 
             Button {
-                withAnimation(.snappy) { step += 1 }
+                AIAccessSettings.mode = selectedAccessMode
+                if selectedAccessMode == .fudAIPlus && !storeManager.isSubscribed {
+                    showPaywall = true
+                } else {
+                    withAnimation(.snappy) { step += 1 }
+                }
             } label: {
-                Text("Got It")
+                Text(selectedAccessMode == .fudAIPlus && !storeManager.isSubscribed ? "Subscribe to Continue" : "Continue")
                     .font(.system(.body, design: .rounded, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -873,6 +869,58 @@ struct OnboardingView: View {
                 .foregroundStyle(.primary)
             Spacer(minLength: 0)
         }
+    }
+
+    private func aiAccessCard(mode: AIAccessMode, title: String, subtitle: String, badge: String) -> some View {
+        Button {
+            selectedAccessMode = mode
+            AIAccessSettings.mode = mode
+        } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                        .frame(width: 44, height: 44)
+                    Image(systemName: mode.icon)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(AppColors.calorie)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Text(title)
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Text(badge)
+                            .font(.system(.caption2, design: .rounded, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 2)
+                            .background(AppColors.calorie, in: Capsule())
+                    }
+                    Text(subtitle)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: selectedAccessMode == mode ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 22))
+                    .foregroundStyle(selectedAccessMode == mode ? AppColors.calorie : .secondary.opacity(0.35))
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(.ultraThinMaterial)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(selectedAccessMode == mode ? AppColors.calorie.opacity(0.45) : Color.white.opacity(0.10), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - 14: Review
