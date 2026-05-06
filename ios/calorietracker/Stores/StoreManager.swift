@@ -1,6 +1,7 @@
 import SwiftUI
 import StoreKit
 
+@MainActor
 @Observable
 class StoreManager {
     // MARK: - Product IDs
@@ -87,10 +88,6 @@ class StoreManager {
         }
     }
 
-    deinit {
-        transactionListener?.cancel()
-    }
-
     // MARK: - Load Products
     func loadProducts() async {
         do {
@@ -101,17 +98,24 @@ class StoreManager {
     }
 
     // MARK: - Purchase
-    func purchase(_ product: Product) async {
+    @discardableResult
+    func purchase(_ product: Product) async -> Bool {
         isPurchasing = true
         purchaseError = nil
+        defer { isPurchasing = false }
 
         do {
             let result = try await product.purchase()
             switch result {
             case .success(let verification):
                 let transaction = extractTransaction(verification)
+                let purchasedPlusSubscription = isActivePlusTransaction(transaction)
+                if purchasedPlusSubscription {
+                    applySubscriptionState(isSubscribed: true, productID: transaction.productID)
+                }
                 await transaction.finish()
-                await checkEntitlements()
+                await checkEntitlements(fallbackActiveProductID: purchasedPlusSubscription ? transaction.productID : nil)
+                return purchasedPlusSubscription || isSubscribed
             case .userCancelled:
                 break
             case .pending:
@@ -123,42 +127,53 @@ class StoreManager {
             purchaseError = error.localizedDescription
         }
 
-        isPurchasing = false
+        return false
     }
 
     // MARK: - Restore
-    func restorePurchases() async {
+    @discardableResult
+    func restorePurchases() async -> Bool {
         do {
             try await AppStore.sync()
             await checkEntitlements()
+            return isSubscribed
         } catch {
             purchaseError = error.localizedDescription
+            return false
         }
     }
 
     // MARK: - Entitlements
-    func checkEntitlements() async {
+    func checkEntitlements(fallbackActiveProductID: String? = nil) async {
         var subscribed = false
         var activeProductID: String?
 
         for await result in Transaction.currentEntitlements {
             let transaction = extractTransaction(result)
-            if transaction.productType == .autoRenewable {
+            if isActivePlusTransaction(transaction) {
                 subscribed = true
                 activeProductID = transaction.productID
             }
         }
 
-        isSubscribed = subscribed
-        currentSubscriptionProductID = activeProductID
+        if !subscribed, let fallbackActiveProductID {
+            subscribed = true
+            activeProductID = fallbackActiveProductID
+        }
+
+        applySubscriptionState(isSubscribed: subscribed, productID: activeProductID)
         hasCheckedEntitlements = true
     }
 
     // MARK: - Transaction Listener
     private func listenForTransactions() -> Task<Void, Never> {
-        Task.detached {
+        Task { [weak self] in
             for await result in Transaction.updates {
+                guard let self else { break }
                 let transaction = self.extractTransaction(result)
+                if self.isActivePlusTransaction(transaction) {
+                    self.applySubscriptionState(isSubscribed: true, productID: transaction.productID)
+                }
                 await transaction.finish()
                 await self.checkEntitlements()
             }
@@ -173,6 +188,25 @@ class StoreManager {
         case .verified(let safe):
             return safe
         }
+    }
+
+    private func isActivePlusTransaction(_ transaction: StoreKit.Transaction) -> Bool {
+        guard Self.allProductIDs.contains(transaction.productID),
+              transaction.productType == .autoRenewable,
+              transaction.revocationDate == nil else {
+            return false
+        }
+
+        if let expirationDate = transaction.expirationDate {
+            return expirationDate > .now
+        }
+
+        return true
+    }
+
+    private func applySubscriptionState(isSubscribed subscribed: Bool, productID: String?) {
+        isSubscribed = subscribed
+        currentSubscriptionProductID = productID
     }
 
     // MARK: - Scan Recording

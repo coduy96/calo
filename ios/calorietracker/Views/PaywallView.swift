@@ -5,6 +5,9 @@ struct PaywallView: View {
     @Environment(StoreManager.self) private var storeManager
     @Environment(\.dismiss) private var dismiss
     @State private var selectedProduct: Product?
+    @State private var didNotifySubscription = false
+
+    var onSubscribed: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -65,7 +68,11 @@ struct PaywallView: View {
             // Subscribe button
             Button {
                 guard let product = selectedProduct else { return }
-                Task { await storeManager.purchase(product) }
+                Task {
+                    if await storeManager.purchase(product) {
+                        handleSubscribed()
+                    }
+                }
             } label: {
                 Group {
                     if storeManager.isPurchasing {
@@ -96,7 +103,11 @@ struct PaywallView: View {
             // Restore + legal
             VStack(spacing: 8) {
                 Button("Restore Purchases") {
-                    Task { await storeManager.restorePurchases() }
+                    Task {
+                        if await storeManager.restorePurchases() {
+                            handleSubscribed()
+                        }
+                    }
                 }
                 .font(.system(.footnote, design: .rounded, weight: .medium))
                 .foregroundStyle(.secondary)
@@ -113,8 +124,15 @@ struct PaywallView: View {
             selectedProduct = storeManager.yearlyProduct ?? storeManager.monthlyProduct
         }
         .onChange(of: storeManager.isSubscribed) { _, isSubscribed in
-            if isSubscribed { dismiss() }
+            if isSubscribed { handleSubscribed() }
         }
+    }
+
+    private func handleSubscribed() {
+        guard !didNotifySubscription else { return }
+        didNotifySubscription = true
+        onSubscribed?()
+        dismiss()
     }
 
     private func yearlyDetailText(_ product: Product) -> String {

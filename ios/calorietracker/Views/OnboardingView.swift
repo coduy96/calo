@@ -145,14 +145,14 @@ struct OnboardingView: View {
                 .animation(.snappy, value: step)
             }
             .sheet(isPresented: $showPaywall) {
-                PaywallView()
+                PaywallView {
+                    advanceAfterPlusPurchaseIfNeeded()
+                }
             }
             .onChange(of: storeManager.isSubscribed) { _, isSubscribed in
-                guard isSubscribed, shouldAdvanceAfterPlusPurchase, step == 11 else { return }
-                shouldAdvanceAfterPlusPurchase = false
-                showPaywall = false
-                AIAccessSettings.mode = .fudAIPlus
-                withAnimation(.snappy) { step += 1 }
+                if isSubscribed {
+                    advanceAfterPlusPurchaseIfNeeded()
+                }
             }
     }
 
@@ -172,6 +172,14 @@ struct OnboardingView: View {
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 36)
+    }
+
+    private func advanceAfterPlusPurchaseIfNeeded() {
+        guard shouldAdvanceAfterPlusPurchase, step == 11 else { return }
+        shouldAdvanceAfterPlusPurchase = false
+        showPaywall = false
+        AIAccessSettings.mode = .fudAIPlus
+        withAnimation(.snappy) { step += 1 }
     }
 
     // MARK: - 0: Welcome
