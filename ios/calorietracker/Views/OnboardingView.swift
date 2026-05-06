@@ -788,7 +788,7 @@ struct OnboardingView: View {
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .multilineTextAlignment(.center)
 
-                    Text("Use your own API key, or let Fud AI handle Gemini for you.")
+                    Text("BYOK keeps Fud AI free. Plus is optional for no API setup and supports development.")
                         .font(.system(.callout, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -798,14 +798,14 @@ struct OnboardingView: View {
                     aiAccessCard(
                         mode: .fudAIPlus,
                         title: "Fud AI Plus",
-                        subtitle: "No setup. Gemini food scans, voice, and Coach with automatic fallback.",
+                        subtitle: "No setup for non-technical users. Gemini food scans, voice, and Coach with fallback.",
                         badge: storeManager.isSubscribed ? "Active" : "Paid"
                     )
 
                     aiAccessCard(
                         mode: .bringYourOwnKey,
                         title: "Bring Your Own Key",
-                        subtitle: "Free app mode. Add Gemini, OpenAI, Groq, or another provider in Settings.",
+                        subtitle: "Free app mode. Use your own Gemini key, OpenAI, Groq, or another provider.",
                         badge: "Default"
                     )
 
@@ -825,7 +825,7 @@ struct OnboardingView: View {
                 }
                 .padding(.horizontal, 24)
 
-                Text("BYOK stays fully local. Plus sends AI requests through Fud AI's secure Gemini proxy.")
+                Text("Calorie tracking should stay accessible: use BYOK freely if you can make an API key, or choose Plus for convenience.")
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)

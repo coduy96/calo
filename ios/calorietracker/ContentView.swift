@@ -2921,7 +2921,7 @@ private struct AIAccessSettingsSection: View {
         } header: {
             Text("AI Access")
         } footer: {
-            Text("BYOK sends requests directly from your device to your chosen provider. Plus uses Fud AI's Gemini proxy for food scan, voice, and Coach with no API key setup.")
+            Text("BYOK is the free route if you can create your own Gemini/API key. Plus is optional no-setup access for non-technical users and helps support Fud AI development.")
         }
         .listRowBackground(AppColors.appCard)
     }
