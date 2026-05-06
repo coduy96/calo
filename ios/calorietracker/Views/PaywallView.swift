@@ -30,7 +30,7 @@ struct PaywallView: View {
 
             // Plan cards
             VStack(spacing: 12) {
-                if let yearly = storeManager.yearlyDiscountProduct ?? storeManager.yearlyProduct {
+                if let yearly = storeManager.yearlyProduct {
                     paywallCard(
                         product: yearly,
                         title: "Yearly",
@@ -50,7 +50,8 @@ struct PaywallView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     featureRow("Uses Fud AI's Gemini models with automatic fallback")
-                    featureRow("\(AIAccessSettings.paidDailyRequestLimit) AI requests per day included")
+                    featureRow("\(AIAccessSettings.paidFoodDailyRequestLimit) food logs, \(AIAccessSettings.paidSpeechDailyRequestLimit) voice transcriptions/day")
+                    featureRow("\(AIAccessSettings.paidCoachDailyRequestLimit) Coach messages/day")
                     featureRow("Switch back to BYOK anytime")
                 }
                 .font(.system(.footnote, design: .rounded))
@@ -109,8 +110,7 @@ struct PaywallView: View {
         }
         .background(AppColors.appBackground)
         .onAppear {
-            // Default to yearly discount if available
-            selectedProduct = storeManager.yearlyDiscountProduct ?? storeManager.yearlyProduct ?? storeManager.monthlyProduct
+            selectedProduct = storeManager.yearlyProduct ?? storeManager.monthlyProduct
         }
         .onChange(of: storeManager.isSubscribed) { _, isSubscribed in
             if isSubscribed { dismiss() }

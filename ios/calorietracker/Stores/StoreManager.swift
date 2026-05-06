@@ -6,9 +6,8 @@ class StoreManager {
     // MARK: - Product IDs
     static let monthlyID = "fudai.subscription.monthly"
     static let yearlyID = "fudai.subscription.yearly"
-    static let yearlyDiscountID = "fudai.subscription.yearly.discount"
 
-    private static let allProductIDs: Set<String> = [monthlyID, yearlyID, yearlyDiscountID]
+    private static let allProductIDs: Set<String> = [monthlyID, yearlyID]
 
     // MARK: - StoreKit State
     var products: [Product] = []
@@ -40,7 +39,7 @@ class StoreManager {
     var canScan: Bool {
         if isSubscribed {
             resetDailyCounterIfNeeded()
-            return dailyScansUsed < AIAccessSettings.paidDailyRequestLimit
+            return dailyScansUsed < AIAccessSettings.paidFoodDailyRequestLimit
         }
         return freeScansUsed < 4
     }
@@ -52,7 +51,7 @@ class StoreManager {
     var remainingScans: Int {
         if isSubscribed {
             resetDailyCounterIfNeeded()
-            return max(0, AIAccessSettings.paidDailyRequestLimit - dailyScansUsed)
+            return max(0, AIAccessSettings.paidFoodDailyRequestLimit - dailyScansUsed)
         }
         return max(0, 3 - freeScansUsed)
     }
@@ -65,16 +64,11 @@ class StoreManager {
         products.first { $0.id == Self.yearlyID }
     }
 
-    var yearlyDiscountProduct: Product? {
-        products.first { $0.id == Self.yearlyDiscountID }
-    }
-
     var currentPlanName: String {
         guard let id = currentSubscriptionProductID else { return "Free" }
         switch id {
         case Self.monthlyID: return "Monthly"
         case Self.yearlyID: return "Yearly"
-        case Self.yearlyDiscountID: return "Yearly (Discount)"
         default: return "Premium"
         }
     }

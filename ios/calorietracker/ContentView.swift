@@ -226,7 +226,7 @@ private struct FudAIPlusIntroView: View {
 
                 VStack(alignment: .leading, spacing: 10) {
                     plusIntroRow("Gemini models with automatic fallback")
-                    plusIntroRow("\(AIAccessSettings.paidDailyRequestLimit) AI requests per day")
+                    plusIntroRow("\(AIAccessSettings.paidFoodDailyRequestLimit) food logs, \(AIAccessSettings.paidCoachDailyRequestLimit) Coach messages/day")
                     plusIntroRow("BYOK still works and you can switch anytime")
                 }
                 .font(.system(.subheadline, design: .rounded))

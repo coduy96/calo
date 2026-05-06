@@ -1,4 +1,9 @@
-const DEFAULT_LIMIT = 80;
+const DEFAULT_TASK_LIMITS = {
+  food: 30,
+  speech: 60,
+  coach: 100,
+};
+const DEFAULT_GLOBAL_LIMIT = 200;
 const FALLBACK_MODELS = {
   food: [
     "gemini-3.1-flash-lite-preview",
@@ -35,10 +40,10 @@ export default async function handler(request, response) {
     return response.status(400).json({ error: "Invalid request body." });
   }
 
-  const quota = await consumeQuota(installID);
+  const quota = await checkQuota(installID, task);
   if (!quota.allowed) {
     return response.status(429).json({
-      error: `Daily Fud AI Plus limit reached. Try again tomorrow, or switch to BYOK for unlimited usage.`,
+      error: quota.message,
     });
   }
 
@@ -60,6 +65,7 @@ export default async function handler(request, response) {
 
     const text = await upstream.text();
     if (upstream.ok) {
+      await recordSuccessfulUsage(installID, task);
       response.setHeader("X-FudAI-Model", model);
       return response.status(200).send(text);
     }
@@ -95,22 +101,105 @@ function configuredModels(task) {
   return configured?.length ? configured : FALLBACK_MODELS[task];
 }
 
-async function consumeQuota(installID) {
-  const limit = Number(process.env.FUD_AI_PLUS_DAILY_LIMIT || DEFAULT_LIMIT);
-  const key = `fudai:plus:${todayKey()}:${installID}`;
+async function checkQuota(installID, task) {
+  const usage = await readUsage(installID, task);
+  if (usage.taskCount >= usage.taskLimit) {
+    return {
+      allowed: false,
+      ...usage,
+      message: `${taskLabel(task)} daily limit reached (${usage.taskLimit}/day). Try again tomorrow, or switch to BYOK for unlimited usage.`,
+    };
+  }
+  if (usage.globalCount >= usage.globalLimit) {
+    return {
+      allowed: false,
+      ...usage,
+      message: `Daily Fud AI Plus safety limit reached (${usage.globalLimit}/day). Try again tomorrow, or switch to BYOK for unlimited usage.`,
+    };
+  }
+  return { allowed: true, ...usage };
+}
+
+async function readUsage(installID, task) {
+  const globalKey = quotaKey(installID);
+  const taskKey = quotaKey(installID, task);
+  const taskLimit = taskDailyLimit(task);
+  const globalLimit = globalDailyLimit();
 
   if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
-    const count = await kvCommand(["INCR", key]);
-    if (count === 1) {
-      await kvCommand(["EXPIRE", key, secondsUntilTomorrow() + 3600]);
-    }
-    return { allowed: count <= limit, count, limit };
+    const [taskCount, globalCount] = await Promise.all([
+      kvCommand(["GET", taskKey]),
+      kvCommand(["GET", globalKey]),
+    ]);
+    return { taskCount, globalCount, taskLimit, globalLimit };
   }
 
-  const current = memoryUsage.get(key) || 0;
-  const next = current + 1;
-  memoryUsage.set(key, next);
-  return { allowed: next <= limit, count: next, limit };
+  return {
+    taskCount: memoryUsage.get(taskKey) || 0,
+    globalCount: memoryUsage.get(globalKey) || 0,
+    taskLimit,
+    globalLimit,
+  };
+}
+
+async function recordSuccessfulUsage(installID, task) {
+  const globalKey = quotaKey(installID);
+  const taskKey = quotaKey(installID, task);
+
+  if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+    const [taskCount, globalCount] = await Promise.all([
+      kvCommand(["INCR", taskKey]),
+      kvCommand(["INCR", globalKey]),
+    ]);
+    const ttl = secondsUntilTomorrow() + 3600;
+    await Promise.all([
+      taskCount === 1 ? kvCommand(["EXPIRE", taskKey, ttl]) : Promise.resolve(),
+      globalCount === 1 ? kvCommand(["EXPIRE", globalKey, ttl]) : Promise.resolve(),
+    ]);
+    return;
+  }
+
+  memoryUsage.set(taskKey, (memoryUsage.get(taskKey) || 0) + 1);
+  memoryUsage.set(globalKey, (memoryUsage.get(globalKey) || 0) + 1);
+}
+
+function quotaKey(installID, task) {
+  const base = `fudai:plus:${todayKey()}:${installID}`;
+  return task ? `${base}:${task}` : base;
+}
+
+function taskDailyLimit(task) {
+  const envKey = {
+    food: "FUD_AI_PLUS_FOOD_DAILY_LIMIT",
+    speech: "FUD_AI_PLUS_SPEECH_DAILY_LIMIT",
+    coach: "FUD_AI_PLUS_COACH_DAILY_LIMIT",
+  }[task];
+  return positiveInteger(process.env[envKey], DEFAULT_TASK_LIMITS[task]);
+}
+
+function globalDailyLimit() {
+  return positiveInteger(
+    process.env.FUD_AI_PLUS_GLOBAL_DAILY_LIMIT ?? process.env.FUD_AI_PLUS_DAILY_LIMIT,
+    DEFAULT_GLOBAL_LIMIT
+  );
+}
+
+function positiveInteger(raw, fallback) {
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
+}
+
+function taskLabel(task) {
+  switch (task) {
+    case "food":
+      return "Food analysis";
+    case "speech":
+      return "Speech-to-text";
+    case "coach":
+      return "Coach";
+    default:
+      return "Fud AI Plus";
+  }
 }
 
 async function kvCommand(command) {
@@ -126,7 +215,7 @@ async function kvCommand(command) {
   if (!result.ok) {
     throw new Error(json?.error || "KV command failed.");
   }
-  return Number(json.result);
+  return Number(json.result || 0);
 }
 
 function todayKey() {

@@ -76,14 +76,14 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "4.99",
+          "displayPrice" : "9.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "monthly001",
           "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "No-key AI access, 80 requests/day",
+              "description" : "No-key AI access with food, voice, and Coach daily limits",
               "displayName" : "Monthly",
               "locale" : "en_US"
             }
@@ -101,14 +101,14 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "29.99",
+          "displayPrice" : "89.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "yearly001",
           "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "No-key AI access, 80 requests/day — best value",
+              "description" : "No-key AI access with food, voice, and Coach daily limits",
               "displayName" : "Yearly",
               "locale" : "en_US"
             }
@@ -116,31 +116,6 @@
           "productID" : "fudai.subscription.yearly",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Yearly",
-          "subscriptionGroupID" : "FudAIPremium",
-          "type" : "RecurringSubscription"
-        },
-        {
-          "adHocOffers" : [
-
-          ],
-          "codeOffers" : [
-
-          ],
-          "displayPrice" : "19.99",
-          "familyShareable" : false,
-          "groupNumber" : 1,
-          "internalID" : "yearlydiscount001",
-          "introductoryOffer" : null,
-          "localizations" : [
-            {
-              "description" : "No-key AI access, 80 requests/day — launch discount",
-              "displayName" : "Yearly (Discount)",
-              "locale" : "en_US"
-            }
-          ],
-          "productID" : "fudai.subscription.yearly.discount",
-          "recurringSubscriptionPeriod" : "P1Y",
-          "referenceName" : "Yearly Discount",
           "subscriptionGroupID" : "FudAIPremium",
           "type" : "RecurringSubscription"
         }

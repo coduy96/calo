@@ -29,7 +29,10 @@ enum AIAccessMode: String, CaseIterable, Codable, Identifiable {
 }
 
 struct AIAccessSettings {
-    static let paidDailyRequestLimit = 80
+    static let paidFoodDailyRequestLimit = 30
+    static let paidSpeechDailyRequestLimit = 60
+    static let paidCoachDailyRequestLimit = 100
+    static let paidGlobalDailyRequestLimit = 200
     static let defaultProxyEndpoint = "https://fud-ai.app/api/gemini"
 
     private static let modeKey = "aiAccessMode"
