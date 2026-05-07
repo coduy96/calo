@@ -22,6 +22,12 @@ enum FoodLogSortOrder: String, CaseIterable, Identifiable {
     }
 }
 
+struct FoodLogMealGroup: Identifiable {
+    let id: String
+    let meal: MealType
+    let entries: [FoodEntry]
+}
+
 @Observable
 class FoodStore {
     private(set) var entries: [FoodEntry] = []
@@ -46,7 +52,7 @@ class FoodStore {
             .sorted { $0.timestamp > $1.timestamp }
     }
 
-    var todayEntriesByMeal: [(meal: MealType, entries: [FoodEntry])] {
+    var todayEntriesByMeal: [FoodLogMealGroup] {
         let calendar = Calendar.current
         let today = entries
             .filter { calendar.isDateInToday($0.timestamp) }
@@ -80,65 +86,51 @@ class FoodStore {
             .sorted { $0.timestamp > $1.timestamp }
     }
 
-    func entriesByMeal(for date: Date, order: FoodLogSortOrder = .standard) -> [(meal: MealType, entries: [FoodEntry])] {
+    func entriesByMeal(for date: Date, order: FoodLogSortOrder = .standard) -> [FoodLogMealGroup] {
         let dayEntries = entries(for: date)
         return groupedEntries(dayEntries, order: order)
     }
 
-    private func groupedEntries(_ dayEntries: [FoodEntry], order: FoodLogSortOrder) -> [(meal: MealType, entries: [FoodEntry])] {
-        let groups = MealType.allCases.compactMap { meal -> (meal: MealType, entries: [FoodEntry])? in
-            let mealEntries = dayEntries.filter { $0.mealType == meal }
-            return mealEntries.isEmpty ? nil : (meal, mealEntries)
-        }
-
+    private func groupedEntries(_ dayEntries: [FoodEntry], order: FoodLogSortOrder) -> [FoodLogMealGroup] {
         switch order {
         case .standard:
-            return groups
-        case .latestMealsFirst:
-            return latestMealsFirstGroups(groups)
-        }
-    }
-
-    private func latestMealsFirstGroups(_ groups: [(meal: MealType, entries: [FoodEntry])]) -> [(meal: MealType, entries: [FoodEntry])] {
-        var ordered = [MealType.dinner, .lunch, .breakfast].compactMap { meal in
-            groups.first { $0.meal == meal }
-        }
-
-        let floatingGroups = groups
-            .filter { reverseMainMealRank($0.meal) == nil }
-            .sorted { lhs, rhs in
-                let lhsLatest = latestTimestamp(in: lhs)
-                let rhsLatest = latestTimestamp(in: rhs)
-                if lhsLatest != rhsLatest { return lhsLatest > rhsLatest }
-                return defaultMealRank(lhs.meal) < defaultMealRank(rhs.meal)
+            return MealType.allCases.compactMap { meal in
+                let mealEntries = dayEntries.filter { $0.mealType == meal }
+                guard !mealEntries.isEmpty else { return nil }
+                return FoodLogMealGroup(id: "standard-\(meal.rawValue)", meal: meal, entries: mealEntries)
             }
+        case .latestMealsFirst:
+            return latestMealRuns(dayEntries)
+        }
+    }
 
-        for group in floatingGroups {
-            let latest = latestTimestamp(in: group)
-            let insertionIndex = ordered.firstIndex { existing in
-                latest > latestTimestamp(in: existing)
-            } ?? ordered.endIndex
-            ordered.insert(group, at: insertionIndex)
+    private func latestMealRuns(_ dayEntries: [FoodEntry]) -> [FoodLogMealGroup] {
+        var groups: [FoodLogMealGroup] = []
+        var currentMeal: MealType?
+        var currentEntries: [FoodEntry] = []
+
+        func appendCurrentGroup() {
+            guard let meal = currentMeal, !currentEntries.isEmpty else { return }
+            let firstEntryID = currentEntries.first?.id.uuidString ?? UUID().uuidString
+            groups.append(FoodLogMealGroup(
+                id: "latest-\(groups.count)-\(meal.rawValue)-\(firstEntryID)",
+                meal: meal,
+                entries: currentEntries
+            ))
         }
 
-        return ordered
-    }
-
-    private func latestTimestamp(in group: (meal: MealType, entries: [FoodEntry])) -> Date {
-        group.entries.first?.timestamp ?? .distantPast
-    }
-
-    private func defaultMealRank(_ meal: MealType) -> Int {
-        MealType.allCases.firstIndex(of: meal) ?? 0
-    }
-
-    private func reverseMainMealRank(_ meal: MealType) -> Int? {
-        switch meal {
-        case .dinner: 0
-        case .lunch: 1
-        case .breakfast: 2
-        case .snack, .other: nil
+        for entry in dayEntries {
+            if entry.mealType == currentMeal {
+                currentEntries.append(entry)
+            } else {
+                appendCurrentGroup()
+                currentMeal = entry.mealType
+                currentEntries = [entry]
+            }
         }
+
+        appendCurrentGroup()
+        return groups
     }
 
     func calories(for date: Date) -> Int {

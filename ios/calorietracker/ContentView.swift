@@ -765,7 +765,7 @@ struct HomeView: View {
                             .listRowBackground(AppColors.appCard)
                     }
                 } else {
-                    ForEach(mealGroups, id: \.meal) { group in
+                    ForEach(mealGroups) { group in
                         Section {
                             ForEach(group.entries) { entry in
                                 FoodRow(entry: entry)
@@ -793,7 +793,7 @@ struct HomeView: View {
                             HStack(alignment: .center) {
                                 Label(group.meal.displayName, systemImage: group.meal.icon)
                                 Spacer()
-                                if group.meal == mealGroups.first?.meal {
+                                if group.id == mealGroups.first?.id {
                                     Menu {
                                         Picker("Food Log Order", selection: $foodLogSortOrderRaw) {
                                             ForEach(FoodLogSortOrder.allCases) { order in
