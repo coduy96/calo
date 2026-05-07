@@ -1,6 +1,27 @@
 import Foundation
 import SwiftUI
 
+enum FoodLogSortOrder: String, CaseIterable, Identifiable {
+    case standard
+    case latestMealsFirst
+
+    static let storageKey = "foodLogSortOrder"
+    static let defaultOrder: FoodLogSortOrder = .standard
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .standard: "Breakfast → Lunch → Dinner"
+        case .latestMealsFirst: "Latest Meals First"
+        }
+    }
+
+    static func order(for rawValue: String) -> FoodLogSortOrder {
+        FoodLogSortOrder(rawValue: rawValue) ?? defaultOrder
+    }
+}
+
 @Observable
 class FoodStore {
     private(set) var entries: [FoodEntry] = []
@@ -31,10 +52,7 @@ class FoodStore {
             .filter { calendar.isDateInToday($0.timestamp) }
             .sorted { $0.timestamp > $1.timestamp }
 
-        return MealType.allCases.compactMap { meal in
-            let mealEntries = today.filter { $0.mealType == meal }
-            return mealEntries.isEmpty ? nil : (meal, mealEntries)
-        }
+        return groupedEntries(today, order: .standard)
     }
 
     var todayCalories: Int {
@@ -62,11 +80,62 @@ class FoodStore {
             .sorted { $0.timestamp > $1.timestamp }
     }
 
-    func entriesByMeal(for date: Date) -> [(meal: MealType, entries: [FoodEntry])] {
+    func entriesByMeal(for date: Date, order: FoodLogSortOrder = .standard) -> [(meal: MealType, entries: [FoodEntry])] {
         let dayEntries = entries(for: date)
-        return MealType.allCases.compactMap { meal in
+        return groupedEntries(dayEntries, order: order)
+    }
+
+    private func groupedEntries(_ dayEntries: [FoodEntry], order: FoodLogSortOrder) -> [(meal: MealType, entries: [FoodEntry])] {
+        let groups = MealType.allCases.compactMap { meal -> (meal: MealType, entries: [FoodEntry])? in
             let mealEntries = dayEntries.filter { $0.mealType == meal }
             return mealEntries.isEmpty ? nil : (meal, mealEntries)
+        }
+
+        switch order {
+        case .standard:
+            return groups
+        case .latestMealsFirst:
+            return groups.sorted { lhs, rhs in
+                compareLatestMealsFirst(lhs: lhs, rhs: rhs)
+            }
+        }
+    }
+
+    private func compareLatestMealsFirst(
+        lhs: (meal: MealType, entries: [FoodEntry]),
+        rhs: (meal: MealType, entries: [FoodEntry])
+    ) -> Bool {
+        let lhsMainRank = reverseMainMealRank(lhs.meal)
+        let rhsMainRank = reverseMainMealRank(rhs.meal)
+
+        if let lhsMainRank, let rhsMainRank {
+            return lhsMainRank < rhsMainRank
+        }
+
+        let lhsLatest = lhs.entries.first?.timestamp ?? .distantPast
+        let rhsLatest = rhs.entries.first?.timestamp ?? .distantPast
+
+        if lhsMainRank != nil || rhsMainRank != nil {
+            if lhsLatest != rhsLatest {
+                return lhsLatest > rhsLatest
+            }
+        }
+
+        if lhsLatest != rhsLatest {
+            return lhsLatest > rhsLatest
+        }
+
+        let lhsDefaultRank = MealType.allCases.firstIndex(of: lhs.meal) ?? 0
+        let rhsDefaultRank = MealType.allCases.firstIndex(of: rhs.meal) ?? 0
+        return lhsDefaultRank < rhsDefaultRank
+    }
+
+    private func reverseMainMealRank(_ meal: MealType) -> Int? {
+        switch meal {
+        case .dinner: 0
+        case .lunch: 1
+        case .breakfast: 2
+        case .snack, .other: nil
         }
     }
 

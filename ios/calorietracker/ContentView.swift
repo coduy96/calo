@@ -627,6 +627,7 @@ struct HomeView: View {
     @State private var currentEmoji: String?
     @State private var showNutritionDetail = false
     @AppStorage("aiAnalysisConsentGiven") private var aiConsentGiven: Bool = false
+    @AppStorage(FoodLogSortOrder.storageKey) private var foodLogSortOrderRaw = FoodLogSortOrder.defaultOrder.rawValue
     @State private var showAIConsent = false
     @Environment(ProfileStore.self) private var profileStore
 
@@ -641,6 +642,7 @@ struct HomeView: View {
     private var selectedCalories: Int { foodStore.calories(for: selectedDate) }
     private var caloriesRemaining: Int { max(calorieGoal - selectedCalories, 0) }
     private var isToday: Bool { Calendar.current.isDateInToday(selectedDate) }
+    private var foodLogSortOrder: FoodLogSortOrder { FoodLogSortOrder.order(for: foodLogSortOrderRaw) }
 
     private var navigationTitle: String {
         if isToday { return "Today" }
@@ -737,7 +739,7 @@ struct HomeView: View {
                 }
 
                 // Food list
-                let mealGroups = foodStore.entriesByMeal(for: selectedDate)
+                let mealGroups = foodStore.entriesByMeal(for: selectedDate, order: foodLogSortOrder)
                 if mealGroups.isEmpty {
                     Section(isToday ? "Today's Food" : "Food Log") {
                         Text("No foods logged")
@@ -1679,6 +1681,7 @@ struct ProfileView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @AppStorage("healthKitEnabled") private var healthKitEnabled = false
     @AppStorage("weekStartsOnMonday") private var weekStartsOnMonday = false
+    @AppStorage(FoodLogSortOrder.storageKey) private var foodLogSortOrderRaw = FoodLogSortOrder.defaultOrder.rawValue
     @AppStorage(AppThemeColor.storageKey) private var appThemeColorRaw = AppThemeColor.defaultColor.rawValue
 
     enum ActiveSheet: String, Identifiable {
@@ -2015,6 +2018,21 @@ struct ProfileView: View {
                             Text("Week Starts On")
                         } icon: {
                             Image(systemName: "calendar")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .tint(.secondary)
+
+                    Picker(selection: $foodLogSortOrderRaw) {
+                        ForEach(FoodLogSortOrder.allCases) { order in
+                            Text(order.displayName).tag(order.rawValue)
+                        }
+                    } label: {
+                        Label {
+                            Text("Food Log Order")
+                        } icon: {
+                            Image(systemName: "arrow.up.arrow.down")
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
