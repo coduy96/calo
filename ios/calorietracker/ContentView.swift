@@ -736,9 +736,7 @@ struct HomeView: View {
                     }
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
-                }
 
-                Section {
                     HStack {
                         Spacer()
                         Menu {
@@ -748,19 +746,19 @@ struct HomeView: View {
                                 }
                             }
                         } label: {
-                            Label {
-                                Text("Sort")
-                            } icon: {
+                            HStack(spacing: 8) {
                                 Image(systemName: "arrow.up.arrow.down")
+                                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                                Text("Sort")
+                                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
                             }
                         }
-                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .tint(AppColors.calorie)
                     }
-                    .frame(height: 28)
+                    .frame(height: 24)
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 32))
+                    .listRowInsets(EdgeInsets(top: -4, leading: 16, bottom: -4, trailing: 40))
                 }
 
                 // Food list
