@@ -757,8 +757,10 @@ struct HomeView: View {
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .tint(AppColors.calorie)
                     }
+                    .frame(height: 28)
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 32))
                 }
 
                 // Food list
