@@ -47,8 +47,8 @@ struct PlusProduct: Identifiable {
 @Observable
 class StoreManager {
     // MARK: - Product IDs
-    static let monthlyID = "fudai.subscription.monthly"
-    static let yearlyID = "fudai.subscription.yearly"
+    static let monthlyID = "fudai.plus.monthly"
+    static let yearlyID = "fudai.plus.yearly"
 
     private static let allProductIDs: Set<String> = [monthlyID, yearlyID]
 

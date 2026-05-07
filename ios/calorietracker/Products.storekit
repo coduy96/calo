@@ -88,7 +88,7 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "fudai.subscription.monthly",
+          "productID" : "fudai.plus.monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Monthly",
           "subscriptionGroupID" : "FudAIPremium",
@@ -113,7 +113,7 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "fudai.subscription.yearly",
+          "productID" : "fudai.plus.yearly",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Yearly",
           "subscriptionGroupID" : "FudAIPremium",
