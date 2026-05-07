@@ -305,6 +305,29 @@ enum AIProvider: String, CaseIterable, Codable, Identifiable {
     }
 }
 
+extension AIProvider {
+    func openAICompatibleTokenLimitKey(for model: String) -> String {
+        if self == .openai || (self == .customOpenAI && Self.usesOpenAICompletionTokenLimit(model: model)) {
+            return "max_completion_tokens"
+        }
+        return "max_tokens"
+    }
+
+    private static func usesOpenAICompletionTokenLimit(model: String) -> Bool {
+        let normalized = model
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .split(separator: "/")
+            .last
+            .map(String.init) ?? model.lowercased()
+
+        return normalized.hasPrefix("gpt-5")
+            || normalized.hasPrefix("o1")
+            || normalized.hasPrefix("o3")
+            || normalized.hasPrefix("o4")
+    }
+}
+
 // MARK: - Settings Persistence
 
 struct AIProviderSettings {

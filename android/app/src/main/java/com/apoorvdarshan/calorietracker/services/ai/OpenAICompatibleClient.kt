@@ -8,6 +8,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Base64
+import java.util.Locale
 
 /**
  * OpenAI-compatible format — used by OpenAI, xAI Grok, OpenRouter, Together AI,
@@ -16,7 +17,7 @@ import java.util.Base64
  *
  *   POST <base>/chat/completions
  *   Header: Authorization: Bearer <apiKey>
- *   Body:   {model, messages: [{role, content: [{type, ...}]}], max_tokens}
+ *   Body:   {model, messages: [{role, content: [{type, ...}]}], max_tokens/max_completion_tokens}
  */
 object OpenAICompatibleClient {
 
@@ -50,7 +51,7 @@ object OpenAICompatibleClient {
         val body = JSONObject()
             .put("model", model)
             .put("messages", JSONArray().put(JSONObject().put("role", "user").put("content", content)))
-            .put("max_tokens", 1024)
+            .put(tokenLimitParameter(provider, model), 1024)
 
         val builder = Request.Builder()
             .url(url)
@@ -88,7 +89,7 @@ object OpenAICompatibleClient {
         val body = JSONObject()
             .put("model", model)
             .put("messages", messages)
-            .put("max_tokens", 1024)
+            .put(tokenLimitParameter(provider, model), 1024)
 
         val builder = Request.Builder()
             .url(url)
@@ -111,5 +112,28 @@ object OpenAICompatibleClient {
         val text = message.optString("content").orEmpty()
         if (text.isEmpty()) throw AiError.InvalidResponse
         return text
+    }
+
+    fun tokenLimitParameter(provider: AIProvider, model: String): String {
+        return if (
+            provider == AIProvider.OPENAI ||
+            (provider == AIProvider.CUSTOM_OPENAI && usesOpenAICompletionTokenLimit(model))
+        ) {
+            "max_completion_tokens"
+        } else {
+            "max_tokens"
+        }
+    }
+
+    private fun usesOpenAICompletionTokenLimit(model: String): Boolean {
+        val normalized = model
+            .trim()
+            .lowercase(Locale.US)
+            .substringAfterLast("/")
+
+        return normalized.startsWith("gpt-5") ||
+            normalized.startsWith("o1") ||
+            normalized.startsWith("o3") ||
+            normalized.startsWith("o4")
     }
 }

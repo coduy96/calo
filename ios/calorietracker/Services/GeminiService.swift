@@ -489,11 +489,11 @@ struct GeminiService {
         }
         messages.append(["role": "user", "content": content])
 
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "model": model,
             "messages": messages,
-            "max_tokens": 1024,
         ]
+        body[provider.openAICompatibleTokenLimitKey(for: model)] = 1024
 
         var headers = ["Content-Type": "application/json"]
         if let apiKey {

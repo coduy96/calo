@@ -201,6 +201,7 @@ class ChatService(
                 put("messages", messages)
                 put("tools", toolsArr)
                 put("tool_choice", "auto")
+                put(OpenAICompatibleClient.tokenLimitParameter(provider, model), 1024)
             }
             val builder = Request.Builder()
                 .url(url)

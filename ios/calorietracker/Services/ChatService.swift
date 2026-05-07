@@ -232,12 +232,13 @@ struct ChatService {
         let toolsArray = openAIToolsArray()
 
         for _ in 0..<maxToolRounds {
-            let body: [String: Any] = [
+            var body: [String: Any] = [
                 "model": model,
                 "messages": messages,
                 "tools": toolsArray,
                 "tool_choice": "auto",
             ]
+            body[provider.openAICompatibleTokenLimitKey(for: model)] = 1024
             let data = try await send(url: url, headers: headers, body: body)
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let choices = json["choices"] as? [[String: Any]],
