@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/swift-5-orange?logo=swift" alt="Swift">
   <img src="https://img.shields.io/badge/kotlin-2.2-7F52FF?logo=kotlin" alt="Kotlin">
   <img src="https://img.shields.io/badge/UI-SwiftUI%20%2F%20Compose-purple" alt="UI">
-  <img src="https://img.shields.io/badge/dependencies-zero-brightgreen" alt="Zero Dependencies">
+  <img src="https://img.shields.io/badge/privacy-local--first-brightgreen" alt="Local-first privacy">
   <img src="https://img.shields.io/badge/languages-15-blue" alt="15 Languages">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
   <a href="https://github.com/apoorvdarshan/fud-ai/stargazers"><img src="https://img.shields.io/github/stars/apoorvdarshan/fud-ai?style=flat&logo=github&color=yellow" alt="GitHub stars"></a>
@@ -25,7 +25,7 @@
 
 ---
 
-Open-source, privacy-first calorie tracker for iOS and Android. Bring your own AI provider — 13 supported including Gemini, OpenAI, Claude, Grok, Groq, Hugging Face, Fireworks AI, DeepInfra, Mistral, and any custom OpenAI-compatible endpoint. iOS also supports Fud AI Plus, an optional paid no-key mode that routes food scan, voice, and Coach requests through a Gemini proxy with daily limits. Snap a meal, ask your AI coach how to hit your goal, speak your lunch. No accounts, no cloud sync, no tracking.
+Open-source, privacy-first calorie tracker for iOS and Android. Bring your own AI provider — 13 supported including Gemini, OpenAI, Claude, Grok, Groq, Hugging Face, Fireworks AI, DeepInfra, Mistral, and any custom OpenAI-compatible endpoint. iOS also supports Fud AI Plus, an optional paid no-key mode that routes food scan, voice, and Coach requests through a Gemini proxy with daily limits and speech language control. Snap a meal, ask your AI coach how to hit your goal, speak your lunch. No accounts, no cloud sync, no tracking.
 
 [App Store](https://apps.apple.com/us/app/fud-ai-calorie-tracker/id6758935726) · [Google Play](https://play.google.com/store/apps/details?id=com.apoorvdarshan.calorietracker) · [Website](https://fud-ai.app) · [Report an Issue](https://github.com/apoorvdarshan/fud-ai/issues/new?labels=bug&title=Bug:%20) · [Request a Feature](https://github.com/apoorvdarshan/fud-ai/issues/new?labels=enhancement&title=Feature:%20)
 
@@ -39,12 +39,13 @@ Open-source, privacy-first calorie tracker for iOS and Android. Bring your own A
 - **Nutrition label scan** — reads packaging for precise per-serving data
 - **Photo library** — analyze existing photos
 - **Text input** — type food descriptions
-- **Voice input** — speak your meals hands-free (5 STT providers with per-provider language selection, see below)
+- **Voice input** — speak your meals hands-free (6 STT options with per-provider language selection, see below)
+- **Smart serving units** — AI can show slices, pieces, cups, ml, or other visible serving units while grams stay the source of truth
 - **Saved Meals** — Recents, Frequent, and Favorites with swipe-to-delete and drag-to-reorder
 
 ### Intelligence
 - **AI Coach tab** — multi-turn chat with memory. Coach sees your profile, weight history, food log, today's date/timezone, and richer meal details, then answers questions like "what's my expected weight in 30 days?" or "how do I lose 2 kg?". Memory persists across launches; Reset button starts a fresh conversation. Long-press any reply to copy.
-- **AI Access modes** — Bring Your Own Key remains the default; iOS users can optionally subscribe to Fud AI Plus for no-key Gemini food scan, voice, and Coach access.
+- **AI Access modes** — Bring Your Own Key remains the default; iOS users can optionally subscribe to Fud AI Plus for no-key Gemini food scan, voice, and Coach access with a Plus speech language selector.
 - **Goal-aware prompt chips** — suggested questions change based on whether your goal is Lose / Gain / Maintain
 - **Thermodynamic weight forecast** — expected weight at 30/60/90 days, predicted vs observed weekly change, days-to-goal, under-logging detection. Surfaced through Coach as live context on every turn.
 - **Resilient requests** — transient provider overloads (503 / 529 / 429) auto-retry with 1s / 2s / 4s exponential backoff across both food analysis and Coach chat, so short spikes resolve invisibly
@@ -52,6 +53,7 @@ Open-source, privacy-first calorie tracker for iOS and Android. Bring your own A
 ### Tracking
 - **13 nutrients** per entry (calories, protein, carbs, fat + 9 micronutrients)
 - **Scrollable week calendar** — swipe to any past week, configurable start day
+- **Food log sorting** — keep the default grouped view, or sort meal sections by latest logging order from the Home screen
 - **Progress charts** — weight trends, calorie history, macro averages (1W to All Time)
 - **Weight History** — tap-to-delete past entries, syncs deletion to Apple Health
 - **Goal tracking** — set target weight, BMR/TDEE auto-calculation; goal-reached alert fires from both manual logs and Apple Health reads
@@ -69,7 +71,7 @@ Open-source, privacy-first calorie tracker for iOS and Android. Bring your own A
 
 ## AI Providers
 
-Pick any of the **13 LLM providers** for both food analysis and the Coach chat. Free Gemini keys are available at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). On iOS, Fud AI Plus can be selected instead of BYOK; Plus uses Gemini models behind a serverless proxy, retries fallback Gemini models, and uses separate daily limits for food analysis, speech-to-text, and Coach.
+Pick any of the **13 LLM providers** for both food analysis and the Coach chat. Free Gemini keys are available at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). On iOS, Fud AI Plus can be selected instead of BYOK; Plus uses Gemini models behind a serverless proxy, retries fallback Gemini models, and uses separate daily limits for food analysis, speech-to-text, and Coach. Plus voice can use Provider Auto, which follows the iPhone language, or a manually selected speech language.
 
 Fud AI Plus proxy env vars: `GEMINI_API_KEY` is required. Optional quota overrides are `FUD_AI_PLUS_FOOD_DAILY_LIMIT`, `FUD_AI_PLUS_SPEECH_DAILY_LIMIT`, `FUD_AI_PLUS_COACH_DAILY_LIMIT`, and `FUD_AI_PLUS_GLOBAL_DAILY_LIMIT`. Defaults are 30 food analyses, 40 speech transcriptions, 50 Coach messages, and 120 total successful Plus calls per day.
 
@@ -96,6 +98,7 @@ Pick how voice input is transcribed. Native iOS is the default — free, on-devi
 | Provider | Notes |
 |----------|-------|
 | Native iOS (On-Device) | Free, offline on modern iPhones, real-time partial results |
+| Gemini Audio | Batch audio transcription through Gemini; used by Fud AI Plus voice logging |
 | OpenAI Whisper | Whisper-1 via `/v1/audio/transcriptions` |
 | Groq (Whisper) | Whisper-large-v3, very fast, has a free tier |
 | Deepgram | Nova-3, fast and accurate |
@@ -209,7 +212,7 @@ All values can be manually overridden in Settings, with a **Recalculate Goals** 
 | **Health** | HealthKit read/write (body measurements + 12 nutrition types) with background observers, UUID-tagged samples for safe delete |
 | **Pattern** | `@Observable` + `.environment()`, main actor isolation |
 | **Localization** | `Localizable.xcstrings` (String Catalog), 15 languages, auto-selected by iPhone's system language |
-| **Dependencies** | Zero |
+| **Dependencies** | RevenueCat SPM for iOS purchases; app data and API keys remain local |
 
 ### Repo Layout
 
@@ -238,7 +241,7 @@ ios/
     ├── Localizable.xcstrings         # String Catalog, 15 languages
     ├── Models/
     │   ├── AIProvider.swift          # 13 LLM providers, model lists, settings
-    │   ├── SpeechProvider.swift      # 5 STT providers + Keychain settings
+    │   ├── SpeechProvider.swift      # 6 STT options + Keychain settings
     │   ├── ChatMessage.swift         # Coach chat message model
     │   ├── UserProfile.swift         # BMR/TDEE/macro calculations
     │   ├── FoodEntry.swift           # Food item with 13 nutrients
@@ -254,7 +257,7 @@ ios/
     ├── Services/
     │   ├── GeminiService.swift       # Food/label analysis, routes 13 providers
     │   ├── ChatService.swift         # Multi-turn Coach chat, routes 13 providers
-    │   ├── SpeechService.swift       # Remote STT router (OpenAI / Groq / Deepgram / AssemblyAI)
+    │   ├── SpeechService.swift       # Remote STT router (Gemini / OpenAI / Groq / Deepgram / AssemblyAI)
     │   ├── WeightAnalysisService.swift # Thermodynamic weight-forecast math
     │   ├── KeychainHelper.swift      # iOS Keychain wrapper
     │   └── APIKeyManager.swift       # Keychain migration helper

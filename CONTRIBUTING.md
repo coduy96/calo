@@ -2,7 +2,7 @@
 
 Thanks for your interest in contributing! Fud AI is an open-source, "bring-your-own-key" calorie tracker. The repo is a monorepo:
 
-- `ios/` — SwiftUI iOS app (shipping on the App Store, v3.3.2)
+- `ios/` — SwiftUI iOS app (shipping on the App Store, v3.4.0)
 - `android/` — Kotlin + Jetpack Compose app (feature-parity port, v1.1.0 in Play Store closed testing)
 - `web/` — marketing site at [fud-ai.app](https://fud-ai.app) (plain HTML/CSS, Vercel)
 
@@ -15,7 +15,7 @@ PRs, bug reports, and feature ideas for any of these are welcome.
 3. Open `ios/calorietracker.xcodeproj` in Xcode (16+)
 4. Build and run on a simulator or device running iOS 17.6 or later
 
-No external dependencies — just Xcode and a valid Apple developer account.
+Uses Swift Package Manager for RevenueCat purchases. For normal feature work, just Xcode and a valid Apple developer account are enough.
 
 ## Getting Started (Android)
 

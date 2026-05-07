@@ -14,7 +14,7 @@ Food & Macro Tracker
 
 ## Promotional Text (170 chars max)
 ```
-New AI Access mode: bring your own key, or use optional Fud AI Plus with no API setup. Theme colors, voice languages, and smoother editing included.
+New Fud AI Plus for no-key AI logging. Also adds theme colors, voice language control, smarter servings, food log sorting, and smoother editing.
 ```
 
 ## Keywords (100 chars max)
@@ -36,8 +36,9 @@ NEW
 • Added optional Fud AI Plus for no-key food scans, voice logging, and Coach.
 • Bring Your Own Key remains available as the free default mode.
 • Added daily Plus usage limits in Settings.
+• Added speech language selection for Plus voice logging.
 
-Also includes theme colors with matching app icons, Instagram in About, per-provider speech language selection, smoother quantity editing, update checks, and richer Coach food context.
+Also includes theme colors with matching app icons, Instagram in About, smarter serving units like slices/pieces/ml, optional food log sorting, smoother quantity editing, update checks, and richer Coach food context.
 ```
 
 ## Description
@@ -56,7 +57,7 @@ HOW TO USE
 
 4 WAYS TO LOG A MEAL
 • Photo — AI identifies the food and returns nutrition
-• Voice — 5 STT engines with per-provider language selection
+• Voice — 6 STT options with per-provider language selection
 • Text — describe in plain language, AI parses it
 • Manual Entry — name + calories + macros + meal type, no AI needed
 
@@ -64,10 +65,10 @@ HOW TO USE
 Google Gemini (incl. Gemini 3.1), OpenAI, Anthropic Claude, xAI Grok, Groq, OpenRouter, Together AI, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama (local), or any OpenAI-compatible endpoint. Switch anytime. Keys stored in iOS Keychain. Add Custom AI Instructions to send region, diet, or brand context with every request. Set a Fallback Provider so the app auto-retries on overload or rate-limit errors.
 
 AI ACCESS MODES
-Bring Your Own Key remains available for full provider control. Fud AI Plus is optional and uses Fud AI's Gemini proxy for no-key food scan, voice, and Coach access with daily limits.
+Bring Your Own Key remains available for full provider control. Fud AI Plus is optional and uses Fud AI's Gemini proxy for no-key food scan, voice, and Coach access with daily limits. Plus voice logging includes a speech language selector; Provider Auto follows your iPhone language.
 
-5 SPEECH-TO-TEXT ENGINES
-Native iOS, OpenAI Whisper, Groq, Deepgram, AssemblyAI.
+6 SPEECH-TO-TEXT OPTIONS
+Native iOS, Gemini Audio, OpenAI Whisper, Groq, Deepgram, AssemblyAI.
 Choose Provider Auto, Use iPhone Language, or a specific language per provider where supported.
 
 COACH
@@ -136,6 +137,6 @@ https://fud-ai.app
 1) iPhone only — not optimized for iPad. Please review on iPhone.
 2) App is free and open source. Subscription is optional for Fud AI Plus; BYOK mode works without purchase or sign-in.
 3) BYOK test path: go to Settings → AI Provider → enter any valid Gemini API key. A free key can be obtained at https://aistudio.google.com/apikey
-4) Plus test path: use StoreKit subscription products in the included Products.storekit file, then select Settings → AI Access → Fud AI Plus.
+4) Plus test path: select Settings → AI Access → Fud AI Plus, subscribe to the monthly or yearly product, then use camera, text, voice, or Coach without adding an API key.
 5) No test account needed — app works immediately after onboarding.
 ```
