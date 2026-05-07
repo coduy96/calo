@@ -1,6 +1,6 @@
 # Play Store Listing
 
-Google Play Console listing copy for Fud AI Android (current: v1.0.10 / versionCode 13). Each field is in a code block for easy copy-paste. Char counts are tracked because Play Console enforces hard caps and silently truncates anything over.
+Google Play Console listing copy for Fud AI Android (current: v1.1.0 / versionCode 15). Each field is in a code block for easy copy-paste. Char counts are tracked because Play Console enforces hard caps and silently truncates anything over.
 
 **Where to paste each field in Play Console:**
 - App name / Short description / Full description → Grow → Store presence → **Main store listing** (default English) and Grow → Store presence → **Custom store listings** → Manage translations (per-language overrides)
@@ -38,7 +38,7 @@ Snap, speak, or type a meal. AI logs the calories. Open source.
 ```
 Fud AI makes calorie tracking effortless with AI-powered food recognition. Snap a photo, speak it, or type it — get instant nutrition: calories, protein, carbs, fats, and 9 micronutrients.
 
-NEW in v1.0.10: Theme color launchers are more reliable after switching colors, and the cold-start splash better matches the selected color.
+NEW in v1.1.0: Food logs can now be sorted by latest meal order, serving units are easier to edit, Gemini speech-to-text is available, and GPT-5/OpenAI requests are fixed.
 
 Free, open source, privacy-first. Bring your own API key. All data stays on your device.
 
@@ -60,8 +60,8 @@ Log body fat % over time, set a goal %, see it graphed alongside weight on the u
 13 AI PROVIDERS
 Google Gemini, OpenAI, Anthropic Claude, xAI Grok, Groq, OpenRouter, Together AI, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama (local), or any OpenAI-compatible endpoint. Switch anytime. OpenRouter defaults to a free vision model — test without loading credits. Keys stored encrypted (AES-256). Add Custom AI Instructions to send region, diet, or brand context with every request. Set a Fallback Provider so the app auto-retries on overload or rate-limit errors.
 
-5 SPEECH-TO-TEXT ENGINES
-Native Android, OpenAI Whisper, Groq, Deepgram, AssemblyAI. Choose Provider Auto, Use Device Language, or a fixed language.
+6 SPEECH-TO-TEXT ENGINES
+Native Android, Gemini, OpenAI Whisper, Groq, Deepgram, AssemblyAI. Choose Provider Auto, Use Device Language, or a fixed language.
 
 COACH (TOOL CALLING)
 Multi-turn chat that sees your profile, weight, body fat, and food log. Ask "what was my weight in March?" or "how's my protein this week?" — Coach pulls the date range it needs via 5 on-demand tools. It now understands today's date/timezone and richer meal details. Goal-aware chips for Lose / Gain / Maintain.
@@ -104,84 +104,84 @@ English-only on Play Console — non-English Play Store browsers (ar, az-AZ, de-
 
 ---
 
-## 4. What's New (v1.0.10)
+## 4. What's New (v1.1.0)
 
 **500 char hard cap per language.** Paste the entire block below into Play Console's "Release notes" field — it auto-routes each `<lang-tag>` block to the matching locale.
 
 ```
 <en-US>
-• Theme color launcher switching is more reliable after changing colors.
-• Cold start splash better matches the selected launcher color.
+• New food log sort option for latest meal order.
+• Easier serving unit edits, Gemini speech-to-text, and GPT-5/OpenAI fixes.
 </en-US>
 
 <ar>
-• تبديل لون أيقونة التشغيل أصبح أكثر موثوقية بعد تغيير اللون.
-• شاشة البدء أصبحت تطابق لون الأيقونة المختار بشكل أفضل.
+• خيار جديد لترتيب سجل الطعام حسب أحدث وجبة.
+• تحسين تعديل وحدات الحصة، وإضافة Gemini للصوت، وإصلاح GPT-5/OpenAI.
 </ar>
 
 <az-AZ>
-• Rəng dəyişəndən sonra launcher rəng keçidi daha etibarlıdır.
-• Soyuq başlanğıc ekranı seçilmiş launcher rənginə daha yaxşı uyğunlaşır.
+• Yemək tarixçəsini ən son yemək sırasına görə çeşidləmə əlavə edildi.
+• Porsiya vahidləri, Gemini səs mətni və GPT-5/OpenAI düzəldildi.
 </az-AZ>
 
 <de-DE>
-• Der Launcher-Farbwechsel ist nach Änderungen zuverlässiger.
-• Der Kaltstart-Splash passt besser zur gewählten Launcher-Farbe.
+• Neue Sortierung für Essenslogs nach neuester Mahlzeit.
+• Einfachere Portionseinheiten, Gemini-Spracheingabe und GPT-5/OpenAI-Fixes.
 </de-DE>
 
 <es-ES>
-• El cambio de color del launcher es más fiable tras cambiarlo.
-• El splash de inicio coincide mejor con el color elegido.
+• Nueva opción para ordenar comidas por registro más reciente.
+• Mejor edición de unidades, voz con Gemini y correcciones GPT-5/OpenAI.
 </es-ES>
 
 <fr-FR>
-• Le changement de couleur du launcher est plus fiable.
-• L'écran de démarrage correspond mieux à la couleur choisie.
+• Nouveau tri du journal par repas les plus récents.
+• Unités plus faciles à modifier, voix Gemini et correctifs GPT-5/OpenAI.
 </fr-FR>
 
 <hi-IN>
-• Color बदलने के बाद launcher color switching अब ज्यादा reliable है.
-• Cold start splash अब selected launcher color से बेहतर match करता है.
+• Food log को latest meal order से sort करने का नया option.
+• Serving unit edit बेहतर, Gemini speech-to-text और GPT-5/OpenAI fixes.
 </hi-IN>
 
 <it-IT>
-• Il cambio colore del launcher è più affidabile dopo le modifiche.
-• Lo splash iniziale segue meglio il colore scelto.
+• Nuovo ordinamento del diario per pasti più recenti.
+• Unità porzione più semplici, voce Gemini e correzioni GPT-5/OpenAI.
 </it-IT>
 
 <ja-JP>
-• 色変更後のランチャーカラー切り替えがより安定しました。
-• コールドスタートのスプラッシュが選択色により近くなりました。
+• 最新の食事順でフードログを並べ替えできます。
+• 単位編集、Gemini音声入力、GPT-5/OpenAIの修正を追加。
 </ja-JP>
 
 <ko-KR>
-• 색상 변경 후 런처 색상 전환이 더 안정적입니다.
-• 콜드 스타트 스플래시가 선택한 색상과 더 잘 맞습니다.
+• 최신 식사 순서로 음식 기록을 정렬할 수 있습니다.
+• 단위 편집, Gemini 음성 입력, GPT-5/OpenAI 수정.
 </ko-KR>
 
 <nl-NL>
-• Launcher-kleur wisselt betrouwbaarder na kleurwijzigingen.
-• De koude-start splash past beter bij de gekozen kleur.
+• Nieuwe sortering voor logs op nieuwste maaltijd.
+• Portie-eenheden makkelijker bewerken, Gemini-spraak en GPT-5/OpenAI-fixes.
 </nl-NL>
 
 <pt-BR>
-• A troca de cor do launcher ficou mais confiável.
-• A tela de abertura combina melhor com a cor escolhida.
+• Nova ordenação do diário por refeição mais recente.
+• Unidades melhores, voz Gemini e correções para GPT-5/OpenAI.
 </pt-BR>
 
 <ro>
-• Schimbarea culorii launcherului este mai fiabilă.
-• Splash-ul la pornire se potrivește mai bine cu culoarea aleasă.
+• Sortare nouă a jurnalului după cele mai recente mese.
+• Unități mai ușor de editat, voce Gemini și remedieri GPT-5/OpenAI.
 </ro>
 
 <ru-RU>
-• Переключение цвета launcher стало надежнее после смены цвета.
-• Экран холодного старта лучше совпадает с выбранным цветом.
+• Новая сортировка журнала по последним приемам пищи.
+• Улучшены единицы порций, Gemini для речи и исправления GPT-5/OpenAI.
 </ru-RU>
 
 <zh-CN>
-• 更改颜色后，启动器颜色切换更可靠。
-• 冷启动画面更贴近所选启动器颜色。
+• 新增按最新餐次排序食物日志。
+• 优化份量单位编辑，加入 Gemini 语音，并修复 GPT-5/OpenAI。
 </zh-CN>
 ```
 
