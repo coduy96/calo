@@ -120,7 +120,14 @@ struct PaywallView: View {
         }
         .background(AppColors.appBackground)
         .onAppear {
-            selectedProduct = storeManager.yearlyProduct ?? storeManager.monthlyProduct
+            selectDefaultProductIfNeeded()
+        }
+        .task {
+            await storeManager.loadProducts()
+            selectDefaultProductIfNeeded()
+        }
+        .onChange(of: storeManager.products.map(\.id)) { _, _ in
+            selectDefaultProductIfNeeded()
         }
         .onChange(of: storeManager.isSubscribed) { _, isSubscribed in
             if isSubscribed { handleSubscribed() }
@@ -132,6 +139,14 @@ struct PaywallView: View {
         didNotifySubscription = true
         onSubscribed?()
         dismiss()
+    }
+
+    private func selectDefaultProductIfNeeded() {
+        if let selectedProduct,
+           storeManager.products.contains(where: { $0.id == selectedProduct.id }) {
+            return
+        }
+        selectedProduct = storeManager.yearlyProduct ?? storeManager.monthlyProduct
     }
 
     private func paywallCard(product: PlusProduct, title: String, badge: String?, detail: String) -> some View {

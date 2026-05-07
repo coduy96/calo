@@ -138,11 +138,15 @@ class StoreManager {
     func loadProducts() async {
         if RevenueCatConfig.isConfigured {
             await loadRevenueCatProducts()
+            #if DEBUG
+            if products.isEmpty {
+                await loadStoreKitProducts()
+            }
+            #endif
+            return
         }
 
-        if products.isEmpty {
-            await loadStoreKitProducts()
-        }
+        await loadStoreKitProducts()
     }
 
     private func loadRevenueCatProducts() async {
