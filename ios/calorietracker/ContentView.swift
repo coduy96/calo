@@ -736,29 +736,6 @@ struct HomeView: View {
                     }
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
-
-                    HStack {
-                        Spacer()
-                        Menu {
-                            Picker("Food Log Order", selection: $foodLogSortOrderRaw) {
-                                ForEach(FoodLogSortOrder.allCases) { order in
-                                    Text(order.displayName).tag(order.rawValue)
-                                }
-                            }
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "arrow.up.arrow.down")
-                                    .font(.system(.caption, design: .rounded, weight: .semibold))
-                                Text("Sort")
-                                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                            }
-                        }
-                        .tint(AppColors.calorie)
-                    }
-                    .frame(height: 24)
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: -4, leading: 16, bottom: -4, trailing: 40))
                 }
 
                 // Food list
@@ -795,7 +772,28 @@ struct HomeView: View {
                                     }
                             }
                         } header: {
-                            Label(group.meal.displayName, systemImage: group.meal.icon)
+                            HStack(alignment: .center) {
+                                Label(group.meal.displayName, systemImage: group.meal.icon)
+                                Spacer()
+                                if group.meal == mealGroups.first?.meal {
+                                    Menu {
+                                        Picker("Food Log Order", selection: $foodLogSortOrderRaw) {
+                                            ForEach(FoodLogSortOrder.allCases) { order in
+                                                Text(order.displayName).tag(order.rawValue)
+                                            }
+                                        }
+                                    } label: {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "arrow.up.arrow.down")
+                                                .font(.system(.caption2, design: .rounded, weight: .semibold))
+                                            Text("Sort")
+                                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                        }
+                                    }
+                                    .tint(AppColors.calorie)
+                                    .textCase(nil)
+                                }
+                            }
                         }
                     }
                 }
