@@ -741,12 +741,20 @@ struct HomeView: View {
                 Section {
                     HStack {
                         Spacer()
-                        Picker("Food Log Order", selection: $foodLogSortOrderRaw) {
-                            ForEach(FoodLogSortOrder.allCases) { order in
-                                Text(order.displayName).tag(order.rawValue)
+                        Menu {
+                            Picker("Food Log Order", selection: $foodLogSortOrderRaw) {
+                                ForEach(FoodLogSortOrder.allCases) { order in
+                                    Text(order.displayName).tag(order.rawValue)
+                                }
+                            }
+                        } label: {
+                            Label {
+                                Text("Sort")
+                            } icon: {
+                                Image(systemName: "arrow.up.arrow.down")
                             }
                         }
-                        .pickerStyle(.menu)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .tint(AppColors.calorie)
                     }
                     .listRowBackground(Color.clear)
