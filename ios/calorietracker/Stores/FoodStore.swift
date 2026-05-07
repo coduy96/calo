@@ -95,39 +95,41 @@ class FoodStore {
         case .standard:
             return groups
         case .latestMealsFirst:
-            return groups.sorted { lhs, rhs in
-                compareLatestMealsFirst(lhs: lhs, rhs: rhs)
-            }
+            return latestMealsFirstGroups(groups)
         }
     }
 
-    private func compareLatestMealsFirst(
-        lhs: (meal: MealType, entries: [FoodEntry]),
-        rhs: (meal: MealType, entries: [FoodEntry])
-    ) -> Bool {
-        let lhsMainRank = reverseMainMealRank(lhs.meal)
-        let rhsMainRank = reverseMainMealRank(rhs.meal)
-
-        if let lhsMainRank, let rhsMainRank {
-            return lhsMainRank < rhsMainRank
+    private func latestMealsFirstGroups(_ groups: [(meal: MealType, entries: [FoodEntry])]) -> [(meal: MealType, entries: [FoodEntry])] {
+        var ordered = [MealType.dinner, .lunch, .breakfast].compactMap { meal in
+            groups.first { $0.meal == meal }
         }
 
-        let lhsLatest = lhs.entries.first?.timestamp ?? .distantPast
-        let rhsLatest = rhs.entries.first?.timestamp ?? .distantPast
-
-        if lhsMainRank != nil || rhsMainRank != nil {
-            if lhsLatest != rhsLatest {
-                return lhsLatest > rhsLatest
+        let floatingGroups = groups
+            .filter { reverseMainMealRank($0.meal) == nil }
+            .sorted { lhs, rhs in
+                let lhsLatest = latestTimestamp(in: lhs)
+                let rhsLatest = latestTimestamp(in: rhs)
+                if lhsLatest != rhsLatest { return lhsLatest > rhsLatest }
+                return defaultMealRank(lhs.meal) < defaultMealRank(rhs.meal)
             }
+
+        for group in floatingGroups {
+            let latest = latestTimestamp(in: group)
+            let insertionIndex = ordered.firstIndex { existing in
+                latest > latestTimestamp(in: existing)
+            } ?? ordered.endIndex
+            ordered.insert(group, at: insertionIndex)
         }
 
-        if lhsLatest != rhsLatest {
-            return lhsLatest > rhsLatest
-        }
+        return ordered
+    }
 
-        let lhsDefaultRank = MealType.allCases.firstIndex(of: lhs.meal) ?? 0
-        let rhsDefaultRank = MealType.allCases.firstIndex(of: rhs.meal) ?? 0
-        return lhsDefaultRank < rhsDefaultRank
+    private func latestTimestamp(in group: (meal: MealType, entries: [FoodEntry])) -> Date {
+        group.entries.first?.timestamp ?? .distantPast
+    }
+
+    private func defaultMealRank(_ meal: MealType) -> Int {
+        MealType.allCases.firstIndex(of: meal) ?? 0
     }
 
     private func reverseMainMealRank(_ meal: MealType) -> Int? {

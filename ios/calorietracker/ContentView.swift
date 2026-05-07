@@ -643,10 +643,28 @@ struct HomeView: View {
     private var caloriesRemaining: Int { max(calorieGoal - selectedCalories, 0) }
     private var isToday: Bool { Calendar.current.isDateInToday(selectedDate) }
     private var foodLogSortOrder: FoodLogSortOrder { FoodLogSortOrder.order(for: foodLogSortOrderRaw) }
+    private var logDateForSelectedDay: Date { logDate(on: selectedDate) }
 
     private var navigationTitle: String {
         if isToday { return "Today" }
         return selectedDate.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())
+    }
+
+    private func logDate(on day: Date, now: Date = .now) -> Date {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(day) { return now }
+
+        let dayComponents = calendar.dateComponents([.year, .month, .day], from: day)
+        let timeComponents = calendar.dateComponents([.hour, .minute, .second, .nanosecond], from: now)
+        var components = DateComponents()
+        components.year = dayComponents.year
+        components.month = dayComponents.month
+        components.day = dayComponents.day
+        components.hour = timeComponents.hour
+        components.minute = timeComponents.minute
+        components.second = timeComponents.second
+        components.nanosecond = timeComponents.nanosecond
+        return calendar.date(from: components) ?? day
     }
 
     var body: some View {
@@ -920,7 +938,7 @@ struct HomeView: View {
                         }
                         .popover(isPresented: $showManualPopover) {
                             ManualEntryView(
-                                logDate: selectedDate,
+                                logDate: logDateForSelectedDay,
                                 onCancel: { showManualPopover = false },
                                 onSave: { entry in
                                     showManualPopover = false
@@ -998,7 +1016,7 @@ struct HomeView: View {
                             servingUnitOptions: result.servingUnitOptions,
                             selectedServingUnit: result.selectedServingUnit,
                             selectedServingQuantity: result.selectedServingQuantity,
-                            logDate: selectedDate,
+                            logDate: logDateForSelectedDay,
                             onLog: { entry in
                                 foodStore.addEntry(entry)
                             }
@@ -1011,7 +1029,7 @@ struct HomeView: View {
                 }
             }
             .sheet(isPresented: $showRecentSheet, content: {
-                RecentsView(logDate: selectedDate, onReview: { entry in
+                RecentsView(logDate: logDateForSelectedDay, onReview: { entry in
                     if let imageData = entry.imageData, let image = UIImage(data: imageData) {
                         currentImage = image
                     } else {
