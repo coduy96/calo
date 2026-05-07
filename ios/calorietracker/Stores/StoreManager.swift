@@ -58,11 +58,6 @@ class StoreManager {
         didSet { AIAccessSettings.setActivePlusEntitlement(isSubscribed) }
     }
     var currentSubscriptionProductID: String?
-    var subscriptionWillRenew = false
-    var subscriptionExpirationDate: Date?
-    var subscriptionUnsubscribeDetectedAt: Date?
-    var subscriptionBillingIssueDetectedAt: Date?
-    var subscriptionManagementURL: URL?
 
     // MARK: - Scan Tracking (UserDefaults-backed)
     var freeScansUsed: Int {
@@ -119,31 +114,6 @@ class StoreManager {
         case Self.yearlyID: return "Yearly"
         default: return "Premium"
         }
-    }
-
-    var hasCancelledActiveSubscription: Bool {
-        isSubscribed && subscriptionUnsubscribeDetectedAt != nil && !subscriptionWillRenew
-    }
-
-    var plusStatusText: String {
-        guard isSubscribed else { return "Subscription needed" }
-
-        if subscriptionBillingIssueDetectedAt != nil {
-            return "Billing issue"
-        }
-
-        if hasCancelledActiveSubscription {
-            if let subscriptionExpirationDate {
-                return "Cancelled until \(subscriptionExpirationDate.formatted(date: .abbreviated, time: .omitted))"
-            }
-            return "Cancelled"
-        }
-
-        if subscriptionWillRenew {
-            return "\(currentPlanName) • Renews"
-        }
-
-        return currentPlanName
     }
 
     // MARK: - Init
@@ -293,15 +263,10 @@ class StoreManager {
     }
 
     // MARK: - Entitlements
-    func checkEntitlements(fallbackActiveProductID: String? = nil, forceRefresh: Bool = false) async {
+    func checkEntitlements(fallbackActiveProductID: String? = nil) async {
         if RevenueCatConfig.isConfigured {
             do {
-                if forceRefresh {
-                    Purchases.shared.invalidateCustomerInfoCache()
-                }
-                let customerInfo = try await Purchases.shared.customerInfo(
-                    fetchPolicy: forceRefresh ? .fetchCurrent : .default
-                )
+                let customerInfo = try await Purchases.shared.customerInfo()
                 applyCustomerInfo(customerInfo, fallbackProductID: fallbackActiveProductID)
                 hasCheckedEntitlements = true
                 return
@@ -312,14 +277,12 @@ class StoreManager {
 
         var subscribed = false
         var activeProductID: String?
-        var activeExpirationDate: Date?
 
         for await result in Transaction.currentEntitlements {
             let transaction = extractTransaction(result)
             if isActivePlusTransaction(transaction) {
                 subscribed = true
                 activeProductID = transaction.productID
-                activeExpirationDate = transaction.expirationDate
             }
         }
 
@@ -328,12 +291,7 @@ class StoreManager {
             activeProductID = fallbackActiveProductID
         }
 
-        applySubscriptionState(
-            isSubscribed: subscribed,
-            productID: activeProductID,
-            willRenew: subscribed,
-            expirationDate: activeExpirationDate
-        )
+        applySubscriptionState(isSubscribed: subscribed, productID: activeProductID)
         hasCheckedEntitlements = true
     }
 
@@ -344,12 +302,7 @@ class StoreManager {
                 guard let self else { break }
                 let transaction = self.extractTransaction(result)
                 if self.isActivePlusTransaction(transaction) {
-                    self.applySubscriptionState(
-                        isSubscribed: true,
-                        productID: transaction.productID,
-                        willRenew: true,
-                        expirationDate: transaction.expirationDate
-                    )
+                    self.applySubscriptionState(isSubscribed: true, productID: transaction.productID)
                 }
                 await transaction.finish()
                 await self.checkEntitlements()
@@ -381,22 +334,9 @@ class StoreManager {
         return true
     }
 
-    private func applySubscriptionState(
-        isSubscribed subscribed: Bool,
-        productID: String?,
-        willRenew: Bool = false,
-        expirationDate: Date? = nil,
-        unsubscribeDetectedAt: Date? = nil,
-        billingIssueDetectedAt: Date? = nil,
-        managementURL: URL? = nil
-    ) {
+    private func applySubscriptionState(isSubscribed subscribed: Bool, productID: String?) {
         isSubscribed = subscribed
         currentSubscriptionProductID = productID
-        subscriptionWillRenew = subscribed && willRenew
-        subscriptionExpirationDate = expirationDate
-        subscriptionUnsubscribeDetectedAt = unsubscribeDetectedAt
-        subscriptionBillingIssueDetectedAt = billingIssueDetectedAt
-        subscriptionManagementURL = managementURL
     }
 
     private func applyCustomerInfo(_ customerInfo: CustomerInfo, fallbackProductID: String? = nil) {
@@ -404,17 +344,8 @@ class StoreManager {
         let entitlementProductID = entitlement?.isActive == true ? entitlement?.productIdentifier : nil
         let activeKnownProductID = customerInfo.activeSubscriptions.first { Self.allProductIDs.contains($0) }
         let productID = entitlementProductID ?? activeKnownProductID ?? fallbackProductID
-        let subscriptionInfo = productID.flatMap { customerInfo.subscriptionsByProductIdentifier[$0] }
         let subscribed = entitlement?.isActive == true || activeKnownProductID != nil || fallbackProductID != nil
-        applySubscriptionState(
-            isSubscribed: subscribed,
-            productID: productID,
-            willRenew: entitlement?.willRenew ?? subscriptionInfo?.willRenew ?? false,
-            expirationDate: entitlement?.expirationDate ?? subscriptionInfo?.expiresDate,
-            unsubscribeDetectedAt: entitlement?.unsubscribeDetectedAt ?? subscriptionInfo?.unsubscribeDetectedAt,
-            billingIssueDetectedAt: entitlement?.billingIssueDetectedAt ?? subscriptionInfo?.billingIssuesDetectedAt,
-            managementURL: customerInfo.managementURL ?? subscriptionInfo?.managementURL
-        )
+        applySubscriptionState(isSubscribed: subscribed, productID: productID)
     }
 
     // MARK: - Scan Recording

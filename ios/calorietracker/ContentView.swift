@@ -3043,11 +3043,11 @@ private struct AIAccessSettingsSection: View {
             Label {
                 Text("Status")
             } icon: {
-                Image(systemName: plusStatusIcon)
-                    .foregroundStyle(plusStatusColor)
+                Image(systemName: storeManager.isSubscribed ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
+                    .foregroundStyle(storeManager.isSubscribed ? .green : AppColors.calorie)
             }
             Spacer()
-            Text(storeManager.plusStatusText)
+            Text(storeManager.isSubscribed ? storeManager.currentPlanName : "Subscription needed")
                 .foregroundStyle(.secondary)
         }
     }
@@ -3061,7 +3061,7 @@ private struct AIAccessSettingsSection: View {
             }
         } label: {
             Label {
-                Text(plusActionTitle)
+                Text(storeManager.isSubscribed ? "Cancel or Manage Subscription" : "Upgrade to Plus")
             } icon: {
                 Image(systemName: storeManager.isSubscribed ? "creditcard.fill" : "sparkles")
                     .foregroundStyle(AppColors.calorie)
@@ -3069,34 +3069,6 @@ private struct AIAccessSettingsSection: View {
         }
         .tint(.primary)
         .disabled(isManagingSubscription)
-    }
-
-    private var plusStatusIcon: String {
-        if storeManager.subscriptionBillingIssueDetectedAt != nil {
-            return "exclamationmark.triangle.fill"
-        }
-
-        if storeManager.hasCancelledActiveSubscription {
-            return "clock.badge.exclamationmark.fill"
-        }
-
-        return storeManager.isSubscribed ? "checkmark.seal.fill" : "exclamationmark.triangle.fill"
-    }
-
-    private var plusStatusColor: Color {
-        if storeManager.subscriptionBillingIssueDetectedAt != nil || storeManager.hasCancelledActiveSubscription {
-            return .orange
-        }
-
-        return storeManager.isSubscribed ? .green : AppColors.calorie
-    }
-
-    private var plusActionTitle: String {
-        if storeManager.hasCancelledActiveSubscription {
-            return "Resume or Manage Subscription"
-        }
-
-        return storeManager.isSubscribed ? "Cancel or Manage Subscription" : "Upgrade to Plus"
     }
 
     private var switchToBYOKButton: some View {
@@ -3144,7 +3116,7 @@ private struct AIAccessSettingsSection: View {
 
         do {
             try await AppStore.showManageSubscriptions(in: scene)
-            await storeManager.checkEntitlements(forceRefresh: true)
+            await storeManager.checkEntitlements()
         } catch {
             openAppleSubscriptionsURL()
         }
