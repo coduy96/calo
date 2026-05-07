@@ -140,9 +140,7 @@ async function verifyPlusEntitlement(installID) {
 
   const json = await result.json();
   const entitlement = json?.subscriber?.entitlements?.[entitlementID];
-  const active =
-    isRevenueCatEntitlementActive(entitlement) ||
-    isRevenueCatKnownSubscriptionActive(json?.subscriber?.subscriptions);
+  const active = isRevenueCatEntitlementActive(entitlement);
   if (active) {
     entitlementCache.set(installID, { expiresAt: Date.now() + ENTITLEMENT_CACHE_MS });
     return { active: true };
@@ -163,40 +161,6 @@ function isRevenueCatEntitlementActive(entitlement) {
     return true;
   }
   const expiresDate = entitlement.expires_date;
-  if (!expiresDate) {
-    return true;
-  }
-  return isFutureDate(expiresDate);
-}
-
-function isRevenueCatKnownSubscriptionActive(subscriptions) {
-  if (!subscriptions || typeof subscriptions !== "object") {
-    return false;
-  }
-
-  return configuredPlusProductIDs().some((productID) =>
-    isRevenueCatSubscriptionActive(subscriptions[productID])
-  );
-}
-
-function configuredPlusProductIDs() {
-  return String(process.env.REVENUECAT_PLUS_PRODUCT_IDS || "fudai.plus.monthly,fudai.plus.yearly")
-    .split(",")
-    .map((productID) => productID.trim())
-    .filter(Boolean);
-}
-
-function isRevenueCatSubscriptionActive(subscription) {
-  if (!subscription || typeof subscription !== "object") {
-    return false;
-  }
-  if (subscription.refunded_at || subscription.revocation_date) {
-    return false;
-  }
-  if (isFutureDate(subscription.grace_period_expires_date)) {
-    return true;
-  }
-  const expiresDate = subscription.expires_date;
   if (!expiresDate) {
     return true;
   }
