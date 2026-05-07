@@ -101,6 +101,10 @@ class PreferencesStore(private val context: Context) {
     val lastSavedMealsSegment: Flow<String> = ds.data.map { it[Keys.LAST_SAVED_MEALS_SEGMENT] ?: "RECENTS" }
     suspend fun setLastSavedMealsSegment(v: String) { ds.edit { it[Keys.LAST_SAVED_MEALS_SEGMENT] = v } }
 
+    /** "standard" | "latestMealsFirst". Mirrors iOS @AppStorage("foodLogSortOrder"). */
+    val foodLogSortOrder: Flow<String> = ds.data.map { it[Keys.FOOD_LOG_SORT_ORDER] ?: "standard" }
+    suspend fun setFoodLogSortOrder(v: String) { ds.edit { it[Keys.FOOD_LOG_SORT_ORDER] = v } }
+
     // -- AI Provider selection --------------------------------------------
     val selectedAIProvider: Flow<AIProvider> = ds.data.map {
         val raw = it[Keys.SELECTED_AI_PROVIDER]
@@ -288,6 +292,7 @@ class PreferencesStore(private val context: Context) {
         val APP_THEME_COLOR = stringPreferencesKey("appThemeColor")
         val WEEK_STARTS_MONDAY = booleanPreferencesKey("weekStartsOnMonday")
         val LAST_SAVED_MEALS_SEGMENT = stringPreferencesKey("lastRecentsSegment")
+        val FOOD_LOG_SORT_ORDER = stringPreferencesKey("foodLogSortOrder")
         val SELECTED_AI_PROVIDER = stringPreferencesKey("selectedAIProvider")
         val SELECTED_AI_MODEL = stringPreferencesKey("selectedAIModel")
         val USER_CONTEXT = stringPreferencesKey("userContext")

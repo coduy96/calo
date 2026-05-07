@@ -22,10 +22,21 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.util.UUID
 
+enum class FoodLogSortOrder(val storageValue: String, val displayName: String) {
+    STANDARD("standard", "Breakfast → Lunch → Dinner"),
+    LATEST_MEALS_FIRST("latestMealsFirst", "Latest Meals First");
+
+    companion object {
+        fun fromStorage(value: String?): FoodLogSortOrder =
+            values().firstOrNull { it.storageValue == value } ?: STANDARD
+    }
+}
+
 data class HomeUiState(
     val date: LocalDate = LocalDate.now(),
     val profile: UserProfile? = null,
     val todayEntries: List<FoodEntry> = emptyList(),
+    val foodLogSortOrder: FoodLogSortOrder = FoodLogSortOrder.STANDARD,
     val favoriteKeys: Set<String> = emptySet(),
     val pendingAnalysis: FoodAnalysis? = null,
     val pendingImageBytes: ByteArray? = null,
@@ -56,8 +67,9 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
             container.profileRepository.profile,
             container.foodRepository.entries,
             container.foodRepository.favoriteKeys,
+            container.prefs.foodLogSortOrder,
             _selectedDate
-        ) { p, entries, favKeys, day ->
+        ) { p, entries, favKeys, sortOrder, day ->
             val zone = ZoneId.systemDefault()
             val dayEntries = entries
                 .filter { it.timestamp.atZone(zone).toLocalDate() == day }
@@ -66,6 +78,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
                 profile = p,
                 date = day,
                 todayEntries = dayEntries,
+                foodLogSortOrder = FoodLogSortOrder.fromStorage(sortOrder),
                 favoriteKeys = favKeys
             )
         }
@@ -75,6 +88,12 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
 
     fun setSelectedDate(date: LocalDate) {
         _selectedDate.value = date
+    }
+
+    fun setFoodLogSortOrder(order: FoodLogSortOrder) {
+        viewModelScope.launch {
+            container.prefs.setFoodLogSortOrder(order.storageValue)
+        }
     }
 
     fun analyzeText(description: String) {

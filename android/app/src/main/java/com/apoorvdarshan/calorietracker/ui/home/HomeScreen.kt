@@ -56,6 +56,7 @@ import androidx.compose.material.icons.filled.Note
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -131,6 +132,7 @@ fun HomeScreen(container: AppContainer) {
     var showManual by remember { mutableStateOf(false) }
     var showSaved by remember { mutableStateOf(false) }
     var showAddMenu by remember { mutableStateOf(false) }
+    var showSortMenu by remember { mutableStateOf(false) }
     var editingEntry by remember { mutableStateOf<FoodEntry?>(null) }
     var showNutritionDetail by remember { mutableStateOf(false) }
 
@@ -204,6 +206,9 @@ fun HomeScreen(container: AppContainer) {
     val today = LocalDate.now()
     val selectedDate = ui.date
     val isToday = selectedDate == today
+    val mealGroups = remember(ui.todayEntries, ui.foodLogSortOrder) {
+        foodLogMealGroups(ui.todayEntries, ui.foodLogSortOrder)
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -414,11 +419,7 @@ fun HomeScreen(container: AppContainer) {
 
             // Food log
             item { Spacer(Modifier.height(8.dp)) }
-            val grouped = ui.todayEntries.groupBy { it.mealType }
-            val ordered = listOf(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER, MealType.SNACK, MealType.OTHER)
-            val populated = ordered.filter { (grouped[it] ?: emptyList()).isNotEmpty() }
-
-            if (populated.isEmpty()) {
+            if (mealGroups.isEmpty()) {
                 item { SectionHeader("Today's Food") }
                 item {
                     SectionCardWrapper(isFirst = true, isLast = true) {
@@ -432,12 +433,24 @@ fun HomeScreen(container: AppContainer) {
                     }
                 }
             } else {
-                for (meal in populated) {
-                    val entries = grouped[meal] ?: emptyList()
-                    item { MealSectionHeader(meal = meal) }
-                    items(entries, key = { it.id }) { entry ->
-                        val index = entries.indexOf(entry)
-                        SectionCardWrapper(isFirst = index == 0, isLast = index == entries.lastIndex) {
+                for ((groupIndex, group) in mealGroups.withIndex()) {
+                    item(key = "header-${group.id}") {
+                        MealSectionHeader(
+                            meal = group.meal,
+                            showSortMenu = groupIndex == 0,
+                            sortOrder = ui.foodLogSortOrder,
+                            sortMenuExpanded = showSortMenu,
+                            onSortClick = { showSortMenu = true },
+                            onSortDismiss = { showSortMenu = false },
+                            onSortOrderSelected = { order ->
+                                showSortMenu = false
+                                vm.setFoodLogSortOrder(order)
+                            }
+                        )
+                    }
+                    items(group.entries, key = { it.id }) { entry ->
+                        val index = group.entries.indexOf(entry)
+                        SectionCardWrapper(isFirst = index == 0, isLast = index == group.entries.lastIndex) {
                             // Tap row -> open EditFoodEntrySheet (matches iOS .onTapGesture).
                             // Swipe trailing edge -> delete; swipe leading edge -> toggle favorite.
                             // Mirrors iOS ContentView.swift .swipeActions(edge: .trailing) on the row,
@@ -450,7 +463,7 @@ fun HomeScreen(container: AppContainer) {
                                 onDelete = { vm.deleteEntry(entry.id) },
                                 onToggleFavorite = { vm.toggleFavorite(entry) }
                             )
-                            if (index != entries.lastIndex) Divider()
+                            if (index != group.entries.lastIndex) Divider()
                         }
                     }
                 }
@@ -824,10 +837,20 @@ private fun SectionHeader(title: String) {
 }
 
 @Composable
-private fun MealSectionHeader(meal: MealType) {
+private fun MealSectionHeader(
+    meal: MealType,
+    showSortMenu: Boolean = false,
+    sortOrder: FoodLogSortOrder = FoodLogSortOrder.STANDARD,
+    sortMenuExpanded: Boolean = false,
+    onSortClick: () -> Unit = {},
+    onSortDismiss: () -> Unit = {},
+    onSortOrderSelected: (FoodLogSortOrder) -> Unit = {}
+) {
     // iOS layout: small dim icon + sentence-case label, regular weight ~17sp.
     Row(
-        Modifier.padding(start = 22.dp, top = 18.dp, bottom = 10.dp),
+        Modifier
+            .fillMaxWidth()
+            .padding(start = 22.dp, end = 30.dp, top = 18.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -843,7 +866,102 @@ private fun MealSectionHeader(meal: MealType) {
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f)
         )
+        if (showSortMenu) {
+            Spacer(Modifier.weight(1f))
+            Box {
+                Row(
+                    modifier = Modifier.clickable { onSortClick() },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.SwapVert,
+                        contentDescription = null,
+                        tint = AppColors.Calorie,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        "Sort",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = AppColors.Calorie
+                    )
+                }
+                DropdownMenu(
+                    expanded = sortMenuExpanded,
+                    onDismissRequest = onSortDismiss
+                ) {
+                    for (order in FoodLogSortOrder.values()) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    order.displayName,
+                                    fontWeight = if (order == sortOrder) FontWeight.SemiBold else FontWeight.Normal
+                                )
+                            },
+                            onClick = { onSortOrderSelected(order) }
+                        )
+                    }
+                }
+            }
+        }
     }
+}
+
+private data class FoodLogMealGroup(
+    val id: String,
+    val meal: MealType,
+    val entries: List<FoodEntry>
+)
+
+private fun foodLogMealGroups(
+    entries: List<FoodEntry>,
+    sortOrder: FoodLogSortOrder
+): List<FoodLogMealGroup> = when (sortOrder) {
+    FoodLogSortOrder.STANDARD -> {
+        val grouped = entries.groupBy { it.mealType }
+        listOf(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER, MealType.SNACK, MealType.OTHER)
+            .mapNotNull { meal ->
+                val mealEntries = grouped[meal].orEmpty()
+                if (mealEntries.isEmpty()) null else FoodLogMealGroup(
+                    id = "standard-${meal.name}",
+                    meal = meal,
+                    entries = mealEntries
+                )
+            }
+    }
+    FoodLogSortOrder.LATEST_MEALS_FIRST -> latestMealRuns(entries)
+}
+
+private fun latestMealRuns(entries: List<FoodEntry>): List<FoodLogMealGroup> {
+    val sortedEntries = entries.sortedByDescending { it.timestamp }
+    val groups = mutableListOf<FoodLogMealGroup>()
+    var currentMeal: MealType? = null
+    val currentEntries = mutableListOf<FoodEntry>()
+
+    fun appendCurrentGroup() {
+        val meal = currentMeal ?: return
+        if (currentEntries.isEmpty()) return
+        groups += FoodLogMealGroup(
+            id = "latest-${groups.size}-${meal.name}-${currentEntries.first().id}",
+            meal = meal,
+            entries = currentEntries.toList()
+        )
+    }
+
+    for (entry in sortedEntries) {
+        if (entry.mealType == currentMeal) {
+            currentEntries += entry
+        } else {
+            appendCurrentGroup()
+            currentMeal = entry.mealType
+            currentEntries.clear()
+            currentEntries += entry
+        }
+    }
+
+    appendCurrentGroup()
+    return groups
 }
 
 private fun mealIcon(meal: MealType): ImageVector = when (meal) {
