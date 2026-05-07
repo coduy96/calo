@@ -2935,6 +2935,7 @@ private struct FudAIPlusManagedSettingsSection: View {
     @State private var quotaSnapshot: AIAccessQuotaSnapshot = .fallback
     @State private var quotaError: String?
     @State private var isLoadingQuota = false
+    @State private var selectedPlusSpeechLanguage: SpeechLanguage = SpeechSettings.selectedLanguage(for: .gemini)
 
     var body: some View {
         Section {
@@ -2942,6 +2943,24 @@ private struct FudAIPlusManagedSettingsSection: View {
             quotaRow(icon: "waveform", title: "Speech-to-Text", bucket: quotaSnapshot.speech)
             quotaRow(icon: "message.fill", title: "Coach", bucket: quotaSnapshot.coach)
             quotaRow(icon: "shield.lefthalf.filled", title: "Daily Safety Limit", bucket: quotaSnapshot.global)
+
+            Picker(selection: $selectedPlusSpeechLanguage) {
+                ForEach(SpeechLanguage.allCases) { language in
+                    Text(language.displayName).tag(language)
+                }
+            } label: {
+                Label {
+                    Text("Speech Language")
+                } icon: {
+                    Image(systemName: "globe")
+                        .foregroundStyle(AppColors.calorie)
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(.secondary)
+            .onChange(of: selectedPlusSpeechLanguage) { _, newLanguage in
+                SpeechSettings.setLanguage(newLanguage, for: .gemini)
+            }
 
             if isLoadingQuota {
                 HStack {
@@ -2957,10 +2976,11 @@ private struct FudAIPlusManagedSettingsSection: View {
         } header: {
             Text("Fud AI Plus")
         } footer: {
-            Text("Remaining daily Plus usage is refreshed from Fud AI's server. Provider, model, fallback, and speech API key settings are managed by Plus.")
+            Text("Remaining daily Plus usage is refreshed from Fud AI's server. Plus voice uses Gemini Audio. Provider Auto uses your iPhone language for Plus; choose a language to override it. Provider, model, fallback, and speech API key settings are managed by Plus.")
         }
         .listRowBackground(AppColors.appCard)
         .task {
+            selectedPlusSpeechLanguage = SpeechSettings.selectedLanguage(for: .gemini)
             await refreshQuota()
         }
     }

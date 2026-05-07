@@ -34,7 +34,13 @@ struct SpeechService {
     /// Caller should only invoke this for non-native providers.
     static func transcribe(audioURL: URL) async throws -> String {
         let provider: SpeechProvider = AIAccessSettings.isUsingFudAIPlus ? .gemini : SpeechSettings.selectedProvider
-        let languageCode = SpeechSettings.selectedLanguage(for: provider).apiLanguageCode
+        let selectedLanguage = SpeechSettings.selectedLanguage(for: provider)
+        let languageCode: String?
+        if AIAccessSettings.isUsingFudAIPlus, provider == .gemini, selectedLanguage == .automatic {
+            languageCode = SpeechLanguage.device.apiLanguageCode
+        } else {
+            languageCode = selectedLanguage.apiLanguageCode
+        }
         guard provider.requiresAPIKey else {
             // Native iOS handled directly by VoiceInputView.
             throw SpeechError.apiError("Native iOS transcription is handled in-view, not via SpeechService.")
