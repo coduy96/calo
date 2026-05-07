@@ -738,6 +738,21 @@ struct HomeView: View {
                     .listRowSeparator(.hidden)
                 }
 
+                Section {
+                    HStack {
+                        Spacer()
+                        Picker("Food Log Order", selection: $foodLogSortOrderRaw) {
+                            ForEach(FoodLogSortOrder.allCases) { order in
+                                Text(order.displayName).tag(order.rawValue)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .tint(AppColors.calorie)
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                }
+
                 // Food list
                 let mealGroups = foodStore.entriesByMeal(for: selectedDate, order: foodLogSortOrder)
                 if mealGroups.isEmpty {
@@ -1681,7 +1696,6 @@ struct ProfileView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @AppStorage("healthKitEnabled") private var healthKitEnabled = false
     @AppStorage("weekStartsOnMonday") private var weekStartsOnMonday = false
-    @AppStorage(FoodLogSortOrder.storageKey) private var foodLogSortOrderRaw = FoodLogSortOrder.defaultOrder.rawValue
     @AppStorage(AppThemeColor.storageKey) private var appThemeColorRaw = AppThemeColor.defaultColor.rawValue
 
     enum ActiveSheet: String, Identifiable {
@@ -2018,21 +2032,6 @@ struct ProfileView: View {
                             Text("Week Starts On")
                         } icon: {
                             Image(systemName: "calendar")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .tint(.secondary)
-
-                    Picker(selection: $foodLogSortOrderRaw) {
-                        ForEach(FoodLogSortOrder.allCases) { order in
-                            Text(order.displayName).tag(order.rawValue)
-                        }
-                    } label: {
-                        Label {
-                            Text("Food Log Order")
-                        } icon: {
-                            Image(systemName: "arrow.up.arrow.down")
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
