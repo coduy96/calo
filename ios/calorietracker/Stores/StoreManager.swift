@@ -1,5 +1,47 @@
 import SwiftUI
 import StoreKit
+import RevenueCat
+
+enum RevenueCatConfig {
+    static let appleAPIKeyInfoKey = "RevenueCatAppleAPIKey"
+    static let entitlementID = "plus"
+
+    private static var didConfigure = false
+
+    static var apiKey: String? {
+        let raw = (Bundle.main.object(forInfoDictionaryKey: appleAPIKeyInfoKey) as? String) ?? ""
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, !trimmed.contains("$(") else { return nil }
+        return trimmed
+    }
+
+    static var isConfigured: Bool {
+        didConfigure
+    }
+
+    static func configureIfNeeded() {
+        guard !didConfigure, let apiKey else { return }
+        #if DEBUG
+        Purchases.logLevel = .debug
+        #endif
+        Purchases.configure(withAPIKey: apiKey, appUserID: AIAccessSettings.installID)
+        didConfigure = true
+    }
+}
+
+struct PlusProduct: Identifiable {
+    fileprivate enum Source {
+        case revenueCat(Package)
+        case storeKit(Product)
+    }
+
+    let id: String
+    let productID: String
+    let title: String
+    let displayPrice: String
+    let detail: String
+    fileprivate let source: Source
+}
 
 @MainActor
 @Observable
@@ -10,8 +52,8 @@ class StoreManager {
 
     private static let allProductIDs: Set<String> = [monthlyID, yearlyID]
 
-    // MARK: - StoreKit State
-    var products: [Product] = []
+    // MARK: - Purchase State
+    var products: [PlusProduct] = []
     var isSubscribed = false {
         didSet { AIAccessSettings.setActivePlusEntitlement(isSubscribed) }
     }
@@ -57,11 +99,11 @@ class StoreManager {
         return max(0, 3 - freeScansUsed)
     }
 
-    var monthlyProduct: Product? {
+    var monthlyProduct: PlusProduct? {
         products.first { $0.id == Self.monthlyID }
     }
 
-    var yearlyProduct: Product? {
+    var yearlyProduct: PlusProduct? {
         products.first { $0.id == Self.yearlyID }
     }
 
@@ -76,11 +118,15 @@ class StoreManager {
 
     // MARK: - Init
     init() {
+        RevenueCatConfig.configureIfNeeded()
+
         freeScansUsed = UserDefaults.standard.integer(forKey: "freeScansUsed")
         dailyScansUsed = UserDefaults.standard.integer(forKey: "dailyScansUsed")
         lastScanDate = UserDefaults.standard.object(forKey: "lastScanDate") as? Date
 
-        transactionListener = listenForTransactions()
+        if !RevenueCatConfig.isConfigured {
+            transactionListener = listenForTransactions()
+        }
 
         Task {
             await loadProducts()
@@ -90,8 +136,45 @@ class StoreManager {
 
     // MARK: - Load Products
     func loadProducts() async {
+        if RevenueCatConfig.isConfigured {
+            await loadRevenueCatProducts()
+        }
+
+        if products.isEmpty {
+            await loadStoreKitProducts()
+        }
+    }
+
+    private func loadRevenueCatProducts() async {
         do {
-            products = try await Product.products(for: Self.allProductIDs)
+            guard let offering = try await Purchases.shared.offerings().current else {
+                purchaseError = "RevenueCat offering is not configured."
+                return
+            }
+            products = plusProducts(from: offering)
+        } catch {
+            purchaseError = error.localizedDescription
+            print("Failed to load RevenueCat offerings: \(error)")
+        }
+    }
+
+    private func loadStoreKitProducts() async {
+        do {
+            let storeProducts = try await Product.products(for: Self.allProductIDs)
+            products = storeProducts.map { product in
+                PlusProduct(
+                    id: product.id,
+                    productID: product.id,
+                    title: product.id == Self.yearlyID ? "Yearly" : "Monthly",
+                    displayPrice: product.displayPrice,
+                    detail: product.id == Self.yearlyID ? yearlyDetailText(product) : "per month",
+                    source: .storeKit(product)
+                )
+            }
+            .sorted { Self.productSortRank($0.productID) < Self.productSortRank($1.productID) }
+            if !products.isEmpty {
+                purchaseError = nil
+            }
         } catch {
             print("Failed to load products: \(error)")
         }
@@ -99,11 +182,32 @@ class StoreManager {
 
     // MARK: - Purchase
     @discardableResult
-    func purchase(_ product: Product) async -> Bool {
+    func purchase(_ product: PlusProduct) async -> Bool {
         isPurchasing = true
         purchaseError = nil
         defer { isPurchasing = false }
 
+        switch product.source {
+        case .revenueCat(let package):
+            return await purchaseRevenueCat(package)
+        case .storeKit(let storeProduct):
+            return await purchaseStoreKit(storeProduct)
+        }
+    }
+
+    private func purchaseRevenueCat(_ package: Package) async -> Bool {
+        do {
+            let result = try await Purchases.shared.purchase(package: package)
+            guard !result.userCancelled else { return false }
+            applyCustomerInfo(result.customerInfo, fallbackProductID: package.storeProduct.productIdentifier)
+            return isSubscribed
+        } catch {
+            purchaseError = error.localizedDescription
+            return false
+        }
+    }
+
+    private func purchaseStoreKit(_ product: Product) async -> Bool {
         do {
             let result = try await product.purchase()
             switch result {
@@ -133,6 +237,17 @@ class StoreManager {
     // MARK: - Restore
     @discardableResult
     func restorePurchases() async -> Bool {
+        if RevenueCatConfig.isConfigured {
+            do {
+                let customerInfo = try await Purchases.shared.restorePurchases()
+                applyCustomerInfo(customerInfo)
+                return isSubscribed
+            } catch {
+                purchaseError = error.localizedDescription
+                return false
+            }
+        }
+
         do {
             try await AppStore.sync()
             await checkEntitlements()
@@ -145,6 +260,17 @@ class StoreManager {
 
     // MARK: - Entitlements
     func checkEntitlements(fallbackActiveProductID: String? = nil) async {
+        if RevenueCatConfig.isConfigured {
+            do {
+                let customerInfo = try await Purchases.shared.customerInfo()
+                applyCustomerInfo(customerInfo, fallbackProductID: fallbackActiveProductID)
+                hasCheckedEntitlements = true
+                return
+            } catch {
+                print("Failed to check RevenueCat entitlements: \(error)")
+            }
+        }
+
         var subscribed = false
         var activeProductID: String?
 
@@ -181,7 +307,7 @@ class StoreManager {
     }
 
     // MARK: - Verification
-    nonisolated private func extractTransaction<T>(_ result: VerificationResult<T>) -> T {
+    nonisolated private func extractTransaction<T>(_ result: StoreKit.VerificationResult<T>) -> T {
         switch result {
         case .unverified(let payload, _):
             return payload
@@ -209,6 +335,15 @@ class StoreManager {
         currentSubscriptionProductID = productID
     }
 
+    private func applyCustomerInfo(_ customerInfo: CustomerInfo, fallbackProductID: String? = nil) {
+        let entitlement = customerInfo.entitlements[RevenueCatConfig.entitlementID]
+        let entitlementProductID = entitlement?.isActive == true ? entitlement?.productIdentifier : nil
+        let activeKnownProductID = customerInfo.activeSubscriptions.first { Self.allProductIDs.contains($0) }
+        let productID = entitlementProductID ?? activeKnownProductID ?? fallbackProductID
+        let subscribed = entitlement?.isActive == true || activeKnownProductID != nil || fallbackProductID != nil
+        applySubscriptionState(isSubscribed: subscribed, productID: productID)
+    }
+
     // MARK: - Scan Recording
     func recordScan() {
         if isSubscribed {
@@ -228,5 +363,73 @@ class StoreManager {
             dailyScansUsed = 0
             lastScanDate = .now
         }
+    }
+
+    private func plusProducts(from offering: Offering) -> [PlusProduct] {
+        var packages: [Package] = []
+        if let annual = offering.annual { packages.append(annual) }
+        if let monthly = offering.monthly { packages.append(monthly) }
+
+        for package in offering.availablePackages where Self.allProductIDs.contains(package.storeProduct.productIdentifier) {
+            if !packages.contains(where: { $0.storeProduct.productIdentifier == package.storeProduct.productIdentifier }) {
+                packages.append(package)
+            }
+        }
+
+        return packages.map { package in
+            PlusProduct(
+                id: package.storeProduct.productIdentifier,
+                productID: package.storeProduct.productIdentifier,
+                title: title(for: package),
+                displayPrice: package.localizedPriceString,
+                detail: detail(for: package),
+                source: .revenueCat(package)
+            )
+        }
+        .sorted { Self.productSortRank($0.productID) < Self.productSortRank($1.productID) }
+    }
+
+    private static func productSortRank(_ productID: String) -> Int {
+        switch productID {
+        case yearlyID: return 0
+        case monthlyID: return 1
+        default: return 2
+        }
+    }
+
+    private func title(for package: Package) -> String {
+        switch package.packageType {
+        case .annual: return "Yearly"
+        case .monthly: return "Monthly"
+        default:
+            switch package.storeProduct.productIdentifier {
+            case Self.yearlyID: return "Yearly"
+            case Self.monthlyID: return "Monthly"
+            default: return package.storeProduct.localizedTitle
+            }
+        }
+    }
+
+    private func detail(for package: Package) -> String {
+        switch package.packageType {
+        case .annual:
+            if let monthlyEquivalent = package.storeProduct.localizedPricePerMonth {
+                return "\(monthlyEquivalent)/mo"
+            }
+            return "per year"
+        case .monthly:
+            return "per month"
+        default:
+            return package.storeProduct.subscriptionPeriod == nil ? "one time" : "subscription"
+        }
+    }
+
+    private func yearlyDetailText(_ product: Product) -> String {
+        let monthlyEquivalent = product.price / 12
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = product.priceFormatStyle.locale
+        let monthlyStr = formatter.string(from: monthlyEquivalent as NSDecimalNumber) ?? ""
+        return "\(monthlyStr)/mo"
     }
 }

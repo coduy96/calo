@@ -7,7 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		BA8E0E2D2F33F198007DD537 /* FudAIWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BA8E0E272F33F198007DD537 /* FudAIWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+			BA8E0E2D2F33F198007DD537 /* FudAIWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BA8E0E272F33F198007DD537 /* FudAIWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+			F00DCA700000000000000001 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = F00DCA700000000000000003 /* RevenueCat */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -102,13 +103,14 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		BA8E0DF02F33F197007DD537 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
+			BA8E0DF02F33F197007DD537 /* Frameworks */ = {
+				isa = PBXFrameworksBuildPhase;
+				buildActionMask = 2147483647;
+				files = (
+					F00DCA700000000000000001 /* RevenueCat in Frameworks */,
+				);
+				runOnlyForDeploymentPostprocessing = 0;
+			};
 		BA8E0E042F33F198007DD537 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -175,11 +177,12 @@
 			fileSystemSynchronizedGroups = (
 				BA8E0DF52F33F197007DD537 /* calorietracker */,
 			);
-			name = calorietracker;
-			packageProductDependencies = (
-			);
-			productName = calorietracker;
-			productReference = BA8E0DF32F33F197007DD537 /* calorietracker.app */;
+				name = calorietracker;
+				packageProductDependencies = (
+					F00DCA700000000000000003 /* RevenueCat */,
+				);
+				productName = calorietracker;
+				productReference = BA8E0DF32F33F197007DD537 /* calorietracker.app */;
 			productType = "com.apple.product-type.application";
 		};
 		BA8E0E062F33F198007DD537 /* calorietrackerTests */ = {
@@ -298,10 +301,13 @@
 				Base,
 			);
 			mainGroup = BA8E0DEA2F33F197007DD537;
-			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
-			productRefGroup = BA8E0DF42F33F197007DD537 /* Products */;
-			projectDirPath = "";
+				minimizedProjectReferenceProxies = 1;
+				packageReferences = (
+					F00DCA700000000000000002 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+				);
+				preferredProjectObjectVersion = 77;
+				productRefGroup = BA8E0DF42F33F197007DD537 /* Products */;
+				projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				BA8E0DF22F33F197007DD537 /* calorietracker */,
@@ -428,10 +434,11 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 3.4.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietracker.debug;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+					PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietracker.debug;
+					PRODUCT_NAME = "$(TARGET_NAME)";
+					REVENUECAT_API_KEY = "";
+					STRING_CATALOG_GENERATE_SYMBOLS = YES;
+					SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -479,10 +486,11 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 3.4.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietracker;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+					PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietracker;
+					PRODUCT_NAME = "$(TARGET_NAME)";
+					REVENUECAT_API_KEY = "";
+					STRING_CATALOG_GENERATE_SYMBOLS = YES;
+					SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -829,6 +837,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+			F00DCA700000000000000002 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+				isa = XCRemoteSwiftPackageReference;
+				repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm";
+				requirement = {
+					kind = upToNextMajorVersion;
+					minimumVersion = 5.70.0;
+				};
+			};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+			F00DCA700000000000000003 /* RevenueCat */ = {
+				isa = XCSwiftPackageProductDependency;
+				package = F00DCA700000000000000002 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+				productName = RevenueCat;
+			};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = BA8E0DEB2F33F197007DD537 /* Project object */;
 }

@@ -1,10 +1,9 @@
 import SwiftUI
-import StoreKit
 
 struct PaywallView: View {
     @Environment(StoreManager.self) private var storeManager
     @Environment(\.dismiss) private var dismiss
-    @State private var selectedProduct: Product?
+    @State private var selectedProduct: PlusProduct?
     @State private var didNotifySubscription = false
 
     var onSubscribed: (() -> Void)?
@@ -38,7 +37,7 @@ struct PaywallView: View {
                         product: yearly,
                         title: "Yearly",
                         badge: "Best Value",
-                        detail: yearlyDetailText(yearly)
+                        detail: yearly.detail
                     )
                 }
 
@@ -47,7 +46,7 @@ struct PaywallView: View {
                         product: monthly,
                         title: "Monthly",
                         badge: nil,
-                        detail: "per month"
+                        detail: monthly.detail
                     )
                 }
 
@@ -135,16 +134,7 @@ struct PaywallView: View {
         dismiss()
     }
 
-    private func yearlyDetailText(_ product: Product) -> String {
-        let monthlyEquivalent = product.price / 12
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.locale = product.priceFormatStyle.locale
-        let monthlyStr = formatter.string(from: monthlyEquivalent as NSDecimalNumber) ?? ""
-        return "\(monthlyStr)/mo"
-    }
-
-    private func paywallCard(product: Product, title: String, badge: String?, detail: String) -> some View {
+    private func paywallCard(product: PlusProduct, title: String, badge: String?, detail: String) -> some View {
         let isSelected = selectedProduct?.id == product.id
 
         return Button {
