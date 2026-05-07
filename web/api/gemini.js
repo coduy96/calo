@@ -93,8 +93,13 @@ export default async function handler(request, response) {
 }
 
 async function verifyPlusEntitlement(installID) {
-  const secret = process.env.REVENUECAT_SECRET_API_KEY || process.env.RC_SECRET_API_KEY;
-  if (!secret) {
+  const apiKey =
+    process.env.REVENUECAT_API_KEY ||
+    process.env.REVENUECAT_PUBLIC_API_KEY ||
+    process.env.REVENUECAT_V1_API_KEY ||
+    process.env.REVENUECAT_SECRET_API_KEY ||
+    process.env.RC_SECRET_API_KEY;
+  if (!apiKey) {
     return {
       active: false,
       status: 500,
@@ -113,7 +118,7 @@ async function verifyPlusEntitlement(installID) {
   try {
     result = await fetch(url, {
       headers: {
-        Authorization: `Bearer ${secret}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
     });
