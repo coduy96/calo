@@ -17,9 +17,6 @@ const FALLBACK_MODELS = {
 
 const memoryUsage = globalThis.__fudAIUsage ?? new Map();
 globalThis.__fudAIUsage = memoryUsage;
-const entitlementCache = globalThis.__fudAIEntitlementCache ?? new Map();
-globalThis.__fudAIEntitlementCache = entitlementCache;
-const ENTITLEMENT_CACHE_MS = 60 * 1000;
 
 export default async function handler(request, response) {
   if (request.method !== "POST" && request.method !== "GET") {
@@ -30,11 +27,6 @@ export default async function handler(request, response) {
   const installID = String(request.headers["x-fudai-install-id"] || "").trim();
   if (!installID) {
     return response.status(400).json({ error: "Missing install ID." });
-  }
-
-  const entitlement = await verifyPlusEntitlement(installID);
-  if (!entitlement.active) {
-    return response.status(entitlement.status).json({ error: entitlement.message });
   }
 
   if (request.method === "GET") {
@@ -90,89 +82,6 @@ export default async function handler(request, response) {
   }
 
   return response.status(502).json({ error: lastError || "Gemini request failed." });
-}
-
-async function verifyPlusEntitlement(installID) {
-  const apiKey =
-    process.env.REVENUECAT_API_KEY ||
-    process.env.REVENUECAT_PUBLIC_API_KEY ||
-    process.env.REVENUECAT_V1_API_KEY ||
-    process.env.REVENUECAT_SECRET_API_KEY ||
-    process.env.RC_SECRET_API_KEY;
-  if (!apiKey) {
-    return {
-      active: false,
-      status: 500,
-      message: "Server is missing RevenueCat entitlement verification.",
-    };
-  }
-
-  const cached = entitlementCache.get(installID);
-  if (cached && cached.expiresAt > Date.now()) {
-    return { active: true };
-  }
-
-  const entitlementID = process.env.REVENUECAT_ENTITLEMENT_ID || "plus";
-  const url = `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(installID)}`;
-  let result;
-  try {
-    result = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-    });
-  } catch {
-    return {
-      active: false,
-      status: 502,
-      message: "Could not verify Fud AI Plus right now. Try again in a moment.",
-    };
-  }
-
-  if (!result.ok) {
-    return {
-      active: false,
-      status: 502,
-      message: "Could not verify Fud AI Plus right now. Try again in a moment.",
-    };
-  }
-
-  const json = await result.json();
-  const entitlement = json?.subscriber?.entitlements?.[entitlementID];
-  const active = isRevenueCatEntitlementActive(entitlement);
-  if (active) {
-    entitlementCache.set(installID, { expiresAt: Date.now() + ENTITLEMENT_CACHE_MS });
-    return { active: true };
-  }
-
-  return {
-    active: false,
-    status: 402,
-    message: "Fud AI Plus is not active. Subscribe or restore purchases in the app.",
-  };
-}
-
-function isRevenueCatEntitlementActive(entitlement) {
-  if (!entitlement) {
-    return false;
-  }
-  if (isFutureDate(entitlement.grace_period_expires_date)) {
-    return true;
-  }
-  const expiresDate = entitlement.expires_date;
-  if (!expiresDate) {
-    return true;
-  }
-  return isFutureDate(expiresDate);
-}
-
-function isFutureDate(rawDate) {
-  if (!rawDate) {
-    return false;
-  }
-  const timestamp = Date.parse(rawDate);
-  return Number.isFinite(timestamp) && timestamp > Date.now();
 }
 
 function normalizeTask(task) {
