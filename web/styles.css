@@ -370,10 +370,10 @@ p { color: var(--ink-soft); }
   background: rgba(242, 237, 227, 0.04);
   transform: translateY(-1px);
 }
-.chip-btn.chip-github:hover i   { color: #FFC857; }
+.chip-btn.chip-github:hover i   { color: #E6E6E6; }
 .chip-btn.chip-ph:hover i       { color: #DA552F; }
 .chip-btn.chip-linkedin:hover i { color: #0A66C2; }
-.chip-btn.chip-trustmrr:hover i { color: #18C964; }
+.chip-btn.chip-trustmrr:hover i { color: #5865FF; }
 .chip-btn.chip-instagram:hover i { color: #E4405F; }
 .chip-btn.chip-paypal:hover i   { color: #0BAFE2; }
 .chip-btn.chip-x:hover i        { color: #FFFFFF; }
