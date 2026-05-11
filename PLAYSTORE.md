@@ -38,7 +38,7 @@ Snap, speak, or type a meal. AI logs the calories. Open source.
 ```
 Fud AI makes calorie tracking effortless with AI-powered food recognition. Snap a photo, speak it, or type it — get instant nutrition: calories, protein, carbs, fats, and 9 micronutrients.
 
-NEW in v1.1.1: Add notes to photo-library meals, customize Home nutrient cards, set optional nutrient goals, estimate those goals with AI, open Ko-fi from About, and keep Review/Edit food sheets from disappearing while scrolling.
+NEW in v1.1.1: Notes for photo-library meals, customizable Home nutrient cards, optional nutrient goals with AI estimates, Ko-fi in About, and Review/Edit food sheets that stay open while scrolling.
 
 Free, open source, privacy-first. Bring your own API key. All data stays on your device.
 
@@ -49,45 +49,45 @@ HOW TO USE
 4) Track progress on charts and home screen widgets
 
 9 WAYS TO LOG A MEAL
-• Photo — AI identifies the food and returns nutrition
+• Photo — AI identifies food and returns nutrition
 • Photo + Note — add context before AI analysis
 • Nutrition Label — scan package nutrition facts
 • From Photos — analyze an existing image
 • From Photos + Note — add context to a library photo
-• Voice — 5 STT engines with per-provider language selection
+• Voice — 5 STT engines with language selection
 • Text — describe in plain language, AI parses it
-• Manual Entry — name + calories + macros + meal type, no AI needed
+• Manual Entry — name + calories + macros + meal type
 • Saved Meals — re-log recents, frequent meals, and favorites
 
 BODY COMPOSITION TRACKING
-Log body fat % over time, set a goal %, see it graphed alongside weight on the unified Progress chart. Health Connect sync auto-imports samples from Withings, Renpho, Samsung Health, Google Fit. "Use Body Fat for BMR" toggles Katch-McArdle ↔ Mifflin-St Jeor without losing the value.
+Log body fat % over time, set a goal %, and see it alongside weight on the unified Progress chart. Health Connect can auto-import samples from Withings, Renpho, Samsung Health, Google Fit, and more. "Use Body Fat for BMR" toggles Katch-McArdle ↔ Mifflin-St Jeor without losing the value.
 
 13 AI PROVIDERS
-Google Gemini, OpenAI, Anthropic Claude, xAI Grok, Groq, OpenRouter, Together AI, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama (local), or any OpenAI-compatible endpoint. Switch anytime. OpenRouter defaults to a free vision model — test without loading credits. Keys stored encrypted (AES-256). Add Custom AI Instructions to send region, diet, or brand context with every request. Set a Fallback Provider so the app auto-retries on overload or rate-limit errors.
+Google Gemini, OpenAI, Anthropic Claude, xAI Grok, Groq, OpenRouter, Together AI, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama, or any OpenAI-compatible endpoint. Switch anytime. Keys are stored encrypted. Add Custom AI Instructions for region, diet, or brand context. Set a Fallback Provider so requests retry on overload or rate-limit errors.
 
 6 SPEECH-TO-TEXT ENGINES
 Native Android, Gemini, OpenAI Whisper, Groq, Deepgram, AssemblyAI. Choose Provider Auto, Use Device Language, or a fixed language.
 
-COACH (TOOL CALLING)
-Multi-turn chat that sees your profile, weight, body fat, and food log. Ask "what was my weight in March?" or "how's my protein this week?" — Coach pulls the date range it needs via 5 on-demand tools. It now understands today's date/timezone and richer meal details. Goal-aware chips for Lose / Gain / Maintain.
+COACH
+Multi-turn chat that sees your profile, weight, body fat, and food log. Ask "what was my weight in March?" or "how's my protein this week?" — Coach pulls the date range it needs via on-demand tools.
 
 SMART DAILY REMINDERS
-Log Weight, Log Body Fat, Streak, Daily Summary — all skip firing on days you've already logged, so fully-tracking users get effectively zero pings.
+Log Weight, Log Body Fat, Streak, and Daily Summary reminders skip firing on days you've already logged.
 
 PERSONALIZED GOALS
-BMR via Katch-McArdle (with body fat) or Mifflin-St Jeor. TDEE with 6 activity levels. Auto-calculated calorie + protein + carbs + fat targets — fully customizable.
+BMR via Katch-McArdle or Mifflin-St Jeor. TDEE with 6 activity levels. Auto-calculated calorie + protein + carbs + fat targets — fully customizable.
 
 OPTIONAL NUTRIENT GOALS
-Set fiber, sugar, saturated fat, cholesterol, sodium, and potassium goals separately from the macro calculator. Use AI Estimate to suggest values from your profile, or manually pick each goal with the same wheel picker used for macros. Home cards can show macros or selected detailed nutrients.
+Set fiber, sugar, saturated fat, cholesterol, sodium, and potassium goals separately from the macro calculator. Use AI Estimate to suggest values from your profile, or manually pick each goal. Home cards can show macros or selected detailed nutrients.
 
 PROGRESS
 Unified Weight / Body Fat chart with trend lines + goal overlays. Calorie trend vs goal. Macro averages over 1W, 1M, 3M, 6M, 1Y, All Time.
 
 WIDGETS
-Calorie widget (pink-gradient ring with today's calories + macros) and Protein widget — both in Small 2x2 and Medium 4x2, refresh the moment you log a meal.
+Calorie and Protein widgets refresh when you log a meal.
 
 SAVED MEALS + SEARCH
-Recents, Frequent, and Favorites tabs. Search bar filters each tab separately — substring, case-insensitive, diacritic-insensitive.
+Recents, Frequent, and Favorites tabs. Search filters each tab separately.
 
 15 LANGUAGES
 Auto-selected by phone language: English, Spanish, French, German, Italian, Portuguese (BR), Dutch, Russian, Japanese, Korean, Chinese, Hindi, Arabic, Romanian, Azerbaijani.
@@ -98,13 +98,12 @@ No account, no sign-in, no cloud sync, no analytics, no ads, no tracking. Local-
 HEALTH CONNECT
 Two-way sync for nutrition, weight, body fat. Macros + 9 micronutrients per meal. Edits and deletes sync back.
 
-Built solo because tracking calories shouldn't feel like a chore. Reach out at apoorv@fud-ai.app, GitHub, or Instagram @fudai.app.
-
 NOTE: Not medical advice. All nutritional estimates are AI-generated. Consult a healthcare professional before significant diet changes.
 
 Terms: https://fud-ai.app/terms.html
 Privacy: https://fud-ai.app/privacy.html
 Source: https://github.com/apoorvdarshan/fud-ai
+
 ```
 
 ### Other 14 languages
