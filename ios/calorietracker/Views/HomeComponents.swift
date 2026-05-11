@@ -115,25 +115,251 @@ struct WeekEnergyStrip: View {
     }
 }
 
+// MARK: - Home Nutrient Cards
+
+enum HomeTopNutrient: String, CaseIterable, Identifiable {
+    case protein
+    case carbs
+    case fat
+    case fiber
+    case sugar
+    case addedSugar
+    case saturatedFat
+    case cholesterol
+    case sodium
+    case potassium
+
+    static let storageKey = "homeTopNutrients"
+    static let defaultSelection: [HomeTopNutrient] = [.protein, .carbs, .fat]
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .protein: "Protein"
+        case .carbs: "Carbs"
+        case .fat: "Fat"
+        case .fiber: "Fiber"
+        case .sugar: "Sugar"
+        case .addedSugar: "Added Sugar"
+        case .saturatedFat: "Sat Fat"
+        case .cholesterol: "Cholesterol"
+        case .sodium: "Sodium"
+        case .potassium: "Potassium"
+        }
+    }
+
+    var unit: String {
+        switch self {
+        case .cholesterol, .sodium, .potassium: "mg"
+        default: "g"
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .protein: "fork.knife"
+        case .carbs: "leaf"
+        case .fat: "drop.fill"
+        case .fiber: "leaf.fill"
+        case .sugar: "cube.fill"
+        case .addedSugar: "plus.circle.fill"
+        case .saturatedFat: "circle.lefthalf.filled"
+        case .cholesterol: "heart.fill"
+        case .sodium: "circle.grid.2x2.fill"
+        case .potassium: "bolt.fill"
+        }
+    }
+
+    var gradientColors: [Color] {
+        switch self {
+        case .protein:
+            AppColors.proteinGradient
+        case .carbs:
+            AppColors.carbsGradient
+        case .fat:
+            AppColors.fatGradient
+        default:
+            AppColors.calorieGradient
+        }
+    }
+
+    func value(from foodStore: FoodStore, on date: Date) -> Double {
+        switch self {
+        case .protein: Double(foodStore.protein(for: date))
+        case .carbs: Double(foodStore.carbs(for: date))
+        case .fat: Double(foodStore.fat(for: date))
+        case .fiber: foodStore.fiber(for: date)
+        case .sugar: foodStore.sugar(for: date)
+        case .addedSugar: foodStore.addedSugar(for: date)
+        case .saturatedFat: foodStore.saturatedFat(for: date)
+        case .cholesterol: foodStore.cholesterol(for: date)
+        case .sodium: foodStore.sodium(for: date)
+        case .potassium: foodStore.potassium(for: date)
+        }
+    }
+
+    func goal(for profile: UserProfile) -> Double {
+        switch self {
+        case .protein: Double(profile.effectiveProtein)
+        case .carbs: Double(profile.effectiveCarbs)
+        case .fat: Double(profile.effectiveFat)
+        case .fiber: 30
+        case .sugar: 50
+        case .addedSugar: 25
+        case .saturatedFat: 20
+        case .cholesterol: 300
+        case .sodium: 2_300
+        case .potassium: 3_500
+        }
+    }
+
+    static func selection(from rawValue: String) -> [HomeTopNutrient] {
+        let parsed = rawValue
+            .split(separator: ",")
+            .compactMap { HomeTopNutrient(rawValue: String($0)) }
+
+        var selection: [HomeTopNutrient] = []
+        for nutrient in parsed + defaultSelection {
+            guard !selection.contains(nutrient) else { continue }
+            selection.append(nutrient)
+            if selection.count == 3 { break }
+        }
+        return selection
+    }
+
+    static func storageValue(for nutrients: [HomeTopNutrient]) -> String {
+        nutrients
+            .prefix(3)
+            .map(\.rawValue)
+            .joined(separator: ",")
+    }
+}
+
+struct HomeNutrientPickerSheet: View {
+    @Binding var selectionRawValue: String
+    @Environment(\.dismiss) private var dismiss
+    @State private var draftSelection: [HomeTopNutrient]
+
+    init(selectionRawValue: Binding<String>) {
+        _selectionRawValue = selectionRawValue
+        _draftSelection = State(initialValue: HomeTopNutrient.selection(from: selectionRawValue.wrappedValue))
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Shown on Home") {
+                    ForEach(Array(draftSelection.enumerated()), id: \.element.id) { index, nutrient in
+                        HStack(spacing: 12) {
+                            Label(nutrient.displayName, systemImage: nutrient.iconName)
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Text("\(index + 1)")
+                                .font(.system(.caption, design: .rounded, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .listRowBackground(AppColors.appCard)
+
+                Section {
+                    ForEach(HomeTopNutrient.allCases) { nutrient in
+                        Button {
+                            toggle(nutrient)
+                        } label: {
+                            HStack(spacing: 12) {
+                                Label(nutrient.displayName, systemImage: nutrient.iconName)
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                if draftSelection.contains(nutrient) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(AppColors.calorie)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                } header: {
+                    Text("Choose 3 Nutrients")
+                } footer: {
+                    Text("Pick exactly three nutrients for the Home summary row.")
+                }
+                .listRowBackground(AppColors.appCard)
+            }
+            .scrollContentBackground(.hidden)
+            .background(AppColors.appBackground)
+            .navigationTitle("Home Nutrients")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Reset") {
+                        draftSelection = HomeTopNutrient.defaultSelection
+                    }
+                    .tint(AppColors.calorie)
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        selectionRawValue = HomeTopNutrient.storageValue(for: draftSelection)
+                        dismiss()
+                    }
+                    .tint(AppColors.calorie)
+                    .disabled(draftSelection.count != 3)
+                }
+            }
+        }
+    }
+
+    private func toggle(_ nutrient: HomeTopNutrient) {
+        if let index = draftSelection.firstIndex(of: nutrient) {
+            draftSelection.remove(at: index)
+        } else if draftSelection.count < 3 {
+            draftSelection.append(nutrient)
+        }
+    }
+}
+
 // MARK: - Macro Card
 
 struct MacroCard: View {
     let label: String
-    let current: Int
-    let goal: Int
+    let current: Double
+    let goal: Double
+    let unit: String
     let gradientColors: [Color]
 
+    init(label: String, current: Int, goal: Int, gradientColors: [Color]) {
+        self.label = label
+        self.current = Double(current)
+        self.goal = Double(goal)
+        self.unit = "g"
+        self.gradientColors = gradientColors
+    }
+
+    init(label: String, current: Double, goal: Double, unit: String, gradientColors: [Color]) {
+        self.label = label
+        self.current = current
+        self.goal = goal
+        self.unit = unit
+        self.gradientColors = gradientColors
+    }
+
     private var progress: Double {
-        goal > 0 ? min(Double(current) / Double(goal), 1.0) : 0
+        goal > 0 ? min(current / goal, 1.0) : 0
     }
 
     var body: some View {
         VStack(spacing: 8) {
             HStack(alignment: .lastTextBaseline, spacing: 2) {
-                Text("\(current)")
+                Text(formatted(current))
                     .font(.system(.title, design: .rounded, weight: .bold))
                     .foregroundStyle(gradientColors.first ?? .primary)
-                Text("/\(goal)g")
+                Text("/\(formatted(goal))\(unit)")
                     .font(.system(.subheadline, design: .rounded, weight: .medium))
                     .foregroundStyle(.secondary)
             }
@@ -149,7 +375,7 @@ struct MacroCard: View {
                         .fill(LinearGradient(colors: gradientColors, startPoint: .leading, endPoint: .trailing))
                         .frame(width: max(6, geo.size.width * progress))
                         .shadow(color: (gradientColors.first ?? .clear).opacity(0.3), radius: 4, y: 2)
-                        .animation(.spring(response: 0.8, dampingFraction: 0.75), value: current)
+                        .animation(.spring(response: 0.8, dampingFraction: 0.75), value: progress)
                 }
             }
             .frame(height: 6)
@@ -158,10 +384,17 @@ struct MacroCard: View {
                 .font(.system(.caption, design: .rounded, weight: .medium))
                 .foregroundStyle(.secondary)
 
-            Text("\(max(goal - current, 0))g left")
+            Text("\(formatted(max(goal - current, 0)))\(unit) left")
                 .font(.system(.caption2, design: .rounded))
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private func formatted(_ value: Double) -> String {
+        if value >= 100 || value.rounded() == value {
+            return "\(Int(value.rounded()))"
+        }
+        return String(format: "%.1f", value)
     }
 }

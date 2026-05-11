@@ -628,6 +628,7 @@ struct HomeView: View {
     @State private var showNutritionDetail = false
     @AppStorage("aiAnalysisConsentGiven") private var aiConsentGiven: Bool = false
     @AppStorage(FoodLogSortOrder.storageKey) private var foodLogSortOrderRaw = FoodLogSortOrder.defaultOrder.rawValue
+    @AppStorage(HomeTopNutrient.storageKey) private var homeTopNutrientsRaw = HomeTopNutrient.storageValue(for: HomeTopNutrient.defaultSelection)
     @State private var showAIConsent = false
     @Environment(ProfileStore.self) private var profileStore
 
@@ -643,6 +644,7 @@ struct HomeView: View {
     private var caloriesRemaining: Int { max(calorieGoal - selectedCalories, 0) }
     private var isToday: Bool { Calendar.current.isDateInToday(selectedDate) }
     private var foodLogSortOrder: FoodLogSortOrder { FoodLogSortOrder.order(for: foodLogSortOrderRaw) }
+    private var homeTopNutrients: [HomeTopNutrient] { HomeTopNutrient.selection(from: homeTopNutrientsRaw) }
     private var logDateForSelectedDay: Date { logDate(on: selectedDate) }
 
     private var navigationTitle: String {
@@ -728,12 +730,18 @@ struct HomeView: View {
                     .listRowSeparator(.hidden)
                 }
 
-                // Macro trio
+                // Top nutrient trio
                 Section {
                     HStack(spacing: 20) {
-                        MacroCard(label: "Protein", current: foodStore.protein(for: selectedDate), goal: proteinGoal, gradientColors: AppColors.proteinGradient)
-                        MacroCard(label: "Carbs", current: foodStore.carbs(for: selectedDate), goal: carbsGoal, gradientColors: AppColors.carbsGradient)
-                        MacroCard(label: "Fat", current: foodStore.fat(for: selectedDate), goal: fatGoal, gradientColors: AppColors.fatGradient)
+                        ForEach(homeTopNutrients) { nutrient in
+                            MacroCard(
+                                label: nutrient.displayName,
+                                current: nutrient.value(from: foodStore, on: selectedDate),
+                                goal: nutrient.goal(for: userProfile),
+                                unit: nutrient.unit,
+                                gradientColors: nutrient.gradientColors
+                            )
+                        }
                     }
                     .padding(.vertical, 8)
                     .listRowBackground(Color.clear)
@@ -1091,7 +1099,7 @@ struct HomeView: View {
                 Text(errorMessage)
             }
             .sheet(isPresented: $showNutritionDetail) {
-                NutritionDetailView(date: selectedDate)
+                NutritionDetailView(date: selectedDate, homeTopNutrientsRaw: $homeTopNutrientsRaw)
             }
             .sheet(isPresented: $showAIConsent) {
                 AIConsentSheetView(
@@ -1145,16 +1153,45 @@ struct HomeView: View {
 // MARK: - Nutrition Detail View
 struct NutritionDetailView: View {
     let date: Date
+    @Binding var homeTopNutrientsRaw: String
     @Environment(FoodStore.self) private var foodStore
     @Environment(ProfileStore.self) private var profileStore
     @Environment(\.dismiss) private var dismiss
+    @State private var showHomeNutrientPicker = false
 
     private var userProfile: UserProfile { profileStore.profile }
+    private var homeTopNutrients: [HomeTopNutrient] { HomeTopNutrient.selection(from: homeTopNutrientsRaw) }
+    private var homeTopNutrientNames: String {
+        homeTopNutrients
+            .map(\.displayName)
+            .joined(separator: ", ")
+    }
 
     var body: some View {
         let _ = profileStore.profile
         return NavigationStack {
             List {
+                Section {
+                    Button {
+                        showHomeNutrientPicker = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            Label("Home Nutrient Cards", systemImage: "square.grid.3x1.fill")
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Text(homeTopNutrientNames)
+                                .font(.system(.footnote, design: .rounded))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                            Image(systemName: "chevron.right")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+                .listRowBackground(AppColors.appCard)
+
                 Section("Macros") {
                     NutritionDetailRow(icon: "flame.fill", label: "Calories", value: "\(foodStore.calories(for: date))", unit: "kcal", goal: "\(userProfile.effectiveCalories)")
                     NutritionDetailRow(icon: "p.circle.fill", label: "Protein", value: "\(foodStore.protein(for: date))", unit: "g", goal: "\(userProfile.effectiveProtein)")
@@ -1180,6 +1217,9 @@ struct NutritionDetailView: View {
             .background(AppColors.appBackground)
             .navigationTitle("Nutrition Details")
             .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $showHomeNutrientPicker) {
+                HomeNutrientPickerSheet(selectionRawValue: $homeTopNutrientsRaw)
+            }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
