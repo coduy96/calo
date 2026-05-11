@@ -19,6 +19,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -57,7 +58,10 @@ fun EditFoodEntrySheet(
     onSave: (FoodEntry) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val state = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+        confirmValueChange = { it != SheetValue.Hidden }
+    )
     val baseServing = entry.servingSizeGrams ?: 100.0
     val servingUnitOptions = remember(entry.servingUnitOptions, baseServing) {
         ServingUnitOption.normalizedOptions(entry.servingUnitOptions, baseServing)

@@ -19,6 +19,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -65,7 +66,10 @@ fun FoodResultSheet(
     val bitmap = remember(imageBytes) {
         imageBytes?.let { android.graphics.BitmapFactory.decodeByteArray(it, 0, it.size) }
     }
-    val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val state = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+        confirmValueChange = { it != SheetValue.Hidden }
+    )
     var name by remember { mutableStateOf(analysis.name) }
     val servingUnitOptions = remember(analysis.servingUnitOptions, analysis.servingSizeGrams) {
         ServingUnitOption.normalizedOptions(analysis.servingUnitOptions, analysis.servingSizeGrams)
