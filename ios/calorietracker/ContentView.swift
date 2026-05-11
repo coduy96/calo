@@ -629,6 +629,7 @@ struct HomeView: View {
     @AppStorage("aiAnalysisConsentGiven") private var aiConsentGiven: Bool = false
     @AppStorage(FoodLogSortOrder.storageKey) private var foodLogSortOrderRaw = FoodLogSortOrder.defaultOrder.rawValue
     @AppStorage(HomeTopNutrient.storageKey) private var homeTopNutrientsRaw = HomeTopNutrient.storageValue(for: HomeTopNutrient.defaultSelection)
+    @AppStorage(OptionalNutrientGoals.storageKey) private var optionalNutrientGoalsData = Data()
     @State private var showAIConsent = false
     @Environment(ProfileStore.self) private var profileStore
 
@@ -645,6 +646,7 @@ struct HomeView: View {
     private var isToday: Bool { Calendar.current.isDateInToday(selectedDate) }
     private var foodLogSortOrder: FoodLogSortOrder { FoodLogSortOrder.order(for: foodLogSortOrderRaw) }
     private var homeTopNutrients: [HomeTopNutrient] { HomeTopNutrient.selection(from: homeTopNutrientsRaw) }
+    private var optionalNutrientGoals: OptionalNutrientGoals { OptionalNutrientGoals.decoded(from: optionalNutrientGoalsData) }
     private var logDateForSelectedDay: Date { logDate(on: selectedDate) }
 
     private var navigationTitle: String {
@@ -737,7 +739,7 @@ struct HomeView: View {
                             MacroCard(
                                 label: nutrient.displayName,
                                 current: nutrient.value(from: foodStore, on: selectedDate),
-                                goal: nutrient.goal(for: userProfile),
+                                goal: nutrient.goal(for: userProfile, optionalGoals: optionalNutrientGoals),
                                 unit: nutrient.unit,
                                 gradientColors: nutrient.gradientColors
                             )
@@ -1157,9 +1159,11 @@ struct NutritionDetailView: View {
     @Environment(FoodStore.self) private var foodStore
     @Environment(ProfileStore.self) private var profileStore
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(OptionalNutrientGoals.storageKey) private var optionalNutrientGoalsData = Data()
     @State private var showHomeNutrientPicker = false
 
     private var userProfile: UserProfile { profileStore.profile }
+    private var optionalNutrientGoals: OptionalNutrientGoals { OptionalNutrientGoals.decoded(from: optionalNutrientGoalsData) }
     private var homeTopNutrients: [HomeTopNutrient] { HomeTopNutrient.selection(from: homeTopNutrientsRaw) }
     private var homeTopNutrientNames: String {
         homeTopNutrients
@@ -1201,15 +1205,15 @@ struct NutritionDetailView: View {
                 .listRowBackground(AppColors.appCard)
 
                 Section("Detailed Nutrition") {
-                    NutritionDetailRow(icon: "cube.fill", label: "Sugar", value: formatMicro(foodStore.sugar(for: date)), unit: "g")
-                    NutritionDetailRow(icon: "plus.circle.fill", label: "Added Sugar", value: formatMicro(foodStore.addedSugar(for: date)), unit: "g")
-                    NutritionDetailRow(icon: "leaf.fill", label: "Fiber", value: formatMicro(foodStore.fiber(for: date)), unit: "g")
-                    NutritionDetailRow(icon: "drop.fill", label: "Saturated Fat", value: formatMicro(foodStore.saturatedFat(for: date)), unit: "g")
+                    optionalNutritionRow(.sugar, value: foodStore.sugar(for: date))
+                    optionalNutritionRow(.addedSugar, value: foodStore.addedSugar(for: date))
+                    optionalNutritionRow(.fiber, value: foodStore.fiber(for: date))
+                    optionalNutritionRow(.saturatedFat, value: foodStore.saturatedFat(for: date))
                     NutritionDetailRow(icon: "drop", label: "Mono Unsat. Fat", value: formatMicro(foodStore.monounsaturatedFat(for: date)), unit: "g")
                     NutritionDetailRow(icon: "drop.halffull", label: "Poly Unsat. Fat", value: formatMicro(foodStore.polyunsaturatedFat(for: date)), unit: "g")
-                    NutritionDetailRow(icon: "heart.circle.fill", label: "Cholesterol", value: formatMicro(foodStore.cholesterol(for: date)), unit: "mg")
-                    NutritionDetailRow(icon: "sparkles", label: "Sodium", value: formatMicro(foodStore.sodium(for: date)), unit: "mg")
-                    NutritionDetailRow(icon: "bolt.fill", label: "Potassium", value: formatMicro(foodStore.potassium(for: date)), unit: "mg")
+                    optionalNutritionRow(.cholesterol, value: foodStore.cholesterol(for: date))
+                    optionalNutritionRow(.sodium, value: foodStore.sodium(for: date))
+                    optionalNutritionRow(.potassium, value: foodStore.potassium(for: date))
                 }
                 .listRowBackground(AppColors.appCard)
             }
@@ -1231,6 +1235,16 @@ struct NutritionDetailView: View {
 
     private func formatMicro(_ value: Double) -> String {
         value == 0 ? "—" : String(format: "%.1f", value)
+    }
+
+    private func optionalNutritionRow(_ nutrient: OptionalNutrient, value: Double) -> some View {
+        NutritionDetailRow(
+            icon: nutrient.iconName,
+            label: nutrient.displayName,
+            value: formatMicro(value),
+            unit: nutrient.unit,
+            goal: "\(optionalNutrientGoals.goal(for: nutrient))"
+        )
     }
 }
 
@@ -2015,6 +2029,22 @@ struct ProfileView: View {
                     macroRow(label: "Protein", icon: "p.circle", macro: .protein, value: profile.effectiveProtein, sheet: .editProtein)
                     macroRow(label: "Carbs", icon: "c.circle", macro: .carbs, value: profile.effectiveCarbs, sheet: .editCarbs)
                     macroRow(label: "Fat", icon: "f.circle", macro: .fat, value: profile.effectiveFat, sheet: .editFat)
+
+                    NavigationLink {
+                        OptionalNutrientGoalsSettingsView(profile: profile, useMetric: useMetric)
+                    } label: {
+                        Label {
+                            HStack {
+                                Text("Other Nutrients")
+                                Spacer()
+                                Text("Sugar, Fiber, Sodium")
+                                    .foregroundStyle(.secondary)
+                            }
+                        } icon: {
+                            Image(systemName: "list.bullet.clipboard")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
 
                     Button {
                         showRecalculateConfirm = true

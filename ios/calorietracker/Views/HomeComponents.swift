@@ -134,40 +134,56 @@ enum HomeTopNutrient: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var displayName: String {
+    var optionalNutrient: OptionalNutrient? {
         switch self {
-        case .protein: "Protein"
-        case .carbs: "Carbs"
-        case .fat: "Fat"
-        case .fiber: "Fiber"
-        case .sugar: "Sugar"
-        case .addedSugar: "Added Sugar"
-        case .saturatedFat: "Sat Fat"
-        case .cholesterol: "Cholesterol"
-        case .sodium: "Sodium"
-        case .potassium: "Potassium"
+        case .fiber: .fiber
+        case .sugar: .sugar
+        case .addedSugar: .addedSugar
+        case .saturatedFat: .saturatedFat
+        case .cholesterol: .cholesterol
+        case .sodium: .sodium
+        case .potassium: .potassium
+        case .protein, .carbs, .fat: nil
+        }
+    }
+
+    var displayName: String {
+        if let optionalNutrient {
+            return optionalNutrient.shortDisplayName
+        }
+
+        switch self {
+        case .protein: return "Protein"
+        case .carbs: return "Carbs"
+        case .fat: return "Fat"
+        case .fiber, .sugar, .addedSugar, .saturatedFat, .cholesterol, .sodium, .potassium:
+            return optionalNutrient?.shortDisplayName ?? rawValue
         }
     }
 
     var unit: String {
+        if let optionalNutrient {
+            return optionalNutrient.unit
+        }
+
         switch self {
-        case .cholesterol, .sodium, .potassium: "mg"
-        default: "g"
+        case .protein, .carbs, .fat: return "g"
+        case .fiber, .sugar, .addedSugar, .saturatedFat, .cholesterol, .sodium, .potassium:
+            return optionalNutrient?.unit ?? "g"
         }
     }
 
     var iconName: String {
+        if let optionalNutrient {
+            return optionalNutrient.iconName
+        }
+
         switch self {
-        case .protein: "fork.knife"
-        case .carbs: "leaf"
-        case .fat: "drop.fill"
-        case .fiber: "leaf.fill"
-        case .sugar: "cube.fill"
-        case .addedSugar: "plus.circle.fill"
-        case .saturatedFat: "circle.lefthalf.filled"
-        case .cholesterol: "heart.fill"
-        case .sodium: "circle.grid.2x2.fill"
-        case .potassium: "bolt.fill"
+        case .protein: return "fork.knife"
+        case .carbs: return "leaf"
+        case .fat: return "drop.fill"
+        case .fiber, .sugar, .addedSugar, .saturatedFat, .cholesterol, .sodium, .potassium:
+            return optionalNutrient?.iconName ?? "circle"
         }
     }
 
@@ -199,18 +215,14 @@ enum HomeTopNutrient: String, CaseIterable, Identifiable {
         }
     }
 
-    func goal(for profile: UserProfile) -> Double {
+    func goal(for profile: UserProfile, optionalGoals: OptionalNutrientGoals = .current) -> Double {
         switch self {
-        case .protein: Double(profile.effectiveProtein)
-        case .carbs: Double(profile.effectiveCarbs)
-        case .fat: Double(profile.effectiveFat)
-        case .fiber: 30
-        case .sugar: 50
-        case .addedSugar: 25
-        case .saturatedFat: 20
-        case .cholesterol: 300
-        case .sodium: 2_300
-        case .potassium: 3_500
+        case .protein: return Double(profile.effectiveProtein)
+        case .carbs: return Double(profile.effectiveCarbs)
+        case .fat: return Double(profile.effectiveFat)
+        case .fiber, .sugar, .addedSugar, .saturatedFat, .cholesterol, .sodium, .potassium:
+            guard let optionalNutrient else { return 0 }
+            return Double(optionalGoals.goal(for: optionalNutrient))
         }
     }
 

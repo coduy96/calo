@@ -277,6 +277,55 @@ struct GeminiService {
         return await addingFallbackServingUnits(to: analysis, image: image)
     }
 
+    static func suggestOptionalNutrientGoals(
+        profile: UserProfile,
+        currentGoals: OptionalNutrientGoals,
+        useMetric: Bool
+    ) async throws -> OptionalNutrientGoals {
+        let weight = useMetric
+            ? String(format: "%.1f kg", profile.weightKg)
+            : String(format: "%.1f lb", profile.weightKg * 2.20462)
+        let height = useMetric
+            ? String(format: "%.0f cm", profile.heightCm)
+            : String(format: "%.1f in", profile.heightCm / 2.54)
+        let bodyFat = profile.bodyFatPercentage.map { "\(Int(($0 * 100).rounded()))%" } ?? "not set"
+        let goalWeight = profile.goalWeightKg.map { kg in
+            useMetric ? String(format: "%.1f kg", kg) : String(format: "%.1f lb", kg * 2.20462)
+        } ?? "not set"
+        let currentGoalLines = OptionalNutrient.allCases
+            .map { "- \($0.displayName): \(currentGoals.goal(for: $0)) \($0.unit) (\($0.goalStyle))" }
+            .joined(separator: "\n")
+
+        let prompt = """
+        You are setting daily non-macro nutrient goals for a food tracking app.
+        Return ONLY valid JSON with these exact numeric keys:
+        {"fiber":30,"sugar":50,"added_sugar":25,"saturated_fat":20,"cholesterol":300,"sodium":2300,"potassium":3500}
+
+        Do not include calories, protein, carbs, or fat. Do not change calorie or macro targets.
+        Use reasonable general-adult nutrition targets unless the user's profile strongly suggests a small adjustment.
+        Treat fiber and potassium as target/minimum style goals. Treat sugar, added sugar, saturated fat, cholesterol, and sodium as daily limit-style goals.
+        Keep values in normal consumer-tracker ranges and round to practical app-friendly numbers.
+
+        User profile:
+        - Gender: \(profile.gender.displayName)
+        - Age: \(profile.age)
+        - Height: \(height)
+        - Weight: \(weight)
+        - Activity: \(profile.activityLevel.displayName)
+        - Weight goal: \(profile.goal.displayName)
+        - Goal weight: \(goalWeight)
+        - Body fat: \(bodyFat)
+        - Current calorie target: \(profile.effectiveCalories) kcal
+        - Current macro targets: \(profile.effectiveProtein)g protein, \(profile.effectiveCarbs)g carbs, \(profile.effectiveFat)g fat
+
+        Current non-macro nutrient defaults/custom values:
+        \(currentGoalLines)
+        """
+
+        let text = try await callAI(prompt: prompt, image: nil)
+        return try parseOptionalNutrientGoals(from: text, fallback: currentGoals)
+    }
+
     // MARK: - Weight Forecast Insight
 
     /// Asks the user's selected LLM to summarize their weight trend and suggest 2–3 adjustments
@@ -730,6 +779,29 @@ struct GeminiService {
             potassiumPer100g: (json["potassium_per_100g"] as? NSNumber)?.doubleValue,
             servingUnitOptions: parseServingUnitOptions(from: json, servingSizeGrams: servingSizeGrams)
         )
+    }
+
+    private static func parseOptionalNutrientGoals(
+        from text: String,
+        fallback: OptionalNutrientGoals
+    ) throws -> OptionalNutrientGoals {
+        let jsonString = extractJSON(from: text)
+        guard let data = jsonString.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { throw AnalysisError.invalidResponse }
+
+        var goals = fallback.mergedWithDefaults()
+        var parsedAnyValue = false
+
+        for nutrient in OptionalNutrient.allCases {
+            let rawValue = json[nutrient.jsonKey] ?? json[nutrient.rawValue]
+            guard let number = rawValue as? NSNumber else { continue }
+            goals.setGoal(number.intValue, for: nutrient)
+            parsedAnyValue = true
+        }
+
+        guard parsedAnyValue else { throw AnalysisError.invalidResponse }
+        return goals.mergedWithDefaults()
     }
 
     private static func addingFallbackServingUnits(
