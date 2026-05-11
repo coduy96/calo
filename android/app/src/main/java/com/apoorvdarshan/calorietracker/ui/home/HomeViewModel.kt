@@ -6,7 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FoodSource
+import com.apoorvdarshan.calorietracker.models.HomeTopNutrient
 import com.apoorvdarshan.calorietracker.models.MealType
+import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
 import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.services.ai.AiError
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis
@@ -36,6 +38,8 @@ data class HomeUiState(
     val date: LocalDate = LocalDate.now(),
     val profile: UserProfile? = null,
     val todayEntries: List<FoodEntry> = emptyList(),
+    val homeTopNutrients: List<HomeTopNutrient> = HomeTopNutrient.DefaultSelection,
+    val optionalNutrientGoals: OptionalNutrientGoals = OptionalNutrientGoals.Default,
     val foodLogSortOrder: FoodLogSortOrder = FoodLogSortOrder.STANDARD,
     val favoriteKeys: Set<String> = emptySet(),
     val pendingAnalysis: FoodAnalysis? = null,
@@ -84,6 +88,18 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
         }
             .onEach { _ui.value = it }
             .launchIn(viewModelScope)
+
+        container.prefs.homeTopNutrients
+            .onEach { raw ->
+                _ui.value = _ui.value.copy(homeTopNutrients = HomeTopNutrient.fromStorage(raw))
+            }
+            .launchIn(viewModelScope)
+
+        container.prefs.optionalNutrientGoals
+            .onEach { goals ->
+                _ui.value = _ui.value.copy(optionalNutrientGoals = goals)
+            }
+            .launchIn(viewModelScope)
     }
 
     fun setSelectedDate(date: LocalDate) {
@@ -93,6 +109,12 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
     fun setFoodLogSortOrder(order: FoodLogSortOrder) {
         viewModelScope.launch {
             container.prefs.setFoodLogSortOrder(order.storageValue)
+        }
+    }
+
+    fun setHomeTopNutrients(selection: List<HomeTopNutrient>) {
+        viewModelScope.launch {
+            container.prefs.setHomeTopNutrients(HomeTopNutrient.toStorage(selection))
         }
     }
 

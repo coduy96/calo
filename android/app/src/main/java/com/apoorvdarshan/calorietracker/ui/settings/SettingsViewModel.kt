@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.models.AIProvider
+import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
 import com.apoorvdarshan.calorietracker.models.SpeechLanguage
 import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.models.UserProfile
@@ -38,7 +39,8 @@ data class SettingsUiState(
     val fallbackEnabled: Boolean = false,
     val fallbackProvider: AIProvider = AIProvider.GEMINI,
     val fallbackModel: String = AIProvider.GEMINI.defaultModel,
-    val fallbackApiKeyMasked: String = ""
+    val fallbackApiKeyMasked: String = "",
+    val optionalNutrientGoals: OptionalNutrientGoals = OptionalNutrientGoals.Default
 )
 
 class SettingsViewModel(val container: AppContainer) : ViewModel() {
@@ -65,6 +67,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             val fbProvider = container.prefs.selectedFallbackProvider.first()
             val fbModel = container.prefs.selectedFallbackModel.first() ?: fbProvider.defaultModel
             val fbMasked = maskKey(container.keyStore.apiKey(fbProvider))
+            val optionalGoals = container.prefs.optionalNutrientGoals.first()
             _ui.value = SettingsUiState(
                 selectedAI = provider,
                 selectedModel = model,
@@ -83,8 +86,16 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 fallbackEnabled = fbEnabled,
                 fallbackProvider = fbProvider,
                 fallbackModel = fbModel,
-                fallbackApiKeyMasked = fbMasked
+                fallbackApiKeyMasked = fbMasked,
+                optionalNutrientGoals = optionalGoals
             )
+        }
+    }
+
+    fun setOptionalNutrientGoals(goals: OptionalNutrientGoals) {
+        viewModelScope.launch {
+            container.prefs.setOptionalNutrientGoals(goals)
+            _ui.value = _ui.value.copy(optionalNutrientGoals = goals)
         }
     }
 

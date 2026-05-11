@@ -150,7 +150,7 @@ fun AboutScreen(container: AppContainer) {
                     Hairline()
                     AboutRow(Icons.Filled.ThumbUp, stringResource(R.string.about_vote_ph)) { open("https://www.producthunt.com/products/fud-ai-calorie-tracker") }
                     Hairline()
-                    AboutRow(Icons.Filled.Favorite, stringResource(R.string.about_support)) { open("https://paypal.me/apoorvdarshan") }
+                    AboutRow(Icons.Filled.Favorite, stringResource(R.string.about_support)) { open("https://ko-fi.com/apoorvdarshan") }
                     Hairline()
                     AboutRow(Icons.Filled.BugReport, stringResource(R.string.about_report_issue)) { open("https://github.com/apoorvdarshan/fud-ai/issues/new?labels=bug&title=Bug:%20") }
                     Hairline()

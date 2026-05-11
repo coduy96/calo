@@ -11,6 +11,8 @@ import com.apoorvdarshan.calorietracker.models.AIProvider
 import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.ChatMessage
 import com.apoorvdarshan.calorietracker.models.FoodEntry
+import com.apoorvdarshan.calorietracker.models.HomeTopNutrient
+import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
 import com.apoorvdarshan.calorietracker.models.SpeechLanguage
 import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.models.UserProfile
@@ -104,6 +106,27 @@ class PreferencesStore(private val context: Context) {
     /** "standard" | "latestMealsFirst". Mirrors iOS @AppStorage("foodLogSortOrder"). */
     val foodLogSortOrder: Flow<String> = ds.data.map { it[Keys.FOOD_LOG_SORT_ORDER] ?: "standard" }
     suspend fun setFoodLogSortOrder(v: String) { ds.edit { it[Keys.FOOD_LOG_SORT_ORDER] = v } }
+
+    /** Comma-separated [HomeTopNutrient.storageKey] values for the three home nutrient cards. */
+    val homeTopNutrients: Flow<String> = ds.data.map {
+        it[Keys.HOME_TOP_NUTRIENTS] ?: HomeTopNutrient.DefaultStorageValue
+    }
+    suspend fun setHomeTopNutrients(v: String) {
+        ds.edit { it[Keys.HOME_TOP_NUTRIENTS] = v }
+    }
+
+    /** Goals for nutrients outside the calorie/protein/carb/fat calculator. */
+    val optionalNutrientGoals: Flow<OptionalNutrientGoals> = ds.data.map { prefs ->
+        prefs[Keys.OPTIONAL_NUTRIENT_GOALS]?.let {
+            runCatching { json.decodeFromString<OptionalNutrientGoals>(it) }.getOrNull()
+        } ?: OptionalNutrientGoals.Default
+    }
+    suspend fun setOptionalNutrientGoals(goals: OptionalNutrientGoals) {
+        ds.edit {
+            it[Keys.OPTIONAL_NUTRIENT_GOALS] =
+                json.encodeToString(OptionalNutrientGoals.serializer(), goals)
+        }
+    }
 
     // -- AI Provider selection --------------------------------------------
     val selectedAIProvider: Flow<AIProvider> = ds.data.map {
@@ -293,6 +316,8 @@ class PreferencesStore(private val context: Context) {
         val WEEK_STARTS_MONDAY = booleanPreferencesKey("weekStartsOnMonday")
         val LAST_SAVED_MEALS_SEGMENT = stringPreferencesKey("lastRecentsSegment")
         val FOOD_LOG_SORT_ORDER = stringPreferencesKey("foodLogSortOrder")
+        val HOME_TOP_NUTRIENTS = stringPreferencesKey("homeTopNutrients")
+        val OPTIONAL_NUTRIENT_GOALS = stringPreferencesKey("optionalNutrientGoals")
         val SELECTED_AI_PROVIDER = stringPreferencesKey("selectedAIProvider")
         val SELECTED_AI_MODEL = stringPreferencesKey("selectedAIModel")
         val USER_CONTEXT = stringPreferencesKey("userContext")

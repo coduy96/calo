@@ -64,6 +64,7 @@ fun MacroCard(
     label: String,
     current: Int,
     goal: Int,
+    unit: String = "g",
     modifier: Modifier = Modifier,
     gradientColors: List<Color> = listOf(AppColors.CalorieStart, AppColors.CalorieEnd)
 ) {
@@ -95,7 +96,7 @@ fun MacroCard(
             )
             // Text("/\(goal)g") .font(.system(.subheadline, design: .rounded, weight: .medium))
             Text(
-                "/${goal}g",
+                "/$goal$unit",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
@@ -145,7 +146,7 @@ fun MacroCard(
 
         // Text("\(left)g left") .font(.system(.caption2, design: .rounded)) .foregroundStyle(.tertiary)
         Text(
-            "${left}g left",
+            "$left$unit left",
             fontSize = 11.sp,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
         )

@@ -1,6 +1,7 @@
 package com.apoorvdarshan.calorietracker.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,10 +16,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +31,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,6 +43,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.models.FoodEntry
+import com.apoorvdarshan.calorietracker.models.HomeTopNutrient
+import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
 import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 
@@ -56,9 +66,13 @@ import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 fun NutritionDetailSheet(
     entries: List<FoodEntry>,
     profile: UserProfile?,
+    homeTopNutrients: List<HomeTopNutrient>,
+    optionalGoals: OptionalNutrientGoals,
+    onHomeTopNutrientsChange: (List<HomeTopNutrient>) -> Unit,
     onDismiss: () -> Unit
 ) {
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showHomeCardsPicker by remember { mutableStateOf(false) }
     val calories = entries.sumOf { it.calories }
     val protein = entries.sumOf { it.protein }
     val carbs = entries.sumOf { it.carbs }
@@ -93,6 +107,16 @@ fun NutritionDetailSheet(
                 }
             }
 
+            item { SectionHeader("Home Cards") }
+            item {
+                Card {
+                    HomeCardsRow(
+                        selected = homeTopNutrients,
+                        onClick = { showHomeCardsPicker = true }
+                    )
+                }
+            }
+
             item { SectionHeader("Macros") }
             item {
                 Card {
@@ -109,26 +133,34 @@ fun NutritionDetailSheet(
             item { SectionHeader("Detailed Nutrition") }
             item {
                 Card {
-                    DetailRow(null, "Sugar", fmt(sugar), "g", labelGlyph = "S")
+                    DetailRow(null, "Sugar", fmt(sugar), "g", goal = "${optionalGoals.sugar}", labelGlyph = "S")
                     Hairline()
-                    DetailRow(null, "Added Sugar", fmt(addedSugar), "g", labelGlyph = "+")
+                    DetailRow(null, "Added Sugar", fmt(addedSugar), "g", goal = "${optionalGoals.addedSugar}", labelGlyph = "+")
                     Hairline()
-                    DetailRow(Icons.Filled.Spa, "Fiber", fmt(fiber), "g")
+                    DetailRow(Icons.Filled.Spa, "Fiber", fmt(fiber), "g", goal = "${optionalGoals.fiber}")
                     Hairline()
-                    DetailRow(Icons.Filled.WaterDrop, "Saturated Fat", fmt(satFat), "g")
+                    DetailRow(Icons.Filled.WaterDrop, "Saturated Fat", fmt(satFat), "g", goal = "${optionalGoals.saturatedFat}")
                     Hairline()
                     DetailRow(Icons.Filled.WaterDrop, "Mono Unsat. Fat", fmt(monoFat), "g")
                     Hairline()
                     DetailRow(Icons.Filled.WaterDrop, "Poly Unsat. Fat", fmt(polyFat), "g")
                     Hairline()
-                    DetailRow(Icons.Filled.Favorite, "Cholesterol", fmt(cholesterol), "mg")
+                    DetailRow(Icons.Filled.Favorite, "Cholesterol", fmt(cholesterol), "mg", goal = "${optionalGoals.cholesterol}")
                     Hairline()
-                    DetailRow(Icons.Filled.Bolt, "Sodium", fmt(sodium), "mg")
+                    DetailRow(Icons.Filled.Bolt, "Sodium", fmt(sodium), "mg", goal = "${optionalGoals.sodium}")
                     Hairline()
-                    DetailRow(Icons.Filled.Bolt, "Potassium", fmt(potassium), "mg")
+                    DetailRow(Icons.Filled.Bolt, "Potassium", fmt(potassium), "mg", goal = "${optionalGoals.potassium}")
                 }
             }
         }
+    }
+
+    if (showHomeCardsPicker) {
+        HomeTopNutrientPickerDialog(
+            selected = homeTopNutrients,
+            onSave = onHomeTopNutrientsChange,
+            onDismiss = { showHomeCardsPicker = false }
+        )
     }
 }
 
@@ -151,6 +183,103 @@ private fun SectionHeader(title: String) {
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
         letterSpacing = 0.6.sp,
         modifier = Modifier.padding(start = 14.dp, top = 6.dp, bottom = 4.dp)
+    )
+}
+
+@Composable
+private fun HomeCardsRow(
+    selected: List<HomeTopNutrient>,
+    onClick: () -> Unit
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(Icons.Filled.Spa, null, tint = AppColors.Calorie, modifier = Modifier.size(20.dp))
+        Column(Modifier.weight(1f)) {
+            Text("Home Nutrient Cards", fontSize = 17.sp)
+            Text(
+                selected.joinToString(" / ") { it.displayName },
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+            )
+        }
+        Icon(
+            Icons.Filled.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+@Composable
+private fun HomeTopNutrientPickerDialog(
+    selected: List<HomeTopNutrient>,
+    onSave: (List<HomeTopNutrient>) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var draft by remember(selected) { mutableStateOf(HomeTopNutrient.normalized(selected)) }
+
+    fun toggle(nutrient: HomeTopNutrient) {
+        draft = if (nutrient in draft) {
+            if (draft.size <= 1) draft else draft - nutrient
+        } else {
+            if (draft.size >= 3) draft else draft + nutrient
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Home Nutrient Cards") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    "Choose up to 3 cards for the top of Home.",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+                Spacer(Modifier.height(4.dp))
+                HomeTopNutrient.values().forEach { nutrient ->
+                    val checked = nutrient in draft
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { toggle(nutrient) }
+                            .padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(checked = checked, onCheckedChange = { toggle(nutrient) })
+                        Column(Modifier.weight(1f)) {
+                            Text(nutrient.displayName, fontWeight = FontWeight.Medium)
+                            Text(
+                                nutrient.unit,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onSave(HomeTopNutrient.normalized(draft))
+                onDismiss()
+            }) {
+                Text("Done", color = AppColors.Calorie)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
     )
 }
 

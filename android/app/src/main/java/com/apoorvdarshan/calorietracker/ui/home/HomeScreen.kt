@@ -35,6 +35,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Note
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Calculate
@@ -52,7 +53,6 @@ import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.filled.WbTwilight
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Nightlight
-import androidx.compose.material.icons.filled.Note
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Restaurant
@@ -145,13 +145,22 @@ fun HomeScreen(container: AppContainer) {
     var pendingCaptureWantsNote by remember { mutableStateOf(false) }
     // Holds the just-captured bytes while the Camera + Note sheet is shown.
     var pendingNoteImageBytes by remember { mutableStateOf<ByteArray?>(null) }
+    var pendingPickedPhotoWantsNote by remember { mutableStateOf(false) }
 
     val photoPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
+        val wantsNote = pendingPickedPhotoWantsNote
+        pendingPickedPhotoWantsNote = false
         if (uri != null) {
             val bytes = ctx.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-            if (bytes != null) vm.analyzePhoto(bytes)
+            if (bytes != null) {
+                if (wantsNote) {
+                    pendingNoteImageBytes = bytes
+                } else {
+                    vm.analyzePhoto(bytes)
+                }
+            }
         }
     }
 
@@ -333,7 +342,7 @@ fun HomeScreen(container: AppContainer) {
                             ) { showAddMenu = false; openCamera() }
                             MenuRow(
                                 label = "Camera + Note",
-                                icon = Icons.Filled.Note
+                                icon = Icons.AutoMirrored.Filled.Note
                             ) { showAddMenu = false; openCamera(withNote = true) }
                             MenuRow(
                                 label = "Nutrition Label",
@@ -344,6 +353,15 @@ fun HomeScreen(container: AppContainer) {
                                 icon = Icons.Filled.PhotoLibrary
                             ) {
                                 showAddMenu = false
+                                pendingPickedPhotoWantsNote = false
+                                photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                            }
+                            MenuRow(
+                                label = "From Photos + Note",
+                                icon = Icons.AutoMirrored.Filled.Note
+                            ) {
+                                showAddMenu = false
+                                pendingPickedPhotoWantsNote = true
                                 photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                             }
                             MenuRow(
@@ -399,9 +417,15 @@ fun HomeScreen(container: AppContainer) {
                         .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    MacroCard(label = "Protein", current = ui.proteinToday, goal = ui.profile?.effectiveProtein ?: 150, modifier = Modifier.weight(1f))
-                    MacroCard(label = "Carbs", current = ui.carbsToday, goal = ui.profile?.effectiveCarbs ?: 220, modifier = Modifier.weight(1f))
-                    MacroCard(label = "Fat", current = ui.fatToday, goal = ui.profile?.effectiveFat ?: 70, modifier = Modifier.weight(1f))
+                    ui.homeTopNutrients.forEach { nutrient ->
+                        MacroCard(
+                            label = nutrient.displayName,
+                            current = nutrient.current(ui.todayEntries),
+                            goal = nutrient.goal(ui.profile, ui.optionalNutrientGoals),
+                            unit = nutrient.unit,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
             item {
@@ -521,6 +545,9 @@ fun HomeScreen(container: AppContainer) {
         NutritionDetailSheet(
             entries = ui.todayEntries,
             profile = ui.profile,
+            homeTopNutrients = ui.homeTopNutrients,
+            optionalGoals = ui.optionalNutrientGoals,
+            onHomeTopNutrientsChange = vm::setHomeTopNutrients,
             onDismiss = { showNutritionDetail = false }
         )
     }

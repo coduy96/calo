@@ -127,6 +127,8 @@ import com.apoorvdarshan.calorietracker.models.ActivityLevel
 import com.apoorvdarshan.calorietracker.models.AIProvider
 import com.apoorvdarshan.calorietracker.models.AutoBalanceMacro
 import com.apoorvdarshan.calorietracker.models.Gender
+import com.apoorvdarshan.calorietracker.models.OptionalNutrient
+import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
 import com.apoorvdarshan.calorietracker.models.SpeechLanguage
 import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.models.UserProfile
@@ -150,7 +152,7 @@ private enum class SettingsSheet {
     AI_PROVIDER, AI_MODEL, API_KEY, CUSTOM_BASE_URL, SPEECH_PROVIDER, SPEECH_LANGUAGE, SPEECH_KEY,
     FALLBACK_PROVIDER, FALLBACK_MODEL, FALLBACK_KEY, FALLBACK_BASE_URL,
     GENDER, BIRTHDAY, HEIGHT, WEIGHT, BODY_FAT, GOAL_BODY_FAT, ACTIVITY, GOAL, GOAL_WEIGHT, GOAL_SPEED,
-    CALORIES, PROTEIN, CARBS, FAT,
+    CALORIES, PROTEIN, CARBS, FAT, OPTIONAL_NUTRIENTS,
     APPEARANCE, THEME_COLOR, WEEK_START
 }
 
@@ -377,6 +379,12 @@ fun SettingsScreen(container: AppContainer, nav: NavHostController) {
                         pinned = p.isPinned(AutoBalanceMacro.FAT),
                         onClick = { openMacro(AutoBalanceMacro.FAT, SettingsSheet.FAT) }
                     )
+                    HorizontalDivider()
+                    SettingRow(
+                        "Other Nutrient Goals",
+                        optionalNutrientSummary(ui.optionalNutrientGoals),
+                        icon = Icons.Outlined.DataUsage
+                    ) { sheet = SettingsSheet.OPTIONAL_NUTRIENTS }
                     HorizontalDivider()
                     Row(
                         Modifier
@@ -988,9 +996,94 @@ private fun SettingsSheets(
                         }
                     } else null
                 )
+                SettingsSheet.OPTIONAL_NUTRIENTS -> OptionalNutrientGoalsSheet(
+                    goals = ui.optionalNutrientGoals,
+                    onSave = {
+                        vm.setOptionalNutrientGoals(it)
+                        onDismiss()
+                    }
+                )
             }
             Spacer(Modifier.height(14.dp))
         }
+    }
+}
+
+@Composable
+private fun OptionalNutrientGoalsSheet(
+    goals: OptionalNutrientGoals,
+    onSave: (OptionalNutrientGoals) -> Unit
+) {
+    var values by remember(goals) {
+        mutableStateOf(
+            OptionalNutrient.values().associateWith { goals.valueFor(it).toString() }
+        )
+    }
+
+    fun defaultValues(): Map<OptionalNutrient, String> =
+        OptionalNutrient.values().associateWith { it.defaultGoal.toString() }
+
+    fun parsedGoals(): OptionalNutrientGoals {
+        var next = OptionalNutrientGoals.Default
+        OptionalNutrient.values().forEach { nutrient ->
+            val fallback = goals.valueFor(nutrient)
+            next = next.withValue(
+                nutrient,
+                values[nutrient]?.toIntOrNull() ?: fallback
+            )
+        }
+        return next
+    }
+
+    Text("Other Nutrient Goals", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Spacer(Modifier.height(4.dp))
+    Text(
+        "These are separate from the calorie and macro calculator.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+    )
+    Spacer(Modifier.height(12.dp))
+    LazyColumn(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(max = 420.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        items(OptionalNutrient.values().toList()) { nutrient ->
+            OutlinedTextField(
+                value = values[nutrient].orEmpty(),
+                onValueChange = { raw ->
+                    values = values + (nutrient to raw.filter { it.isDigit() }.take(5))
+                },
+                label = { Text("${nutrient.displayName} (${nutrient.unit})") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+    Spacer(Modifier.height(16.dp))
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(54.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(AppColors.CalorieGradient)
+            .clickable { onSave(parsedGoals()) },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            "Save",
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.titleMedium
+        )
+    }
+    TextButton(
+        onClick = { values = defaultValues() },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text("Reset to Defaults", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
     }
 }
 
@@ -1626,6 +1719,9 @@ private fun feetInchesLabel(cm: Int): String {
     val inches = totalInches % 12
     return "$feet' $inches\""
 }
+
+private fun optionalNutrientSummary(goals: OptionalNutrientGoals): String =
+    "Fiber ${goals.fiber}g, Sodium ${goals.sodium}mg"
 
 private val birthdayFormatter: DateTimeFormatter =
     DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US)
