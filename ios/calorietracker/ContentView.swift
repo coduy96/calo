@@ -325,6 +325,17 @@ private struct AboutView: View {
                     }
                     .tint(.primary)
 
+                    // Support
+                    Link(destination: URL(string: "https://ko-fi.com/apoorvdarshan")!) {
+                        Label {
+                            Text("Support on Ko-fi")
+                        } icon: {
+                            Image(systemName: "cup.and.saucer.fill")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .tint(.primary)
+
                     // Open Source
                     Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai")!) {
                         Label {
