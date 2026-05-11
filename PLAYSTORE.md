@@ -38,7 +38,7 @@ Snap, speak, or type a meal. AI logs the calories. Open source.
 ```
 Fud AI makes calorie tracking effortless with AI-powered food recognition. Snap a photo, speak it, or type it — get instant nutrition: calories, protein, carbs, fats, and 9 micronutrients.
 
-NEW in v1.1.1: Add notes to photo-library meals, customize Home nutrient cards, set optional nutrient goals, estimate those goals with AI, and open Ko-fi from About.
+NEW in v1.1.1: Add notes to photo-library meals, customize Home nutrient cards, set optional nutrient goals, estimate those goals with AI, open Ko-fi from About, and keep Review/Edit food sheets from disappearing while scrolling.
 
 Free, open source, privacy-first. Bring your own API key. All data stays on your device.
 
@@ -121,90 +121,105 @@ English-only on Play Console — non-English Play Store browsers (ar, az-AZ, de-
 • Add notes to photo-library meals.
 • Customize Home nutrient cards and set optional nutrient goals.
 • AI can estimate fiber, sugar, sodium, potassium, and other goals.
+• Review/Edit food sheets no longer disappear while scrolling.
 </en-US>
 
 <ar>
 • أضف ملاحظات إلى صور الوجبات من المعرض.
 • خصص بطاقات العناصر الغذائية وحدد أهدافًا اختيارية.
 • يمكن للذكاء الاصطناعي تقدير أهداف الألياف والسكر والصوديوم.
+• إصلاح اختفاء شاشة مراجعة/تعديل الطعام عند التمرير.
 </ar>
 
 <az-AZ>
 • Qalereyadan seçilən yeməklərə qeyd əlavə edin.
 • Əsas nutrient kartlarını və əlavə hədəfləri dəyişin.
 • AI lif, şəkər, natrium və digər hədəfləri təxmin edə bilər.
+• Yemək baxış/redaktə səhifəsi sürüşdürəndə bağlanmır.
 </az-AZ>
 
 <de-DE>
 • Notizen zu Fotos aus der Galerie hinzufügen.
 • Home-Nährstoffkarten und optionale Ziele anpassen.
 • KI schätzt Ziele für Ballaststoffe, Zucker, Natrium und mehr.
+• Review/Edit-Food schließt nicht mehr beim Scrollen.
 </de-DE>
 
 <es-ES>
 • Añade notas a fotos de comidas de la galería.
 • Personaliza tarjetas de nutrientes y objetivos opcionales.
 • La IA estima fibra, azúcar, sodio y más.
+• Revisar/editar comida ya no desaparece al desplazarte.
 </es-ES>
 
 <fr-FR>
 • Ajoutez des notes aux photos de repas.
 • Personnalisez les cartes nutriments et objectifs optionnels.
 • L’IA estime fibres, sucre, sodium et plus.
+• La fiche révision/édition ne disparaît plus au défilement.
 </fr-FR>
 
 <hi-IN>
 • Gallery photos पर meal notes जोड़ें.
 • Home nutrient cards और optional goals customize करें.
 • AI fiber, sugar, sodium और बाकी goals estimate कर सकता है.
+• Review/Edit meal sheet अब scroll पर गायब नहीं होती.
 </hi-IN>
 
 <it-IT>
 • Aggiungi note alle foto dei pasti.
 • Personalizza le schede nutrienti e gli obiettivi opzionali.
 • L’IA stima fibre, zucchero, sodio e altro.
+• La scheda revisione/modifica non sparisce più durante lo scroll.
 </it-IT>
 
 <ja-JP>
 • 写真ライブラリの食事にメモを追加できます。
 • ホームの栄養カードと任意目標をカスタマイズ。
 • AIが食物繊維、糖分、ナトリウムなどを推定。
+• レビュー/編集画面がスクロールで消えないよう修正。
 </ja-JP>
 
 <ko-KR>
 • 사진 보관함 음식에 메모를 추가하세요.
 • 홈 영양 카드와 선택 영양 목표를 설정하세요.
 • AI가 섬유질, 당, 나트륨 등을 추정합니다.
+• 리뷰/편집 화면이 스크롤 중 사라지지 않습니다.
 </ko-KR>
 
 <nl-NL>
 • Voeg notities toe aan maaltijdfoto’s.
 • Pas Home-nutriëntkaarten en optionele doelen aan.
 • AI schat vezels, suiker, natrium en meer.
+• Review/bewerk-scherm verdwijnt niet meer bij scrollen.
 </nl-NL>
 
 <pt-BR>
 • Adicione notas a fotos de refeições.
 • Personalize cartões de nutrientes e metas opcionais.
 • A IA estima fibra, açúcar, sódio e mais.
+• A tela revisar/editar não some mais ao rolar.
 </pt-BR>
 
 <ro>
 • Adaugă note la fotografiile meselor.
 • Personalizează cardurile de nutrienți și obiectivele opționale.
 • AI estimează fibre, zahăr, sodiu și altele.
+• Ecranul de revizuire/editare nu mai dispare la derulare.
 </ro>
 
 <ru-RU>
 • Добавляйте заметки к фото еды из галереи.
 • Настройте карточки нутриентов и доп. цели.
 • ИИ оценит клетчатку, сахар, натрий и другое.
+• Экран просмотра/редактирования больше не исчезает при прокрутке.
 </ru-RU>
 
 <zh-CN>
 • 为相册中的餐食照片添加备注。
 • 自定义首页营养卡片和可选营养目标。
 • AI 可估算纤维、糖、钠等目标。
+• 修复审核/编辑食物页面滚动时消失的问题。
 </zh-CN>
 ```
 
