@@ -40,7 +40,9 @@ data class SettingsUiState(
     val fallbackProvider: AIProvider = AIProvider.GEMINI,
     val fallbackModel: String = AIProvider.GEMINI.defaultModel,
     val fallbackApiKeyMasked: String = "",
-    val optionalNutrientGoals: OptionalNutrientGoals = OptionalNutrientGoals.Default
+    val optionalNutrientGoals: OptionalNutrientGoals = OptionalNutrientGoals.Default,
+    val estimatingOptionalNutrientGoals: Boolean = false,
+    val optionalNutrientGoalError: String? = null
 )
 
 class SettingsViewModel(val container: AppContainer) : ViewModel() {
@@ -95,7 +97,33 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
     fun setOptionalNutrientGoals(goals: OptionalNutrientGoals) {
         viewModelScope.launch {
             container.prefs.setOptionalNutrientGoals(goals)
-            _ui.value = _ui.value.copy(optionalNutrientGoals = goals)
+            _ui.value = _ui.value.copy(
+                optionalNutrientGoals = goals,
+                optionalNutrientGoalError = null
+            )
+        }
+    }
+
+    fun estimateOptionalNutrientGoals() {
+        viewModelScope.launch {
+            _ui.value = _ui.value.copy(
+                estimatingOptionalNutrientGoals = true,
+                optionalNutrientGoalError = null
+            )
+            try {
+                val profile = _ui.value.profile ?: container.profileRepository.current()
+                val goals = container.foodAnalysis.estimateOptionalNutrientGoals(profile)
+                container.prefs.setOptionalNutrientGoals(goals)
+                _ui.value = _ui.value.copy(
+                    optionalNutrientGoals = goals,
+                    estimatingOptionalNutrientGoals = false
+                )
+            } catch (e: Throwable) {
+                _ui.value = _ui.value.copy(
+                    estimatingOptionalNutrientGoals = false,
+                    optionalNutrientGoalError = e.localizedMessage ?: "AI estimate failed. Please try again."
+                )
+            }
         }
     }
 

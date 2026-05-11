@@ -87,6 +87,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -998,10 +999,11 @@ private fun SettingsSheets(
                 )
                 SettingsSheet.OPTIONAL_NUTRIENTS -> OptionalNutrientGoalsSheet(
                     goals = ui.optionalNutrientGoals,
-                    onSave = {
-                        vm.setOptionalNutrientGoals(it)
-                        onDismiss()
-                    }
+                    estimating = ui.estimatingOptionalNutrientGoals,
+                    error = ui.optionalNutrientGoalError,
+                    onChange = vm::setOptionalNutrientGoals,
+                    onEstimate = vm::estimateOptionalNutrientGoals,
+                    onDismiss = onDismiss
                 )
             }
             Spacer(Modifier.height(14.dp))
@@ -1012,78 +1014,128 @@ private fun SettingsSheets(
 @Composable
 private fun OptionalNutrientGoalsSheet(
     goals: OptionalNutrientGoals,
-    onSave: (OptionalNutrientGoals) -> Unit
+    estimating: Boolean,
+    error: String?,
+    onChange: (OptionalNutrientGoals) -> Unit,
+    onEstimate: () -> Unit,
+    onDismiss: () -> Unit
 ) {
-    var values by remember(goals) {
-        mutableStateOf(
-            OptionalNutrient.values().associateWith { goals.valueFor(it).toString() }
-        )
-    }
+    var editing by remember { mutableStateOf<OptionalNutrient?>(null) }
+    val nutrient = editing
 
-    fun defaultValues(): Map<OptionalNutrient, String> =
-        OptionalNutrient.values().associateWith { it.defaultGoal.toString() }
-
-    fun parsedGoals(): OptionalNutrientGoals {
-        var next = OptionalNutrientGoals.Default
-        OptionalNutrient.values().forEach { nutrient ->
-            val fallback = goals.valueFor(nutrient)
-            next = next.withValue(
-                nutrient,
-                values[nutrient]?.toIntOrNull() ?: fallback
-            )
+    if (nutrient != null) {
+        TextButton(onClick = { editing = null }) {
+            Text("Other Nutrients", color = AppColors.Calorie)
         }
-        return next
+        Spacer(Modifier.height(4.dp))
+        NutritionPickerSheet(
+            label = nutrient.displayName,
+            unit = nutrient.unit,
+            currentValue = goals.valueFor(nutrient),
+            range = nutrient.pickerRange(),
+            step = nutrient.pickerStep(),
+            onSave = { value ->
+                onChange(goals.withValue(nutrient, value))
+                editing = null
+            }
+        )
+        return
     }
 
-    Text("Other Nutrient Goals", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-    Spacer(Modifier.height(4.dp))
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text("Other Nutrient Goals", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.weight(1f))
+        TextButton(onClick = onDismiss) { Text("Done", color = AppColors.Calorie) }
+    }
     Text(
-        "These are separate from the calorie and macro calculator.",
+        "Separate from calorie, protein, carbs, and fat targets.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
     )
     Spacer(Modifier.height(12.dp))
-    LazyColumn(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(max = 420.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+    Button(
+        onClick = onEstimate,
+        enabled = !estimating,
+        colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie),
+        modifier = Modifier.fillMaxWidth().height(50.dp),
+        shape = RoundedCornerShape(14.dp)
     ) {
-        items(OptionalNutrient.values().toList()) { nutrient ->
-            OutlinedTextField(
-                value = values[nutrient].orEmpty(),
-                onValueChange = { raw ->
-                    values = values + (nutrient to raw.filter { it.isDigit() }.take(5))
-                },
-                label = { Text("${nutrient.displayName} (${nutrient.unit})") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+        if (estimating) {
+            CircularProgressIndicator(
+                color = Color.White,
+                strokeWidth = 2.dp,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.width(10.dp))
+            Text("Estimating...")
+        } else {
+            Text("Estimate with AI")
+        }
+    }
+    if (!error.isNullOrBlank()) {
+        Spacer(Modifier.height(8.dp))
+        Text(
+            error,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFFD32F2F)
+        )
+    }
+    Spacer(Modifier.height(12.dp))
+    LazyColumn(
+        Modifier.fillMaxWidth().heightIn(max = 420.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(OptionalNutrient.values().toList()) { item ->
+            OptionalNutrientGoalRow(
+                nutrient = item,
+                value = goals.valueFor(item),
+                onClick = { editing = item }
             )
         }
     }
-    Spacer(Modifier.height(16.dp))
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .height(54.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(AppColors.CalorieGradient)
-            .clickable { onSave(parsedGoals()) },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            "Save",
-            color = Color.White,
-            fontWeight = FontWeight.SemiBold,
-            style = MaterialTheme.typography.titleMedium
-        )
-    }
     TextButton(
-        onClick = { values = defaultValues() },
+        onClick = { onChange(OptionalNutrientGoals.Default) },
         modifier = Modifier.fillMaxWidth()
     ) {
         Text("Reset to Defaults", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+    }
+}
+
+@Composable
+private fun OptionalNutrientGoalRow(
+    nutrient: OptionalNutrient,
+    value: Int,
+    onClick: () -> Unit
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Outlined.DataUsage,
+            contentDescription = null,
+            tint = AppColors.Calorie,
+            modifier = Modifier.size(22.dp)
+        )
+        Spacer(Modifier.width(14.dp))
+        Text(nutrient.displayName, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+        Text(
+            "$value${nutrient.unit}",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
+        Spacer(Modifier.width(8.dp))
+        Icon(
+            Icons.Filled.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 
@@ -1722,6 +1774,26 @@ private fun feetInchesLabel(cm: Int): String {
 
 private fun optionalNutrientSummary(goals: OptionalNutrientGoals): String =
     "Fiber ${goals.fiber}g, Sodium ${goals.sodium}mg"
+
+private fun OptionalNutrient.pickerRange(): IntRange = when (this) {
+    OptionalNutrient.SUGAR -> 0..200
+    OptionalNutrient.ADDED_SUGAR -> 0..100
+    OptionalNutrient.FIBER -> 0..100
+    OptionalNutrient.SATURATED_FAT -> 0..80
+    OptionalNutrient.CHOLESTEROL -> 0..1000
+    OptionalNutrient.SODIUM -> 0..5000
+    OptionalNutrient.POTASSIUM -> 0..7000
+}
+
+private fun OptionalNutrient.pickerStep(): Int = when (this) {
+    OptionalNutrient.FIBER,
+    OptionalNutrient.SATURATED_FAT -> 1
+    OptionalNutrient.CHOLESTEROL -> 25
+    OptionalNutrient.SODIUM,
+    OptionalNutrient.POTASSIUM -> 50
+    OptionalNutrient.SUGAR,
+    OptionalNutrient.ADDED_SUGAR -> 5
+}
 
 private val birthdayFormatter: DateTimeFormatter =
     DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US)

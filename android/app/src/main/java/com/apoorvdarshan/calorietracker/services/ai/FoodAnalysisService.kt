@@ -3,6 +3,8 @@ package com.apoorvdarshan.calorietracker.services.ai
 import com.apoorvdarshan.calorietracker.data.KeyStore
 import com.apoorvdarshan.calorietracker.data.PreferencesStore
 import com.apoorvdarshan.calorietracker.models.AIProvider
+import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
+import com.apoorvdarshan.calorietracker.models.UserProfile
 import kotlinx.coroutines.flow.first
 import okhttp3.OkHttpClient
 
@@ -15,6 +17,45 @@ class FoodAnalysisService(
     private val keyStore: KeyStore,
     private val okHttp: OkHttpClient = defaultClient
 ) {
+
+    suspend fun estimateOptionalNutrientGoals(profile: UserProfile?): OptionalNutrientGoals {
+        val profileContext = profile?.let {
+            """
+                Profile:
+                - age: ${it.age}
+                - gender: ${it.gender.name.lowercase()}
+                - height_cm: ${String.format(java.util.Locale.US, "%.1f", it.heightCm)}
+                - weight_kg: ${String.format(java.util.Locale.US, "%.1f", it.weightKg)}
+                - activity_level: ${it.activityLevel.name.lowercase()}
+                - weight_goal: ${it.goal.name.lowercase()}
+                - daily_calories: ${it.effectiveCalories}
+                - daily_protein_g: ${it.effectiveProtein}
+                - daily_carbs_g: ${it.effectiveCarbs}
+                - daily_fat_g: ${it.effectiveFat}
+            """.trimIndent()
+        } ?: "No user profile is available. Use conservative general adult defaults."
+        val prompt = """
+            Estimate practical daily goals for nutrients outside the app's calorie/protein/carbs/fat calculator.
+
+            $profileContext
+
+            Return ONLY JSON in this exact shape:
+            {"sugar":50,"added_sugar":25,"fiber":30,"saturated_fat":20,"cholesterol":300,"sodium":2300,"potassium":3500}
+
+            Rules:
+            - Do not return calories, protein, carbs, or fat.
+            - Keep this independent from macro calculation; only estimate the seven listed optional nutrient goals.
+            - sugar, added_sugar, fiber, and saturated_fat are grams per day.
+            - cholesterol, sodium, and potassium are milligrams per day.
+            - Use realistic non-medical nutrition targets for an average adult adjusted by profile and calorie target.
+            - Keep added_sugar and saturated_fat near or below 10% of calories when possible.
+            - Fiber should generally scale around 14g per 1000 kcal, with a practical adult range.
+            - Sodium should usually stay near general adult guidance unless the profile strongly suggests otherwise.
+            - Potassium should use a practical daily target, not food-log intake.
+            - Use integers only.
+        """.trimIndent()
+        return FoodJsonParser.parseOptionalNutrientGoals(callAi(prompt, imageBytes = null))
+    }
 
     suspend fun analyzeText(description: String): FoodAnalysis {
         val prompt = """

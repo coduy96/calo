@@ -1,9 +1,11 @@
 package com.apoorvdarshan.calorietracker.services.ai
 
 import com.apoorvdarshan.calorietracker.models.ServingUnitOption
+import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
 import org.json.JSONArray
 import org.json.JSONObject
 import kotlin.math.round
+import kotlin.math.roundToInt
 
 /** Result of AI food-photo / text analysis. */
 data class FoodAnalysis(
@@ -174,6 +176,29 @@ internal object FoodJsonParser {
         val json = runCatching { JSONObject(extractJson(text)) }.getOrNull()
             ?: throw AiError.InvalidResponse
         return parseServingUnitOptions(json, servingSizeGrams)
+    }
+
+    fun parseOptionalNutrientGoals(text: String): OptionalNutrientGoals {
+        val json = runCatching { JSONObject(extractJson(text)) }.getOrNull()
+            ?: throw AiError.InvalidResponse
+        fun optInt(vararg keys: String, fallback: Int): Int =
+            keys.firstNotNullOfOrNull { key ->
+                if (!json.has(key) || json.isNull(key)) null
+                else when (val value = json.opt(key)) {
+                    is Number -> value.toDouble().roundToInt()
+                    is String -> value.toDoubleOrNull()?.roundToInt()
+                    else -> null
+                }
+            }?.coerceAtLeast(0) ?: fallback
+        return OptionalNutrientGoals(
+            sugar = optInt("sugar", "sugar_g", fallback = OptionalNutrientGoals.Default.sugar),
+            addedSugar = optInt("added_sugar", "addedSugar", "added_sugar_g", fallback = OptionalNutrientGoals.Default.addedSugar),
+            fiber = optInt("fiber", "fiber_g", fallback = OptionalNutrientGoals.Default.fiber),
+            saturatedFat = optInt("saturated_fat", "saturatedFat", "saturated_fat_g", fallback = OptionalNutrientGoals.Default.saturatedFat),
+            cholesterol = optInt("cholesterol", "cholesterol_mg", fallback = OptionalNutrientGoals.Default.cholesterol),
+            sodium = optInt("sodium", "sodium_mg", fallback = OptionalNutrientGoals.Default.sodium),
+            potassium = optInt("potassium", "potassium_mg", fallback = OptionalNutrientGoals.Default.potassium)
+        )
     }
 
     private fun parseServingUnitOptions(
