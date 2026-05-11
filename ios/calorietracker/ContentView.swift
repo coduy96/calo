@@ -614,6 +614,7 @@ struct HomeView: View {
     @State private var capturedImage: UIImage?
     @State private var cameraMode: CameraMode = .snapFood
     @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var photoPickerMode: CameraMode = .snapFood
     @State private var showPhotoPicker = false
     @State private var showError = false
     @State private var errorMessage = ""
@@ -868,9 +869,19 @@ struct HomeView: View {
                             }
                             Button(action: {
 
+                                cameraMode = .snapFood
+                                photoPickerMode = .snapFood
                                 showPhotoPicker = true
                             }) {
                                 Label("From Photos", systemImage: "photo.on.rectangle")
+                            }
+                            Button(action: {
+
+                                cameraMode = .snapFoodWithContext
+                                photoPickerMode = .snapFoodWithContext
+                                showPhotoPicker = true
+                            }) {
+                                Label("From Photos + Note", systemImage: "photo.badge.plus")
                             }
                             Button(action: {
 
@@ -1092,6 +1103,13 @@ struct HomeView: View {
                        let image = UIImage(data: data) {
                         currentImage = image
                         currentEmoji = nil
+                        if photoPickerMode == .snapFoodWithContext {
+                            pendingContextImage = image
+                            contextDescription = ""
+                            showContextSheet = true
+                            return
+                        }
+
                         activeSheet = .analyzing
                         do {
                             let result = try await GeminiService.autoAnalyze(image: image)
