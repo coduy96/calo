@@ -320,6 +320,9 @@ struct HomeNutrientPickerSheet: View {
             draftSelection.remove(at: index)
         } else if draftSelection.count < 3 {
             draftSelection.append(nutrient)
+        } else {
+            draftSelection.removeLast()
+            draftSelection.append(nutrient)
         }
     }
 }
