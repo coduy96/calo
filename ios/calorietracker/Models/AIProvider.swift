@@ -175,12 +175,30 @@ enum AIProvider: String, CaseIterable, Codable, Identifiable {
         models.first ?? ""
     }
 
+    static func normalizedModelID(_ model: String) -> String {
+        switch model.trimmingCharacters(in: .whitespacesAndNewlines) {
+        case "gemini-3.1-flash-lite-preview":
+            return "gemini-3.1-flash-lite"
+        default:
+            return model
+        }
+    }
+
+    func supportedModelOrDefault(_ model: String?) -> String {
+        guard let model else { return defaultModel }
+        let normalized = Self.normalizedModelID(model)
+        if supportsCustomModelName {
+            return normalized
+        }
+        return models.contains(normalized) ? normalized : defaultModel
+    }
+
     /// Only models that are currently in service AND accept image input + return structured text.
     /// Text-only and deprecated/preview models are excluded since this app needs vision for food photos.
     var models: [String] {
         switch self {
         case .gemini: [
-            "gemini-3.1-flash-lite-preview", // vision, newest, cheapest
+            "gemini-3.1-flash-lite",         // vision, newest, cheapest
             "gemini-3.1-pro-preview",        // vision, newest flagship
             "gemini-3-flash-preview",        // vision, newest fast
             "gemini-2.5-flash",              // vision, prior fast
@@ -354,19 +372,12 @@ struct AIProviderSettings {
     static var selectedModel: String {
         get {
             let saved = UserDefaults.standard.string(forKey: modelKey)
-            // Providers that allow free-form model names trust whatever the user saved.
-            if selectedProvider.supportsCustomModelName {
-                return saved ?? selectedProvider.defaultModel
-            }
-            // Otherwise validate against the provider's supported list and fall back to default
+            // Validate against the provider's supported list and fall back to default
             // if the saved one was removed (e.g., a deprecated model we no longer expose).
-            if let saved, selectedProvider.models.contains(saved) {
-                return saved
-            }
-            return selectedProvider.defaultModel
+            return selectedProvider.supportedModelOrDefault(saved)
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: modelKey)
+            UserDefaults.standard.set(AIProvider.normalizedModelID(newValue), forKey: modelKey)
         }
     }
 
@@ -447,11 +458,9 @@ struct AIProviderSettings {
         get {
             let provider = selectedFallbackProvider
             let saved = UserDefaults.standard.string(forKey: fallbackModelKey)
-            if provider.supportsCustomModelName { return saved ?? provider.defaultModel }
-            if let saved, provider.models.contains(saved) { return saved }
-            return provider.defaultModel
+            return provider.supportedModelOrDefault(saved)
         }
-        set { UserDefaults.standard.set(newValue, forKey: fallbackModelKey) }
+        set { UserDefaults.standard.set(AIProvider.normalizedModelID(newValue), forKey: fallbackModelKey) }
     }
 
     /// Providers that have a saved API key (or don't require one, e.g. Ollama),

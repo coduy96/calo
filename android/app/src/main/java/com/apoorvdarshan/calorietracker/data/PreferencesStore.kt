@@ -139,7 +139,7 @@ class PreferencesStore(private val context: Context) {
 
     val selectedAIModel: Flow<String?> = ds.data.map { it[Keys.SELECTED_AI_MODEL] }
     suspend fun setSelectedAIModel(model: String) {
-        ds.edit { it[Keys.SELECTED_AI_MODEL] = model }
+        ds.edit { it[Keys.SELECTED_AI_MODEL] = AIProvider.normalizeModelId(model) }
     }
 
     fun customBaseUrl(provider: AIProvider): Flow<String?> = ds.data.map {
@@ -177,7 +177,7 @@ class PreferencesStore(private val context: Context) {
 
     val selectedFallbackModel: Flow<String?> = ds.data.map { it[Keys.FALLBACK_MODEL] }
     suspend fun setSelectedFallbackModel(model: String) {
-        ds.edit { it[Keys.FALLBACK_MODEL] = model }
+        ds.edit { it[Keys.FALLBACK_MODEL] = AIProvider.normalizeModelId(model) }
     }
 
     // -- Speech Provider selection ---------------------------------------

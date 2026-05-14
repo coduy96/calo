@@ -58,7 +58,7 @@ class ChatService(
         val tools = CoachTools(weights = weights, bodyFats = bodyFats, foods = foods)
 
         val provider = prefs.selectedAIProvider.first()
-        val model = prefs.selectedAIModel.first() ?: provider.defaultModel
+        val model = provider.supportedModelOrDefault(prefs.selectedAIModel.first())
         val baseUrl = prefs.customBaseUrl(provider).first()?.takeIf { it.isNotEmpty() } ?: provider.baseUrl
         val apiKey = keyStore.apiKey(provider)
 

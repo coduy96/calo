@@ -4,9 +4,12 @@ const DEFAULT_TASK_LIMITS = {
   coach: 25,
 };
 const DEFAULT_GLOBAL_LIMIT = 70;
+const MODEL_ALIASES = {
+  "gemini-3.1-flash-lite-preview": "gemini-3.1-flash-lite",
+};
 const FALLBACK_MODELS = {
   food: [
-    "gemini-3.1-flash-lite-preview",
+    "gemini-3.1-flash-lite",
     "gemini-3-flash-preview",
     "gemini-2.5-flash-lite",
     "gemini-2.5-flash",
@@ -105,7 +108,15 @@ function configuredModels(task) {
     .map((model) => model.trim())
     .filter(Boolean);
 
-  return configured?.length ? configured : FALLBACK_MODELS[task];
+  return uniqueModels(configured?.length ? configured : FALLBACK_MODELS[task]);
+}
+
+function uniqueModels(models) {
+  return [...new Set(models.map(normalizeModel).filter(Boolean))];
+}
+
+function normalizeModel(model) {
+  return MODEL_ALIASES[model] || model;
 }
 
 async function handleSpeechTask(installID, speechBody, response) {

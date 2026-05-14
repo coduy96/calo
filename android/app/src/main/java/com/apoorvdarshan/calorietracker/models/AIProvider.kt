@@ -57,7 +57,7 @@ enum class AIProvider {
     /** Only models that are currently in service AND accept image input + return structured text. */
     val models: List<String> get() = when (this) {
         GEMINI -> listOf(
-            "gemini-3.1-flash-lite-preview",
+            "gemini-3.1-flash-lite",
             "gemini-3.1-pro-preview",
             "gemini-3-flash-preview",
             "gemini-2.5-flash",
@@ -129,6 +129,16 @@ enum class AIProvider {
 
     val defaultModel: String get() = models.firstOrNull() ?: ""
 
+    fun supportedModelOrDefault(model: String?): String {
+        val normalized = model?.let(::normalizeModelId)
+        return when {
+            normalized.isNullOrBlank() -> defaultModel
+            supportsCustomModelName -> normalized
+            models.contains(normalized) -> normalized
+            else -> defaultModel
+        }
+    }
+
     val requiresApiKey: Boolean get() = this != OLLAMA
     val requiresCustomEndpoint: Boolean get() = this == CUSTOM_OPENAI
     val requiresCustomModelName: Boolean get() = this == CUSTOM_OPENAI
@@ -160,4 +170,12 @@ enum class AIProvider {
     }
 
     enum class ApiFormat { GEMINI, OPENAI_COMPATIBLE, ANTHROPIC }
+
+    companion object {
+        fun normalizeModelId(model: String): String =
+            when (model.trim()) {
+                "gemini-3.1-flash-lite-preview" -> "gemini-3.1-flash-lite"
+                else -> model
+            }
+    }
 }

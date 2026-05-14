@@ -126,7 +126,7 @@ class FoodAnalysisService(
         val finalPrompt = if (context.isNotBlank()) "User context (apply to every analysis): $context\n\n$prompt" else prompt
 
         val primary = prefs.selectedAIProvider.first()
-        val primaryModel = prefs.selectedAIModel.first() ?: primary.defaultModel
+        val primaryModel = primary.supportedModelOrDefault(prefs.selectedAIModel.first())
         val primaryBaseUrl = prefs.customBaseUrl(primary).first()?.takeIf { it.isNotEmpty() } ?: primary.baseUrl
         val primaryKey = keyStore.apiKey(primary)
         if (primary.requiresApiKey && primaryKey.isNullOrEmpty()) throw AiError.NoApiKey
@@ -242,7 +242,7 @@ class FoodAnalysisService(
     ): FallbackConfig? {
         if (!prefs.fallbackEnabled.first()) return null
         val provider = prefs.selectedFallbackProvider.first()
-        val model = prefs.selectedFallbackModel.first() ?: provider.defaultModel
+        val model = provider.supportedModelOrDefault(prefs.selectedFallbackModel.first())
         // Fallback identical to primary would be a pointless retry of the same call.
         if (provider == primary && model == primaryModel) return null
         val key = keyStore.apiKey(provider)

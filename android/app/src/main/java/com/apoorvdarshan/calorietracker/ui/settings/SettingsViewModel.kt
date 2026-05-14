@@ -52,7 +52,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
     init {
         viewModelScope.launch {
             val provider = container.prefs.selectedAIProvider.first()
-            val model = container.prefs.selectedAIModel.first() ?: provider.defaultModel
+            val model = provider.supportedModelOrDefault(container.prefs.selectedAIModel.first())
             val speech = container.prefs.selectedSpeechProvider.first()
             val speechLanguage = container.prefs.selectedSpeechLanguage(speech).first()
             val useMetric = container.prefs.useMetric.first()
@@ -67,7 +67,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             val userContext = container.prefs.userContext.first()
             val fbEnabled = container.prefs.fallbackEnabled.first()
             val fbProvider = container.prefs.selectedFallbackProvider.first()
-            val fbModel = container.prefs.selectedFallbackModel.first() ?: fbProvider.defaultModel
+            val fbModel = fbProvider.supportedModelOrDefault(container.prefs.selectedFallbackModel.first())
             val fbMasked = maskKey(container.keyStore.apiKey(fbProvider))
             val optionalGoals = container.prefs.optionalNutrientGoals.first()
             _ui.value = SettingsUiState(
@@ -146,7 +146,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             container.prefs.setSelectedFallbackProvider(p)
             // Reset model to provider default if old model isn't in the new provider's list.
             val current = _ui.value.fallbackModel
-            val newModel = if (p.supportsCustomModelName || p.models.contains(current)) current else p.defaultModel
+            val newModel = p.supportedModelOrDefault(current)
             container.prefs.setSelectedFallbackModel(newModel)
             val masked = maskKey(container.keyStore.apiKey(p))
             _ui.value = _ui.value.copy(fallbackProvider = p, fallbackModel = newModel, fallbackApiKeyMasked = masked)
@@ -155,8 +155,9 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
 
     fun selectFallbackModel(m: String) {
         viewModelScope.launch {
-            container.prefs.setSelectedFallbackModel(m)
-            _ui.value = _ui.value.copy(fallbackModel = m)
+            val model = _ui.value.fallbackProvider.supportedModelOrDefault(m)
+            container.prefs.setSelectedFallbackModel(model)
+            _ui.value = _ui.value.copy(fallbackModel = model)
         }
     }
 
@@ -201,8 +202,9 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
 
     fun selectModel(m: String) {
         viewModelScope.launch {
-            container.prefs.setSelectedAIModel(m)
-            _ui.value = _ui.value.copy(selectedModel = m)
+            val model = _ui.value.selectedAI.supportedModelOrDefault(m)
+            container.prefs.setSelectedAIModel(model)
+            _ui.value = _ui.value.copy(selectedModel = model)
         }
     }
 
