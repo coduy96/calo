@@ -50,9 +50,19 @@ struct PaywallView: View {
                     )
                 }
 
+                if let weekly = storeManager.weeklyProduct {
+                    paywallCard(
+                        product: weekly,
+                        title: "Weekly",
+                        badge: nil,
+                        detail: weekly.detail
+                    )
+                }
+
                 VStack(alignment: .leading, spacing: 8) {
                     featureRow("Uses Fud AI's Gemini + Deepgram providers")
                     featureRow("\(AIAccessSettings.paidFoodDailyRequestLimit) food logs, \(AIAccessSettings.paidSpeechDailyRequestLimit) voice transcriptions/day")
+                    featureRow("Voice recordings capped at 60 seconds")
                     featureRow("\(AIAccessSettings.paidCoachDailyRequestLimit) Coach messages/day")
                     featureRow("Switch back to BYOK anytime")
                 }

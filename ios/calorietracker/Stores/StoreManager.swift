@@ -47,10 +47,11 @@ struct PlusProduct: Identifiable {
 @Observable
 class StoreManager {
     // MARK: - Product IDs
+    static let weeklyID = "fudai.plus.weekly"
     static let monthlyID = "fudai.plus.monthly"
     static let yearlyID = "fudai.plus.yearly"
 
-    private static let allProductIDs: Set<String> = [monthlyID, yearlyID]
+    private static let allProductIDs: Set<String> = [weeklyID, monthlyID, yearlyID]
 
     // MARK: - Purchase State
     var products: [PlusProduct] = []
@@ -103,6 +104,10 @@ class StoreManager {
         products.first { $0.id == Self.monthlyID }
     }
 
+    var weeklyProduct: PlusProduct? {
+        products.first { $0.id == Self.weeklyID }
+    }
+
     var yearlyProduct: PlusProduct? {
         products.first { $0.id == Self.yearlyID }
     }
@@ -110,6 +115,7 @@ class StoreManager {
     var currentPlanName: String {
         guard let id = currentSubscriptionProductID else { return "Free" }
         switch id {
+        case Self.weeklyID: return "Weekly"
         case Self.monthlyID: return "Monthly"
         case Self.yearlyID: return "Yearly"
         default: return "Premium"
@@ -169,9 +175,9 @@ class StoreManager {
                 PlusProduct(
                     id: product.id,
                     productID: product.id,
-                    title: product.id == Self.yearlyID ? "Yearly" : "Monthly",
+                    title: Self.title(forProductID: product.id),
                     displayPrice: product.displayPrice,
-                    detail: product.id == Self.yearlyID ? yearlyDetailText(product) : "per month",
+                    detail: detail(for: product),
                     source: .storeKit(product)
                 )
             }
@@ -373,6 +379,7 @@ class StoreManager {
         var packages: [Package] = []
         if let annual = offering.annual { packages.append(annual) }
         if let monthly = offering.monthly { packages.append(monthly) }
+        if let weekly = offering.weekly { packages.append(weekly) }
 
         for package in offering.availablePackages where Self.allProductIDs.contains(package.storeProduct.productIdentifier) {
             if !packages.contains(where: { $0.storeProduct.productIdentifier == package.storeProduct.productIdentifier }) {
@@ -397,7 +404,17 @@ class StoreManager {
         switch productID {
         case yearlyID: return 0
         case monthlyID: return 1
-        default: return 2
+        case weeklyID: return 2
+        default: return 3
+        }
+    }
+
+    private static func title(forProductID productID: String) -> String {
+        switch productID {
+        case yearlyID: return "Yearly"
+        case monthlyID: return "Monthly"
+        case weeklyID: return "Weekly"
+        default: return "Premium"
         }
     }
 
@@ -405,12 +422,27 @@ class StoreManager {
         switch package.packageType {
         case .annual: return "Yearly"
         case .monthly: return "Monthly"
+        case .weekly: return "Weekly"
         default:
             switch package.storeProduct.productIdentifier {
             case Self.yearlyID: return "Yearly"
             case Self.monthlyID: return "Monthly"
+            case Self.weeklyID: return "Weekly"
             default: return package.storeProduct.localizedTitle
             }
+        }
+    }
+
+    private func detail(for product: Product) -> String {
+        switch product.id {
+        case Self.yearlyID:
+            return yearlyDetailText(product)
+        case Self.monthlyID:
+            return "per month"
+        case Self.weeklyID:
+            return "per week"
+        default:
+            return "subscription"
         }
     }
 
@@ -423,6 +455,8 @@ class StoreManager {
             return "per year"
         case .monthly:
             return "per month"
+        case .weekly:
+            return "per week"
         default:
             return package.storeProduct.subscriptionPeriod == nil ? "one time" : "subscription"
         }

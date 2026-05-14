@@ -76,7 +76,7 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "9.99",
+          "displayPrice" : "19.99",
           "familyShareable" : false,
           "groupNumber" : 2,
           "internalID" : "monthly001",
@@ -101,7 +101,7 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "89.99",
+          "displayPrice" : "199.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "yearly001",
@@ -116,6 +116,31 @@
           "productID" : "fudai.plus.yearly",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Yearly",
+          "subscriptionGroupID" : "FudAIPremium",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "5.99",
+          "familyShareable" : false,
+          "groupNumber" : 3,
+          "internalID" : "weekly001",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "No-key AI access with food, voice, and Coach daily limits",
+              "displayName" : "Weekly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "fudai.plus.weekly",
+          "recurringSubscriptionPeriod" : "P1W",
+          "referenceName" : "Weekly",
           "subscriptionGroupID" : "FudAIPremium",
           "type" : "RecurringSubscription"
         }
