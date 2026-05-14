@@ -3870,7 +3870,7 @@ private struct AIAccessSettingsSection: View {
     private var plusActionButton: some View {
         Button {
             if storeManager.isSubscribed {
-                Task { await openSubscriptionManagement() }
+                openSubscriptionManagement()
             } else {
                 showFudAIPlusPaywall = true
             }
@@ -3918,23 +3918,10 @@ private struct AIAccessSettingsSection: View {
     }
 
     @MainActor
-    private func openSubscriptionManagement() async {
+    private func openSubscriptionManagement() {
         isManagingSubscription = true
         defer { isManagingSubscription = false }
-
-        guard let scene = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene })
-            .first(where: { $0.activationState == .foregroundActive }) else {
-            openAppleSubscriptionsURL()
-            return
-        }
-
-        do {
-            try await AppStore.showManageSubscriptions(in: scene)
-            await storeManager.checkEntitlements()
-        } catch {
-            openAppleSubscriptionsURL()
-        }
+        openAppleSubscriptionsURL()
     }
 
     private func openAppleSubscriptionsURL() {
