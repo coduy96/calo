@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import java.util.Base64
 
 /**
  * Sealed wrapper around chip text — either a resource (for our preset chips,
@@ -75,10 +76,16 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
         )
     }
 
-    fun send(userText: String) {
-        if (userText.isBlank() || _ui.value.sending) return
+    fun send(userText: String, imageBytes: ByteArray? = null, thumbnailBytes: ByteArray? = null) {
+        val trimmed = userText.trim()
+        if ((trimmed.isBlank() && imageBytes == null) || _ui.value.sending) return
+        val text = trimmed.ifEmpty { "Analyze this image." }
         viewModelScope.launch {
-            val userMsg = ChatMessage(role = ChatMessage.Role.USER, content = userText)
+            val userMsg = ChatMessage(
+                role = ChatMessage.Role.USER,
+                content = text,
+                attachmentImageBase64 = thumbnailBytes?.let { Base64.getEncoder().encodeToString(it) }
+            )
             container.chatRepository.append(userMsg)
             _ui.value = _ui.value.copy(sending = true, error = null, errorRes = null)
             try {
@@ -97,12 +104,13 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
 
                 val reply = container.chatService.sendMessage(
                     history = history,
-                    newUserMessage = userText,
+                    newUserMessage = text,
                     profile = profile,
                     weights = weights,
                     bodyFats = bodyFats,
                     foods = foods,
-                    useMetric = useMetric
+                    useMetric = useMetric,
+                    imageBytes = imageBytes
                 )
                 container.chatRepository.append(ChatMessage(role = ChatMessage.Role.ASSISTANT, content = reply.trim()))
                 _ui.value = _ui.value.copy(sending = false)

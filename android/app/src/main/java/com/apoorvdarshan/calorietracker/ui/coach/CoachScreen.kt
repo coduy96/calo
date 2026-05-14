@@ -1,5 +1,15 @@
 package com.apoorvdarshan.calorietracker.ui.coach
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -8,6 +18,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,7 +45,10 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -63,7 +77,10 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
@@ -79,6 +96,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.models.ChatMessage
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.util.Base64
 import kotlinx.coroutines.delay
 
 /**
@@ -97,14 +117,73 @@ fun CoachScreen(container: AppContainer) {
     val vm: CoachViewModel = viewModel(factory = CoachViewModel.Factory(container))
     val ui by vm.ui.collectAsState()
     var input by remember { mutableStateOf("") }
+    var attachedImageBytes by remember { mutableStateOf<ByteArray?>(null) }
+    var showAttachMenu by remember { mutableStateOf(false) }
+    var pendingCaptureFile by remember { mutableStateOf<File?>(null) }
     val listState = rememberLazyListState()
     var showResetConfirm by remember { mutableStateOf(false) }
+    val ctx = LocalContext.current
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
 
     fun hideKeyboard() {
         focusManager.clearFocus()
         keyboard?.hide()
+    }
+
+    val photoPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val bytes = ctx.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+            if (bytes != null) attachedImageBytes = resizedJpeg(bytes, maxDimension = 1800, quality = 86) ?: bytes
+        }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { saved ->
+        val file = pendingCaptureFile
+        pendingCaptureFile = null
+        if (saved && file != null && file.exists()) {
+            val bytes = file.readBytes()
+            if (bytes.isNotEmpty()) attachedImageBytes = resizedJpeg(bytes, maxDimension = 1800, quality = 86) ?: bytes
+        }
+    }
+
+    fun launchCamera() {
+        val dir = File(ctx.cacheDir, "coach-capture").apply { mkdirs() }
+        val file = File(dir, "coach-${System.currentTimeMillis()}.jpg")
+        val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", file)
+        pendingCaptureFile = file
+        cameraLauncher.launch(uri)
+    }
+
+    val cameraPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) launchCamera()
+    }
+
+    fun openCamera() {
+        if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            launchCamera()
+        } else {
+            cameraPermission.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    fun sendCurrentDraft() {
+        val image = attachedImageBytes
+        val trimmed = input.trim()
+        if (trimmed.isEmpty() && image == null) return
+        if (ui.sending) return
+        val imageForAi = image?.let { resizedJpeg(it, maxDimension = 1600, quality = 78) ?: it }
+        val thumbnail = image?.let { resizedJpeg(it, maxDimension = 700, quality = 68) ?: it }
+        hideKeyboard()
+        input = ""
+        attachedImageBytes = null
+        vm.send(trimmed, imageBytes = imageForAi, thumbnailBytes = thumbnail)
     }
 
     LaunchedEffect(ui.messages.size, ui.sending) {
@@ -177,6 +256,7 @@ fun CoachScreen(container: AppContainer) {
                 onTap = { chip ->
                     hideKeyboard()
                     input = ""
+                    attachedImageBytes = null
                     vm.send(chip)
                 }
             )
@@ -185,15 +265,11 @@ fun CoachScreen(container: AppContainer) {
             InputBar(
                 value = input,
                 onValueChange = { input = it },
+                attachedImageBytes = attachedImageBytes,
                 sending = ui.sending,
-                onSend = {
-                    val trimmed = input.trim()
-                    if (trimmed.isNotEmpty() && !ui.sending) {
-                        hideKeyboard()
-                        input = ""
-                        vm.send(trimmed)
-                    }
-                }
+                onPickImage = { showAttachMenu = true },
+                onRemoveImage = { attachedImageBytes = null },
+                onSend = { sendCurrentDraft() }
             )
         }
     }
@@ -211,6 +287,25 @@ fun CoachScreen(container: AppContainer) {
             },
             dismissButton = {
                 TextButton(onClick = { showResetConfirm = false }) { Text(stringResource(R.string.action_cancel)) }
+            }
+        )
+    }
+
+    if (showAttachMenu) {
+        AlertDialog(
+            onDismissRequest = { showAttachMenu = false },
+            title = { Text("Add Image") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showAttachMenu = false
+                    openCamera()
+                }) { Text("Camera", color = AppColors.Calorie) }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showAttachMenu = false
+                    photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                }) { Text("Photos") }
             }
         )
     }
@@ -385,7 +480,7 @@ private fun MessageBubble(msg: ChatMessage) {
             Spacer(Modifier.width(48.dp))
         } else {
             Spacer(Modifier.width(48.dp))
-            Bubble(content = msg.content, isUser = true)
+            Bubble(content = msg.content, isUser = true, attachmentImageBase64 = msg.attachmentImageBase64)
         }
     }
 }
@@ -423,7 +518,7 @@ private fun AssistantBadge() {
  *   shadow asst: Black 0.12, radius 6, y 3
  */
 @Composable
-private fun Bubble(content: String, isUser: Boolean) {
+private fun Bubble(content: String, isUser: Boolean, attachmentImageBase64: String? = null) {
     val shape = RoundedCornerShape(20.dp)
     val borderBrush = Brush.linearGradient(
         listOf(
@@ -471,14 +566,35 @@ private fun Bubble(content: String, isUser: Boolean) {
                     )
             )
         }
-        Text(
-            content,
-            fontSize = 17.sp,
-            color = if (isUser) Color.White else MaterialTheme.colorScheme.onSurface,
-            lineHeight = 22.sp,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 11.dp),
-            style = TextStyle(fontWeight = FontWeight.Normal)
-        )
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 11.dp)) {
+            attachmentImageBase64?.let { encoded ->
+                val bitmap = remember(encoded) {
+                    runCatching {
+                        val bytes = Base64.getDecoder().decode(encoded)
+                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    }.getOrNull()
+                }
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(150.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
+            }
+            Text(
+                content,
+                fontSize = 17.sp,
+                color = if (isUser) Color.White else MaterialTheme.colorScheme.onSurface,
+                lineHeight = 22.sp,
+                style = TextStyle(fontWeight = FontWeight.Normal)
+            )
+        }
     }
 }
 
@@ -536,13 +652,16 @@ private fun PromptChip(text: String, enabled: Boolean, onTap: (String) -> Unit) 
 private fun InputBar(
     value: String,
     onValueChange: (String) -> Unit,
+    attachedImageBytes: ByteArray?,
     sending: Boolean,
+    onPickImage: () -> Unit,
+    onRemoveImage: () -> Unit,
     onSend: () -> Unit
 ) {
-    val canSend = !sending && value.trim().isNotEmpty()
+    val canSend = !sending && (value.trim().isNotEmpty() || attachedImageBytes != null)
     val capsule = RoundedCornerShape(28.dp)
 
-    Row(
+    Column(
         modifier = Modifier
             .padding(horizontal = 12.dp)
             .padding(top = 4.dp, bottom = 10.dp)
@@ -563,34 +682,80 @@ private fun InputBar(
                 capsule
             )
             .padding(start = 4.dp, end = 5.dp, top = 4.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Box(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 8.dp)) {
-            if (value.isEmpty()) {
-                Text(
-                    stringResource(R.string.coach_input_placeholder),
-                    fontSize = 17.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
-                )
+        attachedImageBytes?.let { bytes ->
+            val bitmap = remember(bytes) { BitmapFactory.decodeByteArray(bytes, 0, bytes.size) }
+            if (bitmap != null) {
+                Box(
+                    modifier = Modifier
+                        .padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 4.dp)
+                        .size(width = 88.dp, height = 70.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                ) {
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    IconButton(
+                        onClick = onRemoveImage,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(4.dp)
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = 0.55f))
+                    ) {
+                        Icon(Icons.Filled.Close, contentDescription = "Remove image", tint = Color.White, modifier = Modifier.size(14.dp))
+                    }
+                }
             }
-            BasicTextField(
-                value = value,
-                onValueChange = onValueChange,
-                textStyle = LocalTextStyle.current.copy(
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Normal
-                ),
-                cursorBrush = SolidColor(AppColors.Calorie),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(onSend = { onSend() }),
-                maxLines = 5,
-                modifier = Modifier.fillMaxWidth()
-            )
         }
 
-        SendButton(canSend = canSend, onClick = onSend)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            IconButton(
+                onClick = onPickImage,
+                enabled = !sending,
+                modifier = Modifier.size(38.dp)
+            ) {
+                Icon(
+                    Icons.Filled.PhotoLibrary,
+                    contentDescription = "Add image",
+                    tint = AppColors.Calorie,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+
+            Box(Modifier.weight(1f).padding(horizontal = 2.dp, vertical = 8.dp)) {
+                if (value.isEmpty()) {
+                    Text(
+                        stringResource(R.string.coach_input_placeholder),
+                        fontSize = 17.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+                    )
+                }
+                BasicTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    textStyle = LocalTextStyle.current.copy(
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Normal
+                    ),
+                    cursorBrush = SolidColor(AppColors.Calorie),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(onSend = { onSend() }),
+                    maxLines = 5,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            SendButton(canSend = canSend, onClick = onSend)
+        }
     }
 }
 
@@ -630,5 +795,25 @@ private fun SendButton(canSend: Boolean, onClick: () -> Unit) {
             tint = Color.White,
             modifier = Modifier.size(16.dp)
         )
+    }
+}
+
+private fun resizedJpeg(bytes: ByteArray, maxDimension: Int, quality: Int): ByteArray? {
+    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return null
+    val longest = maxOf(bitmap.width, bitmap.height)
+    val scaled = if (longest > maxDimension) {
+        val ratio = maxDimension.toFloat() / longest.toFloat()
+        Bitmap.createScaledBitmap(
+            bitmap,
+            (bitmap.width * ratio).toInt().coerceAtLeast(1),
+            (bitmap.height * ratio).toInt().coerceAtLeast(1),
+            true
+        )
+    } else {
+        bitmap
+    }
+    return ByteArrayOutputStream().use { out ->
+        scaled.compress(Bitmap.CompressFormat.JPEG, quality.coerceIn(1, 100), out)
+        out.toByteArray()
     }
 }

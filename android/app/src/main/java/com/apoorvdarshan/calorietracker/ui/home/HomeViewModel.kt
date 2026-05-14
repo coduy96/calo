@@ -10,6 +10,7 @@ import com.apoorvdarshan.calorietracker.models.HomeTopNutrient
 import com.apoorvdarshan.calorietracker.models.MealType
 import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
 import com.apoorvdarshan.calorietracker.models.UserProfile
+import com.apoorvdarshan.calorietracker.services.OpenFoodFactsService
 import com.apoorvdarshan.calorietracker.services.ai.AiError
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +45,7 @@ data class HomeUiState(
     val favoriteKeys: Set<String> = emptySet(),
     val pendingAnalysis: FoodAnalysis? = null,
     val pendingImageBytes: ByteArray? = null,
+    val pendingFoodSource: FoodSource? = null,
     /**
      * Set when the pendingAnalysis came from a Saved Meals tap (Recents /
      * Frequent / Favorites) instead of a fresh AI analysis. We keep the
@@ -121,7 +123,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
     fun analyzeText(description: String) {
         viewModelScope.launch {
             container.analyzingFood.value = true
-            _ui.value = _ui.value.copy(analyzing = true, error = null, pendingAnalysis = null, pendingImageBytes = null)
+            _ui.value = _ui.value.copy(analyzing = true, error = null, pendingAnalysis = null, pendingImageBytes = null, pendingFoodSource = FoodSource.TEXT_INPUT)
             try {
                 val analysis = container.foodAnalysis.analyzeText(description)
                 _ui.value = _ui.value.copy(analyzing = false, pendingAnalysis = analysis)
@@ -138,7 +140,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
     fun analyzePhoto(bytes: ByteArray) {
         viewModelScope.launch {
             container.analyzingFood.value = true
-            _ui.value = _ui.value.copy(analyzing = true, error = null, pendingAnalysis = null, pendingImageBytes = bytes)
+            _ui.value = _ui.value.copy(analyzing = true, error = null, pendingAnalysis = null, pendingImageBytes = bytes, pendingFoodSource = FoodSource.SNAP_FOOD)
             try {
                 val analysis = container.foodAnalysis.analyzeAuto(bytes)
                 _ui.value = _ui.value.copy(analyzing = false, pendingAnalysis = analysis)
@@ -160,7 +162,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
     fun analyzePhotoWithNote(bytes: ByteArray, note: String) {
         viewModelScope.launch {
             container.analyzingFood.value = true
-            _ui.value = _ui.value.copy(analyzing = true, error = null, pendingAnalysis = null, pendingImageBytes = bytes)
+            _ui.value = _ui.value.copy(analyzing = true, error = null, pendingAnalysis = null, pendingImageBytes = bytes, pendingFoodSource = FoodSource.SNAP_FOOD)
             try {
                 val analysis = container.foodAnalysis.analyzeFood(bytes, note.takeIf { it.isNotBlank() })
                 _ui.value = _ui.value.copy(analyzing = false, pendingAnalysis = analysis)
@@ -168,6 +170,28 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
                 _ui.value = _ui.value.copy(analyzing = false, error = e.message)
             } catch (e: Throwable) {
                 _ui.value = _ui.value.copy(analyzing = false, error = e.localizedMessage ?: "Analysis failed")
+            } finally {
+                container.analyzingFood.value = false
+            }
+        }
+    }
+
+    fun lookupBarcode(barcode: String) {
+        viewModelScope.launch {
+            container.analyzingFood.value = true
+            _ui.value = _ui.value.copy(
+                analyzing = true,
+                error = null,
+                pendingAnalysis = null,
+                pendingImageBytes = null,
+                pendingFoodSource = FoodSource.BARCODE,
+                pendingReviewSource = null
+            )
+            try {
+                val analysis = OpenFoodFactsService.lookup(barcode)
+                _ui.value = _ui.value.copy(analyzing = false, pendingAnalysis = analysis)
+            } catch (e: Throwable) {
+                _ui.value = _ui.value.copy(analyzing = false, error = e.localizedMessage ?: "Barcode lookup failed")
             } finally {
                 container.analyzingFood.value = false
             }
@@ -184,6 +208,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
     ) {
         val analysis = _ui.value.pendingAnalysis ?: return
         val reviewSource = _ui.value.pendingReviewSource
+        val pendingFoodSource = _ui.value.pendingFoodSource
         viewModelScope.launch {
             val imageBytes = _ui.value.pendingImageBytes
             val id = UUID.randomUUID()
@@ -206,6 +231,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
                 imageFilename = filename,
                 emoji = analysis.emoji,
                 source = reviewSource?.source
+                    ?: pendingFoodSource
                     ?: if (imageBytes != null) FoodSource.SNAP_FOOD else FoodSource.TEXT_INPUT,
                 mealType = mealType,
                 sugar = s(analysis.sugar),
@@ -226,6 +252,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
             _ui.value = _ui.value.copy(
                 pendingAnalysis = null,
                 pendingImageBytes = null,
+                pendingFoodSource = null,
                 pendingReviewSource = null
             )
         }
@@ -235,6 +262,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
         _ui.value = _ui.value.copy(
             pendingAnalysis = null,
             pendingImageBytes = null,
+            pendingFoodSource = null,
             pendingReviewSource = null,
             error = null
         )
@@ -254,6 +282,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
         _ui.value = _ui.value.copy(
             pendingAnalysis = analysis,
             pendingImageBytes = bytes,
+            pendingFoodSource = template.source,
             pendingReviewSource = template,
             error = null
         )
@@ -281,6 +310,20 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
     fun relogMeal(template: FoodEntry) {
         viewModelScope.launch {
             container.foodRepository.addEntry(template.duplicatedForLogging(timestampForSelectedDay()))
+        }
+    }
+
+    fun copyEntriesToSelectedDay(entries: List<FoodEntry>) {
+        if (entries.isEmpty()) return
+        viewModelScope.launch {
+            entries.forEach { entry ->
+                container.foodRepository.addEntry(
+                    entry.duplicatedForLogging(
+                        logDate = timestampForSelectedDayPreservingTime(entry.timestamp),
+                        mealType = entry.mealType
+                    )
+                )
+            }
         }
     }
 
@@ -321,6 +364,12 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
         val zone = ZoneId.systemDefault()
         val nowTime = java.time.LocalTime.now()
         return day.atTime(nowTime).atZone(zone).toInstant()
+    }
+
+    private fun timestampForSelectedDayPreservingTime(sourceTimestamp: Instant): Instant {
+        val zone = ZoneId.systemDefault()
+        val sourceTime = sourceTimestamp.atZone(zone).toLocalTime()
+        return _selectedDate.value.atTime(sourceTime).atZone(zone).toInstant()
     }
 
     class Factory(private val container: AppContainer) : ViewModelProvider.Factory {

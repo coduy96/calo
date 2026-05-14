@@ -11,6 +11,7 @@ data class ChatMessage(
     val id: UUID = UUID.randomUUID(),
     val role: Role,
     val content: String,
+    val attachmentImageBase64: String? = null,
     @Serializable(with = InstantSerializer::class)
     val timestamp: Instant = Instant.now()
 ) {

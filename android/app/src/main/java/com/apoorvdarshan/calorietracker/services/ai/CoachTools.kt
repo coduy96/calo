@@ -197,6 +197,7 @@ class CoachTools(
     private fun sourceName(source: FoodSource): String = when (source) {
         FoodSource.SNAP_FOOD -> "snapFood"
         FoodSource.NUTRITION_LABEL -> "nutritionLabel"
+        FoodSource.BARCODE -> "barcode"
         FoodSource.TEXT_INPUT -> "textInput"
         FoodSource.MANUAL -> "manual"
     }

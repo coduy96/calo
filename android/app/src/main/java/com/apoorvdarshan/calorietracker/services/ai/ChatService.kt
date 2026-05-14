@@ -23,6 +23,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Base64
 import java.util.Locale
 
 /**
@@ -48,7 +49,8 @@ class ChatService(
         weights: List<WeightEntry>,
         bodyFats: List<BodyFatEntry>,
         foods: List<FoodEntry>,
-        useMetric: Boolean
+        useMetric: Boolean,
+        imageBytes: ByteArray? = null
     ): String {
         val baseSystemPrompt = buildSystemPrompt(profile, weights, bodyFats, foods, useMetric)
         val userContext = prefs.userContext.first()
@@ -66,9 +68,9 @@ class ChatService(
         if (baseUrl.isEmpty()) throw AiError.InvalidUrl(baseUrl)
 
         return when (provider.apiFormat) {
-            AIProvider.ApiFormat.GEMINI -> runGeminiToolLoop(baseUrl, model, apiKey!!, systemPrompt, history, newUserMessage, tools)
-            AIProvider.ApiFormat.ANTHROPIC -> runAnthropicToolLoop(baseUrl, model, apiKey!!, systemPrompt, history, newUserMessage, tools)
-            AIProvider.ApiFormat.OPENAI_COMPATIBLE -> runOpenAIToolLoop(baseUrl, model, apiKey, systemPrompt, history, newUserMessage, provider, tools)
+            AIProvider.ApiFormat.GEMINI -> runGeminiToolLoop(baseUrl, model, apiKey!!, systemPrompt, history, newUserMessage, tools, imageBytes)
+            AIProvider.ApiFormat.ANTHROPIC -> runAnthropicToolLoop(baseUrl, model, apiKey!!, systemPrompt, history, newUserMessage, tools, imageBytes)
+            AIProvider.ApiFormat.OPENAI_COMPATIBLE -> runOpenAIToolLoop(baseUrl, model, apiKey, systemPrompt, history, newUserMessage, provider, tools, imageBytes)
         }
     }
 
@@ -170,7 +172,8 @@ class ChatService(
         history: List<ChatMessage>,
         newUserMessage: String,
         provider: AIProvider,
-        tools: CoachTools
+        tools: CoachTools,
+        imageBytes: ByteArray?
     ): String {
         val url = "$baseUrl/chat/completions"
         // OpenAI tool schema: {type:function, function:{name, description, parameters}}
@@ -193,7 +196,7 @@ class ChatService(
             val role = if (msg.role == ChatMessage.Role.USER) "user" else "assistant"
             messages.put(JSONObject().put("role", role).put("content", msg.content))
         }
-        messages.put(JSONObject().put("role", "user").put("content", newUserMessage))
+        messages.put(JSONObject().put("role", "user").put("content", openAIUserContent(newUserMessage, imageBytes)))
 
         repeat(MAX_TOOL_ROUNDS) {
             val body = JSONObject().apply {
@@ -253,7 +256,8 @@ class ChatService(
         systemPrompt: String,
         history: List<ChatMessage>,
         newUserMessage: String,
-        tools: CoachTools
+        tools: CoachTools,
+        imageBytes: ByteArray?
     ): String {
         val url = "$baseUrl/messages"
         // Anthropic tool schema: {name, description, input_schema}
@@ -272,7 +276,7 @@ class ChatService(
             val role = if (msg.role == ChatMessage.Role.USER) "user" else "assistant"
             messages.put(JSONObject().put("role", role).put("content", msg.content))
         }
-        messages.put(JSONObject().put("role", "user").put("content", newUserMessage))
+        messages.put(JSONObject().put("role", "user").put("content", anthropicUserContent(newUserMessage, imageBytes)))
 
         repeat(MAX_TOOL_ROUNDS) {
             val body = JSONObject().apply {
@@ -342,7 +346,8 @@ class ChatService(
         systemPrompt: String,
         history: List<ChatMessage>,
         newUserMessage: String,
-        tools: CoachTools
+        tools: CoachTools,
+        imageBytes: ByteArray?
     ): String {
         val url = "$baseUrl/models/$model:generateContent"
         // Gemini tool schema: tools=[{functionDeclarations:[{name,description,parameters}]}]
@@ -368,7 +373,7 @@ class ChatService(
         }
         contents.put(JSONObject().apply {
             put("role", "user")
-            put("parts", JSONArray().put(JSONObject().put("text", newUserMessage)))
+            put("parts", geminiUserParts(newUserMessage, imageBytes))
         })
 
         repeat(MAX_TOOL_ROUNDS) {
@@ -442,6 +447,57 @@ class ChatService(
             put("required", JSONArray().put("from").put("to"))
         }
     }
+
+    private fun openAIUserContent(text: String, imageBytes: ByteArray?): Any {
+        if (imageBytes == null) return text
+        return JSONArray().apply {
+            put(JSONObject().put("type", "text").put("text", text))
+            put(
+                JSONObject()
+                    .put("type", "image_url")
+                    .put(
+                        "image_url",
+                        JSONObject().put("url", "data:image/jpeg;base64,${base64(imageBytes)}")
+                    )
+            )
+        }
+    }
+
+    private fun anthropicUserContent(text: String, imageBytes: ByteArray?): Any {
+        if (imageBytes == null) return text
+        return JSONArray().apply {
+            put(JSONObject().put("type", "text").put("text", text))
+            put(
+                JSONObject()
+                    .put("type", "image")
+                    .put(
+                        "source",
+                        JSONObject()
+                            .put("type", "base64")
+                            .put("media_type", "image/jpeg")
+                            .put("data", base64(imageBytes))
+                    )
+            )
+        }
+    }
+
+    private fun geminiUserParts(text: String, imageBytes: ByteArray?): JSONArray =
+        JSONArray().apply {
+            imageBytes?.let {
+                put(
+                    JSONObject().put(
+                        "inlineData",
+                        JSONObject()
+                            .put("mimeType", "image/jpeg")
+                            .put("data", base64(it))
+                    )
+                )
+            }
+            put(JSONObject().put("text", text))
+        }
+
+    private fun base64(bytes: ByteArray): String =
+        Base64.getEncoder().encodeToString(bytes)
 
     // MARK: - English label helpers (LLM input — not localized)
 

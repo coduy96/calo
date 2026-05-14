@@ -39,6 +39,7 @@ import androidx.compose.material.icons.automirrored.filled.Note
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Coffee
@@ -63,18 +64,24 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -113,8 +120,10 @@ import com.apoorvdarshan.calorietracker.ui.components.MacroCard
 import com.apoorvdarshan.calorietracker.ui.components.WeekEnergyStrip
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import java.time.DayOfWeek
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
 import java.util.Locale
@@ -126,11 +135,14 @@ fun HomeScreen(container: AppContainer) {
     val ui by vm.ui.collectAsState()
     val ctx = LocalContext.current
     val weekStartsOnMonday by container.prefs.weekStartsOnMonday.collectAsState(initial = false)
+    val allEntries by container.foodRepository.entries.collectAsState(initial = emptyList())
 
     var showText by remember { mutableStateOf(false) }
     var showVoice by remember { mutableStateOf(false) }
     var showManual by remember { mutableStateOf(false) }
     var showSaved by remember { mutableStateOf(false) }
+    var showBarcodeScanner by remember { mutableStateOf(false) }
+    var showCopyFromDay by remember { mutableStateOf(false) }
     var showAddMenu by remember { mutableStateOf(false) }
     var showSortMenu by remember { mutableStateOf(false) }
     var editingEntry by remember { mutableStateOf<FoodEntry?>(null) }
@@ -209,6 +221,22 @@ fun HomeScreen(container: AppContainer) {
         } else {
             permissionWantsNote = withNote
             cameraPermission.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    val barcodePermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) showBarcodeScanner = true
+    }
+
+    fun openBarcodeScanner() {
+        if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) ==
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            showBarcodeScanner = true
+        } else {
+            barcodePermission.launch(Manifest.permission.CAMERA)
         }
     }
 
@@ -349,6 +377,10 @@ fun HomeScreen(container: AppContainer) {
                                 icon = Icons.Filled.QrCodeScanner
                             ) { showAddMenu = false; openCamera() }
                             MenuRow(
+                                label = "Barcode",
+                                icon = Icons.Filled.QrCodeScanner
+                            ) { showAddMenu = false; openBarcodeScanner() }
+                            MenuRow(
                                 label = "From Photos",
                                 icon = Icons.Filled.PhotoLibrary
                             ) {
@@ -380,6 +412,10 @@ fun HomeScreen(container: AppContainer) {
                                 label = "Saved Meals",
                                 icon = Icons.Filled.Bookmark
                             ) { showAddMenu = false; showSaved = true }
+                            MenuRow(
+                                label = "Copy from Day",
+                                icon = Icons.Filled.CalendarMonth
+                            ) { showAddMenu = false; showCopyFromDay = true }
                         }
                     }
                 }
@@ -527,6 +563,28 @@ fun HomeScreen(container: AppContainer) {
             // Tapping a Saved Meals row opens the FoodResultSheet for review
             // instead of logging immediately — same UX as the photo flow.
             onRelogEntry = { vm.reviewSavedMeal(it) }
+        )
+    }
+
+    if (showCopyFromDay) {
+        CopyFromDaySheet(
+            targetDate = ui.date,
+            allEntries = allEntries,
+            onCopy = { entries ->
+                vm.copyEntriesToSelectedDay(entries)
+                showCopyFromDay = false
+            },
+            onDismiss = { showCopyFromDay = false }
+        )
+    }
+
+    if (showBarcodeScanner) {
+        BarcodeScannerSheet(
+            onBarcode = { barcode ->
+                showBarcodeScanner = false
+                vm.lookupBarcode(barcode)
+            },
+            onDismiss = { showBarcodeScanner = false }
         )
     }
 
@@ -1267,6 +1325,178 @@ private fun MacroChip(label: String, value: Int) {
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CopyFromDaySheet(
+    targetDate: LocalDate,
+    allEntries: List<FoodEntry>,
+    onCopy: (List<FoodEntry>) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val state = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+        confirmValueChange = { it != SheetValue.Hidden }
+    )
+    var sourceDate by remember(targetDate) { mutableStateOf(targetDate.minusDays(1)) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val zone = ZoneId.systemDefault()
+    val dateFmt = remember { DateTimeFormatter.ofPattern("MMM d", Locale.US) }
+    val sourceEntries = remember(allEntries, sourceDate) {
+        allEntries
+            .filter { it.timestamp.atZone(zone).toLocalDate() == sourceDate }
+            .sortedByDescending { it.timestamp }
+    }
+    val groups = remember(sourceEntries) {
+        foodLogMealGroups(sourceEntries, FoodLogSortOrder.STANDARD)
+    }
+    val targetText = if (targetDate == LocalDate.now()) "today" else targetDate.format(dateFmt)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = state,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        containerColor = MaterialTheme.colorScheme.background
+    ) {
+        SheetReviewToolbar(
+            title = "Copy from Day",
+            primaryLabel = if (sourceEntries.isEmpty()) "Done" else "Copy All",
+            onCancel = onDismiss,
+            onPrimary = { if (sourceEntries.isEmpty()) onDismiss() else onCopy(sourceEntries) }
+        )
+
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            item {
+                Column(Modifier.padding(horizontal = 20.dp)) {
+                    SheetSectionHeader("Source")
+                    SheetPillRow(onClick = { showDatePicker = true }) {
+                        Text("Copy From", fontSize = 17.sp, modifier = Modifier.weight(1f))
+                        Text(
+                            sourceDate.format(dateFmt),
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = AppColors.Calorie
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Foods will be copied to $targetText. Original entries stay unchanged.",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                        modifier = Modifier.padding(horizontal = 18.dp)
+                    )
+                }
+            }
+
+            if (sourceEntries.isEmpty()) {
+                item {
+                    SectionCardWrapper(isFirst = true, isLast = true) {
+                        Column(
+                            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 28.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                Icons.Filled.CalendarMonth,
+                                contentDescription = null,
+                                tint = AppColors.Calorie.copy(alpha = 0.45f),
+                                modifier = Modifier.size(34.dp)
+                            )
+                            Text(
+                                "No foods logged on this day",
+                                fontSize = 15.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                }
+            } else {
+                item {
+                    Button(
+                        onClick = { onCopy(sourceEntries) },
+                        colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie),
+                        shape = RoundedCornerShape(18.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp)
+                            .height(50.dp)
+                    ) {
+                        Text(
+                            "Copy ${sourceEntries.size} food${if (sourceEntries.size == 1) "" else "s"} to $targetText",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                groups.forEach { group ->
+                    item(key = "copy-header-${group.id}") {
+                        MealSectionHeader(meal = group.meal)
+                    }
+                    item(key = "copy-meal-${group.id}") {
+                        Button(
+                            onClick = { onCopy(group.entries) },
+                            colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie.copy(alpha = 0.12f)),
+                            shape = RoundedCornerShape(18.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .height(46.dp)
+                        ) {
+                            Text(
+                                "Copy ${stringResource(group.meal.displayNameRes)}",
+                                color = AppColors.Calorie,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                    items(group.entries, key = { "copy-entry-${it.id}" }) { entry ->
+                        val index = group.entries.indexOf(entry)
+                        SectionCardWrapper(isFirst = index == 0, isLast = index == group.entries.lastIndex) {
+                            Box(Modifier.clickable { onCopy(listOf(entry)) }) {
+                                FoodRow(entry = entry)
+                            }
+                            if (index != group.entries.lastIndex) Divider()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showDatePicker) {
+        val pickerState = rememberDatePickerState(
+            initialSelectedDateMillis = sourceDate.atStartOfDay()
+                .toInstant(ZoneOffset.UTC)
+                .toEpochMilli()
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    pickerState.selectedDateMillis?.let { millis ->
+                        sourceDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
+                    }
+                    showDatePicker = false
+                }) {
+                    Text("Done", color = AppColors.Calorie)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = pickerState)
+        }
     }
 }
 

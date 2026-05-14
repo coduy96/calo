@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 enum class FoodSource {
     @SerialName("snapFood") SNAP_FOOD,
     @SerialName("nutritionLabel") NUTRITION_LABEL,
+    @SerialName("barcode") BARCODE,
     @SerialName("textInput") TEXT_INPUT,
     @SerialName("manual") MANUAL
 }

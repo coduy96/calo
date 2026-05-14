@@ -2,25 +2,33 @@ package com.apoorvdarshan.calorietracker.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.UnfoldMore
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,6 +49,13 @@ import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.MealType
 import com.apoorvdarshan.calorietracker.models.ServingUnitOption
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.roundToInt
 
 /**
@@ -88,6 +103,14 @@ fun EditFoodEntrySheet(
     var moreNutritionExpanded by remember { mutableStateOf(false) }
     var mealMenuExpanded by remember { mutableStateOf(false) }
     var servingMenuExpanded by remember { mutableStateOf(false) }
+    val zone = remember { ZoneId.systemDefault() }
+    val initialLoggedAt = remember(entry.id, entry.timestamp) { entry.timestamp.atZone(zone) }
+    var loggedDate by remember(entry.id, entry.timestamp) { mutableStateOf(initialLoggedAt.toLocalDate()) }
+    var loggedTime by remember(entry.id, entry.timestamp) { mutableStateOf(initialLoggedAt.toLocalTime().withSecond(0).withNano(0)) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US) }
+    val timeFormatter = remember { DateTimeFormatter.ofPattern("h:mm a", Locale.US) }
 
     fun scaledInt(v: Int) = (v * scale).roundToInt()
     fun scaledD(v: Double?) = v?.let { ((it * scale) * 10).roundToInt() / 10.0 }
@@ -98,6 +121,7 @@ fun EditFoodEntrySheet(
         protein = scaledInt(entry.protein),
         carbs = scaledInt(entry.carbs),
         fat = scaledInt(entry.fat),
+        timestamp = loggedDate.atTime(loggedTime).atZone(zone).toInstant(),
         mealType = mealType,
         sugar = scaledD(entry.sugar),
         addedSugar = scaledD(entry.addedSugar),
@@ -312,6 +336,125 @@ fun EditFoodEntrySheet(
                     }
                 }
             }
+
+            item { SheetSectionHeader("Date & Time") }
+            item {
+                SheetPillCard {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { showDatePicker = true }
+                            .padding(horizontal = 18.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Date", fontSize = 17.sp, modifier = Modifier.weight(1f))
+                        Text(
+                            loggedDate.format(dateFormatter),
+                            fontSize = 17.sp,
+                            color = AppColors.Calorie,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    SheetHairline()
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { showTimePicker = true }
+                            .padding(horizontal = 18.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Time", fontSize = 17.sp, modifier = Modifier.weight(1f))
+                        Text(
+                            loggedTime.format(timeFormatter),
+                            fontSize = 17.sp,
+                            color = AppColors.Calorie,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
         }
     }
+
+    if (showDatePicker) {
+        val pickerState = rememberDatePickerState(
+            initialSelectedDateMillis = loggedDate.atStartOfDay()
+                .toInstant(ZoneOffset.UTC)
+                .toEpochMilli()
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    pickerState.selectedDateMillis?.let { millis ->
+                        loggedDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
+                    }
+                    showDatePicker = false
+                }) {
+                    Text("Done", color = AppColors.Calorie)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+            }
+        ) {
+            DatePicker(state = pickerState)
+        }
+    }
+
+    if (showTimePicker) {
+        EditFoodTimeDialog(
+            initialTime = loggedTime,
+            onConfirm = {
+                loggedTime = it
+                showTimePicker = false
+            },
+            onDismiss = { showTimePicker = false }
+        )
+    }
+}
+
+@Composable
+private fun EditFoodTimeDialog(
+    initialTime: LocalTime,
+    onConfirm: (LocalTime) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var hourText by remember(initialTime) { mutableStateOf(initialTime.hour.toString().padStart(2, '0')) }
+    var minuteText by remember(initialTime) { mutableStateOf(initialTime.minute.toString().padStart(2, '0')) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Time") },
+        text = {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = hourText,
+                    onValueChange = { hourText = it.filter(Char::isDigit).take(2) },
+                    label = { Text("Hour") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedTextField(
+                    value = minuteText,
+                    onValueChange = { minuteText = it.filter(Char::isDigit).take(2) },
+                    label = { Text("Minute") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val hour = hourText.toIntOrNull()?.coerceIn(0, 23) ?: initialTime.hour
+                val minute = minuteText.toIntOrNull()?.coerceIn(0, 59) ?: initialTime.minute
+                onConfirm(LocalTime.of(hour, minute))
+            }) {
+                Text("Done", color = AppColors.Calorie)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
 }
