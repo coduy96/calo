@@ -25,7 +25,7 @@ struct VoiceInputView: View {
     var onCancel: () -> Void
     var onSubmit: (String) -> Void
 
-    private var provider: SpeechProvider { AIAccessSettings.isUsingFudAIPlus ? .gemini : SpeechSettings.selectedProvider }
+    private var provider: SpeechProvider { AIAccessSettings.isUsingFudAIPlus ? .deepgram : SpeechSettings.selectedProvider }
     private var isNative: Bool { provider == .nativeIOS }
 
     private var analyzeButtonLabel: String { "Analyze" }

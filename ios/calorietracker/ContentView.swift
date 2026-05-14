@@ -226,7 +226,7 @@ private struct FudAIPlusIntroView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 10) {
-                    plusIntroRow("Gemini models with automatic fallback")
+                    plusIntroRow("Gemini for AI, Deepgram for voice")
                     plusIntroRow("\(AIAccessSettings.paidFoodDailyRequestLimit) food logs, \(AIAccessSettings.paidCoachDailyRequestLimit) Coach messages/day")
                     plusIntroRow("BYOK still works and you can switch anytime")
                 }
@@ -3708,7 +3708,7 @@ private struct FudAIPlusManagedSettingsSection: View {
     @State private var quotaSnapshot: AIAccessQuotaSnapshot = .fallback
     @State private var quotaError: String?
     @State private var isLoadingQuota = false
-    @State private var selectedPlusSpeechLanguage: SpeechLanguage = SpeechSettings.selectedLanguage(for: .gemini)
+    @State private var selectedPlusSpeechLanguage: SpeechLanguage = SpeechSettings.selectedLanguage(for: .deepgram)
 
     var body: some View {
         Section {
@@ -3732,7 +3732,7 @@ private struct FudAIPlusManagedSettingsSection: View {
             .pickerStyle(.menu)
             .tint(.secondary)
             .onChange(of: selectedPlusSpeechLanguage) { _, newLanguage in
-                SpeechSettings.setLanguage(newLanguage, for: .gemini)
+                SpeechSettings.setLanguage(newLanguage, for: .deepgram)
             }
 
             if isLoadingQuota {
@@ -3749,11 +3749,11 @@ private struct FudAIPlusManagedSettingsSection: View {
         } header: {
             Text("Fud AI Plus")
         } footer: {
-            Text("Remaining daily Plus usage is refreshed from Fud AI's server. Plus voice uses Gemini Audio. Provider Auto uses your iPhone language for Plus; choose a language to override it. Provider, model, fallback, and speech API key settings are managed by Plus.")
+            Text("Remaining daily Plus usage is refreshed from Fud AI's server. Plus voice uses Deepgram through Fud AI's proxy. Provider Auto lets Deepgram detect the language; choose a language to override it. Provider, model, fallback, and speech API key settings are managed by Plus.")
         }
         .listRowBackground(AppColors.appCard)
         .task {
-            selectedPlusSpeechLanguage = SpeechSettings.selectedLanguage(for: .gemini)
+            selectedPlusSpeechLanguage = SpeechSettings.selectedLanguage(for: .deepgram)
             await refreshQuota()
         }
     }
@@ -3994,7 +3994,7 @@ struct AIConsentSheetView: View {
     let onCancel: () -> Void
 
     private var providerName: String {
-        AIAccessSettings.isUsingFudAIPlus ? "Fud AI Plus (Google Gemini)" : AIProviderSettings.selectedProvider.rawValue
+        AIAccessSettings.isUsingFudAIPlus ? "Fud AI Plus (Gemini + Deepgram)" : AIProviderSettings.selectedProvider.rawValue
     }
 
     var body: some View {
@@ -4026,9 +4026,9 @@ struct AIConsentSheetView: View {
 
                     VStack(alignment: .leading, spacing: 14) {
                         consentRow(icon: "photo.fill", title: "What is sent",
-                                   text: "When you log a meal, the photo, voice transcript, or text description is sent to your selected AI provider. Profile data (age, weight, goals) is sent only for Coach chat.")
+                                   text: "When you log a meal, the photo, voice audio or transcript, or text description is sent to your selected AI provider. Profile data (age, weight, goals) is sent only for Coach chat.")
                         consentRow(icon: "network", title: "Who receives it",
-                                   text: "Your current AI access: \(providerName). You can change this anytime in Settings → AI Access. BYOK requests go directly to your provider; Plus requests go through Fud AI's Gemini proxy.")
+                                   text: "Your current AI access: \(providerName). You can change this anytime in Settings → AI Access. BYOK requests go directly to your provider; Plus requests go through Fud AI's proxy.")
                         consentRow(icon: "lock.shield.fill", title: "What stays local",
                                    text: AIAccessSettings.isUsingFudAIPlus ? "Your saved food log, weight history, and body fat history stay on this device. Only the active AI request is sent for processing." : "Your API key, weight history, body fat history, and food log all stay on this device. Requests go directly from your device to the provider.")
                     }

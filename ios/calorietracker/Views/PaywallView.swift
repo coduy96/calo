@@ -51,7 +51,7 @@ struct PaywallView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
-                    featureRow("Uses Fud AI's Gemini models with automatic fallback")
+                    featureRow("Uses Fud AI's Gemini + Deepgram providers")
                     featureRow("\(AIAccessSettings.paidFoodDailyRequestLimit) food logs, \(AIAccessSettings.paidSpeechDailyRequestLimit) voice transcriptions/day")
                     featureRow("\(AIAccessSettings.paidCoachDailyRequestLimit) Coach messages/day")
                     featureRow("Switch back to BYOK anytime")

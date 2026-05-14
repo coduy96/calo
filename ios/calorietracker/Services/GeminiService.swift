@@ -93,6 +93,56 @@ enum FudAIProxyClient {
         }
     }
 
+    static func transcribeSpeech(audioData: Data, languageCode: String?) async throws -> String {
+        guard AIAccessSettings.hasActivePlusEntitlement else {
+            throw ProxyError.subscriptionRequired
+        }
+
+        var body: [String: Any] = [
+            "audioBase64": audioData.base64EncodedString(),
+            "mimeType": "audio/m4a",
+        ]
+        if let languageCode {
+            body["language"] = languageCode
+        }
+
+        let payload: [String: Any] = [
+            "task": ProxyTask.speech.rawValue,
+            "body": body,
+        ]
+
+        var request = URLRequest(url: AIAccessSettings.proxyEndpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("ios", forHTTPHeaderField: "X-FudAI-Platform")
+        request.setValue(AIAccessSettings.installID, forHTTPHeaderField: "X-FudAI-Install-ID")
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse else { throw ProxyError.invalidResponse }
+            guard (200..<300).contains(http.statusCode) else {
+                let message = parseProxyMessage(from: data) ?? "Fud AI Plus speech request failed with HTTP \(http.statusCode)."
+                if http.statusCode == 402 || http.statusCode == 429 {
+                    throw ProxyError.quotaExceeded(message)
+                }
+                throw ProxyError.apiError(message)
+            }
+            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let text = json["text"] as? String
+            else {
+                throw ProxyError.invalidResponse
+            }
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { throw ProxyError.invalidResponse }
+            return trimmed
+        } catch let error as ProxyError {
+            throw error
+        } catch {
+            throw ProxyError.networkError(error)
+        }
+    }
+
     private static func parseProxyMessage(from data: Data) -> String? {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
         if let error = json["error"] as? String {

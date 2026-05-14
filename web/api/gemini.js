@@ -12,7 +12,6 @@ const FALLBACK_MODELS = {
     "gemini-2.5-flash",
   ],
   coach: ["gemini-2.5-flash-lite", "gemini-2.5-flash"],
-  speech: ["gemini-2.5-flash-lite", "gemini-2.5-flash"],
 };
 
 const memoryUsage = globalThis.__fudAIUsage ?? new Map();
@@ -33,14 +32,9 @@ export default async function handler(request, response) {
     return response.status(200).json(await usageSnapshot(installID));
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return response.status(500).json({ error: "Server is missing GEMINI_API_KEY." });
-  }
-
   const task = normalizeTask(request.body?.task);
-  const geminiBody = request.body?.body;
-  if (!task || !geminiBody || typeof geminiBody !== "object") {
+  const requestBody = request.body?.body;
+  if (!task || !requestBody || typeof requestBody !== "object") {
     return response.status(400).json({ error: "Invalid request body." });
   }
 
@@ -49,6 +43,15 @@ export default async function handler(request, response) {
     return response.status(429).json({
       error: quota.message,
     });
+  }
+
+  if (task === "speech") {
+    return handleSpeechTask(installID, requestBody, response);
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return response.status(500).json({ error: "Server is missing GEMINI_API_KEY." });
   }
 
   const models = configuredModels(task);
@@ -63,7 +66,7 @@ export default async function handler(request, response) {
           "Content-Type": "application/json",
           "X-goog-api-key": apiKey,
         },
-        body: JSON.stringify(geminiBody),
+        body: JSON.stringify(requestBody),
       }
     );
 
@@ -95,7 +98,6 @@ function configuredModels(task) {
   const envKey = {
     food: "GEMINI_FOOD_MODELS",
     coach: "GEMINI_COACH_MODELS",
-    speech: "GEMINI_SPEECH_MODELS",
   }[task];
 
   const configured = process.env[envKey]
@@ -104,6 +106,74 @@ function configuredModels(task) {
     .filter(Boolean);
 
   return configured?.length ? configured : FALLBACK_MODELS[task];
+}
+
+async function handleSpeechTask(installID, speechBody, response) {
+  const apiKey = process.env.DEEPGRAM_API_KEY;
+  if (!apiKey) {
+    return response.status(500).json({ error: "Server is missing DEEPGRAM_API_KEY." });
+  }
+
+  const audioBase64 = String(speechBody.audioBase64 || "").trim();
+  if (!audioBase64) {
+    return response.status(400).json({ error: "Missing audio." });
+  }
+
+  const audioData = Buffer.from(audioBase64, "base64");
+  if (!audioData.length) {
+    return response.status(400).json({ error: "Invalid audio." });
+  }
+
+  const model = String(process.env.DEEPGRAM_SPEECH_MODEL || "nova-3").trim();
+  const mimeType = String(speechBody.mimeType || "audio/m4a").trim();
+  const language = String(speechBody.language || "").trim();
+  const params = new URLSearchParams({
+    model,
+    smart_format: "true",
+    punctuate: "true",
+  });
+  if (language) {
+    params.set("language", language);
+  } else {
+    params.set("detect_language", "true");
+  }
+
+  const upstream = await fetch(`https://api.deepgram.com/v1/listen?${params}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Token ${apiKey}`,
+      "Content-Type": mimeType,
+    },
+    body: audioData,
+  });
+
+  const text = await upstream.text();
+  if (!upstream.ok) {
+    const message = parseUpstreamError(text) || `Deepgram failed with HTTP ${upstream.status}.`;
+    return response.status(502).json({ error: message });
+  }
+
+  const transcript = parseDeepgramTranscript(text);
+  if (!transcript) {
+    return response.status(502).json({ error: "Deepgram returned an empty transcript." });
+  }
+
+  const usage = await recordSuccessfulUsage(installID, "speech");
+  setUsageHeaders(response, usage, "speech");
+  response.setHeader("X-FudAI-Model", `deepgram:${model}`);
+  return response.status(200).json({ text: transcript });
+}
+
+function parseDeepgramTranscript(text) {
+  try {
+    const json = JSON.parse(text);
+    const transcript =
+      json?.results?.channels?.[0]?.alternatives?.[0]?.transcript ||
+      json?.results?.utterances?.map((utterance) => utterance.transcript).join(" ");
+    return String(transcript || "").trim();
+  } catch {
+    return "";
+  }
 }
 
 async function checkQuota(installID, task) {
@@ -304,7 +374,7 @@ function secondsUntilTomorrow() {
 function parseUpstreamError(text) {
   try {
     const json = JSON.parse(text);
-    return json?.error?.message || json?.error || null;
+    return json?.error?.message || json?.error || json?.err_msg || null;
   } catch {
     return text || null;
   }

@@ -33,27 +33,27 @@ struct SpeechService {
     /// Transcribe an audio file using the currently-selected speech provider.
     /// Caller should only invoke this for non-native providers.
     static func transcribe(audioURL: URL) async throws -> String {
-        let provider: SpeechProvider = AIAccessSettings.isUsingFudAIPlus ? .gemini : SpeechSettings.selectedProvider
+        let usingFudAIPlus = AIAccessSettings.isUsingFudAIPlus
+        let provider: SpeechProvider = usingFudAIPlus ? .deepgram : SpeechSettings.selectedProvider
         let selectedLanguage = SpeechSettings.selectedLanguage(for: provider)
-        let languageCode: String?
-        if AIAccessSettings.isUsingFudAIPlus, provider == .gemini, selectedLanguage == .automatic {
-            languageCode = SpeechLanguage.device.apiLanguageCode
-        } else {
-            languageCode = selectedLanguage.apiLanguageCode
-        }
+        let languageCode = selectedLanguage.apiLanguageCode
         guard provider.requiresAPIKey else {
             // Native iOS handled directly by VoiceInputView.
             throw SpeechError.apiError("Native iOS transcription is handled in-view, not via SpeechService.")
         }
-        if AIAccessSettings.isUsingFudAIPlus, !AIAccessSettings.hasActivePlusEntitlement {
+        if usingFudAIPlus, !AIAccessSettings.hasActivePlusEntitlement {
             throw SpeechError.subscriptionRequired
-        }
-        let apiKey = SpeechSettings.apiKey(for: provider)
-        if !AIAccessSettings.isUsingFudAIPlus, (apiKey == nil || apiKey?.isEmpty == true) {
-            throw SpeechError.noAPIKey
         }
         guard let audioData = try? Data(contentsOf: audioURL) else {
             throw SpeechError.fileReadFailed
+        }
+        if usingFudAIPlus {
+            return try await FudAIProxyClient.transcribeSpeech(audioData: audioData, languageCode: languageCode)
+        }
+
+        let apiKey = SpeechSettings.apiKey(for: provider)
+        if apiKey == nil || apiKey?.isEmpty == true {
+            throw SpeechError.noAPIKey
         }
         let resolvedAPIKey = apiKey ?? ""
         switch provider {
