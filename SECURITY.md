@@ -43,6 +43,7 @@ Only the latest released version on each store (App Store for iOS, Play Store fo
 - The Android app source in `android/` (Kotlin + Compose codebase, Glance widget, repositories, services)
 - API-key handling via `EncryptedSharedPreferences` (AES-256, AndroidKeystore-backed) in `data/KeyStore.kt` — including the AEAD recovery path that wipes a corrupted master-key alias on reinstall
 - Network requests to AI and speech-to-text providers (`services/ai/*`, `services/speech/*`)
+- Barcode lookup behavior against Open Food Facts, including the "missing product / missing nutrition" fallback path
 - Health Connect read/write (`services/health/HealthConnectManager.kt`) and the `fudai_<uuid>` `clientRecordId` convention used for dedup + safe deletion
 - Glance widget snapshot (`models/WidgetSnapshot.kt`) shared via the app's DataStore and `ImageProvider(bitmap)` rendering path
 - Local persistence (DataStore Preferences for everything, EncryptedSharedPreferences for keys, no Room/cloud)

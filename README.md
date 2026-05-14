@@ -37,7 +37,7 @@ Open-source, privacy-first calorie tracker for iOS and Android. Bring your own A
 - **Snap food** — camera identifies meals and estimates nutrition
 - **Camera + Note** — add a description with the photo for better accuracy
 - **Nutrition label scan** — reads packaging for precise per-serving data
-- **Barcode lookup** — scan packaged foods on iOS and fill nutrition from Open Food Facts when product data is available
+- **Barcode lookup** — scan packaged foods on iOS and Android and fill nutrition from Open Food Facts when product data is available
 - **Photo library** — analyze existing photos
 - **Photo library + Note** — pick an existing photo and add context before AI analysis
 - **Text input** — type food descriptions
@@ -47,7 +47,7 @@ Open-source, privacy-first calorie tracker for iOS and Android. Bring your own A
 - **Saved Meals** — Recents, Frequent, and Favorites with swipe-to-delete and drag-to-reorder
 
 ### Intelligence
-- **AI Coach tab** — multi-turn chat with memory. Coach sees your profile, weight history, food log, today's date/timezone, and richer meal details, then answers questions like "what's my expected weight in 30 days?" or "how do I lose 2 kg?". Memory persists across launches; Reset button starts a fresh conversation. Long-press any reply to copy.
+- **AI Coach tab** — multi-turn chat with memory. Coach sees your profile, weight history, food log, today's date/timezone, and richer meal details, then answers questions like "what's my expected weight in 30 days?" or "how do I lose 2 kg?". Coach also supports camera/photo attachments on Android. Memory persists across launches; Reset button starts a fresh conversation. Long-press any reply to copy.
 - **AI Access modes** — Bring Your Own Key remains available; iOS onboarding now highlights optional Fud AI Plus first for no-key Gemini food scan, Deepgram voice transcription, and Coach access with a Plus speech language selector.
 - **AI optional nutrient goals** — estimate fiber, sugar, saturated fat, cholesterol, sodium, and potassium goals from profile data without changing calorie/protein/carbs/fat formulas.
 - **Goal-aware prompt chips** — suggested questions change based on whether your goal is Lose / Gain / Maintain
@@ -225,7 +225,7 @@ All values can be manually overridden in Settings, with a **Recalculate Goals** 
 ```
 fud-ai/
 ├── ios/          # SwiftUI iOS app (shipping on App Store, v3.5)
-├── android/      # Kotlin + Jetpack Compose app (min SDK 26 / Android 8.0, v1.1.1)
+├── android/      # Kotlin + Jetpack Compose app (min SDK 26 / Android 8.0, v1.2)
 ├── web/          # Marketing site — https://fud-ai.app (static HTML/CSS, Vercel)
 ├── APPSTORE.md   # App Store Connect listing copy (iOS)
 ├── PLAYSTORE.md  # Google Play Console listing copy (Android)

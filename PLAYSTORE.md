@@ -1,6 +1,6 @@
 # Play Store Listing
 
-Google Play Console listing copy for Fud AI Android (current: v1.1.1 / versionCode 16). Each field is in a code block for easy copy-paste. Char counts are tracked because Play Console enforces hard caps and silently truncates anything over.
+Google Play Console listing copy for Fud AI Android (current: v1.2 / versionCode 17). Each field is in a code block for easy copy-paste. Char counts are tracked because Play Console enforces hard caps and silently truncates anything over.
 
 **Where to paste each field in Play Console:**
 - App name / Short description / Full description → Grow → Store presence → **Main store listing** (default English) and Grow → Store presence → **Custom store listings** → Manage translations (per-language overrides)
@@ -36,15 +36,15 @@ Snap, speak, or type a meal. AI logs the calories. Open source.
 
 ### English (en-US)
 ```
-Fud AI makes calorie tracking effortless with AI-powered food recognition. Snap a photo, speak it, or type it — get instant nutrition: calories, protein, carbs, fats, and 9 micronutrients.
+Fud AI makes calorie tracking effortless with AI-powered food recognition. Snap a photo, scan a barcode, speak it, or type it — get instant nutrition: calories, protein, carbs, fats, and 9 micronutrients.
 
-NEW in v1.1.1: Notes for photo-library meals, customizable Home nutrient cards, optional nutrient goals with AI estimates, Ko-fi in About, and Review/Edit food sheets that stay open while scrolling.
+NEW in v1.2: Barcode logging on Android, Copy from Day, editable food date/time, Coach photo/camera attachments, and Gemini Flash Lite GA.
 
 Free, open source, privacy-first. Bring your own API key. All data stays on your device.
 
 HOW TO USE
 1) Set up your profile with goals + body stats
-2) Snap, speak, type, or manually enter a meal — review and save
+2) Snap, scan, speak, type, or manually enter a meal — review and save
 3) Ask Coach anything: trends, predictions, advice
 4) Track progress on charts and home screen widgets
 
@@ -52,12 +52,14 @@ HOW TO USE
 • Photo — AI identifies food and returns nutrition
 • Photo + Note — add context before AI analysis
 • Nutrition Label — scan package nutrition facts
+• Barcode — look up packaged foods with Open Food Facts
 • From Photos — analyze an existing image
 • From Photos + Note — add context to a library photo
 • Voice — 5 STT engines with language selection
 • Text — describe in plain language, AI parses it
 • Manual Entry — name + calories + macros + meal type
 • Saved Meals — re-log recents, frequent meals, and favorites
+• Copy from Day — copy meals from another date
 
 BODY COMPOSITION TRACKING
 Log body fat % over time, set a goal %, and see it alongside weight on the unified Progress chart. Health Connect can auto-import samples from Withings, Renpho, Samsung Health, Google Fit, and more. "Use Body Fat for BMR" toggles Katch-McArdle ↔ Mifflin-St Jeor without losing the value.
@@ -69,7 +71,7 @@ Google Gemini, OpenAI, Anthropic Claude, xAI Grok, Groq, OpenRouter, Together AI
 Native Android, Gemini, OpenAI Whisper, Groq, Deepgram, AssemblyAI. Choose Provider Auto, Use Device Language, or a fixed language.
 
 COACH
-Multi-turn chat that sees your profile, weight, body fat, and food log. Ask "what was my weight in March?" or "how's my protein this week?" — Coach pulls the date range it needs via on-demand tools.
+Multi-turn chat that sees your profile, weight, body fat, and food log. Ask "what was my weight in March?" or "how's my protein this week?" — Coach pulls the date range it needs via on-demand tools. You can also attach a camera photo or photo-library image to a Coach message.
 
 SMART DAILY REMINDERS
 Log Weight, Log Body Fat, Streak, and Daily Summary reminders skip firing on days you've already logged.
@@ -78,7 +80,7 @@ PERSONALIZED GOALS
 BMR via Katch-McArdle or Mifflin-St Jeor. TDEE with 6 activity levels. Auto-calculated calorie + protein + carbs + fat targets — fully customizable.
 
 OPTIONAL NUTRIENT GOALS
-Set fiber, sugar, saturated fat, cholesterol, sodium, and potassium goals separately from the macro calculator. Use AI Estimate to suggest values from your profile, or manually pick each goal. Home cards can show macros or selected detailed nutrients.
+Set fiber, sugar, saturated fat, cholesterol, sodium, and potassium goals separately from the macro calculator. Use AI Estimate from your profile, or set goals manually. Home cards can show macros or selected detailed nutrients.
 
 PROGRESS
 Unified Weight / Body Fat chart with trend lines + goal overlays. Calorie trend vs goal. Macro averages over 1W, 1M, 3M, 6M, 1Y, All Time.
@@ -111,114 +113,129 @@ English-only on Play Console — non-English Play Store browsers (ar, az-AZ, de-
 
 ---
 
-## 4. What's New (v1.1.1)
+## 4. What's New (v1.2)
 
 **500 char hard cap per language.** Paste the entire block below into Play Console's "Release notes" field — it auto-routes each `<lang-tag>` block to the matching locale.
 
 ```
 <en-US>
-• Add notes to photo-library meals.
-• Customize Home nutrient cards and set optional nutrient goals.
-• AI can estimate fiber, sugar, sodium, potassium, and other goals.
-• Review/Edit food sheets no longer disappear while scrolling.
+• Barcode logging for packaged foods with Open Food Facts.
+• Copy meals from another date.
+• Edit a food's logged date and time.
+• Attach camera or photo-library images in Coach.
+• Gemini Flash Lite moved to the GA model.
 </en-US>
 
 <ar>
-• أضف ملاحظات إلى صور الوجبات من المعرض.
-• خصص بطاقات العناصر الغذائية وحدد أهدافًا اختيارية.
-• يمكن للذكاء الاصطناعي تقدير أهداف الألياف والسكر والصوديوم.
-• إصلاح اختفاء شاشة مراجعة/تعديل الطعام عند التمرير.
+• تسجيل الباركود للأطعمة المعلبة عبر Open Food Facts.
+• انسخ الوجبات من يوم آخر.
+• عدّل تاريخ ووقت تسجيل الطعام.
+• أرفق صور الكاميرا أو المعرض في Coach.
+• تحديث Gemini Flash Lite إلى إصدار GA.
 </ar>
 
 <az-AZ>
-• Qalereyadan seçilən yeməklərə qeyd əlavə edin.
-• Əsas nutrient kartlarını və əlavə hədəfləri dəyişin.
-• AI lif, şəkər, natrium və digər hədəfləri təxmin edə bilər.
-• Yemək baxış/redaktə səhifəsi sürüşdürəndə bağlanmır.
+• Paketli qidalar üçün Open Food Facts barkod qeydi.
+• Yeməkləri başqa gündən kopyalayın.
+• Yeməyin qeyd tarixini və vaxtını redaktə edin.
+• Coach-da kamera və qalereya şəkli əlavə edin.
+• Gemini Flash Lite GA modelinə keçirildi.
 </az-AZ>
 
 <de-DE>
-• Notizen zu Fotos aus der Galerie hinzufügen.
-• Home-Nährstoffkarten und optionale Ziele anpassen.
-• KI schätzt Ziele für Ballaststoffe, Zucker, Natrium und mehr.
-• Review/Edit-Food schließt nicht mehr beim Scrollen.
+• Barcode-Logging mit Open Food Facts.
+• Mahlzeiten von einem anderen Tag kopieren.
+• Datum und Uhrzeit eines Lebensmittels bearbeiten.
+• Kamera- oder Galerie-Bilder in Coach anhängen.
+• Gemini Flash Lite nutzt jetzt das GA-Modell.
 </de-DE>
 
 <es-ES>
-• Añade notas a fotos de comidas de la galería.
-• Personaliza tarjetas de nutrientes y objetivos opcionales.
-• La IA estima fibra, azúcar, sodio y más.
-• Revisar/editar comida ya no desaparece al desplazarte.
+• Registro por código de barras con Open Food Facts.
+• Copia comidas desde otro día.
+• Edita fecha y hora de un alimento.
+• Adjunta fotos de cámara o galería en Coach.
+• Gemini Flash Lite pasa al modelo GA.
 </es-ES>
 
 <fr-FR>
-• Ajoutez des notes aux photos de repas.
-• Personnalisez les cartes nutriments et objectifs optionnels.
-• L’IA estime fibres, sucre, sodium et plus.
-• La fiche révision/édition ne disparaît plus au défilement.
+• Journal par code-barres avec Open Food Facts.
+• Copiez des repas depuis un autre jour.
+• Modifiez la date et l'heure d'un aliment.
+• Ajoutez des photos caméra/galerie dans Coach.
+• Gemini Flash Lite passe au modèle GA.
 </fr-FR>
 
 <hi-IN>
-• Gallery photos पर meal notes जोड़ें.
-• Home nutrient cards और optional goals customize करें.
-• AI fiber, sugar, sodium और बाकी goals estimate कर सकता है.
-• Review/Edit meal sheet अब scroll पर गायब नहीं होती.
+• Open Food Facts से barcode food logging.
+• किसी और दिन से meals copy करें.
+• Food की logged date और time edit करें.
+• Coach में camera या gallery image attach करें.
+• Gemini Flash Lite अब GA model पर है.
 </hi-IN>
 
 <it-IT>
-• Aggiungi note alle foto dei pasti.
-• Personalizza le schede nutrienti e gli obiettivi opzionali.
-• L’IA stima fibre, zucchero, sodio e altro.
-• La scheda revisione/modifica non sparisce più durante lo scroll.
+• Log con codice a barre tramite Open Food Facts.
+• Copia pasti da un altro giorno.
+• Modifica data e ora di un alimento.
+• Allega foto da camera o galleria in Coach.
+• Gemini Flash Lite ora usa il modello GA.
 </it-IT>
 
 <ja-JP>
-• 写真ライブラリの食事にメモを追加できます。
-• ホームの栄養カードと任意目標をカスタマイズ。
-• AIが食物繊維、糖分、ナトリウムなどを推定。
-• レビュー/編集画面がスクロールで消えないよう修正。
+• Open Food Factsでバーコード記録。
+• 別の日から食事をコピーできます。
+• 食品の記録日と時刻を編集できます。
+• Coachにカメラ/写真を添付できます。
+• Gemini Flash LiteをGAモデルに更新。
 </ja-JP>
 
 <ko-KR>
-• 사진 보관함 음식에 메모를 추가하세요.
-• 홈 영양 카드와 선택 영양 목표를 설정하세요.
-• AI가 섬유질, 당, 나트륨 등을 추정합니다.
-• 리뷰/편집 화면이 스크롤 중 사라지지 않습니다.
+• Open Food Facts 바코드 식품 기록.
+• 다른 날짜의 식사를 복사하세요.
+• 음식의 기록 날짜와 시간을 편집하세요.
+• Coach에 카메라/사진을 첨부하세요.
+• Gemini Flash Lite가 GA 모델로 전환되었습니다.
 </ko-KR>
 
 <nl-NL>
-• Voeg notities toe aan maaltijdfoto’s.
-• Pas Home-nutriëntkaarten en optionele doelen aan.
-• AI schat vezels, suiker, natrium en meer.
-• Review/bewerk-scherm verdwijnt niet meer bij scrollen.
+• Barcode-loggen met Open Food Facts.
+• Kopieer maaltijden van een andere dag.
+• Bewerk datum en tijd van een maaltijd.
+• Voeg camera- of galerijbeelden toe in Coach.
+• Gemini Flash Lite gebruikt nu het GA-model.
 </nl-NL>
 
 <pt-BR>
-• Adicione notas a fotos de refeições.
-• Personalize cartões de nutrientes e metas opcionais.
-• A IA estima fibra, açúcar, sódio e mais.
-• A tela revisar/editar não some mais ao rolar.
+• Registro por código de barras com Open Food Facts.
+• Copie refeições de outro dia.
+• Edite data e hora de um alimento.
+• Anexe fotos da câmera ou galeria no Coach.
+• Gemini Flash Lite agora usa o modelo GA.
 </pt-BR>
 
 <ro>
-• Adaugă note la fotografiile meselor.
-• Personalizează cardurile de nutrienți și obiectivele opționale.
-• AI estimează fibre, zahăr, sodiu și altele.
-• Ecranul de revizuire/editare nu mai dispare la derulare.
+• Logare prin cod de bare cu Open Food Facts.
+• Copiază mese din altă zi.
+• Editează data și ora unui aliment.
+• Atașează poze din cameră sau galerie în Coach.
+• Gemini Flash Lite folosește acum modelul GA.
 </ro>
 
 <ru-RU>
-• Добавляйте заметки к фото еды из галереи.
-• Настройте карточки нутриентов и доп. цели.
-• ИИ оценит клетчатку, сахар, натрий и другое.
-• Экран просмотра/редактирования больше не исчезает при прокрутке.
+• Запись по штрихкоду через Open Food Facts.
+• Копируйте еду из другого дня.
+• Меняйте дату и время записи еды.
+• Прикрепляйте фото с камеры или галереи в Coach.
+• Gemini Flash Lite переведен на GA-модель.
 </ru-RU>
 
 <zh-CN>
-• 为相册中的餐食照片添加备注。
-• 自定义首页营养卡片和可选营养目标。
-• AI 可估算纤维、糖、钠等目标。
-• 修复审核/编辑食物页面滚动时消失的问题。
+• 使用 Open Food Facts 条码记录包装食品。
+• 从其他日期复制餐食。
+• 编辑食物的记录日期和时间。
+• 在 Coach 中附加相机或相册图片。
+• Gemini Flash Lite 已切换到 GA 模型。
 </zh-CN>
 ```
 

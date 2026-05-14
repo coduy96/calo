@@ -3,7 +3,7 @@
 Thanks for your interest in contributing! Fud AI is an open-source, "bring-your-own-key" calorie tracker. The repo is a monorepo:
 
 - `ios/` — SwiftUI iOS app (shipping on the App Store, v3.5)
-- `android/` — Kotlin + Jetpack Compose app (feature-parity port, v1.1.1)
+- `android/` — Kotlin + Jetpack Compose app (feature-parity port, v1.2)
 - `web/` — marketing site at [fud-ai.app](https://fud-ai.app) (plain HTML/CSS, Vercel)
 
 PRs, bug reports, and feature ideas for any of these are welcome.
@@ -51,7 +51,7 @@ Go to **Settings → AI Provider** in the running app and paste an API key for a
 
 iOS can also use **Fud AI Plus** instead of BYOK. Local StoreKit testing uses `ios/calorietracker/Products.storekit` with weekly, monthly, and yearly products. The production Plus proxy needs `GEMINI_API_KEY` for food/Coach and `DEEPGRAM_API_KEY` for voice; default Plus limits are 30 food analyses, 20 speech transcriptions, 25 Coach messages, and 70 total successful Plus calls per day.
 
-iOS barcode logging uses Open Food Facts directly from the device and does not require an API key. If a packaged food is missing or incomplete there, the app should guide the user back to Nutrition Label scan instead of inventing values.
+Barcode logging on iOS and Android uses Open Food Facts directly from the device and does not require an API key. If a packaged food is missing or incomplete there, the app should guide the user back to Nutrition Label scan instead of inventing values.
 
 > For a full architecture deep-dive (stores/repositories, services, widgets, HealthKit/Health Connect conventions, localization rules, R8 keep rules, gotchas), read [`CLAUDE.md`](CLAUDE.md) in the repo root. It's the source of truth for how the codebase is organized.
 
