@@ -32,6 +32,8 @@ Only the latest released version on each store (App Store for iOS, Play Store fo
 - The iOS app source in `ios/` (SwiftUI codebase, widget extension, tests targets)
 - API-key handling and iOS Keychain storage (`KeychainHelper`, `AIProviderSettings`, `SpeechSettings`)
 - Network requests to AI and speech-to-text providers (`GeminiService`, `ChatService`, `SpeechService`)
+- Fud AI Plus proxy request handling (`web/api/gemini.js`), including Gemini food/Coach routing, Deepgram voice routing, anonymous install IDs, and quota enforcement
+- Barcode lookup behavior against Open Food Facts, including the "missing product / missing nutrition" fallback path
 - HealthKit read/write paths (`HealthKitManager`) and UUID-tagged sample conventions
 - Widget App Group container (`group.com.apoorvdarshan.calorietracker`) and the snapshot written into it
 - Local persistence layer (`UserDefaults`, Keychain) including the Coach chat history and food/weight/body-fat logs
@@ -49,12 +51,14 @@ Only the latest released version on each store (App Store for iOS, Play Store fo
 **In scope (web):**
 
 - The marketing site source in `web/` (static HTML/CSS, no JS framework, no backend)
+- The Fud AI Plus serverless API route in `web/api/gemini.js`, including required secret handling for `GEMINI_API_KEY`, `DEEPGRAM_API_KEY`, and optional KV quota storage
 - Privacy policy + terms pages (`web/privacy.html`, `web/terms.html`) — accuracy of disclosures
 
 **Out of scope:**
 
 - Vulnerabilities in third-party AI providers (report to them directly — OpenAI, Anthropic, Google, xAI, etc.)
 - Vulnerabilities in third-party speech-to-text providers (report to them — Deepgram, AssemblyAI, etc.)
+- Incorrect or incomplete Open Food Facts product data. Fud AI can only show the nutrition available from that public database; missing products are product-data issues, not security issues
 - Vulnerabilities in OS-level components (iOS HealthKit, Android Health Connect, Glance, WorkManager, Compose) — report to Apple / Google
 - Issues requiring physical device access with the device unlocked
 - Social-engineering attacks against users' own API keys

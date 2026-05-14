@@ -2,8 +2,8 @@
 
 Thanks for your interest in contributing! Fud AI is an open-source, "bring-your-own-key" calorie tracker. The repo is a monorepo:
 
-- `ios/` — SwiftUI iOS app (shipping on the App Store, v3.4.0)
-- `android/` — Kotlin + Jetpack Compose app (feature-parity port, v1.1.0 in Play Store closed testing)
+- `ios/` — SwiftUI iOS app (shipping on the App Store, v3.5)
+- `android/` — Kotlin + Jetpack Compose app (feature-parity port, v1.1.1)
 - `web/` — marketing site at [fud-ai.app](https://fud-ai.app) (plain HTML/CSS, Vercel)
 
 PRs, bug reports, and feature ideas for any of these are welcome.
@@ -48,6 +48,10 @@ The site is plain HTML/CSS — no build step, no framework, no dependencies. Dep
 ## First-Run Setup (both platforms)
 
 Go to **Settings → AI Provider** in the running app and paste an API key for any of the 13 supported providers (Gemini, OpenAI, Claude, Grok, Groq, OpenRouter, Together AI, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama for local, or any custom OpenAI-compatible endpoint). A free Gemini key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey) is the fastest way to get started. Keys are stored in iOS Keychain (iOS) or EncryptedSharedPreferences/AES-256 (Android) — never transmitted to us.
+
+iOS can also use **Fud AI Plus** instead of BYOK. Local StoreKit testing uses `ios/calorietracker/Products.storekit` with weekly, monthly, and yearly products. The production Plus proxy needs `GEMINI_API_KEY` for food/Coach and `DEEPGRAM_API_KEY` for voice; default Plus limits are 30 food analyses, 20 speech transcriptions, 25 Coach messages, and 70 total successful Plus calls per day.
+
+iOS barcode logging uses Open Food Facts directly from the device and does not require an API key. If a packaged food is missing or incomplete there, the app should guide the user back to Nutrition Label scan instead of inventing values.
 
 > For a full architecture deep-dive (stores/repositories, services, widgets, HealthKit/Health Connect conventions, localization rules, R8 keep rules, gotchas), read [`CLAUDE.md`](CLAUDE.md) in the repo root. It's the source of truth for how the codebase is organized.
 
@@ -107,7 +111,7 @@ Include vision-capable model IDs since the app needs vision for food photo analy
 
 ## Adding a Speech-to-Text Provider
 
-**iOS:** extend `SpeechProvider` in `ios/calorietracker/Models/SpeechProvider.swift`, add the handler in `SpeechService.transcribe`. **Android:** extend `models/SpeechProvider.kt` and add a client in `services/speech/`. Follow the pattern from the existing providers (OpenAI, Groq, Deepgram, AssemblyAI).
+**iOS:** extend `SpeechProvider` in `ios/calorietracker/Models/SpeechProvider.swift`, add the handler in `SpeechService.transcribe`, and keep Fud AI Plus routed through Deepgram unless the Plus proxy contract changes. **Android:** extend `models/SpeechProvider.kt` and add a client in `services/speech/`. Follow the pattern from the existing providers (OpenAI, Groq, Deepgram, AssemblyAI).
 
 ## Localization
 

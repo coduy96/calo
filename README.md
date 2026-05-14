@@ -25,7 +25,7 @@
 
 ---
 
-Open-source, privacy-first calorie tracker for iOS and Android. Bring your own AI provider — 13 supported including Gemini, OpenAI, Claude, Grok, Groq, Hugging Face, Fireworks AI, DeepInfra, Mistral, and any custom OpenAI-compatible endpoint. iOS also supports Fud AI Plus, an optional paid no-key mode that routes food scan, voice, and Coach requests through a Gemini proxy with daily limits and speech language control. Snap a meal, add a note to a camera or library photo, ask your AI coach how to hit your goal, or speak your lunch. No accounts, no cloud sync, no tracking.
+Open-source, privacy-first calorie tracker for iOS and Android. Bring your own AI provider — 13 supported including Gemini, OpenAI, Claude, Grok, Groq, Hugging Face, Fireworks AI, DeepInfra, Mistral, and any custom OpenAI-compatible endpoint. iOS also supports Fud AI Plus, an optional paid no-key mode that routes food scans and Coach through Gemini and Plus voice through Deepgram via a serverless proxy with daily limits and speech language control. Snap a meal, scan a barcode, add a note to a camera or library photo, ask your AI coach how to hit your goal, or speak your lunch. No accounts, no cloud sync, no tracking.
 
 [App Store](https://apps.apple.com/us/app/fud-ai-calorie-tracker/id6758935726) · [Google Play](https://play.google.com/store/apps/details?id=com.apoorvdarshan.calorietracker) · [Website](https://fud-ai.app) · [Report an Issue](https://github.com/apoorvdarshan/fud-ai/issues/new?labels=bug&title=Bug:%20) · [Request a Feature](https://github.com/apoorvdarshan/fud-ai/issues/new?labels=enhancement&title=Feature:%20)
 
@@ -37,6 +37,7 @@ Open-source, privacy-first calorie tracker for iOS and Android. Bring your own A
 - **Snap food** — camera identifies meals and estimates nutrition
 - **Camera + Note** — add a description with the photo for better accuracy
 - **Nutrition label scan** — reads packaging for precise per-serving data
+- **Barcode lookup** — scan packaged foods on iOS and fill nutrition from Open Food Facts when product data is available
 - **Photo library** — analyze existing photos
 - **Photo library + Note** — pick an existing photo and add context before AI analysis
 - **Text input** — type food descriptions
@@ -47,7 +48,7 @@ Open-source, privacy-first calorie tracker for iOS and Android. Bring your own A
 
 ### Intelligence
 - **AI Coach tab** — multi-turn chat with memory. Coach sees your profile, weight history, food log, today's date/timezone, and richer meal details, then answers questions like "what's my expected weight in 30 days?" or "how do I lose 2 kg?". Memory persists across launches; Reset button starts a fresh conversation. Long-press any reply to copy.
-- **AI Access modes** — Bring Your Own Key remains available; iOS onboarding now highlights optional Fud AI Plus first for no-key Gemini food scan, voice, and Coach access with a Plus speech language selector.
+- **AI Access modes** — Bring Your Own Key remains available; iOS onboarding now highlights optional Fud AI Plus first for no-key Gemini food scan, Deepgram voice transcription, and Coach access with a Plus speech language selector.
 - **AI optional nutrient goals** — estimate fiber, sugar, saturated fat, cholesterol, sodium, and potassium goals from profile data without changing calorie/protein/carbs/fat formulas.
 - **Goal-aware prompt chips** — suggested questions change based on whether your goal is Lose / Gain / Maintain
 - **Thermodynamic weight forecast** — expected weight at 30/60/90 days, predicted vs observed weekly change, days-to-goal, under-logging detection. Surfaced through Coach as live context on every turn.
@@ -76,9 +77,9 @@ Open-source, privacy-first calorie tracker for iOS and Android. Bring your own A
 
 ## AI Providers
 
-Pick any of the **13 LLM providers** for food analysis, optional nutrient-goal estimation, and Coach chat. Free Gemini keys are available at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). On iOS, Fud AI Plus can be selected instead of BYOK; Plus uses Gemini models behind a serverless proxy, retries fallback Gemini models, and uses separate daily limits for food analysis, speech-to-text, and Coach. Plus voice can use Provider Auto, which follows the iPhone language, or a manually selected speech language.
+Pick any of the **13 LLM providers** for food analysis, optional nutrient-goal estimation, and Coach chat. Free Gemini keys are available at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). On iOS, Fud AI Plus can be selected instead of BYOK; Plus uses Gemini models for food and Coach behind a serverless proxy, Deepgram for voice transcription, and separate daily limits for food analysis, speech-to-text, and Coach. Plus voice can use Provider Auto, which follows the iPhone language, or a manually selected speech language. Plus currently offers weekly, monthly, and yearly products.
 
-Fud AI Plus proxy env vars: `GEMINI_API_KEY` is required. Optional quota overrides are `FUD_AI_PLUS_FOOD_DAILY_LIMIT`, `FUD_AI_PLUS_SPEECH_DAILY_LIMIT`, `FUD_AI_PLUS_COACH_DAILY_LIMIT`, and `FUD_AI_PLUS_GLOBAL_DAILY_LIMIT`. Defaults are 30 food analyses, 40 speech transcriptions, 50 Coach messages, and 120 total successful Plus calls per day.
+Fud AI Plus proxy env vars: `GEMINI_API_KEY` is required for food/Coach, and `DEEPGRAM_API_KEY` is required for Plus voice. Optional quota overrides are `FUD_AI_PLUS_FOOD_DAILY_LIMIT`, `FUD_AI_PLUS_SPEECH_DAILY_LIMIT`, `FUD_AI_PLUS_COACH_DAILY_LIMIT`, and `FUD_AI_PLUS_GLOBAL_DAILY_LIMIT`. Defaults are 30 food analyses, 20 speech transcriptions, 25 Coach messages, and 70 total successful Plus calls per day. Plus voice recordings are capped at 60 seconds in the app.
 
 | Provider | Format | Highlight | Needs API Key |
 |----------|--------|-----------|:---:|
@@ -103,10 +104,10 @@ Pick how voice input is transcribed. Native iOS is the default — free, on-devi
 | Provider | Notes |
 |----------|-------|
 | Native iOS (On-Device) | Free, offline on modern iPhones, real-time partial results |
-| Gemini Audio | Batch audio transcription through Gemini; used by Fud AI Plus voice logging |
+| Gemini Audio | Batch audio transcription through Gemini for BYOK users |
 | OpenAI Whisper | Whisper-1 via `/v1/audio/transcriptions` |
 | Groq (Whisper) | Whisper-large-v3, very fast, has a free tier |
-| Deepgram | Nova-3, fast and accurate |
+| Deepgram | Nova-3, fast and accurate; used by Fud AI Plus voice logging through the proxy |
 | AssemblyAI | Universal model, strong accuracy, free tier |
 
 API keys are stored encrypted on-device: **iOS Keychain** on iOS and **EncryptedSharedPreferences backed by Android Keystore** on Android.
@@ -142,11 +143,11 @@ A seven-step walkthrough of the app's core flow — from opening the dashboard t
       <sub>Daily calorie ring, macro bars (P&nbsp;/&nbsp;C&nbsp;/&nbsp;F), and today's logged meals grouped by meal type. Week strip at the top for date navigation.</sub>
     </td>
     <td align="center" width="33%">
-      <img src="ios/screenshots/logging.png" width="230" alt="Nine food logging options menu">
+      <img src="ios/screenshots/logging.png" width="230" alt="Food logging options menu">
       <br><br>
       <b>02 · Log · Options</b>
       <br>
-      <sub>Tap + to open the entry menu: Camera, Camera + Note, Nutrition Label scan, From Photos, From Photos + Note, Text Input, Voice, Manual Entry, or Saved Meals.</sub>
+      <sub>Tap + to open the entry menu: Camera, Camera + Note, Nutrition Label scan, Barcode, From Photos, From Photos + Note, Text Input, Voice, Manual Entry, or Saved Meals.</sub>
     </td>
     <td align="center" width="33%">
       <img src="ios/screenshots/snap.png" width="230" alt="Snap food capture">
@@ -223,7 +224,7 @@ All values can be manually overridden in Settings, with a **Recalculate Goals** 
 
 ```
 fud-ai/
-├── ios/          # SwiftUI iOS app (shipping on App Store, v3.4.1)
+├── ios/          # SwiftUI iOS app (shipping on App Store, v3.5)
 ├── android/      # Kotlin + Jetpack Compose app (min SDK 26 / Android 8.0, v1.1.1)
 ├── web/          # Marketing site — https://fud-ai.app (static HTML/CSS, Vercel)
 ├── APPSTORE.md   # App Store Connect listing copy (iOS)
@@ -319,7 +320,7 @@ See [SECURITY.md](SECURITY.md). Use [private vulnerability reporting](https://gi
 
 ## Privacy
 
-No accounts, no cloud sync, no analytics. BYOK API keys are encrypted on-device and requests go directly to the provider you choose. Fud AI Plus sends only the active AI/STT request through the Gemini proxy for processing and quota enforcement. Optional nutrient goals and Home nutrient-card choices are local preferences; AI estimation sends only the profile context needed for that one estimate. **Delete All Data** is local-only — it wipes the app's storage (food log, weight log, profile, Coach chat, API keys, widget snapshot) but never touches Apple Health or Health Connect. Samples you've synced are yours; if you want them cleaned up, do it from Health / Health Connect settings. See [Privacy Policy](https://fud-ai.app/privacy.html).
+No accounts, no cloud sync, no analytics. BYOK API keys are encrypted on-device and requests go directly to the provider you choose. Barcode lookup sends the scanned barcode to Open Food Facts and stores the returned nutrition locally. Fud AI Plus sends only the active AI/STT request through the proxy for processing and quota enforcement: Gemini for food/Coach and Deepgram for voice. Optional nutrient goals and Home nutrient-card choices are local preferences; AI estimation sends only the profile context needed for that one estimate. **Delete All Data** is local-only — it wipes the app's storage (food log, weight log, profile, Coach chat, API keys, widget snapshot) but never touches Apple Health or Health Connect. Samples you've synced are yours; if you want them cleaned up, do it from Health / Health Connect settings. See [Privacy Policy](https://fud-ai.app/privacy.html).
 
 ## License
 

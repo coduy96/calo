@@ -62,9 +62,9 @@
   <div class="container">
     <div class="legal-content">
       <h1>Privacy Policy</h1>
-      <span class="legal-date">Last updated: May 11, 2026</span>
+      <span class="legal-date">Last updated: May 14, 2026</span>
 
-      <p>Fud AI ("we", "our", "the app") is an open-source iOS and Android app developed by Apoorv Darshan. This privacy policy explains how your information is handled across both platforms. In short: we don't have Fud AI accounts, in-app analytics, ads, or behavioral tracking. Your app data stays on your device except for the specific AI/STT requests you initiate, optional update metadata checks, platform health sync you explicitly enable, and Fud AI Plus requests when you choose the paid no-key setup on iOS. The public website may use Vercel Web Analytics for aggregate pageview metrics; those website metrics are not connected to your app food log, health data, API keys, or Plus subscription.</p>
+      <p>Fud AI ("we", "our", "the app") is an open-source iOS and Android app developed by Apoorv Darshan. This privacy policy explains how your information is handled across both platforms. In short: we don't have Fud AI accounts, in-app analytics, ads, or behavioral tracking. Your app data stays on your device except for the specific AI/STT requests you initiate, barcode lookups you trigger, optional update metadata checks, platform health sync you explicitly enable, and Fud AI Plus requests when you choose the paid no-key setup on iOS. The public website may use Vercel Web Analytics for aggregate pageview metrics; those website metrics are not connected to your app food log, health data, API keys, or Plus subscription.</p>
 
       <h3>Information You Provide</h3>
       <ul>
@@ -72,6 +72,7 @@
         <li>Activity level, weight goal, target weight, and weekly weight-change rate</li>
         <li>Food photos taken within the app</li>
         <li>Food photos selected from your library through the system picker, plus any meal notes or text descriptions you submit for AI analysis</li>
+        <li>Barcode values scanned for packaged-food lookup</li>
         <li>Food entries and nutrition data you log (including manual entries)</li>
         <li>Weight log entries</li>
         <li>Body fat % readings logged over time, plus an optional goal body fat % (only collected if you opt into body-fat tracking during onboarding or later in Settings)</li>
@@ -85,11 +86,12 @@
       <h3>How We Use Your Information</h3>
       <ul>
         <li><strong>AI Food Analysis:</strong> Food photos from the camera or system photo picker, meal notes, text descriptions, and the text produced from voice input are sent to your selected AI access path. In Bring Your Own Key mode, requests go directly from your device to your chosen AI provider (any of 13 supported: Google Gemini, OpenAI, Anthropic Claude, xAI Grok, OpenRouter, Together AI, Groq, Hugging Face, Fireworks AI, DeepInfra, Mistral, Ollama running locally, or a custom OpenAI-compatible endpoint you configure). In Fud AI Plus mode on iOS, requests are sent to Fud AI's serverless proxy, which forwards them to Google Gemini using Fud AI's API key and applies daily quota/fallback handling. <strong>Explicit in-app consent before any data leaves your device:</strong> the first time you trigger an AI analysis (photo, voice, text, or nutrition label), the app shows an "AI Analysis Notice" sheet that names your current AI access path, lists exactly what is sent (photo / voice transcript / text / profile data for Coach chat), and requires you to tap Allow before the request fires. Manual entry never requires consent because no data is sent anywhere. <strong>Custom AI Instructions (optional, Settings → AI Provider):</strong> if you fill in the Custom AI Instructions text box, that text is appended to every AI request so the model sees your context. The text stays local except when included in the AI request payload. <strong>Fallback AI Provider (BYOK only):</strong> if your primary BYOK provider returns an error, the request can retry with the secondary provider you configured. <strong>Note on OpenRouter <code>openrouter/free</code>:</strong> when you pick the free-tier default model on OpenRouter, OpenRouter itself selects the upstream provider that handles your request.</li>
+        <li><strong>Barcode Lookup:</strong> On iOS, if you choose Barcode from the logging menu, the scanned barcode is sent from your device to the public Open Food Facts API. Fud AI requests only product fields needed for nutrition logging, such as product name, brand, quantity, serving size, and nutriments. If Open Food Facts has no product or incomplete nutrition, the app asks you to scan the nutrition label instead. Barcode lookup does not use your BYOK AI key or Fud AI Plus quota.</li>
         <li><strong>AI Coach Chat:</strong> When you use the Coach tab, the app sends a slim system prompt (your profile, BMR/TDEE/macro formulas, weight forecast, current date/timezone, and a one-line "data available" snapshot) plus your conversation history through your selected AI access path. Coach can additionally call <strong>tool functions</strong> mid-turn to fetch any date range of your weight, body-fat, calorie, or food-entry history when you ask about specific past dates ("what was my weight in March?", "what did I eat Tuesday?"). The fetched data is sent as part of the AI request and may include meal source, meal type, serving size, and micronutrients when relevant. Full chat history is kept locally; only the last 20 messages are included in each LLM request to cap token cost.</li>
         <li><strong>Optional Nutrient Goal Estimation:</strong> If you tap the AI estimate button for detailed nutrient goals, the app sends the minimum profile context needed for that estimate, such as your goal, body measurements, activity level, and current calorie/macro targets, through your selected AI access path. The returned fiber, sugar, saturated fat, cholesterol, sodium, and potassium goals are stored locally as settings and do not change the calorie/protein/carbs/fat calculator.</li>
-        <li><strong>Speech-to-Text:</strong> If you pick the on-device option (Native iOS on iPhone, Native Android <code>SpeechRecognizer</code> on Android), voice recognition happens on your device and the selected language is passed as a local recognition hint when applicable. If you pick a remote BYOK provider (Gemini Audio, OpenAI Whisper, Groq, Deepgram, AssemblyAI), a short audio recording is uploaded to that provider and its text response is returned to the app. In Fud AI Plus mode on iOS, remote voice input is uploaded to Fud AI's serverless proxy and forwarded to Google Gemini for transcription. If you choose a fixed speech language or "Use Device Language" instead of Provider Auto, the corresponding language code may be sent with the audio so it can bias transcription. Provider Auto for Plus follows your iPhone language.</li>
-        <li><strong>Fud AI Plus Subscriptions:</strong> iOS Plus subscriptions are processed by Apple and entitlement status is managed in the app through RevenueCat. Apple and RevenueCat may receive subscription-related identifiers and events such as an app user/customer ID, product ID, purchase, renewal, cancellation, refund, expiration, restore, and related timestamps. We do not receive your payment card details. Subscription records are used only to unlock or restore Plus access and to support subscription management.</li>
-        <li><strong>Plus Quota Checks:</strong> Fud AI Plus requests include an anonymous install ID so the serverless proxy can count daily food, speech, Coach, and total usage. If Vercel KV is configured, daily quota counters may be stored there until expiry; otherwise the proxy keeps temporary in-memory counters. Request payloads are forwarded to Gemini for processing and are not used to create a Fud AI account.</li>
+        <li><strong>Speech-to-Text:</strong> If you pick the on-device option (Native iOS on iPhone, Native Android <code>SpeechRecognizer</code> on Android), voice recognition happens on your device and the selected language is passed as a local recognition hint when applicable. If you pick a remote BYOK provider (Gemini Audio, OpenAI Whisper, Groq, Deepgram, AssemblyAI), a short audio recording is uploaded to that provider and its text response is returned to the app. In Fud AI Plus mode on iOS, remote voice input is capped at 60 seconds, uploaded to Fud AI's serverless proxy, and forwarded to Deepgram for transcription. If you choose a fixed speech language or "Use Device Language" instead of Provider Auto, the corresponding language code may be sent with the audio so it can bias transcription. Provider Auto for Plus follows your iPhone language.</li>
+        <li><strong>Fud AI Plus Subscriptions:</strong> iOS Plus subscriptions are processed by Apple and entitlement status is managed in the app through RevenueCat. Apple and RevenueCat may receive subscription-related identifiers and events such as an app user/customer ID, product ID, weekly/monthly/yearly product ID, purchase, renewal, cancellation, refund, expiration, restore, and related timestamps. We do not receive your payment card details. Subscription records are used only to unlock or restore Plus access and to support subscription management.</li>
+        <li><strong>Plus Quota Checks:</strong> Fud AI Plus requests include an anonymous install ID so the serverless proxy can count daily food, speech, Coach, and total usage. If Vercel KV is configured, daily quota counters may be stored there until expiry; otherwise the proxy keeps temporary in-memory counters. Food and Coach payloads are forwarded to Gemini; speech audio is forwarded to Deepgram. Payloads are not used to create a Fud AI account.</li>
         <li><strong>Local Storage:</strong> All food entries, weight entries, body-fat readings, user profile (including any goal body fat %), Coach chat history, food photos, optional nutrient goals, Home nutrient-card choices, and app preferences are stored locally on your device — in <code>UserDefaults</code> on iOS, in <code>DataStore Preferences</code> on Android. Nothing leaves your device except the specific AI/STT requests described above.</li>
         <li><strong>API Key Storage:</strong> On iOS, your API keys are stored in iOS Keychain (encrypted, hardware-backed, accessible only to the app). On Android, they are stored in <code>EncryptedSharedPreferences</code> using AES-256 with the master key managed by Android Keystore (also hardware-backed on devices with a TEE / StrongBox).</li>
         <li><strong>Widgets:</strong> To display today's calorie and macro totals on the Home Screen / Lock Screen, the main app writes a small snapshot (today's totals + goals) into a shared container — App Group on iOS, the same DataStore on Android. The widget reads this snapshot to render. The snapshot never leaves your device and contains only numbers — no food names, photos, or identifiers.</li>
@@ -106,7 +108,7 @@
         <li>We do <strong>not</strong> sell your personal data</li>
         <li>We do <strong>not</strong> operate Fud AI accounts, in-app analytics, ads, or tracking servers</li>
         <li>We do <strong>not</strong> require an account, sign-in, or cloud sync</li>
-        <li>We do <strong>not</strong> see your BYOK API keys; Fud AI Plus payloads pass through our serverless proxy only to reach Google Gemini</li>
+        <li>We do <strong>not</strong> see your BYOK API keys; Fud AI Plus payloads pass through our serverless proxy only to reach Gemini for food/Coach or Deepgram for voice</li>
         <li>We do <strong>not</strong> receive your App Store payment card details</li>
       </ul>
 
@@ -127,8 +129,9 @@
           <tr><td>API keys (LLM + STT)</td><td>iOS Keychain</td><td>EncryptedSharedPreferences (AES-256, AndroidKeystore-backed)</td><td>You only</td></tr>
           <tr><td>Plus subscription status (iOS)</td><td colspan="2">Apple App Store + RevenueCat; small local cache in the app for access state.</td><td>You + Apple + RevenueCat</td></tr>
           <tr><td>Plus quota counters</td><td colspan="2">Anonymous install ID + daily task counts in the Fud AI proxy / Vercel KV when configured.</td><td>Processed for quota enforcement</td></tr>
+          <tr><td>Barcode values</td><td colspan="2">Sent to Open Food Facts only when you scan a barcode.</td><td>Open Food Facts</td></tr>
           <tr><td>Food photos and meal notes (for AI analysis)</td><td colspan="2">BYOK: sent to your chosen AI provider. Plus: sent through Fud AI's proxy to Google Gemini.</td><td>Processed in transit</td></tr>
-          <tr><td>Voice audio (remote STT)</td><td colspan="2">BYOK: sent to your chosen STT provider. Plus: sent through Fud AI's proxy to Google Gemini.</td><td>Processed in transit</td></tr>
+          <tr><td>Voice audio (remote STT)</td><td colspan="2">BYOK: sent to your chosen STT provider. Plus: sent through Fud AI's proxy to Deepgram.</td><td>Processed in transit</td></tr>
           <tr><td>Coach chat messages</td><td colspan="2">BYOK: sent to your chosen AI provider. Plus: sent through Fud AI's proxy to Google Gemini.</td><td>Processed in transit</td></tr>
           <tr><td>Health data</td><td>Apple HealthKit</td><td>Health Connect</td><td>You + apps you authorize</td></tr>
         </tbody>
@@ -152,7 +155,13 @@
         <li><a href="https://www.assemblyai.com/legal/privacy-policy" target="_blank" rel="noopener">AssemblyAI</a></li>
       </ul>
       <p>If you use Ollama or a custom OpenAI-compatible endpoint, requests go to whatever URL you configure — typically your own machine or a self-hosted server.</p>
-      <p>If you use Fud AI Plus, AI and remote speech requests are routed through Fud AI's serverless proxy to Google Gemini. The proxy uses an anonymous install ID only for quota enforcement and does not require a Fud AI account.</p>
+      <p>If you use Fud AI Plus, food and Coach requests are routed through Fud AI's serverless proxy to Google Gemini, while remote speech requests are routed through the same proxy to Deepgram. The proxy uses an anonymous install ID only for quota enforcement and does not require a Fud AI account.</p>
+
+      <h3>Barcode/Product Data Provider</h3>
+      <p>Barcode lookup uses the public Open Food Facts API. When you scan a barcode, the barcode value is sent to Open Food Facts so the app can retrieve public product and nutrition data when available. Open Food Facts' own policies apply to that lookup.</p>
+      <ul>
+        <li><a href="https://world.openfoodfacts.org/privacy" target="_blank" rel="noopener">Open Food Facts Privacy</a></li>
+      </ul>
 
       <h3>Payments &amp; Subscription Providers</h3>
       <p>Fud AI Plus subscriptions on iOS are purchased through Apple App Store in-app purchase and managed in-app using RevenueCat. Apple handles payment processing and billing information. RevenueCat helps the app verify, restore, and synchronize subscription entitlement state. Their policies apply to subscription processing:</p>
@@ -163,7 +172,7 @@
 
       <h3>Permissions Requested</h3>
       <ul>
-        <li><strong>Camera</strong> — for snapping food photos. Prompted on first use.</li>
+        <li><strong>Camera</strong> — for snapping food photos and scanning barcodes. Prompted on first use.</li>
         <li><strong>Microphone / Speech Recognition</strong> — for voice meal input. Prompted on first use.</li>
         <li><strong>Photo Library / Storage</strong> — to pick existing food photos. iOS uses <code>PHPicker</code>; Android uses the system <code>PickVisualMedia</code> photo picker — neither requires broad photo-library access.</li>
         <li><strong>Notifications</strong> — only if you enable streak or daily-summary reminders. On Android 13+, this triggers the runtime <code>POST_NOTIFICATIONS</code> permission prompt.</li>
