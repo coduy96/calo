@@ -54,9 +54,9 @@ struct AIAccessQuotaSnapshot: Codable, Equatable {
 
 struct AIAccessSettings {
     static let paidFoodDailyRequestLimit = 30
-    static let paidSpeechDailyRequestLimit = 40
-    static let paidCoachDailyRequestLimit = 50
-    static let paidGlobalDailyRequestLimit = 120
+    static let paidSpeechDailyRequestLimit = 20
+    static let paidCoachDailyRequestLimit = 25
+    static let paidGlobalDailyRequestLimit = 70
     static let defaultProxyEndpoint = "https://fud-ai.app/api/gemini"
 
     private static let modeKey = "aiAccessMode"
