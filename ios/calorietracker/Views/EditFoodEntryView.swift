@@ -33,6 +33,7 @@ struct EditFoodEntryView: View {
     @State private var quantityFocusRequest = 0
     @State private var isQuantityEditing = false
     @State private var mealType: MealType
+    @State private var loggedAt: Date
 
     private var scale: Double {
         guard baseServingSizeGrams > 0 else { return 1 }
@@ -92,6 +93,7 @@ struct EditFoodEntryView: View {
         ))
         self._selectedServingUnitID = State(initialValue: initialServingUnitID)
         self._mealType = State(initialValue: entry.mealType)
+        self._loggedAt = State(initialValue: entry.timestamp)
     }
 
     private static func formatGrams(_ value: Double) -> String {
@@ -202,6 +204,13 @@ struct EditFoodEntryView: View {
                         .tint(AppColors.calorie)
                     }
 
+                    Section("Date & Time") {
+                        DatePicker("Date", selection: $loggedAt, displayedComponents: .date)
+                            .tint(AppColors.calorie)
+                        DatePicker("Time", selection: $loggedAt, displayedComponents: .hourAndMinute)
+                            .tint(AppColors.calorie)
+                    }
+
                 }
                 .scrollContentBackground(.hidden)
                 .background(AppColors.appBackground)
@@ -247,7 +256,7 @@ struct EditFoodEntryView: View {
             protein: scaledProtein,
             carbs: scaledCarbs,
             fat: scaledFat,
-            timestamp: entry.timestamp,
+            timestamp: loggedAt,
             imageData: entry.imageData,
             emoji: entry.emoji,
             source: entry.source,
