@@ -58,11 +58,12 @@ struct AIAccessSettings {
     static let paidCoachDailyRequestLimit = 25
     static let paidGlobalDailyRequestLimit = 70
     static let defaultProxyEndpoint = "https://fud-ai.app/api/gemini"
+    static let currentPlusUpdateAnnouncementID = "barcode_plus_update_2026_05"
 
     private static let modeKey = "aiAccessMode"
     private static let plusEntitlementCacheKey = "fudAIPlusEntitlementCached"
     private static let plusIntroSeenKey = "fudAIPlusIntroSeen_3_4"
-    private static let plusUpdateAnnouncementVersionKey = "fudAIPlusUpdateAnnouncementSeenVersion"
+    private static let plusUpdateAnnouncementIDKey = "fudAIPlusUpdateAnnouncementSeenID"
     private static let installIDKey = "fudAIInstallID"
     private static let proxyEndpointKey = "fudAIProxyEndpoint"
 
@@ -97,9 +98,9 @@ struct AIAccessSettings {
         set { UserDefaults.standard.set(newValue, forKey: plusIntroSeenKey) }
     }
 
-    static var lastSeenPlusUpdateAnnouncementVersion: String? {
-        get { UserDefaults.standard.string(forKey: plusUpdateAnnouncementVersionKey) }
-        set { UserDefaults.standard.set(newValue, forKey: plusUpdateAnnouncementVersionKey) }
+    static var lastSeenPlusUpdateAnnouncementID: String? {
+        get { UserDefaults.standard.string(forKey: plusUpdateAnnouncementIDKey) }
+        set { UserDefaults.standard.set(newValue, forKey: plusUpdateAnnouncementIDKey) }
     }
 
     static var installID: String {
@@ -120,7 +121,7 @@ struct AIAccessSettings {
         UserDefaults.standard.removeObject(forKey: modeKey)
         UserDefaults.standard.removeObject(forKey: plusEntitlementCacheKey)
         UserDefaults.standard.removeObject(forKey: plusIntroSeenKey)
-        UserDefaults.standard.removeObject(forKey: plusUpdateAnnouncementVersionKey)
+        UserDefaults.standard.removeObject(forKey: plusUpdateAnnouncementIDKey)
         UserDefaults.standard.removeObject(forKey: proxyEndpointKey)
     }
 }

@@ -159,24 +159,28 @@ struct ContentView: View {
             await storeManager.checkEntitlements()
             maybeShowFudAIPlusIntro()
         }
-        .sheet(isPresented: $showFudAIPlusIntro) {
+        .sheet(isPresented: $showFudAIPlusIntro, onDismiss: markFudAIPlusIntroSeen) {
             FudAIPlusIntroView(
                 onUpgrade: {
+                    markFudAIPlusIntroSeen()
                     AIAccessSettings.mode = .fudAIPlus
                     showFudAIPlusIntro = false
                     showFudAIPlusPaywall = true
                 },
                 onRateApp: {
+                    markFudAIPlusIntroSeen()
                     showFudAIPlusIntro = false
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                         requestNativeReview()
                     }
                 },
                 onStarGitHub: {
+                    markFudAIPlusIntroSeen()
                     showFudAIPlusIntro = false
                     openGitHubRepo()
                 },
                 onDismiss: {
+                    markFudAIPlusIntroSeen()
                     showFudAIPlusIntro = false
                 }
             )
@@ -198,11 +202,12 @@ struct ContentView: View {
 
     @MainActor
     private func maybeShowFudAIPlusIntro() {
-        let currentVersion = AppUpdateChecker.currentVersion
-        guard AIAccessSettings.lastSeenPlusUpdateAnnouncementVersion != currentVersion else { return }
-        AIAccessSettings.lastSeenPlusUpdateAnnouncementVersion = currentVersion
-        guard !storeManager.isSubscribed else { return }
+        guard AIAccessSettings.lastSeenPlusUpdateAnnouncementID != AIAccessSettings.currentPlusUpdateAnnouncementID else { return }
         showFudAIPlusIntro = true
+    }
+
+    private func markFudAIPlusIntroSeen() {
+        AIAccessSettings.lastSeenPlusUpdateAnnouncementID = AIAccessSettings.currentPlusUpdateAnnouncementID
     }
 
     private func requestNativeReview() {
