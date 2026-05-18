@@ -112,7 +112,7 @@ struct ContentView: View {
                 ProgressTabView()
             }
             Tab("Coach", systemImage: "bubble.left.and.bubble.right.fill", value: AppTab.coach) {
-                ChatView()
+                ChatThreadListView()
             }
             Tab("Add", systemImage: "plus", value: AppTab.add, role: .search) {
                 Color.clear
@@ -137,7 +137,7 @@ struct ContentView: View {
                     Text("Progress")
                 }
 
-            ChatView()
+            ChatThreadListView()
                 .tag(AppTab.coach)
                 .tabItem {
                     Image(systemName: "bubble.left.and.bubble.right.fill")

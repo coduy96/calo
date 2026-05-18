@@ -2,15 +2,18 @@ import PhotosUI
 import SwiftUI
 import UIKit
 
-/// "Coach" tab — a persistent AI conversation that has access to the user's profile,
-/// weight history, food log, and computed forecast. Handles multi-turn chat with memory
-/// (saved locally), a reset button, and context-aware quick-reply prompt chips.
+/// Detail view for one Coach conversation. Pushed onto the Coach tab's NavigationStack
+/// from `ChatThreadListView`, which means the tab bar auto-hides while this is on screen.
+/// Has access to the user's profile, weight history, food log, and computed forecast.
 struct ChatView: View {
+    let threadID: UUID
+
     @Environment(ChatStore.self) private var chatStore
     @Environment(ProfileStore.self) private var profileStore
     @Environment(WeightStore.self) private var weightStore
     @Environment(BodyFatStore.self) private var bodyFatStore
     @Environment(FoodStore.self) private var foodStore
+    @Environment(\.dismiss) private var dismiss
     @AppStorage("useMetric") private var useMetric = false
 
     @State private var draft = ""
@@ -19,88 +22,122 @@ struct ChatView: View {
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var isSending = false
     @State private var errorMessage: String?
-    @State private var showResetConfirmation = false
+    @State private var showDeleteConfirmation = false
+    @State private var showRenameAlert = false
+    @State private var renameDraft = ""
     @State private var showCamera = false
     @State private var showPhotoPicker = false
     @FocusState private var isInputFocused: Bool
 
     private var userProfile: UserProfile { profileStore.profile }
-    private var messages: [ChatMessage] { chatStore.messages }
+    private var thread: ChatThread? { chatStore.thread(id: threadID) }
+    private var messages: [ChatMessage] { thread?.messages ?? [] }
+    private var navigationTitleText: String {
+        let title = thread?.title ?? ""
+        return title.isEmpty ? "New Chat" : title
+    }
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                Group {
-                    if messages.isEmpty {
-                        emptyState
-                    } else {
-                        messageList
-                    }
+        VStack(spacing: 0) {
+            Group {
+                if messages.isEmpty {
+                    emptyState
+                } else {
+                    messageList
                 }
-                .contentShape(Rectangle())
-                .simultaneousGesture(
-                    TapGesture().onEnded { isInputFocused = false }
-                )
-
-                promptChips
-
-                inputArea
             }
-            .background(AppColors.appBackground)
-            .navigationTitle("Coach")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+            .contentShape(Rectangle())
+            .simultaneousGesture(
+                TapGesture().onEnded { isInputFocused = false }
+            )
+
+            promptChips
+
+            inputArea
+        }
+        .background(AppColors.appBackground)
+        .navigationTitle(navigationTitleText)
+        .navigationBarTitleDisplayMode(.inline)
+        // Hide the bottom tab bar (and the floating "+" search tab in iOS 26)
+        // while a conversation is on screen so the chat takes the full canvas.
+        .toolbar(.hidden, for: .tabBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
                     Button {
-                        if !messages.isEmpty { showResetConfirmation = true }
+                        renameDraft = thread?.title ?? ""
+                        showRenameAlert = true
                     } label: {
-                        Image(systemName: "arrow.counterclockwise")
-                            .foregroundStyle(messages.isEmpty ? Color.secondary : AppColors.calorie)
+                        Label("Rename", systemImage: "pencil")
                     }
                     .disabled(messages.isEmpty)
+
+                    Button(role: .destructive) {
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("Delete Chat", systemImage: "trash")
+                    }
+                    .disabled(messages.isEmpty)
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .foregroundStyle(messages.isEmpty ? Color.secondary : AppColors.calorie)
                 }
+                .disabled(messages.isEmpty)
             }
-            .alert("Reset Chat", isPresented: $showResetConfirmation) {
-                Button("Cancel", role: .cancel) { }
-                Button("Reset", role: .destructive) {
-                    chatStore.reset()
-                    errorMessage = nil
-                }
-            } message: {
-                Text("Clear all messages and start fresh? This can't be undone.")
+        }
+        .alert("Delete Chat", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                chatStore.delete(threadID: threadID)
+                dismiss()
             }
-            .fullScreenCover(isPresented: $showCamera) {
-                CameraView(image: $capturedImage)
-                    .ignoresSafeArea()
+        } message: {
+            Text("Permanently delete this conversation? This can't be undone.")
+        }
+        .alert("Rename Chat", isPresented: $showRenameAlert) {
+            TextField("Title", text: $renameDraft)
+                .textInputAutocapitalization(.sentences)
+            Button("Cancel", role: .cancel) { }
+            Button("Save") {
+                chatStore.rename(threadID: threadID, to: renameDraft)
             }
-            .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .images)
-            .onChange(of: capturedImage) { _, newValue in
-                guard let image = newValue else { return }
-                capturedImage = nil
-                attachedImage = image
-                errorMessage = nil
-            }
-            .onChange(of: selectedPhotoItem) { _, newValue in
-                guard let item = newValue else { return }
-                selectedPhotoItem = nil
-                Task {
-                    do {
-                        guard let data = try await item.loadTransferable(type: Data.self),
-                              let image = UIImage(data: data) else {
-                            await MainActor.run { errorMessage = "Could not load that photo." }
-                            return
-                        }
-                        await MainActor.run {
-                            attachedImage = image
-                            errorMessage = nil
-                        }
-                    } catch {
-                        await MainActor.run {
-                            errorMessage = "Could not load that photo."
-                        }
+        }
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraView(image: $capturedImage)
+                .ignoresSafeArea()
+        }
+        .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .images)
+        .onChange(of: capturedImage) { _, newValue in
+            guard let image = newValue else { return }
+            capturedImage = nil
+            attachedImage = image
+            errorMessage = nil
+        }
+        .onChange(of: selectedPhotoItem) { _, newValue in
+            guard let item = newValue else { return }
+            selectedPhotoItem = nil
+            Task {
+                do {
+                    guard let data = try await item.loadTransferable(type: Data.self),
+                          let image = UIImage(data: data) else {
+                        await MainActor.run { errorMessage = "Could not load that photo." }
+                        return
+                    }
+                    await MainActor.run {
+                        attachedImage = image
+                        errorMessage = nil
+                    }
+                } catch {
+                    await MainActor.run {
+                        errorMessage = "Could not load that photo."
                     }
                 }
             }
+        }
+        // Abandoned draft cleanup: if the user backs out without sending a message,
+        // remove the empty thread so it never shows up in the history list.
+        .onDisappear {
+            chatStore.deleteIfEmpty(threadID)
         }
     }
 
@@ -432,12 +469,17 @@ struct ChatView: View {
             return
         }
 
-        chatStore.append(ChatMessage(role: .user, content: text, attachmentImageData: thumbnailData))
+        chatStore.append(
+            ChatMessage(role: .user, content: text, attachmentImageData: thumbnailData),
+            to: threadID
+        )
         draft = ""
         attachedImage = nil
         errorMessage = nil
         isSending = true
-        let historyForCall = chatStore.contextMessages().dropLast()  // exclude the user msg we just appended
+        // Exclude the user message we just appended — ChatService takes it as `newUserMessage`.
+        let historyForCall = chatStore.contextMessages(for: threadID).dropLast()
+        let currentThreadID = threadID
 
         Task {
             defer { isSending = false }
@@ -452,7 +494,7 @@ struct ChatView: View {
                     foods: foodStore.entries,
                     useMetric: useMetric
                 )
-                chatStore.append(ChatMessage(role: .assistant, content: reply))
+                chatStore.append(ChatMessage(role: .assistant, content: reply), to: currentThreadID)
             } catch {
                 errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
             }
