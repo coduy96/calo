@@ -102,7 +102,6 @@ struct WeekEnergyStrip: View {
                         if isSelected {
                             Circle()
                                 .fill(LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing))
-                                .shadow(color: AppColors.calorie.opacity(0.35), radius: 6, y: 3)
                         } else if isToday {
                             Circle()
                                 .strokeBorder(AppColors.calorie.opacity(0.35), lineWidth: 1.5)
@@ -349,21 +348,24 @@ struct MacroCard: View {
     let goal: Double
     let unit: String
     let gradientColors: [Color]
+    let iconName: String?
 
-    init(label: String, current: Int, goal: Int, gradientColors: [Color]) {
+    init(label: String, current: Int, goal: Int, gradientColors: [Color], iconName: String? = nil) {
         self.label = label
         self.current = Double(current)
         self.goal = Double(goal)
         self.unit = "g"
         self.gradientColors = gradientColors
+        self.iconName = iconName
     }
 
-    init(label: String, current: Double, goal: Double, unit: String, gradientColors: [Color]) {
+    init(label: String, current: Double, goal: Double, unit: String, gradientColors: [Color], iconName: String? = nil) {
         self.label = label
         self.current = current
         self.goal = goal
         self.unit = unit
         self.gradientColors = gradientColors
+        self.iconName = iconName
     }
 
     private var progress: Double {
@@ -372,6 +374,12 @@ struct MacroCard: View {
 
     var body: some View {
         VStack(spacing: 8) {
+            if let iconName {
+                Image(systemName: iconName)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(gradientColors.first ?? .primary)
+            }
+
             HStack(alignment: .lastTextBaseline, spacing: 2) {
                 Text(formatted(current))
                     .font(.system(.title, design: .rounded, weight: .bold))
@@ -398,12 +406,12 @@ struct MacroCard: View {
             .frame(height: 6)
 
             Text(label)
-                .font(.system(.caption, design: .rounded, weight: .medium))
-                .foregroundStyle(.secondary)
+                .font(.system(.footnote, design: .rounded, weight: .bold))
+                .foregroundStyle(.primary)
 
             Text("\(formatted(max(goal - current, 0)))\(unit) left")
-                .font(.system(.caption2, design: .rounded))
-                .foregroundStyle(.tertiary)
+                .font(.system(.caption, design: .rounded, weight: .semibold))
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
     }

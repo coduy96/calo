@@ -121,6 +121,7 @@ struct ContentView: View {
                 Color.clear
             }
         }
+        .tabBarMinimizeBehavior(.onScrollDown)
     }
 
     private var legacyTabView: some View {
@@ -466,40 +467,49 @@ struct HomeView: View {
 
                 // Calorie hero
                 Section {
-                    VStack(spacing: 20) {
-                        VStack(spacing: 4) {
-                            Text("\(selectedCalories)")
-                                .font(.system(size: 72, weight: .bold, design: .rounded))
-                                .foregroundStyle(
-                                    LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+                    VStack(spacing: 16) {
+                        ZStack {
+                            ActivityRingView(
+                                progress: calorieGoal > 0 ? min(Double(selectedCalories) / Double(calorieGoal), 1.0) : 0,
+                                ringWidth: 18,
+                                gradientColors: AppColors.calorieGradient
+                            )
+                            .frame(width: 240, height: 240)
+
+                            VStack(spacing: 4) {
+                                Text("\(selectedCalories)")
+                                    .font(.system(size: 64, weight: .bold, design: .rounded))
+                                    .foregroundStyle(
+                                        LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+                                    )
+                                    .contentTransition(.numericText())
+                                    .animation(.snappy, value: selectedCalories)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.5)
+
+                                Text("of \(calorieGoal) kcal")
+                                    .font(.system(.callout, design: .rounded, weight: .medium))
+                                    .foregroundStyle(.tertiary)
+
+                                HStack(spacing: 6) {
+                                    Image(systemName: caloriesRemaining > 0 ? "flame" : "checkmark.circle.fill")
+                                        .font(.system(.caption, weight: .semibold))
+                                        .foregroundStyle(AppColors.calorie)
+                                    Text("\(caloriesRemaining) kcal left")
+                                        .font(.system(.footnote, design: .rounded, weight: .semibold))
+                                        .foregroundStyle(.secondary)
+                                        .contentTransition(.numericText())
+                                        .animation(.snappy, value: caloriesRemaining)
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(
+                                    Capsule().fill(AppColors.calorie.opacity(0.08))
                                 )
-                                .contentTransition(.numericText())
-                                .animation(.snappy, value: selectedCalories)
-
-                            Text("of \(calorieGoal) kcal")
-                                .font(.system(.callout, design: .rounded, weight: .medium))
-                                .foregroundStyle(.tertiary)
-                        }
-
-                        GeometryReader { geo in
-                            ZStack(alignment: .leading) {
-                                Capsule()
-                                    .fill(AppColors.calorie.opacity(0.10))
-                                    .frame(height: 10)
-
-                                Capsule()
-                                    .fill(LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing))
-                                    .frame(width: max(10, geo.size.width * min(Double(selectedCalories) / Double(calorieGoal), 1.0)), height: 10)
-                                    .shadow(color: AppColors.calorie.opacity(0.35), radius: 8, y: 3)
-                                    .animation(.spring(response: 0.8, dampingFraction: 0.75), value: selectedCalories)
+                                .padding(.top, 2)
                             }
+                            .padding(.horizontal, 32)
                         }
-                        .frame(height: 10)
-                        .padding(.horizontal, 24)
-
-                        Text("\(caloriesRemaining) left")
-                            .font(.system(.footnote, design: .rounded, weight: .medium))
-                            .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 20)
@@ -516,7 +526,8 @@ struct HomeView: View {
                                 current: nutrient.value(from: foodStore, on: selectedDate),
                                 goal: nutrient.goal(for: userProfile, optionalGoals: optionalNutrientGoals),
                                 unit: nutrient.unit,
-                                gradientColors: nutrient.gradientColors
+                                gradientColors: nutrient.gradientColors,
+                                iconName: nutrient.iconName
                             )
                         }
                     }

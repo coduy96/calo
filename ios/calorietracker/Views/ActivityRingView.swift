@@ -10,7 +10,6 @@ struct ActivityRingView: View {
     var body: some View {
         GeometryReader { geo in
             let size = min(geo.size.width, geo.size.height)
-            let radius = (size - ringWidth) / 2
 
             ZStack {
                 // Background track
@@ -30,16 +29,6 @@ struct ActivityRingView: View {
                         style: StrokeStyle(lineWidth: ringWidth, lineCap: .round)
                     )
                     .rotationEffect(.degrees(-90))
-
-                // Glow dot at arc endpoint
-                if animatedProgress > 0.01 {
-                    Circle()
-                        .fill(gradientColors.last ?? .white)
-                        .frame(width: ringWidth, height: ringWidth)
-                        .shadow(color: gradientColors.last?.opacity(0.6) ?? .clear, radius: 6)
-                        .offset(y: -radius)
-                        .rotationEffect(.degrees(360 * animatedProgress - 90))
-                }
             }
             .frame(width: size, height: size)
             .position(x: geo.size.width / 2, y: geo.size.height / 2)
