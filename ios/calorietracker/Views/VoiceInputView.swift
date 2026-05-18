@@ -27,9 +27,9 @@ struct VoiceInputView: View {
     var onCancel: () -> Void
     var onSubmit: (String) -> Void
 
-    private var provider: SpeechProvider { AIAccessSettings.isUsingFudAIPlus ? .deepgram : SpeechSettings.selectedProvider }
+    private var provider: SpeechProvider { AIAccessSettings.isUsingVoidpenPlus ? .deepgram : SpeechSettings.selectedProvider }
     private var isNative: Bool { provider == .nativeIOS }
-    private var hasPlusVoiceLimit: Bool { AIAccessSettings.isUsingFudAIPlus && !isNative }
+    private var hasPlusVoiceLimit: Bool { AIAccessSettings.isUsingVoidpenPlus && !isNative }
 
     private var analyzeButtonLabel: String { "Analyze" }
 
@@ -140,7 +140,7 @@ struct VoiceInputView: View {
             }
 
             if hasPlusVoiceLimit {
-                Text("Fud AI Plus voice recordings are capped at 60 seconds.")
+                Text("Voidpen Plus voice recordings are capped at 60 seconds.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -185,7 +185,7 @@ struct VoiceInputView: View {
         if isNative {
             startNativeRecording()
         } else {
-            guard AIAccessSettings.isUsingFudAIPlus || SpeechSettings.apiKey(for: provider) != nil else {
+            guard AIAccessSettings.isUsingVoidpenPlus || SpeechSettings.apiKey(for: provider) != nil else {
                 permissionError = "No API key configured for \(provider.rawValue). Add one in Settings → Speech-to-Text."
                 return
             }

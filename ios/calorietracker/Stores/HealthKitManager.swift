@@ -129,7 +129,7 @@ class HealthKitManager {
             quantity: quantity,
             start: date,
             end: date,
-            metadata: ["fudai_weight_id": UUID().uuidString]
+            metadata: ["voidpen_weight_id": UUID().uuidString]
         )
         healthStore.save(sample) { _, _ in }
     }
@@ -144,7 +144,7 @@ class HealthKitManager {
             quantity: quantity,
             start: entry.date,
             end: entry.date,
-            metadata: ["fudai_weight_id": entry.id.uuidString]
+            metadata: ["voidpen_weight_id": entry.id.uuidString]
         )
         healthStore.save(sample) { _, _ in }
     }
@@ -153,7 +153,7 @@ class HealthKitManager {
     /// Bypasses the `healthKitEnabled` flag so a weight synced earlier still gets removed
     /// even if the user has since turned HealthKit sync off.
     func deleteWeight(entryID: UUID) {
-        let predicate = HKQuery.predicateForObjects(withMetadataKey: "fudai_weight_id", operatorType: .equalTo, value: entryID.uuidString)
+        let predicate = HKQuery.predicateForObjects(withMetadataKey: "voidpen_weight_id", operatorType: .equalTo, value: entryID.uuidString)
         healthStore.deleteObjects(of: HKQuantityType(.bodyMass), predicate: predicate) { _, _, _ in }
     }
 
@@ -169,10 +169,10 @@ class HealthKitManager {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
         let type = HKQuantityType(.bodyFatPercentage)
         let quantity = HKQuantity(unit: .percent(), doubleValue: fraction)
-        // Tag with a synthetic fudai_bodyfat_id so the change-token observer
+        // Tag with a synthetic voidpen_bodyfat_id so the change-token observer
         // can recognize "this is our own write" and not re-import it as if it
         // were a fresh external sample. Same convention as writeWeight(kg:date:).
-        let metadata: [String: Any] = ["fudai_bodyfat_id": UUID().uuidString]
+        let metadata: [String: Any] = ["voidpen_bodyfat_id": UUID().uuidString]
         let sample = HKQuantitySample(type: type, quantity: quantity, start: .now, end: .now, metadata: metadata)
         healthStore.save(sample) { _, _ in }
     }
@@ -184,7 +184,7 @@ class HealthKitManager {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
         let type = HKQuantityType(.bodyFatPercentage)
         let quantity = HKQuantity(unit: .percent(), doubleValue: entry.bodyFatFraction)
-        let metadata: [String: Any] = ["fudai_bodyfat_id": entry.id.uuidString]
+        let metadata: [String: Any] = ["voidpen_bodyfat_id": entry.id.uuidString]
         let sample = HKQuantitySample(type: type, quantity: quantity, start: entry.date, end: entry.date, metadata: metadata)
         healthStore.save(sample) { _, _ in }
     }
@@ -193,7 +193,7 @@ class HealthKitManager {
     /// healthKitEnabled so an in-app delete still cleans up samples exported
     /// while sync was enabled — same policy as deleteWeight / deleteNutrition.
     func deleteBodyFat(entryID: UUID) {
-        let predicate = HKQuery.predicateForObjects(withMetadataKey: "fudai_bodyfat_id", operatorType: .equalTo, value: entryID.uuidString)
+        let predicate = HKQuery.predicateForObjects(withMetadataKey: "voidpen_bodyfat_id", operatorType: .equalTo, value: entryID.uuidString)
         healthStore.deleteObjects(of: HKQuantityType(.bodyFatPercentage), predicate: predicate) { _, _, _ in }
     }
 
@@ -205,7 +205,7 @@ class HealthKitManager {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
 
         let metadata: [String: Any] = [
-            "fudai_entry_id": entry.id.uuidString,
+            "voidpen_entry_id": entry.id.uuidString,
             HKMetadataKeyFoodType: entry.name,
         ]
 
@@ -277,7 +277,7 @@ class HealthKitManager {
     }
 
     /// One-shot import of every weight sample HealthKit knows about. Skips
-    /// our own writes (fudai_weight_id present), and dedupes against existing
+    /// our own writes (voidpen_weight_id present), and dedupes against existing
     /// entries by same-day + same-value so re-running this — or running it
     /// when the user already incrementally synced via the change-token observer
     /// — never creates duplicates. Stamps weightBackfillVersionKey on success
@@ -293,7 +293,7 @@ class HealthKitManager {
         isBackfillingWeight = true
         Task {
             defer { isBackfillingWeight = false }
-            let samples = await fetchAllSamples(.bodyMass, unit: .gramUnit(with: .kilo), fudaiMetadataKey: "fudai_weight_id")
+            let samples = await fetchAllSamples(.bodyMass, unit: .gramUnit(with: .kilo), voidpenMetadataKey: "voidpen_weight_id")
             // Build the dedup index from the *current* store snapshot — the
             // observer might have added rows while we were querying HK.
             let calendar = Calendar.current
@@ -307,7 +307,7 @@ class HealthKitManager {
             }
             var newEntries: [WeightEntry] = []
             for s in samples {
-                if s.fudaiID != nil { continue } // our own write — already represented
+                if s.voidpenID != nil { continue } // our own write — already represented
                 if isAlreadyLogged(s.date, s.value) { continue }
                 newEntries.append(WeightEntry(date: s.date, weightKg: s.value))
             }
@@ -319,7 +319,7 @@ class HealthKitManager {
     }
 
     /// Mirror of backfillWeightFromHealthKitIfNeeded for body-fat samples.
-    /// Same dedup discipline (skip our writes via fudai_bodyfat_id, dedup
+    /// Same dedup discipline (skip our writes via voidpen_bodyfat_id, dedup
     /// externals by same-day + same-fraction) and same one-shot-per-version
     /// guard so it doesn't re-scan on every scene-active.
     func backfillBodyFatFromHealthKitIfNeeded(
@@ -333,7 +333,7 @@ class HealthKitManager {
         isBackfillingBodyFat = true
         Task {
             defer { isBackfillingBodyFat = false }
-            let samples = await fetchAllSamples(.bodyFatPercentage, unit: .percent(), fudaiMetadataKey: "fudai_bodyfat_id")
+            let samples = await fetchAllSamples(.bodyFatPercentage, unit: .percent(), voidpenMetadataKey: "voidpen_bodyfat_id")
             let calendar = Calendar.current
             let snapshot = existing()
             let isAlreadyLogged: (Date, Double) -> Bool = { date, fraction in
@@ -343,7 +343,7 @@ class HealthKitManager {
             }
             var newEntries: [BodyFatEntry] = []
             for s in samples {
-                if s.fudaiID != nil { continue }
+                if s.voidpenID != nil { continue }
                 if isAlreadyLogged(s.date, s.value) { continue }
                 newEntries.append(BodyFatEntry(date: s.date, bodyFatFraction: s.value))
             }
@@ -355,7 +355,7 @@ class HealthKitManager {
     }
 
     private func nutritionSampleExists(forEntryID entryID: UUID) async -> Bool {
-        let predicate = HKQuery.predicateForObjects(withMetadataKey: "fudai_entry_id", operatorType: .equalTo, value: entryID.uuidString)
+        let predicate = HKQuery.predicateForObjects(withMetadataKey: "voidpen_entry_id", operatorType: .equalTo, value: entryID.uuidString)
         let type = HKQuantityType(.dietaryEnergyConsumed)
         return await withCheckedContinuation { continuation in
             let query = HKSampleQuery(sampleType: type, predicate: predicate, limit: 1, sortDescriptors: nil) { _, results, _ in
@@ -366,7 +366,7 @@ class HealthKitManager {
     }
 
     private func deleteNutritionSamples(entryID: UUID) async {
-        let predicate = HKQuery.predicateForObjects(withMetadataKey: "fudai_entry_id", operatorType: .equalTo, value: entryID.uuidString)
+        let predicate = HKQuery.predicateForObjects(withMetadataKey: "voidpen_entry_id", operatorType: .equalTo, value: entryID.uuidString)
         let nutritionTypes: [HKQuantityTypeIdentifier] = [
             .dietaryEnergyConsumed, .dietaryProtein, .dietaryCarbohydrates, .dietaryFatTotal,
             .dietarySugar, .dietaryFiber, .dietaryFatSaturated, .dietaryFatMonounsaturated,
@@ -394,9 +394,9 @@ class HealthKitManager {
     // MARK: - Read Body Measurements
 
     func fetchLatestBodyMeasurements() async -> (weight: Double?, weightDate: Date?, weightFudaiID: UUID?, height: Double?, bodyFat: Double?, bodyFatDate: Date?, bodyFatFudaiID: UUID?, dob: Date?, sex: HKBiologicalSex?) {
-        async let weightSample = fetchLatestSample(.bodyMass, unit: .gramUnit(with: .kilo), fudaiMetadataKey: "fudai_weight_id")
-        async let height = fetchLatestSample(.height, unit: .meterUnit(with: .centi), fudaiMetadataKey: nil)
-        async let bodyFat = fetchLatestSample(.bodyFatPercentage, unit: .percent(), fudaiMetadataKey: "fudai_bodyfat_id")
+        async let weightSample = fetchLatestSample(.bodyMass, unit: .gramUnit(with: .kilo), voidpenMetadataKey: "voidpen_weight_id")
+        async let height = fetchLatestSample(.height, unit: .meterUnit(with: .centi), voidpenMetadataKey: nil)
+        async let bodyFat = fetchLatestSample(.bodyFatPercentage, unit: .percent(), voidpenMetadataKey: "voidpen_bodyfat_id")
 
         var dob: Date?
         var sex: HKBiologicalSex?
@@ -411,7 +411,7 @@ class HealthKitManager {
         let w = await weightSample
         let h = await height
         let b = await bodyFat
-        return (w?.value, w?.date, w?.fudaiID, h?.value, b?.value, b?.date, b?.fudaiID, dob, sex)
+        return (w?.value, w?.date, w?.voidpenID, h?.value, b?.value, b?.date, b?.voidpenID, dob, sex)
     }
 
     /// Pulls every sample of `identifier` ever written to HealthKit (limit 10k
@@ -419,7 +419,7 @@ class HealthKitManager {
     /// weight + body-fat backfill that runs the first time the user enables
     /// HealthKit sync and brings years of historical readings into the Progress
     /// chart. Sorted oldest-first so callers can append in chronological order.
-    func fetchAllSamples(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, fudaiMetadataKey: String?) async -> [(value: Double, date: Date, fudaiID: UUID?)] {
+    func fetchAllSamples(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, voidpenMetadataKey: String?) async -> [(value: Double, date: Date, voidpenID: UUID?)] {
         let type = HKQuantityType(identifier)
         let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
         let predicate = HKQuery.predicateForSamples(withStart: nil, end: nil, options: .strictEndDate)
@@ -430,10 +430,10 @@ class HealthKitManager {
                     continuation.resume(returning: [])
                     return
                 }
-                let mapped = samples.map { sample -> (value: Double, date: Date, fudaiID: UUID?) in
-                    let idString = fudaiMetadataKey.flatMap { sample.metadata?[$0] as? String }
-                    let fudaiID = idString.flatMap(UUID.init(uuidString:))
-                    return (sample.quantity.doubleValue(for: unit), sample.startDate, fudaiID)
+                let mapped = samples.map { sample -> (value: Double, date: Date, voidpenID: UUID?) in
+                    let idString = voidpenMetadataKey.flatMap { sample.metadata?[$0] as? String }
+                    let voidpenID = idString.flatMap(UUID.init(uuidString:))
+                    return (sample.quantity.doubleValue(for: unit), sample.startDate, voidpenID)
                 }
                 continuation.resume(returning: mapped)
             }
@@ -441,11 +441,11 @@ class HealthKitManager {
         }
     }
 
-    /// `fudaiMetadataKey` lets each caller specify which metadata key holds the
-    /// in-app-write marker for that quantity type — bodyMass uses `fudai_weight_id`,
-    /// bodyFatPercentage uses `fudai_bodyfat_id`, height has no marker. Pass nil
-    /// when there's no marker to look for; the returned `fudaiID` will be nil.
-    private func fetchLatestSample(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, fudaiMetadataKey: String?) async -> (value: Double, date: Date, fudaiID: UUID?)? {
+    /// `voidpenMetadataKey` lets each caller specify which metadata key holds the
+    /// in-app-write marker for that quantity type — bodyMass uses `voidpen_weight_id`,
+    /// bodyFatPercentage uses `voidpen_bodyfat_id`, height has no marker. Pass nil
+    /// when there's no marker to look for; the returned `voidpenID` will be nil.
+    private func fetchLatestSample(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, voidpenMetadataKey: String?) async -> (value: Double, date: Date, voidpenID: UUID?)? {
         let type = HKQuantityType(identifier)
         let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
         let predicate = HKQuery.predicateForSamples(withStart: nil, end: nil, options: .strictEndDate)
@@ -453,9 +453,9 @@ class HealthKitManager {
         return await withCheckedContinuation { continuation in
             let query = HKSampleQuery(sampleType: type, predicate: predicate, limit: 1, sortDescriptors: [sortDescriptor]) { _, results, _ in
                 if let sample = results?.first as? HKQuantitySample {
-                    let idString = fudaiMetadataKey.flatMap { sample.metadata?[$0] as? String }
-                    let fudaiID = idString.flatMap(UUID.init(uuidString:))
-                    continuation.resume(returning: (sample.quantity.doubleValue(for: unit), sample.startDate, fudaiID))
+                    let idString = voidpenMetadataKey.flatMap { sample.metadata?[$0] as? String }
+                    let voidpenID = idString.flatMap(UUID.init(uuidString:))
+                    continuation.resume(returning: (sample.quantity.doubleValue(for: unit), sample.startDate, voidpenID))
                 } else {
                     continuation.resume(returning: nil)
                 }

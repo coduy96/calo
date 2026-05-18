@@ -100,7 +100,7 @@ struct FoodEntry: Identifiable, Codable {
     /// Kept as a property so existing views continue to read `entry.imageData`
     /// unchanged; the on-disk filename is the source of truth for persistence.
     var imageData: Data?
-    /// Filename (not path) under Application Support/fudai-food-images/ where
+    /// Filename (not path) under Application Support/voidpen-food-images/ where
     /// the JPEG lives. Tiny string; JSON-safe. The actual bytes live on disk
     /// to keep the foodEntries UserDefaults blob under iOS's 4 MiB cap.
     var imageFilename: String?

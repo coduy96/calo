@@ -22,7 +22,7 @@ struct PaywallView: View {
                 Text("Unlock Premium")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
 
-                Text("No API key needed.\nAI food scans, voice logging, and Coach run through Fud AI Plus.")
+                Text("No API key needed.\nAI food scans, voice logging, and Coach run through Voidpen Plus.")
                     .font(.system(.callout, design: .rounded))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -60,7 +60,7 @@ struct PaywallView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
-                    featureRow("Uses Fud AI's Gemini + Deepgram providers")
+                    featureRow("Uses Voidpen's Gemini + Deepgram providers")
                     featureRow("\(AIAccessSettings.paidFoodDailyRequestLimit) food logs, \(AIAccessSettings.paidSpeechDailyRequestLimit) voice transcriptions/day")
                     featureRow("Voice recordings capped at 60 seconds")
                     featureRow("\(AIAccessSettings.paidCoachDailyRequestLimit) Coach messages/day")

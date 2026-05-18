@@ -9,13 +9,13 @@ import Foundation
 /// in place (phantom adds/deletes on relaunch).
 ///
 /// Now images live as individual JPEGs under
-/// `Application Support/fudai-food-images/<uuid>.jpg`, and `FoodEntry`
+/// `Application Support/voidpen-food-images/<uuid>.jpg`, and `FoodEntry`
 /// persists only the filename. The encoded entry JSON is tiny — a few
 /// hundred bytes per entry — so UserDefaults stays well under its cap.
 struct FoodImageStore {
     static let shared = FoodImageStore()
 
-    private let folderName = "fudai-food-images"
+    private let folderName = "voidpen-food-images"
 
     private var folderURL: URL? {
         guard let base = try? FileManager.default.url(

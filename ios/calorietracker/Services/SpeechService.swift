@@ -25,7 +25,7 @@ struct SpeechService {
             case .invalidResponse:
                 return "Unexpected response from the speech provider."
             case .subscriptionRequired:
-                return "Fud AI Plus is not active. Subscribe or switch back to Bring Your Own Key in Settings."
+                return "Voidpen Plus is not active. Subscribe or switch back to Bring Your Own Key in Settings."
             }
         }
     }
@@ -33,22 +33,22 @@ struct SpeechService {
     /// Transcribe an audio file using the currently-selected speech provider.
     /// Caller should only invoke this for non-native providers.
     static func transcribe(audioURL: URL) async throws -> String {
-        let usingFudAIPlus = AIAccessSettings.isUsingFudAIPlus
-        let provider: SpeechProvider = usingFudAIPlus ? .deepgram : SpeechSettings.selectedProvider
+        let usingVoidpenPlus = AIAccessSettings.isUsingVoidpenPlus
+        let provider: SpeechProvider = usingVoidpenPlus ? .deepgram : SpeechSettings.selectedProvider
         let selectedLanguage = SpeechSettings.selectedLanguage(for: provider)
         let languageCode = selectedLanguage.apiLanguageCode
         guard provider.requiresAPIKey else {
             // Native iOS handled directly by VoiceInputView.
             throw SpeechError.apiError("Native iOS transcription is handled in-view, not via SpeechService.")
         }
-        if usingFudAIPlus, !AIAccessSettings.hasActivePlusEntitlement {
+        if usingVoidpenPlus, !AIAccessSettings.hasActivePlusEntitlement {
             throw SpeechError.subscriptionRequired
         }
         guard let audioData = try? Data(contentsOf: audioURL) else {
             throw SpeechError.fileReadFailed
         }
-        if usingFudAIPlus {
-            return try await FudAIProxyClient.transcribeSpeech(audioData: audioData, languageCode: languageCode)
+        if usingVoidpenPlus {
+            return try await VoidpenProxyClient.transcribeSpeech(audioData: audioData, languageCode: languageCode)
         }
 
         let apiKey = SpeechSettings.apiKey(for: provider)
@@ -123,8 +123,8 @@ struct SpeechService {
         ]
 
         let data: Data
-        if AIAccessSettings.isUsingFudAIPlus {
-            data = try await FudAIProxyClient.generateContent(task: .speech, body: body)
+        if AIAccessSettings.isUsingVoidpenPlus {
+            data = try await VoidpenProxyClient.generateContent(task: .speech, body: body)
         } else {
             guard let apiKey else { throw SpeechError.noAPIKey }
             guard let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent") else {

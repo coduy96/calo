@@ -11,7 +11,7 @@ struct OnboardingView: View {
     @Environment(StoreManager.self) private var storeManager
 
     @State private var step = 0
-    @State private var selectedAccessMode: AIAccessMode = .fudAIPlus
+    @State private var selectedAccessMode: AIAccessMode = .voidpenPlus
     @State private var showPaywall = false
     @State private var shouldAdvanceAfterPlusPurchase = false
     @State private var gender: Gender = .male
@@ -183,7 +183,7 @@ struct OnboardingView: View {
         guard shouldAdvanceAfterPlusPurchase, step == 11 else { return }
         shouldAdvanceAfterPlusPurchase = false
         showPaywall = false
-        AIAccessSettings.mode = .fudAIPlus
+        AIAccessSettings.mode = .voidpenPlus
         withAnimation(.snappy) { step += 1 }
     }
 
@@ -645,7 +645,7 @@ struct OnboardingView: View {
                     .multilineTextAlignment(.center)
 
                 VStack(spacing: 12) {
-                    Text("Fud AI would like to send you Notifications")
+                    Text("Voidpen would like to send you Notifications")
                         .font(.system(.subheadline, design: .rounded, weight: .medium))
                         .multilineTextAlignment(.center)
                     Divider()
@@ -809,7 +809,7 @@ struct OnboardingView: View {
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .multilineTextAlignment(.center)
 
-                    Text("BYOK keeps Fud AI free. Plus is optional for no API setup and supports development.")
+                    Text("BYOK keeps Voidpen free. Plus is optional for no API setup and supports development.")
                         .font(.system(.callout, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -817,8 +817,8 @@ struct OnboardingView: View {
 
                 VStack(spacing: 12) {
                     aiAccessCard(
-                        mode: .fudAIPlus,
-                        title: "Fud AI Plus",
+                        mode: .voidpenPlus,
+                        title: "Voidpen Plus",
                         subtitle: "No setup for non-technical users. Gemini food scans, voice, and Coach with fallback.",
                         badge: storeManager.isSubscribed ? "Active" : "Default"
                     )
@@ -830,9 +830,9 @@ struct OnboardingView: View {
                         badge: "Free"
                     )
 
-                    if selectedAccessMode == .fudAIPlus && !storeManager.isSubscribed {
+                    if selectedAccessMode == .voidpenPlus && !storeManager.isSubscribed {
                         Button {
-                            AIAccessSettings.mode = .fudAIPlus
+                            AIAccessSettings.mode = .voidpenPlus
                             shouldAdvanceAfterPlusPurchase = true
                             showPaywall = true
                         } label: {
@@ -857,14 +857,14 @@ struct OnboardingView: View {
 
             Button {
                 AIAccessSettings.mode = selectedAccessMode
-                if selectedAccessMode == .fudAIPlus && !storeManager.isSubscribed {
+                if selectedAccessMode == .voidpenPlus && !storeManager.isSubscribed {
                     shouldAdvanceAfterPlusPurchase = true
                     showPaywall = true
                 } else {
                     withAnimation(.snappy) { step += 1 }
                 }
             } label: {
-                Text(selectedAccessMode == .fudAIPlus && !storeManager.isSubscribed ? "Subscribe to Continue" : "Continue")
+                Text(selectedAccessMode == .voidpenPlus && !storeManager.isSubscribed ? "Subscribe to Continue" : "Continue")
                     .font(.system(.body, design: .rounded, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)

@@ -2,28 +2,28 @@ import Foundation
 
 enum AIAccessMode: String, CaseIterable, Codable, Identifiable {
     case bringYourOwnKey = "Bring Your Own Key"
-    case fudAIPlus = "Fud AI Plus"
+    case voidpenPlus = "Voidpen Plus"
 
     var id: String { rawValue }
 
     var displayName: String {
         switch self {
         case .bringYourOwnKey: "Bring Your Own Key"
-        case .fudAIPlus: "Fud AI Plus"
+        case .voidpenPlus: "Voidpen Plus"
         }
     }
 
     var shortName: String {
         switch self {
         case .bringYourOwnKey: "BYOK"
-        case .fudAIPlus: "Plus"
+        case .voidpenPlus: "Plus"
         }
     }
 
     var icon: String {
         switch self {
         case .bringYourOwnKey: "key.fill"
-        case .fudAIPlus: "sparkles"
+        case .voidpenPlus: "sparkles"
         }
     }
 }
@@ -57,15 +57,15 @@ struct AIAccessSettings {
     static let paidSpeechDailyRequestLimit = 20
     static let paidCoachDailyRequestLimit = 25
     static let paidGlobalDailyRequestLimit = 70
-    static let defaultProxyEndpoint = "https://fud-ai.app/api/gemini"
+    static let defaultProxyEndpoint = "https://voidpen.com/api/gemini"
     static let currentPlusUpdateAnnouncementID = "barcode_plus_update_2026_05"
 
     private static let modeKey = "aiAccessMode"
-    private static let plusEntitlementCacheKey = "fudAIPlusEntitlementCached"
-    private static let plusIntroSeenKey = "fudAIPlusIntroSeen_3_4"
-    private static let plusUpdateAnnouncementIDKey = "fudAIPlusUpdateAnnouncementSeenID"
-    private static let installIDKey = "fudAIInstallID"
-    private static let proxyEndpointKey = "fudAIProxyEndpoint"
+    private static let plusEntitlementCacheKey = "voidpenPlusEntitlementCached"
+    private static let plusIntroSeenKey = "voidpenPlusIntroSeen_3_4"
+    private static let plusUpdateAnnouncementIDKey = "voidpenPlusUpdateAnnouncementSeenID"
+    private static let installIDKey = "voidpenInstallID"
+    private static let proxyEndpointKey = "voidpenProxyEndpoint"
 
     static var mode: AIAccessMode {
         get {
@@ -81,8 +81,8 @@ struct AIAccessSettings {
         }
     }
 
-    static var isUsingFudAIPlus: Bool {
-        mode == .fudAIPlus
+    static var isUsingVoidpenPlus: Bool {
+        mode == .voidpenPlus
     }
 
     static var hasActivePlusEntitlement: Bool {

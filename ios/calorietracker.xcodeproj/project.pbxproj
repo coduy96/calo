@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-			BA8E0E2D2F33F198007DD537 /* FudAIWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BA8E0E272F33F198007DD537 /* FudAIWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-			F00DCA700000000000000001 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = F00DCA700000000000000003 /* RevenueCat */; };
+		BA8E0E2D2F33F198007DD537 /* VoidpenWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BA8E0E272F33F198007DD537 /* VoidpenWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F00DCA700000000000000001 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = F00DCA700000000000000003 /* RevenueCat */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -31,7 +31,7 @@
 			containerPortal = BA8E0DEB2F33F197007DD537 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = BA8E0E282F33F198007DD537;
-			remoteInfo = FudAIWidgetsExtension;
+			remoteInfo = VoidpenWidgetsExtension;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -42,7 +42,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				BA8E0E2D2F33F198007DD537 /* FudAIWidgetsExtension.appex in Embed Foundation Extensions */,
+				BA8E0E2D2F33F198007DD537 /* VoidpenWidgetsExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -53,7 +53,7 @@
 		BA8E0DF32F33F197007DD537 /* calorietracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = calorietracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BA8E0E072F33F198007DD537 /* calorietrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = calorietrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BA8E0E112F33F198007DD537 /* calorietrackerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = calorietrackerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		BA8E0E272F33F198007DD537 /* FudAIWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FudAIWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BA8E0E272F33F198007DD537 /* VoidpenWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VoidpenWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -64,12 +64,12 @@
 			);
 			target = BA8E0DF22F33F197007DD537 /* calorietracker */;
 		};
-		BA8E0E262F33F198007DD537 /* Exceptions for "FudAIWidgets" folder in "FudAIWidgetsExtension" target */ = {
+		BA8E0E262F33F198007DD537 /* Exceptions for "VoidpenWidgets" folder in "VoidpenWidgetsExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = BA8E0E282F33F198007DD537 /* FudAIWidgetsExtension */;
+			target = BA8E0E282F33F198007DD537 /* VoidpenWidgetsExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -92,25 +92,25 @@
 			path = calorietrackerUITests;
 			sourceTree = "<group>";
 		};
-		BA8E0E252F33F198007DD537 /* FudAIWidgets */ = {
+		BA8E0E252F33F198007DD537 /* VoidpenWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				BA8E0E262F33F198007DD537 /* Exceptions for "FudAIWidgets" folder in "FudAIWidgetsExtension" target */,
+				BA8E0E262F33F198007DD537 /* Exceptions for "VoidpenWidgets" folder in "VoidpenWidgetsExtension" target */,
 			);
-			path = FudAIWidgets;
+			path = VoidpenWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-			BA8E0DF02F33F197007DD537 /* Frameworks */ = {
-				isa = PBXFrameworksBuildPhase;
-				buildActionMask = 2147483647;
-				files = (
-					F00DCA700000000000000001 /* RevenueCat in Frameworks */,
-				);
-				runOnlyForDeploymentPostprocessing = 0;
-			};
+		BA8E0DF02F33F197007DD537 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F00DCA700000000000000001 /* RevenueCat in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BA8E0E042F33F198007DD537 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -139,7 +139,7 @@
 			isa = PBXGroup;
 			children = (
 				BA8E0DF52F33F197007DD537 /* calorietracker */,
-				BA8E0E252F33F198007DD537 /* FudAIWidgets */,
+				BA8E0E252F33F198007DD537 /* VoidpenWidgets */,
 				BA8E0E0A2F33F198007DD537 /* calorietrackerTests */,
 				BA8E0E142F33F198007DD537 /* calorietrackerUITests */,
 				BA8E0DF42F33F197007DD537 /* Products */,
@@ -152,7 +152,7 @@
 				BA8E0DF32F33F197007DD537 /* calorietracker.app */,
 				BA8E0E072F33F198007DD537 /* calorietrackerTests.xctest */,
 				BA8E0E112F33F198007DD537 /* calorietrackerUITests.xctest */,
-				BA8E0E272F33F198007DD537 /* FudAIWidgetsExtension.appex */,
+				BA8E0E272F33F198007DD537 /* VoidpenWidgetsExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -177,12 +177,12 @@
 			fileSystemSynchronizedGroups = (
 				BA8E0DF52F33F197007DD537 /* calorietracker */,
 			);
-				name = calorietracker;
-				packageProductDependencies = (
-					F00DCA700000000000000003 /* RevenueCat */,
-				);
-				productName = calorietracker;
-				productReference = BA8E0DF32F33F197007DD537 /* calorietracker.app */;
+			name = calorietracker;
+			packageProductDependencies = (
+				F00DCA700000000000000003 /* RevenueCat */,
+			);
+			productName = calorietracker;
+			productReference = BA8E0DF32F33F197007DD537 /* calorietracker.app */;
 			productType = "com.apple.product-type.application";
 		};
 		BA8E0E062F33F198007DD537 /* calorietrackerTests */ = {
@@ -231,9 +231,9 @@
 			productReference = BA8E0E112F33F198007DD537 /* calorietrackerUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		BA8E0E282F33F198007DD537 /* FudAIWidgetsExtension */ = {
+		BA8E0E282F33F198007DD537 /* VoidpenWidgetsExtension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = BA8E0E322F33F198007DD537 /* Build configuration list for PBXNativeTarget "FudAIWidgetsExtension" */;
+			buildConfigurationList = BA8E0E322F33F198007DD537 /* Build configuration list for PBXNativeTarget "VoidpenWidgetsExtension" */;
 			buildPhases = (
 				BA8E0E292F33F198007DD537 /* Sources */,
 				BA8E0E2A2F33F198007DD537 /* Frameworks */,
@@ -244,13 +244,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				BA8E0E252F33F198007DD537 /* FudAIWidgets */,
+				BA8E0E252F33F198007DD537 /* VoidpenWidgets */,
 			);
-			name = FudAIWidgetsExtension;
+			name = VoidpenWidgetsExtension;
 			packageProductDependencies = (
 			);
-			productName = FudAIWidgetsExtension;
-			productReference = BA8E0E272F33F198007DD537 /* FudAIWidgetsExtension.appex */;
+			productName = VoidpenWidgetsExtension;
+			productReference = BA8E0E272F33F198007DD537 /* VoidpenWidgetsExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -301,17 +301,17 @@
 				Base,
 			);
 			mainGroup = BA8E0DEA2F33F197007DD537;
-				minimizedProjectReferenceProxies = 1;
-				packageReferences = (
-					F00DCA700000000000000002 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
-				);
-				preferredProjectObjectVersion = 77;
-				productRefGroup = BA8E0DF42F33F197007DD537 /* Products */;
-				projectDirPath = "";
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F00DCA700000000000000002 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = BA8E0DF42F33F197007DD537 /* Products */;
+			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				BA8E0DF22F33F197007DD537 /* calorietracker */,
-				BA8E0E282F33F198007DD537 /* FudAIWidgetsExtension */,
+				BA8E0E282F33F198007DD537 /* VoidpenWidgetsExtension */,
 				BA8E0E062F33F198007DD537 /* calorietrackerTests */,
 				BA8E0E102F33F198007DD537 /* calorietrackerUITests */,
 			);
@@ -393,7 +393,7 @@
 		};
 		BA8E0E2E2F33F198007DD537 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = BA8E0E282F33F198007DD537 /* FudAIWidgetsExtension */;
+			target = BA8E0E282F33F198007DD537 /* VoidpenWidgetsExtension */;
 			targetProxy = BA8E0E2F2F33F198007DD537 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -402,27 +402,27 @@
 		BA8E0E1B2F33F198007DD537 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				APP_DISPLAY_NAME = "Voidpen Debug";
+				APP_GROUP_IDENTIFIER = group.com.cotrinhhienduy.calorietracker.debug;
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconRed AppIconOrange AppIconGreen AppIconMint AppIconTeal AppIconBlue AppIconPurple";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
-				APP_DISPLAY_NAME = "Fud AI Debug";
-				APP_GROUP_IDENTIFIER = group.com.apoorvdarshan.calorietracker.debug;
 				CODE_SIGN_ENTITLEMENTS = calorietracker/calorietracker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 13;
-				DEVELOPMENT_TEAM = 23RV7FYH36;
+				DEVELOPMENT_TEAM = NKK59YZ368;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = calorietracker/Info.plist;
 				INFOPLIST_KEY_AppGroupIdentifier = "$(APP_GROUP_IDENTIFIER)";
 				INFOPLIST_KEY_CFBundleDisplayName = "$(APP_DISPLAY_NAME)";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Cal AI needs camera access to scan your food and calculate calories.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Voidpen needs camera access to scan your food and calculate calories.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Read your weight, height, and body composition to keep your profile accurate.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Write your nutrition and body measurements so all your health data stays in one place.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Fud AI needs microphone access so you can log food by voice.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Fud AI uses speech recognition to convert your voice into text for food logging.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Voidpen needs microphone access so you can log food by voice.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Voidpen uses speech recognition to convert your voice into text for food logging.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -434,11 +434,11 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 3.5;
-					PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietracker.debug;
-					PRODUCT_NAME = "$(TARGET_NAME)";
-					REVENUECAT_API_KEY = appl_gTWwNXfsUvRsJAxvqyNandnyjVa;
-					STRING_CATALOG_GENERATE_SYMBOLS = YES;
-					SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cotrinhhienduy.calorietracker.debug;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REVENUECAT_API_KEY = appl_gTWwNXfsUvRsJAxvqyNandnyjVa;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -454,27 +454,27 @@
 		BA8E0E1C2F33F198007DD537 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				APP_DISPLAY_NAME = Voidpen;
+				APP_GROUP_IDENTIFIER = group.com.cotrinhhienduy.calorietracker;
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconRed AppIconOrange AppIconGreen AppIconMint AppIconTeal AppIconBlue AppIconPurple";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
-				APP_DISPLAY_NAME = "Fud AI";
-				APP_GROUP_IDENTIFIER = group.com.apoorvdarshan.calorietracker;
 				CODE_SIGN_ENTITLEMENTS = calorietracker/calorietracker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 13;
-				DEVELOPMENT_TEAM = 23RV7FYH36;
+				DEVELOPMENT_TEAM = NKK59YZ368;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = calorietracker/Info.plist;
 				INFOPLIST_KEY_AppGroupIdentifier = "$(APP_GROUP_IDENTIFIER)";
 				INFOPLIST_KEY_CFBundleDisplayName = "$(APP_DISPLAY_NAME)";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Cal AI needs camera access to scan your food and calculate calories.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Voidpen needs camera access to scan your food and calculate calories.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Read your weight, height, and body composition to keep your profile accurate.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Write your nutrition and body measurements so all your health data stays in one place.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Fud AI needs microphone access so you can log food by voice.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Fud AI uses speech recognition to convert your voice into text for food logging.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Voidpen needs microphone access so you can log food by voice.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Voidpen uses speech recognition to convert your voice into text for food logging.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -486,11 +486,11 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 3.5;
-					PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietracker;
-					PRODUCT_NAME = "$(TARGET_NAME)";
-					REVENUECAT_API_KEY = appl_gTWwNXfsUvRsJAxvqyNandnyjVa;
-					STRING_CATALOG_GENERATE_SYMBOLS = YES;
-					SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cotrinhhienduy.calorietracker;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REVENUECAT_API_KEY = appl_gTWwNXfsUvRsJAxvqyNandnyjVa;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -508,9 +508,9 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -574,9 +574,9 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -638,7 +638,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietrackerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cotrinhhienduy.calorietrackerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -660,7 +660,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietrackerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cotrinhhienduy.calorietrackerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -680,7 +680,7 @@
 				DEVELOPMENT_TEAM = 23RV7FYH36;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietrackerUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cotrinhhienduy.calorietrackerUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -700,7 +700,7 @@
 				DEVELOPMENT_TEAM = 23RV7FYH36;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietrackerUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cotrinhhienduy.calorietrackerUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -715,16 +715,16 @@
 		BA8E0E302F33F198007DD537 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APP_DISPLAY_NAME = "Voidpen Debug";
+				APP_GROUP_IDENTIFIER = group.com.cotrinhhienduy.calorietracker.debug;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				APP_DISPLAY_NAME = "Fud AI Debug";
-				APP_GROUP_IDENTIFIER = group.com.apoorvdarshan.calorietracker.debug;
-				CODE_SIGN_ENTITLEMENTS = FudAIWidgets/FudAIWidgets.entitlements;
+				CODE_SIGN_ENTITLEMENTS = VoidpenWidgets/VoidpenWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 13;
-				DEVELOPMENT_TEAM = 23RV7FYH36;
+				DEVELOPMENT_TEAM = NKK59YZ368;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = FudAIWidgets/Info.plist;
+				INFOPLIST_FILE = VoidpenWidgets/Info.plist;
 				INFOPLIST_KEY_AppGroupIdentifier = "$(APP_GROUP_IDENTIFIER)";
 				INFOPLIST_KEY_CFBundleDisplayName = "$(APP_DISPLAY_NAME)";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -735,7 +735,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 3.5;
-				PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietracker.debug.FudAIWidgets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cotrinhhienduy.calorietracker.debug.VoidpenWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -754,16 +754,16 @@
 		BA8E0E312F33F198007DD537 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APP_DISPLAY_NAME = Voidpen;
+				APP_GROUP_IDENTIFIER = group.com.cotrinhhienduy.calorietracker;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				APP_DISPLAY_NAME = "Fud AI";
-				APP_GROUP_IDENTIFIER = group.com.apoorvdarshan.calorietracker;
-				CODE_SIGN_ENTITLEMENTS = FudAIWidgets/FudAIWidgets.entitlements;
+				CODE_SIGN_ENTITLEMENTS = VoidpenWidgets/VoidpenWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 13;
-				DEVELOPMENT_TEAM = 23RV7FYH36;
+				DEVELOPMENT_TEAM = NKK59YZ368;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = FudAIWidgets/Info.plist;
+				INFOPLIST_FILE = VoidpenWidgets/Info.plist;
 				INFOPLIST_KEY_AppGroupIdentifier = "$(APP_GROUP_IDENTIFIER)";
 				INFOPLIST_KEY_CFBundleDisplayName = "$(APP_DISPLAY_NAME)";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -774,7 +774,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 3.5;
-				PRODUCT_BUNDLE_IDENTIFIER = com.apoorvdarshan.calorietracker.FudAIWidgets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cotrinhhienduy.calorietracker.VoidpenWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -829,7 +829,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		BA8E0E322F33F198007DD537 /* Build configuration list for PBXNativeTarget "FudAIWidgetsExtension" */ = {
+		BA8E0E322F33F198007DD537 /* Build configuration list for PBXNativeTarget "VoidpenWidgetsExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BA8E0E302F33F198007DD537 /* Debug */,
@@ -841,22 +841,22 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-			F00DCA700000000000000002 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
-				isa = XCRemoteSwiftPackageReference;
-				repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm";
-				requirement = {
-					kind = upToNextMajorVersion;
-					minimumVersion = 5.70.0;
-				};
+		F00DCA700000000000000002 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.70.0;
 			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-			F00DCA700000000000000003 /* RevenueCat */ = {
-				isa = XCSwiftPackageProductDependency;
-				package = F00DCA700000000000000002 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
-				productName = RevenueCat;
-			};
+		F00DCA700000000000000003 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F00DCA700000000000000002 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
+		};
 /* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = BA8E0DEB2F33F197007DD537 /* Project object */;

@@ -285,7 +285,7 @@ class FoodStore {
         // Skip the disk-delete when a favorite (or another entry) still
         // references this filename. Without this guard, favoriting a meal,
         // deleting the log entry, and relaunching wipes the favorite's image
-        // because both rows share the same fudai-image-<uuid>.jpg.
+        // because both rows share the same voidpen-image-<uuid>.jpg.
         if let filename = entry.imageFilename, !isImageStillReferenced(filename: filename, excludingEntryID: id) {
             FoodImageStore.shared.delete(filename: filename)
         }
@@ -336,7 +336,7 @@ class FoodStore {
 
     /// Used by deleteEntry / replaceAllEntries to decide whether the on-disk
     /// JPEG can safely be removed. A filename can be shared by a logged entry
-    /// + a favorite (same `id`, same generated `fudai-image-<uuid>.jpg`), or
+    /// + a favorite (same `id`, same generated `voidpen-image-<uuid>.jpg`), or
     /// by two logged entries that came from the same favorite re-log.
     private func isImageStillReferenced(filename: String, excludingEntryID: UUID) -> Bool {
         if entries.contains(where: { $0.id != excludingEntryID && $0.imageFilename == filename }) {

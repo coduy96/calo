@@ -8,7 +8,7 @@ struct CloudData {
 }
 
 struct CloudKitService {
-    private static let containerID = "iCloud.com.apoorvdarshan.calorietracker"
+    private static let containerID = "iCloud.com.cotrinhhienduy.calorietracker"
     private static var container: CKContainer { CKContainer(identifier: containerID) }
     private static var database: CKDatabase { container.privateCloudDatabase }
 

@@ -13,107 +13,12 @@ enum CameraMode {
     case nutritionLabel
 }
 
-private let fudAIAppStoreID = "6758935726"
-private let fudAIAppStoreURL = URL(string: "https://apps.apple.com/us/app/fud-ai-calorie-tracker/id6758935726")!
-
-private enum AppUpdateState: Equatable {
-    case idle
-    case checking
-    case upToDate(current: String, latest: String?)
-    case available(current: String, latest: String, url: URL)
-    case failed(current: String)
-
-    var isUpdateAvailable: Bool {
-        if case .available = self {
-            return true
-        }
-        return false
-    }
-
-    var hasStartedCheck: Bool {
-        if case .idle = self {
-            return false
-        }
-        return true
-    }
-}
-
-private struct AppStoreLookupResponse: Decodable {
-    let results: [AppStoreLookupResult]
-}
-
-private struct AppStoreLookupResult: Decodable {
-    let version: String
-    let trackViewUrl: String?
-}
-
-private enum AppUpdateChecker {
-    static var currentVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
-    }
-
-    static var currentVersionDisplay: String {
-        currentVersion
-    }
-
-    static func check() async -> AppUpdateState {
-        let current = currentVersion
-
-        guard let url = URL(string: "https://itunes.apple.com/lookup?id=\(fudAIAppStoreID)&country=us") else {
-            return .failed(current: current)
-        }
-
-        do {
-            let (data, response) = try await URLSession.shared.data(from: url)
-            guard let httpResponse = response as? HTTPURLResponse,
-                  (200..<300).contains(httpResponse.statusCode) else {
-                return .failed(current: current)
-            }
-
-            let lookup = try JSONDecoder().decode(AppStoreLookupResponse.self, from: data)
-            guard let result = lookup.results.first else {
-                return .upToDate(current: current, latest: nil)
-            }
-
-            let updateURL = result.trackViewUrl.flatMap(URL.init(string:)) ?? fudAIAppStoreURL
-            if isVersion(result.version, newerThan: current) {
-                return .available(current: current, latest: result.version, url: updateURL)
-            }
-
-            return .upToDate(current: current, latest: result.version)
-        } catch {
-            return .failed(current: current)
-        }
-    }
-
-    private static func isVersion(_ latest: String, newerThan current: String) -> Bool {
-        let latestParts = latest.split(separator: ".").map { Int($0) ?? 0 }
-        let currentParts = current.split(separator: ".").map { Int($0) ?? 0 }
-        let count = max(latestParts.count, currentParts.count)
-
-        for index in 0..<count {
-            let latestValue = index < latestParts.count ? latestParts[index] : 0
-            let currentValue = index < currentParts.count ? currentParts[index] : 0
-
-            if latestValue > currentValue {
-                return true
-            }
-            if latestValue < currentValue {
-                return false
-            }
-        }
-
-        return false
-    }
-}
-
 // MARK: - Main Content View
 struct ContentView: View {
     @Environment(StoreManager.self) private var storeManager
     @AppStorage(AppThemeColor.storageKey) private var appThemeColorRaw = AppThemeColor.defaultColor.rawValue
-    @State private var appUpdateState: AppUpdateState = .idle
-    @State private var showFudAIPlusIntro = false
-    @State private var showFudAIPlusPaywall = false
+    @State private var showVoidpenPlusIntro = false
+    @State private var showVoidpenPlusPaywall = false
 
     var body: some View {
         TabView {
@@ -140,73 +45,45 @@ struct ContentView: View {
                     Image(systemName: "gearshape.fill")
                     Text("Settings")
                 }
-
-            AboutView(
-                updateState: $appUpdateState,
-                refreshUpdateState: {
-                    await refreshAppUpdateState(force: true)
-                }
-            )
-                .tabItem {
-                    Image(systemName: "info.circle.fill")
-                    Text("About")
-                }
-                .badge(appUpdateState.isUpdateAvailable ? "!" : nil)
         }
         .tint(AppThemeColor.color(for: appThemeColorRaw).color)
         .task {
-            await refreshAppUpdateState()
             await storeManager.checkEntitlements()
-            maybeShowFudAIPlusIntro()
+            maybeShowVoidpenPlusIntro()
         }
-        .sheet(isPresented: $showFudAIPlusIntro, onDismiss: markFudAIPlusIntroSeen) {
-            FudAIPlusIntroView(
+        .sheet(isPresented: $showVoidpenPlusIntro, onDismiss: markVoidpenPlusIntroSeen) {
+            VoidpenPlusIntroView(
                 onUpgrade: {
-                    markFudAIPlusIntroSeen()
-                    AIAccessSettings.mode = .fudAIPlus
-                    showFudAIPlusIntro = false
-                    showFudAIPlusPaywall = true
+                    markVoidpenPlusIntroSeen()
+                    AIAccessSettings.mode = .voidpenPlus
+                    showVoidpenPlusIntro = false
+                    showVoidpenPlusPaywall = true
                 },
                 onRateApp: {
-                    markFudAIPlusIntroSeen()
-                    showFudAIPlusIntro = false
+                    markVoidpenPlusIntroSeen()
+                    showVoidpenPlusIntro = false
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                         requestNativeReview()
                     }
                 },
-                onStarGitHub: {
-                    markFudAIPlusIntroSeen()
-                    showFudAIPlusIntro = false
-                    openGitHubRepo()
-                },
                 onDismiss: {
-                    markFudAIPlusIntroSeen()
-                    showFudAIPlusIntro = false
+                    markVoidpenPlusIntroSeen()
+                    showVoidpenPlusIntro = false
                 }
             )
         }
-        .sheet(isPresented: $showFudAIPlusPaywall) {
+        .sheet(isPresented: $showVoidpenPlusPaywall) {
             PaywallView()
         }
     }
 
     @MainActor
-    private func refreshAppUpdateState(force: Bool = false) async {
-        if !force && appUpdateState.hasStartedCheck {
-            return
-        }
-
-        appUpdateState = .checking
-        appUpdateState = await AppUpdateChecker.check()
-    }
-
-    @MainActor
-    private func maybeShowFudAIPlusIntro() {
+    private func maybeShowVoidpenPlusIntro() {
         guard AIAccessSettings.lastSeenPlusUpdateAnnouncementID != AIAccessSettings.currentPlusUpdateAnnouncementID else { return }
-        showFudAIPlusIntro = true
+        showVoidpenPlusIntro = true
     }
 
-    private func markFudAIPlusIntroSeen() {
+    private func markVoidpenPlusIntroSeen() {
         AIAccessSettings.lastSeenPlusUpdateAnnouncementID = AIAccessSettings.currentPlusUpdateAnnouncementID
     }
 
@@ -217,17 +94,11 @@ struct ContentView: View {
         }
     }
 
-    private func openGitHubRepo() {
-        if let url = URL(string: "https://github.com/apoorvdarshan/fud-ai") {
-            UIApplication.shared.open(url)
-        }
-    }
 }
 
-private struct FudAIPlusIntroView: View {
+private struct VoidpenPlusIntroView: View {
     let onUpgrade: () -> Void
     let onRateApp: () -> Void
-    let onStarGitHub: () -> Void
     let onDismiss: () -> Void
 
     var body: some View {
@@ -246,9 +117,9 @@ private struct FudAIPlusIntroView: View {
                     }
 
                     VStack(spacing: 8) {
-                        Text("New in Fud AI")
+                        Text("New in Voidpen")
                             .font(.system(size: 28, weight: .bold, design: .rounded))
-                        Text("Barcode logging is here. Fud AI Plus is the no-setup option for non-technical users who do not want to manage API keys.")
+                        Text("Barcode logging is here. Voidpen Plus is the no-setup option for non-technical users who do not want to manage API keys.")
                             .font(.system(.callout, design: .rounded))
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -257,8 +128,8 @@ private struct FudAIPlusIntroView: View {
 
                     VStack(alignment: .leading, spacing: 10) {
                         plusIntroRow("Scan a barcode to log packaged foods faster")
-                        plusIntroRow("Fud AI Plus includes food scan, voice, and Coach without setup")
-                        plusIntroRow("Ratings and GitHub stars help keep the app open source and BYOK-friendly")
+                        plusIntroRow("Voidpen Plus includes food scan, voice, and Coach without setup")
+                        plusIntroRow("Ratings help keep the app BYOK-friendly")
                     }
                     .font(.system(.subheadline, design: .rounded))
                     .padding(.horizontal, 30)
@@ -270,7 +141,7 @@ private struct FudAIPlusIntroView: View {
 
             VStack(spacing: 10) {
                 Button(action: onUpgrade) {
-                    Text("Upgrade to Fud AI Plus")
+                    Text("Upgrade to Voidpen Plus")
                         .font(.system(.body, design: .rounded, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -289,15 +160,6 @@ private struct FudAIPlusIntroView: View {
                 }
                 .buttonStyle(.bordered)
                 .tint(AppColors.calorie)
-
-                Button(action: onStarGitHub) {
-                    Label("Star on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
-                        .font(.system(.body, design: .rounded, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 48)
-                }
-                .buttonStyle(.bordered)
-                .tint(.secondary)
 
                 Button(action: onDismiss) {
                     Text("Not Now")
@@ -323,339 +185,6 @@ private struct FudAIPlusIntroView: View {
             Spacer(minLength: 0)
         }
     }
-}
-
-// MARK: - About View
-private struct AboutView: View {
-    @Binding private var updateState: AppUpdateState
-    private let refreshUpdateState: () async -> Void
-
-    @State private var showShareSheet = false
-
-    init(updateState: Binding<AppUpdateState>, refreshUpdateState: @escaping () async -> Void) {
-        self._updateState = updateState
-        self.refreshUpdateState = refreshUpdateState
-    }
-
-    private var shareMessage: String {
-        String(localized: "I've been tracking my meals with Fud AI — snap a photo, speak it, or type it, and the AI logs the calories. It's free, open source, and your data stays on your device.\n\nDownload: https://fud-ai.app")
-    }
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    updateRow
-
-                    // Rate the App
-                    Button {
-                        requestNativeReview()
-                    } label: {
-                        Label {
-                            Text("Rate the App")
-                        } icon: {
-                            Image(systemName: "star.fill")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                    }
-                    .tint(.primary)
-
-                    // Share the App — uses UIActivityViewController so both
-                    // the personalized message AND the App Store URL get
-                    // forwarded to every share target (SwiftUI ShareLink
-                    // drops the message arg for most targets).
-                    Button {
-                        showShareSheet = true
-                    } label: {
-                        Label {
-                            Text("Share the App")
-                        } icon: {
-                            Image(systemName: "square.and.arrow.up.fill")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                    }
-                    .tint(.primary)
-
-                    // Support
-                    Link(destination: URL(string: "https://ko-fi.com/apoorvdarshan")!) {
-                        Label {
-                            Text("Support on Ko-fi")
-                        } icon: {
-                            Image(systemName: "cup.and.saucer.fill")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                    }
-                    .tint(.primary)
-
-                    // Open Source
-                    Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai")!) {
-                        Label {
-                            Text("Open Source (MIT)")
-                        } icon: {
-                            Image(systemName: "chevron.left.forwardslash.chevron.right")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                    }
-                    .tint(.primary)
-
-                    // Star the Repo
-                    Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai")!) {
-                        Label {
-                            Text("Star on GitHub")
-                        } icon: {
-                            Image(systemName: "star.circle.fill")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                    }
-                    .tint(.primary)
-
-                    // Vote on Product Hunt
-                    Link(destination: URL(string: "https://www.producthunt.com/products/fud-ai-calorie-tracker")!) {
-                        Label {
-                            Text("Vote on Product Hunt")
-                        } icon: {
-                            Image(systemName: "hand.thumbsup.fill")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                    }
-                    .tint(.primary)
-
-                    // Report an Issue
-                    Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai/issues/new?labels=bug&title=Bug:%20")!) {
-                        Label {
-                            Text("Report an Issue")
-                        } icon: {
-                            Image(systemName: "exclamationmark.bubble.fill")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                    }
-                    .tint(.primary)
-
-                    // Request a Feature
-                    Link(destination: URL(string: "https://github.com/apoorvdarshan/fud-ai/issues/new?labels=enhancement&title=Feature:%20")!) {
-                        Label {
-                            Text("Request a Feature")
-                        } icon: {
-                            Image(systemName: "lightbulb.fill")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                    }
-                    .tint(.primary)
-
-                    // Contact
-                    Link(destination: URL(string: "mailto:apoorv@fud-ai.app")!) {
-                        Label {
-                            Text("Contact Us")
-                        } icon: {
-                            Image(systemName: "envelope.fill")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                    }
-                    .tint(.primary)
-
-                    // Follow on X
-                    Link(destination: URL(string: "https://x.com/apoorvdarshan")!) {
-                        Label {
-                            Text("Follow on X")
-                        } icon: {
-                            Image(systemName: "at")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                    }
-                    .tint(.primary)
-
-                    // Instagram
-                    Link(destination: URL(string: "https://www.instagram.com/fudai.app/")!) {
-                        Label {
-                            Text("Follow on Instagram")
-                        } icon: {
-                            Image(systemName: "camera.fill")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                    }
-                    .tint(.primary)
-
-                    // LinkedIn
-                    Link(destination: URL(string: "https://www.linkedin.com/company/fud-ai-app")!) {
-                        Label {
-                            Text("Follow on LinkedIn")
-                        } icon: {
-                            Image(systemName: "briefcase.fill")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                    }
-                    .tint(.primary)
-                }
-                .listRowBackground(AppColors.appCard)
-
-                Section {
-                    // Privacy Policy
-                    Link(destination: URL(string: "https://fud-ai.app/privacy.html")!) {
-                        Label {
-                            Text("Privacy Policy")
-                        } icon: {
-                            Image(systemName: "lock.shield.fill")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                    }
-                    .tint(.primary)
-
-                    // Terms of Service
-                    Link(destination: URL(string: "https://fud-ai.app/terms.html")!) {
-                        Label {
-                            Text("Terms of Service")
-                        } icon: {
-                            Image(systemName: "doc.text.fill")
-                                .foregroundStyle(AppColors.calorie)
-                        }
-                    }
-                    .tint(.primary)
-                }
-                .listRowBackground(AppColors.appCard)
-
-                Section {
-                    VStack(spacing: 4) {
-                        Text("Made by Apoorv Darshan")
-                            .font(.system(.footnote, design: .rounded, weight: .medium))
-                            .foregroundStyle(.secondary)
-                        Text("with care, for everyone")
-                            .font(.system(.caption2, design: .rounded))
-                            .foregroundStyle(.tertiary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-                }
-            }
-            .scrollContentBackground(.hidden)
-            .background(AppColors.appBackground)
-            .navigationBarHidden(true)
-            .sheet(isPresented: $showShareSheet) {
-                ActivityShareSheet(activityItems: [shareMessage, fudAIAppStoreURL])
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var updateRow: some View {
-        switch updateState {
-        case .checking:
-            HStack {
-                Label {
-                    Text("Checking for Updates")
-                } icon: {
-                    Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
-                        .foregroundStyle(AppColors.calorie)
-                }
-
-                Spacer()
-
-                ProgressView()
-                    .tint(AppColors.calorie)
-            }
-
-        case .available(let current, let latest, let url):
-            Button {
-                UIApplication.shared.open(url)
-            } label: {
-                HStack(spacing: 12) {
-                    Label {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Update Available")
-                            Text("Current \(current) -> Latest \(latest)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    } icon: {
-                        ZStack(alignment: .topTrailing) {
-                            Image(systemName: "arrow.down.circle.fill")
-                                .foregroundStyle(AppColors.calorie)
-
-                            Circle()
-                                .fill(AppColors.calorie)
-                                .frame(width: 8, height: 8)
-                                .offset(x: 3, y: -3)
-                        }
-                    }
-
-                    Spacer()
-
-                    Text("Update")
-                        .fontWeight(.semibold)
-                        .foregroundStyle(AppColors.calorie)
-                }
-            }
-            .tint(.primary)
-
-        case .failed:
-            Button {
-                Task {
-                    await refreshUpdateState()
-                }
-            } label: {
-                HStack {
-                    Label {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Check for Updates")
-                            Text("Version \(AppUpdateChecker.currentVersionDisplay)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    } icon: {
-                        Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
-                            .foregroundStyle(AppColors.calorie)
-                    }
-
-                    Spacer()
-                }
-            }
-            .tint(.primary)
-
-        case .idle, .upToDate:
-            Button {
-                Task {
-                    await refreshUpdateState()
-                }
-            } label: {
-                HStack {
-                    Label {
-                        Text("App Version")
-                    } icon: {
-                        Image(systemName: "checkmark.seal.fill")
-                            .foregroundStyle(AppColors.calorie)
-                    }
-
-                    Spacer()
-
-                    Text(AppUpdateChecker.currentVersionDisplay)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .tint(.primary)
-        }
-    }
-
-    private func requestNativeReview() {
-        if let scene = UIApplication.shared.connectedScenes
-            .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
-            AppStore.requestReview(in: scene)
-        }
-    }
-}
-
-// MARK: - Share Sheet wrapper (UIActivityViewController)
-// Used by AboutView so the personalized message AND the App Store URL
-// both reach every share target. SwiftUI's ShareLink message arg is
-// dropped by most targets; UIActivityViewController forwards every item.
-struct ActivityShareSheet: UIViewControllerRepresentable {
-    let activityItems: [Any]
-    var applicationActivities: [UIActivity]? = nil
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: activityItems, applicationActivities: applicationActivities)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 // MARK: - Home View (Main Dashboard)
@@ -1514,7 +1043,7 @@ private enum OpenFoodFactsService {
 
     private static var userAgent: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-        return "FudAI/\(version) (https://fud-ai.app)"
+        return "Voidpen/\(version) (https://voidpen.com)"
     }
 
     private static func analysis(from product: OpenFoodFactsProduct, barcode: String) throws -> GeminiService.FoodAnalysis {
@@ -2583,7 +2112,7 @@ struct ProfileView: View {
     @State private var speechApiKeyText: String = SpeechSettings.apiKey(for: SpeechSettings.selectedProvider) ?? ""
     @State private var showSpeechAPIKey = false
     @State private var selectedAccessMode: AIAccessMode = AIAccessSettings.mode
-    @State private var showFudAIPlusPaywall = false
+    @State private var showVoidpenPlusPaywall = false
 
     // Height formatting
     private var heightDisplay: String {
@@ -2922,11 +2451,11 @@ struct ProfileView: View {
 
                 AIAccessSettingsSection(
                     selectedAccessMode: $selectedAccessMode,
-                    showFudAIPlusPaywall: $showFudAIPlusPaywall
+                    showVoidpenPlusPaywall: $showVoidpenPlusPaywall
                 )
 
-                if selectedAccessMode == .fudAIPlus {
-                    FudAIPlusManagedSettingsSection()
+                if selectedAccessMode == .voidpenPlus {
+                    VoidpenPlusManagedSettingsSection()
                 } else {
                     // Section 4: AI Provider
                     Section("AI Provider") {
@@ -3614,7 +3143,7 @@ struct ProfileView: View {
             .sheet(isPresented: $showCalculationMethods) {
                 CalculationMethodsView()
             }
-            .sheet(isPresented: $showFudAIPlusPaywall) {
+            .sheet(isPresented: $showVoidpenPlusPaywall) {
                 PaywallView()
             }
             .onAppear {
@@ -3641,7 +3170,7 @@ struct ProfileView: View {
                     // Delete All Data is local-only. We intentionally do NOT touch Apple
                     // Health samples — that data is personal and belongs to the user, not
                     // this app's storage. If they want HK cleaned up they can do it from
-                    // the Health app's Sources → Fud AI screen.
+                    // the Health app's Sources → Voidpen screen.
                     foodStore.replaceAllEntries([])
                     weightStore.replaceAllEntries([])
                     // Wipe the food-image folder defensively — replaceAllEntries
@@ -3776,7 +3305,7 @@ struct ProfileView: View {
 
 }
 
-private struct FudAIPlusManagedSettingsSection: View {
+private struct VoidpenPlusManagedSettingsSection: View {
     @State private var quotaSnapshot: AIAccessQuotaSnapshot = .fallback
     @State private var quotaError: String?
     @State private var isLoadingQuota = false
@@ -3819,9 +3348,9 @@ private struct FudAIPlusManagedSettingsSection: View {
                     .foregroundStyle(.secondary)
             }
         } header: {
-            Text("Fud AI Plus")
+            Text("Voidpen Plus")
         } footer: {
-            Text("Remaining daily Plus usage is refreshed from Fud AI's server. Plus voice uses Deepgram through Fud AI's proxy. Provider Auto lets Deepgram detect the language; choose a language to override it. Provider, model, fallback, and speech API key settings are managed by Plus.")
+            Text("Remaining daily Plus usage is refreshed from Voidpen's server. Plus voice uses Deepgram through Voidpen's proxy. Provider Auto lets Deepgram detect the language; choose a language to override it. Provider, model, fallback, and speech API key settings are managed by Plus.")
         }
         .listRowBackground(AppColors.appCard)
         .task {
@@ -3849,7 +3378,7 @@ private struct FudAIPlusManagedSettingsSection: View {
         isLoadingQuota = true
         quotaError = nil
         do {
-            quotaSnapshot = try await FudAIProxyClient.quotaSnapshot()
+            quotaSnapshot = try await VoidpenProxyClient.quotaSnapshot()
         } catch {
             quotaError = "Could not refresh usage right now."
         }
@@ -3860,7 +3389,7 @@ private struct FudAIPlusManagedSettingsSection: View {
 private struct AIAccessSettingsSection: View {
     @Environment(StoreManager.self) private var storeManager
     @Binding var selectedAccessMode: AIAccessMode
-    @Binding var showFudAIPlusPaywall: Bool
+    @Binding var showVoidpenPlusPaywall: Bool
     @State private var isManagingSubscription = false
 
     var body: some View {
@@ -3881,12 +3410,12 @@ private struct AIAccessSettingsSection: View {
             .tint(.secondary)
             .onChange(of: selectedAccessMode) { _, newMode in
                 AIAccessSettings.mode = newMode
-                if newMode == .fudAIPlus && !storeManager.isSubscribed {
-                    showFudAIPlusPaywall = true
+                if newMode == .voidpenPlus && !storeManager.isSubscribed {
+                    showVoidpenPlusPaywall = true
                 }
             }
 
-            if selectedAccessMode == .fudAIPlus {
+            if selectedAccessMode == .voidpenPlus {
                 plusStatusRow
                 plusActionButton
                 if storeManager.isSubscribed {
@@ -3922,7 +3451,7 @@ private struct AIAccessSettingsSection: View {
             if storeManager.isSubscribed {
                 openSubscriptionManagement()
             } else {
-                showFudAIPlusPaywall = true
+                showVoidpenPlusPaywall = true
             }
         } label: {
             Label {
@@ -3953,12 +3482,12 @@ private struct AIAccessSettingsSection: View {
 
     private var upgradeButton: some View {
         Button {
-            selectedAccessMode = .fudAIPlus
-            AIAccessSettings.mode = .fudAIPlus
-            showFudAIPlusPaywall = true
+            selectedAccessMode = .voidpenPlus
+            AIAccessSettings.mode = .voidpenPlus
+            showVoidpenPlusPaywall = true
         } label: {
             Label {
-                Text("Upgrade to Fud AI Plus")
+                Text("Upgrade to Voidpen Plus")
             } icon: {
                 Image(systemName: "sparkles")
                     .foregroundStyle(AppColors.calorie)
@@ -4053,7 +3582,7 @@ struct AIConsentSheetView: View {
     let onCancel: () -> Void
 
     private var providerName: String {
-        AIAccessSettings.isUsingFudAIPlus ? "Fud AI Plus (Gemini + Deepgram)" : AIProviderSettings.selectedProvider.rawValue
+        AIAccessSettings.isUsingVoidpenPlus ? "Voidpen Plus (Gemini + Deepgram)" : AIProviderSettings.selectedProvider.rawValue
     }
 
     var body: some View {
@@ -4076,7 +3605,7 @@ struct AIConsentSheetView: View {
                         Text("AI Analysis Notice")
                             .font(.system(size: 24, weight: .bold, design: .rounded))
                             .multilineTextAlignment(.center)
-                        Text("Before Fud AI sends data to a third-party AI provider, we need your permission.")
+                        Text("Before Voidpen sends data to a third-party AI provider, we need your permission.")
                             .font(.system(.callout, design: .rounded))
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -4087,9 +3616,9 @@ struct AIConsentSheetView: View {
                         consentRow(icon: "photo.fill", title: "What is sent",
                                    text: "When you log a meal, the photo, voice audio or transcript, or text description is sent to your selected AI provider. Profile data (age, weight, goals) is sent only for Coach chat.")
                         consentRow(icon: "network", title: "Who receives it",
-                                   text: "Your current AI access: \(providerName). You can change this anytime in Settings → AI Access. BYOK requests go directly to your provider; Plus requests go through Fud AI's proxy.")
+                                   text: "Your current AI access: \(providerName). You can change this anytime in Settings → AI Access. BYOK requests go directly to your provider; Plus requests go through Voidpen's proxy.")
                         consentRow(icon: "lock.shield.fill", title: "What stays local",
-                                   text: AIAccessSettings.isUsingFudAIPlus ? "Your saved food log, weight history, and body fat history stay on this device. Only the active AI request is sent for processing." : "Your API key, weight history, body fat history, and food log all stay on this device. Requests go directly from your device to the provider.")
+                                   text: AIAccessSettings.isUsingVoidpenPlus ? "Your saved food log, weight history, and body fat history stay on this device. Only the active AI request is sent for processing." : "Your API key, weight history, body fat history, and food log all stay on this device. Requests go directly from your device to the provider.")
                     }
                     .padding(.horizontal, 20)
 
@@ -4100,7 +3629,7 @@ struct AIConsentSheetView: View {
                         .padding(.horizontal, 24)
                         .padding(.top, 4)
 
-                    Link("View privacy policy", destination: URL(string: "https://fud-ai.app/privacy.html")!)
+                    Link("View privacy policy", destination: URL(string: "https://voidpen.com/privacy.html")!)
                         .font(.system(.footnote, design: .rounded, weight: .medium))
                         .foregroundStyle(AppColors.calorie)
                 }

@@ -63,11 +63,11 @@
   },
   "subscriptionGroups" : [
     {
-      "id" : "FudAIPremium",
+      "id" : "VoidpenPremium",
       "localizations" : [
 
       ],
-      "name" : "Fud AI Premium",
+      "name" : "Voidpen Premium",
       "subscriptions" : [
         {
           "adHocOffers" : [
@@ -88,10 +88,10 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "fudai.plus.monthly",
+          "productID" : "voidpen.plus.monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Monthly",
-          "subscriptionGroupID" : "FudAIPremium",
+          "subscriptionGroupID" : "VoidpenPremium",
           "type" : "RecurringSubscription"
         },
         {
@@ -113,10 +113,10 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "fudai.plus.yearly",
+          "productID" : "voidpen.plus.yearly",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Yearly",
-          "subscriptionGroupID" : "FudAIPremium",
+          "subscriptionGroupID" : "VoidpenPremium",
           "type" : "RecurringSubscription"
         },
         {
@@ -138,10 +138,10 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "fudai.plus.weekly",
+          "productID" : "voidpen.plus.weekly",
           "recurringSubscriptionPeriod" : "P1W",
           "referenceName" : "Weekly",
-          "subscriptionGroupID" : "FudAIPremium",
+          "subscriptionGroupID" : "VoidpenPremium",
           "type" : "RecurringSubscription"
         }
       ]

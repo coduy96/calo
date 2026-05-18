@@ -2,7 +2,7 @@
 //  calorietrackerApp.swift
 //  calorietracker
 //
-//  Created by Apoorv Darshan on 05/02/26.
+//  Created by Co Trinh Hien Duy on 05/02/26.
 //
 
 import SwiftUI
@@ -150,10 +150,10 @@ struct calorietrackerApp: App {
             var changed = false
 
             if let kg = weightKg, let date = weightDate {
-                // If the HK sample was written by our app (has fudai_weight_id), never re-add
+                // If the HK sample was written by our app (has voidpen_weight_id), never re-add
                 // from the observer: either the entry still exists in the store (duplicate) or the
                 // user just deleted it and the HK delete hasn't propagated yet (would resurrect it).
-                // External HK samples (Apple Watch, scale, Health app) have no fudai_weight_id;
+                // External HK samples (Apple Watch, scale, Health app) have no voidpen_weight_id;
                 // those we dedup by same-day + same-value.
                 let shouldAdd: Bool
                 if weightFudaiID != nil {
@@ -183,7 +183,7 @@ struct calorietrackerApp: App {
             }
             if let bf = bodyFat, let date = bodyFatDate {
                 // Same dedup discipline as weight: skip our own writes
-                // (fudai_bodyfat_id present), and dedup external samples by
+                // (voidpen_bodyfat_id present), and dedup external samples by
                 // same-day + same-fraction so re-firing the observer can't
                 // duplicate a smart-scale reading we already imported once.
                 let shouldAdd: Bool

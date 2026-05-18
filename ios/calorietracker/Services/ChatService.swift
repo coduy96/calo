@@ -24,7 +24,7 @@ struct ChatService {
             case .invalidResponse:
                 return "Could not understand the AI response. Please try again."
             case .subscriptionRequired:
-                return "Fud AI Plus is not active. Subscribe or switch back to Bring Your Own Key in Settings."
+                return "Voidpen Plus is not active. Subscribe or switch back to Bring Your Own Key in Settings."
             }
         }
     }
@@ -56,16 +56,16 @@ struct ChatService {
         )
         let tools = CoachTools(weights: weights, bodyFats: bodyFats, foods: foods, useMetric: useMetric)
 
-        let usingFudAIPlus = AIAccessSettings.isUsingFudAIPlus
-        let provider: AIProvider = usingFudAIPlus ? .gemini : AIProviderSettings.selectedProvider
-        let model = usingFudAIPlus ? "gemini-2.5-flash-lite" : AIProviderSettings.selectedModel
-        let baseURL = usingFudAIPlus ? AIProvider.gemini.baseURL : AIProviderSettings.currentBaseURL
+        let usingVoidpenPlus = AIAccessSettings.isUsingVoidpenPlus
+        let provider: AIProvider = usingVoidpenPlus ? .gemini : AIProviderSettings.selectedProvider
+        let model = usingVoidpenPlus ? "gemini-2.5-flash-lite" : AIProviderSettings.selectedModel
+        let baseURL = usingVoidpenPlus ? AIProvider.gemini.baseURL : AIProviderSettings.currentBaseURL
 
-        if usingFudAIPlus, !AIAccessSettings.hasActivePlusEntitlement {
+        if usingVoidpenPlus, !AIAccessSettings.hasActivePlusEntitlement {
             throw ChatError.subscriptionRequired
         }
 
-        guard usingFudAIPlus || AIProviderSettings.currentAPIKey != nil || provider == .ollama else {
+        guard usingVoidpenPlus || AIProviderSettings.currentAPIKey != nil || provider == .ollama else {
             throw ChatError.noAPIKey
         }
 
@@ -230,8 +230,8 @@ struct ChatService {
             headers["Authorization"] = "Bearer \(apiKey)"
         }
         if provider == .openrouter {
-            headers["HTTP-Referer"] = "https://github.com/apoorvdarshan/fud-ai"
-            headers["X-Title"] = "Fud AI"
+            headers["HTTP-Referer"] = "https://github.com/cotrinhhienduy/voidpen"
+            headers["X-Title"] = "Voidpen"
         }
 
         let toolsArray = openAIToolsArray()
@@ -428,7 +428,7 @@ struct ChatService {
 
     private static func callGemini(baseURL: String, model: String, systemPrompt: String, history: [ChatMessage], newUserMessage: String, imageData: Data?, tools: CoachTools) async throws -> String {
         let apiKey = AIProviderSettings.currentAPIKey
-        if !AIAccessSettings.isUsingFudAIPlus, apiKey == nil {
+        if !AIAccessSettings.isUsingVoidpenPlus, apiKey == nil {
             throw ChatError.noAPIKey
         }
         guard let url = URL(string: "\(baseURL)/models/\(model):generateContent") else {
@@ -451,8 +451,8 @@ struct ChatService {
                 "tools": [toolsObj],
             ]
             let data: Data
-            if AIAccessSettings.isUsingFudAIPlus {
-                data = try await FudAIProxyClient.generateContent(task: .coach, body: body)
+            if AIAccessSettings.isUsingVoidpenPlus {
+                data = try await VoidpenProxyClient.generateContent(task: .coach, body: body)
             } else {
                 data = try await send(
                     url: url,

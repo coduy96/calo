@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Apple Guideline 1.4.1 (Safety: Physical Harm) requires apps with health
 /// or medical calculations to cite their sources. This sheet documents every
-/// formula Fud AI uses to derive BMR, TDEE, calorie targets, and macro splits,
+/// formula Voidpen uses to derive BMR, TDEE, calorie targets, and macro splits,
 /// with links to the original peer-reviewed sources where available. Reachable
 /// from the onboarding Plan step ("How is this calculated?") and from
 /// Settings → Goals & Nutrition → Calculation Methods.
@@ -94,7 +94,7 @@ struct CalculationMethodsView: View {
 
     private var intro: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("How Fud AI calculates your numbers")
+            Text("How Voidpen calculates your numbers")
                 .font(.system(.title3, design: .rounded, weight: .bold))
             Text("Every metabolism, calorie target, and macro split shown in the app comes from peer-reviewed equations. Your AI provider only estimates the per-meal nutrition; the daily targets are pure math from your profile.")
                 .font(.system(.subheadline, design: .rounded))
@@ -108,7 +108,7 @@ struct CalculationMethodsView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Not medical advice")
                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
-            Text("Fud AI is an estimation tool, not a clinical instrument. Predictive equations carry inherent error (typically ±10% for BMR). Consult a registered dietitian, physician, or sports medicine professional before significant diet changes — especially if you have a medical condition, are pregnant or breastfeeding, are under 18, or are managing an eating disorder.")
+            Text("Voidpen is an estimation tool, not a clinical instrument. Predictive equations carry inherent error (typically ±10% for BMR). Consult a registered dietitian, physician, or sports medicine professional before significant diet changes — especially if you have a medical condition, are pregnant or breastfeeding, are under 18, or are managing an eating disorder.")
                 .font(.system(.footnote, design: .rounded))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

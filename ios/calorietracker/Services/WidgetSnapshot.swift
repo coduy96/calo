@@ -4,7 +4,7 @@ import Foundation
 /// reads out of the shared App Group container. The main app writes it on
 /// every FoodStore change; the widget re-reads on its timeline refresh.
 ///
-/// The widget target has its own copy of this file (FudAIWidgets/WidgetSnapshot.swift).
+/// The widget target has its own copy of this file (VoidpenWidgets/WidgetSnapshot.swift).
 /// Keep the two in sync or decoding will fail silently.
 struct WidgetSnapshot: Codable, Equatable {
     let date: Date
@@ -20,7 +20,7 @@ struct WidgetSnapshot: Codable, Equatable {
 
     static var appGroupID: String {
         Bundle.main.object(forInfoDictionaryKey: "AppGroupIdentifier") as? String
-            ?? "group.com.apoorvdarshan.calorietracker"
+            ?? "group.com.cotrinhhienduy.calorietracker"
     }
     private static let key = "widget_snapshot_v1"
 

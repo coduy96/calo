@@ -1,7 +1,7 @@
 import Foundation
 import UIKit
 
-enum FudAIProxyClient {
+enum VoidpenProxyClient {
     enum ProxyTask: String {
         case food
         case coach
@@ -18,13 +18,13 @@ enum FudAIProxyClient {
         var errorDescription: String? {
             switch self {
             case .subscriptionRequired:
-                return "Fud AI Plus is not active. Subscribe or switch back to Bring Your Own Key in Settings."
+                return "Voidpen Plus is not active. Subscribe or switch back to Bring Your Own Key in Settings."
             case .quotaExceeded(let message):
                 return message
             case .apiError(let message):
                 return message
             case .invalidResponse:
-                return "Unexpected response from Fud AI Plus."
+                return "Unexpected response from Voidpen Plus."
             case .networkError(let error):
                 return "Network error: \(error.localizedDescription)"
             }
@@ -38,14 +38,14 @@ enum FudAIProxyClient {
 
         var request = URLRequest(url: AIAccessSettings.proxyEndpoint)
         request.httpMethod = "GET"
-        request.setValue("ios", forHTTPHeaderField: "X-FudAI-Platform")
-        request.setValue(AIAccessSettings.installID, forHTTPHeaderField: "X-FudAI-Install-ID")
+        request.setValue("ios", forHTTPHeaderField: "X-Voidpen-Platform")
+        request.setValue(AIAccessSettings.installID, forHTTPHeaderField: "X-Voidpen-Install-ID")
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
             guard let http = response as? HTTPURLResponse else { throw ProxyError.invalidResponse }
             guard (200..<300).contains(http.statusCode) else {
-                let message = parseProxyMessage(from: data) ?? "Fud AI Plus usage failed with HTTP \(http.statusCode)."
+                let message = parseProxyMessage(from: data) ?? "Voidpen Plus usage failed with HTTP \(http.statusCode)."
                 throw ProxyError.apiError(message)
             }
             return try JSONDecoder().decode(AIAccessQuotaSnapshot.self, from: data)
@@ -71,15 +71,15 @@ enum FudAIProxyClient {
         var request = URLRequest(url: AIAccessSettings.proxyEndpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("ios", forHTTPHeaderField: "X-FudAI-Platform")
-        request.setValue(AIAccessSettings.installID, forHTTPHeaderField: "X-FudAI-Install-ID")
+        request.setValue("ios", forHTTPHeaderField: "X-Voidpen-Platform")
+        request.setValue(AIAccessSettings.installID, forHTTPHeaderField: "X-Voidpen-Install-ID")
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
             guard let http = response as? HTTPURLResponse else { throw ProxyError.invalidResponse }
             guard (200..<300).contains(http.statusCode) else {
-                let message = parseProxyMessage(from: data) ?? "Fud AI Plus request failed with HTTP \(http.statusCode)."
+                let message = parseProxyMessage(from: data) ?? "Voidpen Plus request failed with HTTP \(http.statusCode)."
                 if http.statusCode == 402 || http.statusCode == 429 {
                     throw ProxyError.quotaExceeded(message)
                 }
@@ -114,15 +114,15 @@ enum FudAIProxyClient {
         var request = URLRequest(url: AIAccessSettings.proxyEndpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("ios", forHTTPHeaderField: "X-FudAI-Platform")
-        request.setValue(AIAccessSettings.installID, forHTTPHeaderField: "X-FudAI-Install-ID")
+        request.setValue("ios", forHTTPHeaderField: "X-Voidpen-Platform")
+        request.setValue(AIAccessSettings.installID, forHTTPHeaderField: "X-Voidpen-Install-ID")
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
             guard let http = response as? HTTPURLResponse else { throw ProxyError.invalidResponse }
             guard (200..<300).contains(http.statusCode) else {
-                let message = parseProxyMessage(from: data) ?? "Fud AI Plus speech request failed with HTTP \(http.statusCode)."
+                let message = parseProxyMessage(from: data) ?? "Voidpen Plus speech request failed with HTTP \(http.statusCode)."
                 if http.statusCode == 402 || http.statusCode == 429 {
                     throw ProxyError.quotaExceeded(message)
                 }
@@ -244,7 +244,7 @@ struct GeminiService {
             case .apiError(let message):
                 return "API error: \(message)"
             case .subscriptionRequired:
-                return "Fud AI Plus is not active. Subscribe or switch back to Bring Your Own Key in Settings."
+                return "Voidpen Plus is not active. Subscribe or switch back to Bring Your Own Key in Settings."
             }
         }
     }
@@ -447,13 +447,13 @@ struct GeminiService {
     // MARK: - Unified AI Call Router
 
     private static func callAI(prompt: String, image: UIImage?) async throws -> String {
-        let usingFudAIPlus = AIAccessSettings.isUsingFudAIPlus
-        if usingFudAIPlus, !AIAccessSettings.hasActivePlusEntitlement {
+        let usingVoidpenPlus = AIAccessSettings.isUsingVoidpenPlus
+        if usingVoidpenPlus, !AIAccessSettings.hasActivePlusEntitlement {
             throw AnalysisError.subscriptionRequired
         }
 
         let primaryProvider = AIProviderSettings.selectedProvider
-        if !usingFudAIPlus, primaryProvider.requiresAPIKey, AIProviderSettings.currentAPIKey == nil {
+        if !usingVoidpenPlus, primaryProvider.requiresAPIKey, AIProviderSettings.currentAPIKey == nil {
             throw AnalysisError.noAPIKey
         }
 
@@ -465,7 +465,7 @@ struct GeminiService {
             imageData = data
         }
 
-        if usingFudAIPlus {
+        if usingVoidpenPlus {
             return try await dispatch(
                 provider: .gemini,
                 model: "gemini-2.5-flash-lite",
@@ -506,7 +506,7 @@ struct GeminiService {
     private static func dispatch(provider: AIProvider, model: String, baseURL: String, apiKey: String?, prompt: String, imageData: Data?) async throws -> String {
         switch provider.apiFormat {
         case .gemini:
-            if AIAccessSettings.isUsingFudAIPlus {
+            if AIAccessSettings.isUsingVoidpenPlus {
                 return try await callGemini(baseURL: baseURL, model: model, apiKey: nil, prompt: prompt, imageData: imageData)
             }
             guard let key = apiKey else { throw AnalysisError.noAPIKey }
@@ -543,8 +543,8 @@ struct GeminiService {
         }
 
         let data: Data
-        if AIAccessSettings.isUsingFudAIPlus {
-            data = try await FudAIProxyClient.generateContent(task: .food, body: body)
+        if AIAccessSettings.isUsingVoidpenPlus {
+            data = try await VoidpenProxyClient.generateContent(task: .food, body: body)
         } else {
             guard let apiKey else { throw AnalysisError.noAPIKey }
             guard let url = URL(string: "\(baseURL)/models/\(model):generateContent") else {
@@ -599,8 +599,8 @@ struct GeminiService {
             headers["Authorization"] = "Bearer \(apiKey)"
         }
         if provider == .openrouter {
-            headers["HTTP-Referer"] = "https://github.com/apoorvdarshan/fud-ai"
-            headers["X-Title"] = "Fud AI"
+            headers["HTTP-Referer"] = "https://github.com/cotrinhhienduy/voidpen"
+            headers["X-Title"] = "Voidpen"
         }
 
         let data = try await makeRequest(url: url, headers: headers, body: body)

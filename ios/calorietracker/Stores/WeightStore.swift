@@ -84,7 +84,7 @@ class WeightStore {
     }
 
     /// Bulk-import weight samples discovered from HealthKit (e.g. years of
-    /// scale history that predate Fud AI). Bypasses onEntryAdded so the
+    /// scale history that predate Voidpen). Bypasses onEntryAdded so the
     /// imported externals don't echo back to HK as fresh writes — these
     /// samples already exist there. Saves + syncs profile once at the end.
     func importExternalEntries(_ external: [WeightEntry]) {
