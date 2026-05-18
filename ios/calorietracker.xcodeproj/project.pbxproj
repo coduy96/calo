@@ -297,6 +297,7 @@
 				"pt-BR",
 				ro,
 				ru,
+				vi,
 				"zh-Hans",
 				Base,
 			);

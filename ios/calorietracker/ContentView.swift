@@ -2221,6 +2221,8 @@ struct ProfileView: View {
     @AppStorage("healthKitEnabled") private var healthKitEnabled = false
     @AppStorage("weekStartsOnMonday") private var weekStartsOnMonday = false
     @AppStorage(AppThemeColor.storageKey) private var appThemeColorRaw = AppThemeColor.defaultColor.rawValue
+    @AppStorage(AppLanguageSettings.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
+    @State private var showLanguageRestartAlert = false
 
     enum ActiveSheet: String, Identifiable {
         case editBirthday, editHeight, editWeight, editBodyFat, editGoalBodyFat, editGoalWeight, editCalories, editProtein, editCarbs, editFat
@@ -2255,6 +2257,17 @@ struct ProfileView: View {
     @State private var showSpeechAPIKey = false
     @State private var selectedAccessMode: AIAccessMode = AIAccessSettings.mode
     @State private var showVoidpenPlusPaywall = false
+    @State private var showShareSheet = false
+
+    private var appVersionDisplay: String {
+        let short = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
+        return build.isEmpty ? short : "\(short) (\(build))"
+    }
+
+    private var shareMessage: String {
+        "Check out Voidpen — a calorie tracker that keeps your data on-device."
+    }
 
     // Height formatting
     private var heightDisplay: String {
@@ -2534,6 +2547,29 @@ struct ProfileView: View {
                     }
                     .pickerStyle(.menu)
                     .tint(.secondary)
+
+                    Picker(selection: $appLanguageRaw) {
+                        ForEach(AppLanguage.allCases) { language in
+                            Text(language.displayName).tag(language.rawValue)
+                        }
+                    } label: {
+                        Label {
+                            Text("App Language")
+                        } icon: {
+                            Image(systemName: "character.bubble")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .tint(.secondary)
+                    .onChange(of: appLanguageRaw) { _, _ in
+                        // AppleLanguages is read once at process start, so the
+                        // override only takes effect on next launch. Apply it
+                        // now so the relaunched process picks up the right
+                        // localization, and prompt the user to restart.
+                        AppLanguageSettings.applyToBundle()
+                        showLanguageRestartAlert = true
+                    }
 
                     NavigationLink {
                         ThemeColorSettingsView(selectedColorRaw: $appThemeColorRaw)
@@ -3116,6 +3152,46 @@ struct ProfileView: View {
                     .buttonStyle(.plain)
                 }
                 .listRowBackground(AppColors.appCard)
+
+                // Section 6: About
+                Section("About") {
+                    HStack {
+                        Label {
+                            Text("App Version")
+                        } icon: {
+                            Image(systemName: "checkmark.seal.fill")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                        Spacer()
+                        Text(appVersionDisplay)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Button {
+                        requestNativeReview()
+                    } label: {
+                        Label {
+                            Text("Rate the App")
+                        } icon: {
+                            Image(systemName: "star.fill")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .tint(.primary)
+
+                    Button {
+                        showShareSheet = true
+                    } label: {
+                        Label {
+                            Text("Share the App")
+                        } icon: {
+                            Image(systemName: "square.and.arrow.up.fill")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .tint(.primary)
+                }
+                .listRowBackground(AppColors.appCard)
             }
             .scrollContentBackground(.hidden)
             .background(AppColors.appBackground)
@@ -3288,6 +3364,9 @@ struct ProfileView: View {
             .sheet(isPresented: $showVoidpenPlusPaywall) {
                 PaywallView()
             }
+            .sheet(isPresented: $showShareSheet) {
+                ActivityShareSheet(activityItems: [shareMessage])
+            }
             .onAppear {
                 selectedAccessMode = AIAccessSettings.mode
             }
@@ -3305,6 +3384,11 @@ struct ProfileView: View {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text(invalidGoalWeightMessage)
+            }
+            .alert("Restart required", isPresented: $showLanguageRestartAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("Quit and reopen the app to apply the new language.")
             }
             .alert("Delete All Data", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { }
@@ -3344,6 +3428,13 @@ struct ProfileView: View {
 
     private func saveProfile() {
         profile.save()
+    }
+
+    private func requestNativeReview() {
+        if let scene = UIApplication.shared.connectedScenes
+            .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+            AppStore.requestReview(in: scene)
+        }
     }
 
     /// Clear all custom goal overrides so calories + macros recompute from the current
@@ -3445,6 +3536,20 @@ struct ProfileView: View {
         }
     }
 
+}
+
+// UIActivityViewController wrapper. SwiftUI's ShareLink message arg gets
+// dropped by most share targets — UIActivityViewController forwards every
+// activity item, so the share-the-app message reaches Messages, Mail, etc.
+struct ActivityShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+    var applicationActivities: [UIActivity]? = nil
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: applicationActivities)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 private struct VoidpenPlusManagedSettingsSection: View {
