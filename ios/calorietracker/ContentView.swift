@@ -34,7 +34,7 @@ final class AddFoodIntent {
 }
 
 enum AppTab: Hashable {
-    case home, progress, coach, settings, add
+    case home, progress, coach, add
 }
 
 // MARK: - Main Content View
@@ -114,9 +114,6 @@ struct ContentView: View {
             Tab("Coach", systemImage: "bubble.left.and.bubble.right.fill", value: AppTab.coach) {
                 ChatView()
             }
-            Tab("Settings", systemImage: "gearshape.fill", value: AppTab.settings) {
-                ProfileView()
-            }
             Tab("Add", systemImage: "plus", value: AppTab.add, role: .search) {
                 Color.clear
             }
@@ -145,13 +142,6 @@ struct ContentView: View {
                 .tabItem {
                     Image(systemName: "bubble.left.and.bubble.right.fill")
                     Text("Coach")
-                }
-
-            ProfileView()
-                .tag(AppTab.settings)
-                .tabItem {
-                    Image(systemName: "gearshape.fill")
-                    Text("Settings")
                 }
         }
     }
@@ -407,6 +397,7 @@ struct HomeView: View {
     @AppStorage(HomeTopNutrient.storageKey) private var homeTopNutrientsRaw = HomeTopNutrient.storageValue(for: HomeTopNutrient.defaultSelection)
     @AppStorage(OptionalNutrientGoals.storageKey) private var optionalNutrientGoalsData = Data()
     @State private var showAIConsent = false
+    @State private var showSettings = false
     @Environment(ProfileStore.self) private var profileStore
 
     /// Force a body re-evaluation whenever profileStore.profile changes by reading it
@@ -534,22 +525,6 @@ struct HomeView: View {
                     .padding(.vertical, 8)
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
-
-                    Button {
-                        showNutritionDetail = true
-                    } label: {
-                        HStack {
-                            Spacer()
-                            Text("View More")
-                                .font(.system(.subheadline, design: .rounded, weight: .medium))
-                            Image(systemName: "chevron.right")
-                                .font(.caption2)
-                            Spacer()
-                        }
-                        .foregroundStyle(AppColors.calorie.opacity(0.6))
-                    }
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
                 }
 
                 // Food list
@@ -617,6 +592,25 @@ struct HomeView: View {
             .animation(.snappy, value: selectedDate)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showNutritionDetail = true
+                    } label: {
+                        Image(systemName: "list.bullet.clipboard")
+                    }
+                    .tint(AppColors.calorie)
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                    .tint(AppColors.calorie)
+                }
+            }
             .overlay(alignment: .bottomTrailing) {
                 if #unavailable(iOS 26.0) {
                     AddFoodMenuButton(intent: addFoodIntent)
@@ -866,6 +860,9 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showNutritionDetail) {
                 NutritionDetailView(date: selectedDate, homeTopNutrientsRaw: $homeTopNutrientsRaw)
+            }
+            .sheet(isPresented: $showSettings) {
+                ProfileView()
             }
             .sheet(isPresented: $showAIConsent) {
                 AIConsentSheetView(
@@ -2219,6 +2216,7 @@ struct ProfileView: View {
     @Environment(NotificationManager.self) private var notificationManager
     @Environment(HealthKitManager.self) private var healthKitManager
     @Environment(StoreManager.self) private var storeManager
+    @Environment(\.dismiss) private var dismiss
     private var profile: UserProfile {
         get { profileStore.profile }
         nonmutating set { profileStore.profile = newValue }
@@ -2326,6 +2324,25 @@ struct ProfileView: View {
 
     private var selectedThemeColor: AppThemeColor {
         AppThemeColor.color(for: appThemeColorRaw)
+    }
+
+    private var settingsHeader: some View {
+        ZStack {
+            Text("Settings")
+                .font(.system(.headline, design: .rounded, weight: .semibold))
+                .foregroundStyle(.primary)
+                .frame(maxWidth: .infinity)
+
+            HStack {
+                Spacer()
+                Button("Done") { dismiss() }
+                    .font(.system(.body, design: .rounded, weight: .semibold))
+                    .tint(AppColors.calorie)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(AppColors.appBackground)
     }
 
     var body: some View {
@@ -3207,6 +3224,7 @@ struct ProfileView: View {
             .scrollContentBackground(.hidden)
             .background(AppColors.appBackground)
             .navigationBarHidden(true)
+            .safeAreaInset(edge: .top, spacing: 0) { settingsHeader }
             .sheet(item: $activeSheet) { sheet in
                 switch sheet {
                 case .editBirthday:

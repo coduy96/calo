@@ -22926,6 +22926,7 @@
       }
     },
     "View More" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
