@@ -13,40 +13,65 @@ enum CameraMode {
     case nutritionLabel
 }
 
+// MARK: - Add Food Intent Bridge
+
+@Observable
+final class AddFoodIntent {
+    enum Action: Equatable {
+        case camera
+        case cameraWithContext
+        case nutritionLabel
+        case barcode
+        case fromPhotos
+        case fromPhotosWithContext
+        case text
+        case voice
+        case manual
+        case savedMeals
+        case copyFromDay
+    }
+    var pendingAction: Action?
+}
+
+enum AppTab: Hashable {
+    case home, progress, coach, settings, add
+}
+
 // MARK: - Main Content View
 struct ContentView: View {
     @Environment(StoreManager.self) private var storeManager
     @AppStorage(AppThemeColor.storageKey) private var appThemeColorRaw = AppThemeColor.defaultColor.rawValue
     @State private var showVoidpenPlusIntro = false
     @State private var showVoidpenPlusPaywall = false
+    @State private var selectedTab: AppTab = .home
+    @State private var lastNonAddTab: AppTab = .home
+    @State private var showAddOptions = false
+    @State private var addFoodIntent = AddFoodIntent()
 
     var body: some View {
-        TabView {
-            HomeView()
-                .tabItem {
-                    Image(systemName: "house.fill")
-                    Text("Home")
-                }
-
-            ProgressTabView()
-                .tabItem {
-                    Image(systemName: "chart.bar.fill")
-                    Text("Progress")
-                }
-
-            ChatView()
-                .tabItem {
-                    Image(systemName: "bubble.left.and.bubble.right.fill")
-                    Text("Coach")
-                }
-
-            ProfileView()
-                .tabItem {
-                    Image(systemName: "gearshape.fill")
-                    Text("Settings")
-                }
+        Group {
+            if #available(iOS 26.0, *) {
+                modernTabView
+            } else {
+                legacyTabView
+            }
         }
+        .environment(addFoodIntent)
         .tint(AppThemeColor.color(for: appThemeColorRaw).color)
+        .onChange(of: selectedTab) { _, new in
+            if new == .add {
+                showAddOptions = true
+                DispatchQueue.main.async {
+                    selectedTab = lastNonAddTab
+                }
+            } else {
+                lastNonAddTab = new
+            }
+        }
+        .sheet(isPresented: $showAddOptions) {
+            AddFoodOptionsSheet(intent: addFoodIntent)
+                .presentationDetents([.medium, .large])
+        }
         .task {
             await storeManager.checkEntitlements()
             maybeShowVoidpenPlusIntro()
@@ -77,6 +102,59 @@ struct ContentView: View {
         }
     }
 
+    @available(iOS 26.0, *)
+    private var modernTabView: some View {
+        TabView(selection: $selectedTab) {
+            Tab("Home", systemImage: "house.fill", value: AppTab.home) {
+                HomeView()
+            }
+            Tab("Progress", systemImage: "chart.bar.fill", value: AppTab.progress) {
+                ProgressTabView()
+            }
+            Tab("Coach", systemImage: "bubble.left.and.bubble.right.fill", value: AppTab.coach) {
+                ChatView()
+            }
+            Tab("Settings", systemImage: "gearshape.fill", value: AppTab.settings) {
+                ProfileView()
+            }
+            Tab("Add", systemImage: "plus", value: AppTab.add, role: .search) {
+                Color.clear
+            }
+        }
+    }
+
+    private var legacyTabView: some View {
+        TabView(selection: $selectedTab) {
+            HomeView()
+                .tag(AppTab.home)
+                .tabItem {
+                    Image(systemName: "house.fill")
+                    Text("Home")
+                }
+
+            ProgressTabView()
+                .tag(AppTab.progress)
+                .tabItem {
+                    Image(systemName: "chart.bar.fill")
+                    Text("Progress")
+                }
+
+            ChatView()
+                .tag(AppTab.coach)
+                .tabItem {
+                    Image(systemName: "bubble.left.and.bubble.right.fill")
+                    Text("Coach")
+                }
+
+            ProfileView()
+                .tag(AppTab.settings)
+                .tabItem {
+                    Image(systemName: "gearshape.fill")
+                    Text("Settings")
+                }
+        }
+    }
+
     @MainActor
     private func maybeShowVoidpenPlusIntro() {
         guard AIAccessSettings.lastSeenPlusUpdateAnnouncementID != AIAccessSettings.currentPlusUpdateAnnouncementID else { return }
@@ -94,6 +172,107 @@ struct ContentView: View {
         }
     }
 
+}
+
+// MARK: - Add Food Options Sheet (iOS 26 search-tab destination)
+private struct AddFoodOptionsSheet: View {
+    let intent: AddFoodIntent
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                row("Camera", "camera.fill", .camera)
+                row("Camera + Note", "camera.badge.ellipsis", .cameraWithContext)
+                row("Nutrition Label", "text.viewfinder", .nutritionLabel)
+                row("Barcode", "barcode.viewfinder", .barcode)
+                row("From Photos", "photo.on.rectangle", .fromPhotos)
+                row("From Photos + Note", "photo.badge.plus", .fromPhotosWithContext)
+                row("Text Input", "character.cursor.ibeam", .text)
+                row("Voice", "mic.fill", .voice)
+                row("Manual Entry", "square.and.pencil", .manual)
+                row("Saved Meals", "bookmark.fill", .savedMeals)
+                row("Copy from Day", "calendar", .copyFromDay)
+            }
+            .navigationTitle("Add Food")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func row(_ title: String, _ image: String, _ action: AddFoodIntent.Action) -> some View {
+        Button {
+            intent.pendingAction = action
+            dismiss()
+        } label: {
+            Label(title, systemImage: image)
+                .foregroundStyle(.primary)
+        }
+    }
+}
+
+// MARK: - Floating Add Food Menu Button
+private struct AddFoodMenuButton: View {
+    let intent: AddFoodIntent
+
+    var body: some View {
+        Menu {
+            Button { intent.pendingAction = .camera } label: {
+                Label("Camera", systemImage: "camera.fill")
+            }
+            Button { intent.pendingAction = .cameraWithContext } label: {
+                Label("Camera + Note", systemImage: "camera.badge.ellipsis")
+            }
+            Button { intent.pendingAction = .nutritionLabel } label: {
+                Label("Nutrition Label", systemImage: "text.viewfinder")
+            }
+            Button { intent.pendingAction = .barcode } label: {
+                Label("Barcode", systemImage: "barcode.viewfinder")
+            }
+            Button { intent.pendingAction = .fromPhotos } label: {
+                Label("From Photos", systemImage: "photo.on.rectangle")
+            }
+            Button { intent.pendingAction = .fromPhotosWithContext } label: {
+                Label("From Photos + Note", systemImage: "photo.badge.plus")
+            }
+            Button { intent.pendingAction = .text } label: {
+                Label("Text Input", systemImage: "character.cursor.ibeam")
+            }
+            Button { intent.pendingAction = .voice } label: {
+                Label("Voice", systemImage: "mic.fill")
+            }
+            Button { intent.pendingAction = .manual } label: {
+                Label("Manual Entry", systemImage: "square.and.pencil")
+            }
+            Button { intent.pendingAction = .savedMeals } label: {
+                Label("Saved Meals", systemImage: "bookmark.fill")
+            }
+            Button { intent.pendingAction = .copyFromDay } label: {
+                Label("Copy from Day", systemImage: "calendar")
+            }
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 52, height: 52)
+                .background(
+                    LinearGradient(
+                        colors: AppColors.calorieGradient,
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .clipShape(Circle())
+                .shadow(color: AppColors.calorie.opacity(0.35), radius: 10, x: 0, y: 5)
+                .shadow(color: .black.opacity(0.12), radius: 3, x: 0, y: 1)
+        }
+        .menuOrder(.fixed)
+    }
 }
 
 private struct VoidpenPlusIntroView: View {
@@ -190,6 +369,7 @@ private struct VoidpenPlusIntroView: View {
 // MARK: - Home View (Main Dashboard)
 struct HomeView: View {
     @Environment(FoodStore.self) private var foodStore
+    @Environment(AddFoodIntent.self) private var addFoodIntent
     @State private var showCamera = false
     @State private var showBarcodeScanner = false
     @State private var capturedImage: UIImage?
@@ -426,171 +606,85 @@ struct HomeView: View {
             .animation(.snappy, value: selectedDate)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                            Button(action: {
-
-                                requireAIConsent {
-                                    cameraMode = .snapFood
-                                    showCamera = true
-                                }
-                            }) {
-                                Label("Camera", systemImage: "camera.fill")
-                            }
-                            Button(action: {
-
-                                requireAIConsent {
-                                    cameraMode = .snapFoodWithContext
-                                    showCamera = true
-                                }
-                            }) {
-                                Label("Camera + Note", systemImage: "camera.badge.ellipsis")
-                            }
-                            Button(action: {
-
-                                requireAIConsent {
-                                    cameraMode = .nutritionLabel
-                                    showCamera = true
-                                }
-                            }) {
-                                Label("Nutrition Label", systemImage: "text.viewfinder")
-                            }
-                            Button(action: {
-
-                                showBarcodeScanner = true
-                            }) {
-                                Label("Barcode", systemImage: "barcode.viewfinder")
-                            }
-                            Button(action: {
-
-                                requireAIConsent {
-                                    cameraMode = .snapFood
-                                    photoPickerMode = .snapFood
-                                    showPhotoPicker = true
-                                }
-                            }) {
-                                Label("From Photos", systemImage: "photo.on.rectangle")
-                            }
-                            Button(action: {
-
-                                requireAIConsent {
-                                    cameraMode = .snapFoodWithContext
-                                    photoPickerMode = .snapFoodWithContext
-                                    showPhotoPicker = true
-                                }
-                            }) {
-                                Label("From Photos + Note", systemImage: "photo.badge.plus")
-                            }
-                            Button(action: {
-
-                                requireAIConsent {
-                                    showTextPopover = true
-                                }
-                            }) {
-                                Label("Text Input", systemImage: "character.cursor.ibeam")
-                            }
-                            Button(action: {
-
-                                requireAIConsent {
-                                    showVoicePopover = true
-                                }
-                            }) {
-                                Label("Voice", systemImage: "mic.fill")
-                            }
-                            Button(action: {
-
-                                showManualPopover = true
-                            }) {
-                                Label("Manual Entry", systemImage: "square.and.pencil")
-                            }
-                            Button(action: {
-
-                                showRecentSheet = true
-                            }) {
-                                Label("Saved Meals", systemImage: "bookmark.fill")
-                            }
-                            Button(action: {
-
-                                showCopyFromDaySheet = true
-                            }) {
-                                Label("Copy from Day", systemImage: "calendar")
-                            }
-                        } label: {
-                            Image(systemName: "plus")
-                        }
-                        .popover(isPresented: $showTextPopover) {
-                            TextFoodInputView(
-                                onCancel: {
-                                    showTextPopover = false
-                                },
-                                onSubmit: { description in
-                                    showTextPopover = false
-                                    currentImage = nil
-                                    currentEmoji = nil
-                                    currentFoodSource = .textInput
-                                    guard aiConsentGiven else { showAIConsent = true; return }
-                                    Task {
-                                        try? await Task.sleep(for: .milliseconds(300))
-                                        activeSheet = .analyzingText
-                                        do {
-                                            let result = try await GeminiService.analyzeTextInput(description: description)
-
-                                            currentFoodResult = result
-                                            currentEmoji = result.emoji
-                                            activeSheet = .foodResult
-                                        } catch {
-                                            activeSheet = nil
-                                            errorMessage = error.localizedDescription
-                                            showError = true
-                                        }
-                                    }
-                                }
-                            )
-                            .presentationCompactAdaptation(.popover)
-                        }
-                        .popover(isPresented: $showVoicePopover) {
-                            VoiceInputView(
-                                onCancel: {
-                                    showVoicePopover = false
-                                },
-                                onSubmit: { description in
-                                    showVoicePopover = false
-                                    currentImage = nil
-                                    currentEmoji = nil
-                                    currentFoodSource = .textInput
-                                    guard aiConsentGiven else { showAIConsent = true; return }
-                                    Task {
-                                        try? await Task.sleep(for: .milliseconds(300))
-                                        activeSheet = .analyzingText
-                                        do {
-                                            let result = try await GeminiService.analyzeTextInput(description: description)
-
-                                            currentFoodResult = result
-                                            currentEmoji = result.emoji
-                                            activeSheet = .foodResult
-                                        } catch {
-                                            activeSheet = nil
-                                            errorMessage = error.localizedDescription
-                                            showError = true
-                                        }
-                                    }
-                                }
-                            )
-                            .presentationCompactAdaptation(.popover)
-                        }
-                        .popover(isPresented: $showManualPopover) {
-                            ManualEntryView(
-                                logDate: logDateForSelectedDay,
-                                onCancel: { showManualPopover = false },
-                                onSave: { entry in
-                                    showManualPopover = false
-                                    foodStore.addEntry(entry)
-                                }
-                            )
-                            .presentationCompactAdaptation(.popover)
-                        }
+            .overlay(alignment: .bottomTrailing) {
+                if #unavailable(iOS 26.0) {
+                    AddFoodMenuButton(intent: addFoodIntent)
+                        .padding(.trailing, 16)
+                        .padding(.bottom, 8)
                 }
+            }
+            .onChange(of: addFoodIntent.pendingAction) { _, action in
+                guard let action else { return }
+                addFoodIntent.pendingAction = nil
+                handle(addAction: action)
+            }
+            .sheet(isPresented: $showTextPopover) {
+                TextFoodInputView(
+                    onCancel: {
+                        showTextPopover = false
+                    },
+                    onSubmit: { description in
+                        showTextPopover = false
+                        currentImage = nil
+                        currentEmoji = nil
+                        currentFoodSource = .textInput
+                        guard aiConsentGiven else { showAIConsent = true; return }
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(300))
+                            activeSheet = .analyzingText
+                            do {
+                                let result = try await GeminiService.analyzeTextInput(description: description)
+
+                                currentFoodResult = result
+                                currentEmoji = result.emoji
+                                activeSheet = .foodResult
+                            } catch {
+                                activeSheet = nil
+                                errorMessage = error.localizedDescription
+                                showError = true
+                            }
+                        }
+                    }
+                )
+            }
+            .sheet(isPresented: $showVoicePopover) {
+                VoiceInputView(
+                    onCancel: {
+                        showVoicePopover = false
+                    },
+                    onSubmit: { description in
+                        showVoicePopover = false
+                        currentImage = nil
+                        currentEmoji = nil
+                        currentFoodSource = .textInput
+                        guard aiConsentGiven else { showAIConsent = true; return }
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(300))
+                            activeSheet = .analyzingText
+                            do {
+                                let result = try await GeminiService.analyzeTextInput(description: description)
+
+                                currentFoodResult = result
+                                currentEmoji = result.emoji
+                                activeSheet = .foodResult
+                            } catch {
+                                activeSheet = nil
+                                errorMessage = error.localizedDescription
+                                showError = true
+                            }
+                        }
+                    }
+                )
+            }
+            .sheet(isPresented: $showManualPopover) {
+                ManualEntryView(
+                    logDate: logDateForSelectedDay,
+                    onCancel: { showManualPopover = false },
+                    onSave: { entry in
+                        showManualPopover = false
+                        foodStore.addEntry(entry)
+                    }
+                )
             }
             .fullScreenCover(isPresented: $showCamera) {
                 CameraView(image: $capturedImage)
@@ -783,6 +877,54 @@ struct HomeView: View {
             return
         }
         action()
+    }
+
+    private func handle(addAction action: AddFoodIntent.Action) {
+        switch action {
+        case .camera:
+            requireAIConsent {
+                cameraMode = .snapFood
+                showCamera = true
+            }
+        case .cameraWithContext:
+            requireAIConsent {
+                cameraMode = .snapFoodWithContext
+                showCamera = true
+            }
+        case .nutritionLabel:
+            requireAIConsent {
+                cameraMode = .nutritionLabel
+                showCamera = true
+            }
+        case .barcode:
+            showBarcodeScanner = true
+        case .fromPhotos:
+            requireAIConsent {
+                cameraMode = .snapFood
+                photoPickerMode = .snapFood
+                showPhotoPicker = true
+            }
+        case .fromPhotosWithContext:
+            requireAIConsent {
+                cameraMode = .snapFoodWithContext
+                photoPickerMode = .snapFoodWithContext
+                showPhotoPicker = true
+            }
+        case .text:
+            requireAIConsent {
+                showTextPopover = true
+            }
+        case .voice:
+            requireAIConsent {
+                showVoicePopover = true
+            }
+        case .manual:
+            showManualPopover = true
+        case .savedMeals:
+            showRecentSheet = true
+        case .copyFromDay:
+            showCopyFromDaySheet = true
+        }
     }
 
     private func startAnalysis(image: UIImage, mode: CameraMode, description: String? = nil) {
