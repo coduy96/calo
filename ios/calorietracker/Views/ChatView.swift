@@ -593,9 +593,6 @@ private struct MessageBubble: View {
             .padding(.vertical, 11)
             .background(bubbleBackground)
             .overlay(bubbleStroke)
-            .overlay(alignment: .top) {
-                if isUser { bubbleHighlight }
-            }
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .shadow(color: isUser ? AppColors.calorie.opacity(0.28) : Color.black.opacity(0.12),
                     radius: isUser ? 10 : 6, x: 0, y: isUser ? 6 : 3)
@@ -605,7 +602,7 @@ private struct MessageBubble: View {
     @ViewBuilder
     private var bubbleBackground: some View {
         if isUser {
-            LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+            AppColors.calorie
         } else {
             ZStack {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -630,16 +627,6 @@ private struct MessageBubble: View {
             )
     }
 
-    /// Glassy top highlight on user bubbles — makes the gradient read as polished glass, not flat paint.
-    private var bubbleHighlight: some View {
-        LinearGradient(
-            colors: [Color.white.opacity(0.35), Color.white.opacity(0)],
-            startPoint: .top,
-            endPoint: .center
-        )
-        .blendMode(.plusLighter)
-        .allowsHitTesting(false)
-    }
 }
 
 private struct TypingIndicator: View {
