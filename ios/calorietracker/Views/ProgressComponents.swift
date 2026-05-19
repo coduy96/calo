@@ -22,6 +22,17 @@ enum TimeRange: String, CaseIterable {
         }
     }
 
+    var displayName: LocalizedStringKey {
+        switch self {
+        case .week: "1W"
+        case .month: "1M"
+        case .threeMonths: "3M"
+        case .sixMonths: "6M"
+        case .year: "1Y"
+        case .allTime: "All"
+        }
+    }
+
     func dateRange() -> ClosedRange<Date> {
         let calendar = Calendar.current
         let end = calendar.startOfDay(for: .now).addingTimeInterval(86399)
@@ -37,6 +48,10 @@ struct WeightChartSection: View {
     let goalWeightKg: Double?
     let currentWeightKg: Double?
     let onLogWeight: () -> Void
+    /// Selected time-range window. When non-nil, drives the chart's x-axis
+    /// domain so the visible span reflects the picker selection even if the
+    /// data is sparse. `nil` means auto-fit to data (used for `.allTime`).
+    var dateRange: ClosedRange<Date>? = nil
     @AppStorage("useMetric") private var useMetric = false
 
     private func displayWeight(_ kg: Double) -> Double {
@@ -59,15 +74,15 @@ struct WeightChartSection: View {
             }
 
             if weightEntries.isEmpty {
-                emptyState("Log your first weight to see trends")
+                emptyState(LocalizedStringKey("Log your first weight to see trends"))
             } else {
                 // Current / Goal row
                 HStack(spacing: 16) {
                     if let current = currentWeightKg {
-                        StatBadge(label: "Current", value: String(format: "%.1f %@", displayWeight(current), unit))
+                        StatBadge(label: LocalizedStringKey("Current"), value: String(format: "%.1f %@", displayWeight(current), unit))
                     }
                     if let goal = goalWeightKg {
-                        StatBadge(label: "Goal", value: String(format: "%.1f %@", displayWeight(goal), unit))
+                        StatBadge(label: LocalizedStringKey("Goal"), value: String(format: "%.1f %@", displayWeight(goal), unit))
                     }
                 }
 
@@ -96,6 +111,7 @@ struct WeightChartSection: View {
                     }
                 }
                 .chartYScale(domain: weightYDomain)
+                .chartXScaleIfNeeded(dateRange)
                 .chartXAxis {
                     AxisMarks(values: .stride(by: .day, count: xAxisStride)) { _ in
                         AxisGridLine()
@@ -112,12 +128,7 @@ struct WeightChartSection: View {
     }
 
     private var xAxisStride: Int {
-        let count = weightEntries.count
-        if count <= 7 { return 1 }
-        if count <= 30 { return 5 }
-        if count <= 90 { return 14 }
-        if count <= 180 { return 30 }
-        return 60
+        rangeBasedStride(for: dateRange, fallbackCount: weightEntries.count)
     }
 
     private var weightYDomain: ClosedRange<Double> {
@@ -134,6 +145,7 @@ struct WeightChartSection: View {
 struct CalorieChartSection: View {
     let dailyCalories: [(date: Date, calories: Int)]
     let calorieGoal: Int
+    var dateRange: ClosedRange<Date>? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -150,7 +162,7 @@ struct CalorieChartSection: View {
             }
 
             if dailyCalories.isEmpty {
-                emptyState("No food logged yet")
+                emptyState(LocalizedStringKey("No food logged yet"))
             } else {
                 Chart {
                     ForEach(dailyCalories, id: \.date) { item in
@@ -168,6 +180,7 @@ struct CalorieChartSection: View {
                         .foregroundStyle(AppColors.calorie.opacity(0.6))
                         .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
                 }
+                .chartXScaleIfNeeded(dateRange)
                 .chartXAxis {
                     AxisMarks(values: .stride(by: .day, count: calorieXStride)) { _ in
                         AxisGridLine()
@@ -183,12 +196,7 @@ struct CalorieChartSection: View {
     }
 
     private var calorieXStride: Int {
-        let count = dailyCalories.count
-        if count <= 7 { return 1 }
-        if count <= 30 { return 5 }
-        if count <= 90 { return 14 }
-        if count <= 180 { return 30 }
-        return 60
+        rangeBasedStride(for: dateRange, fallbackCount: dailyCalories.count)
     }
 }
 
@@ -207,9 +215,9 @@ struct MacroAveragesSection: View {
             Text("Macro Averages")
                 .font(.system(.headline, design: .rounded, weight: .semibold))
 
-            MacroProgressRow(label: "Protein", current: avgProtein, goal: proteinGoal, color: AppColors.protein, gradientColors: AppColors.proteinGradient)
-            MacroProgressRow(label: "Carbs", current: avgCarbs, goal: carbsGoal, color: AppColors.carbs, gradientColors: AppColors.carbsGradient)
-            MacroProgressRow(label: "Fat", current: avgFat, goal: fatGoal, color: AppColors.fat, gradientColors: AppColors.fatGradient)
+            MacroProgressRow(label: LocalizedStringKey("Protein"), current: avgProtein, goal: proteinGoal, color: AppColors.protein, gradientColors: AppColors.proteinGradient)
+            MacroProgressRow(label: LocalizedStringKey("Carbs"), current: avgCarbs, goal: carbsGoal, color: AppColors.carbs, gradientColors: AppColors.carbsGradient)
+            MacroProgressRow(label: LocalizedStringKey("Fat"), current: avgFat, goal: fatGoal, color: AppColors.fat, gradientColors: AppColors.fatGradient)
         }
         .padding()
         .background(AppColors.appCard)
@@ -218,7 +226,7 @@ struct MacroAveragesSection: View {
 }
 
 struct MacroProgressRow: View {
-    let label: String
+    let label: LocalizedStringKey
     let current: Int
     let goal: Int
     let color: Color
@@ -234,7 +242,7 @@ struct MacroProgressRow: View {
                 Text(label)
                     .font(.system(.subheadline, design: .rounded, weight: .medium))
                 Spacer()
-                Text("\(current)g / \(goal)g")
+                Text(String(format: String(localized: "%lldg / %lldg"), current, goal))
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(.secondary)
             }
@@ -269,10 +277,10 @@ struct StatsSection: View {
                 .font(.system(.headline, design: .rounded, weight: .semibold))
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                StatTile(icon: "flame.fill", label: "Current Streak", value: "\(streak) days", color: AppColors.calorie)
-                StatTile(icon: "trophy.fill", label: "Best Streak", value: "\(bestStreak) days", color: AppColors.carbs)
-                StatTile(icon: "target", label: "Days on Target", value: "\(daysOnTarget)", color: AppColors.protein)
-                StatTile(icon: "fork.knife", label: "Total Entries", value: "\(totalEntries)", color: AppColors.fat)
+                StatTile(icon: "flame.fill", label: LocalizedStringKey("Current Streak"), value: String(format: String(localized: "%lld days"), streak), color: AppColors.calorie)
+                StatTile(icon: "trophy.fill", label: LocalizedStringKey("Best Streak"), value: String(format: String(localized: "%lld days"), bestStreak), color: AppColors.carbs)
+                StatTile(icon: "target", label: LocalizedStringKey("Days on Target"), value: "\(daysOnTarget)", color: AppColors.protein)
+                StatTile(icon: "fork.knife", label: LocalizedStringKey("Total Entries"), value: "\(totalEntries)", color: AppColors.fat)
             }
         }
         .padding()
@@ -283,7 +291,7 @@ struct StatsSection: View {
 
 struct StatTile: View {
     let icon: String
-    let label: String
+    let label: LocalizedStringKey
     let value: String
     let color: Color
 
@@ -309,7 +317,7 @@ struct StatTile: View {
 }
 
 struct StatBadge: View {
-    let label: String
+    let label: LocalizedStringKey
     let value: String
 
     var body: some View {
@@ -441,9 +449,13 @@ struct WeightHistoryLink: View {
                     Text("Weight History")
                         .font(.system(.body, design: .rounded, weight: .medium))
                         .foregroundStyle(.primary)
-                    Text("\(totalCount) \(totalCount == 1 ? "entry" : "entries") · tap to view or delete")
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(.secondary)
+                    Text(
+                        totalCount == 1
+                            ? String(format: String(localized: "%lld entry · tap to view or delete"), totalCount)
+                            : String(format: String(localized: "%lld entries · tap to view or delete"), totalCount)
+                    )
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
@@ -517,7 +529,11 @@ struct AllWeightHistoryView: View {
             }
         } message: {
             if let entry = pendingDeletion {
-                Text("Remove \(weightHistoryFormatter.string(from: entry.date))'s entry of \(displayWeight(entry.weightKg, useMetric: useMetric))? This also deletes the matching sample from Apple Health.")
+                Text(String(
+                    format: String(localized: "Remove %@'s entry of %@? This also deletes the matching sample from Apple Health."),
+                    weightHistoryFormatter.string(from: entry.date),
+                    displayWeight(entry.weightKg, useMetric: useMetric)
+                ))
             }
         }
     }
@@ -542,10 +558,10 @@ private func displayWeight(_ kg: Double, useMetric: Bool) -> String {
 enum BodyMetric: String, CaseIterable, Identifiable {
     case weight, bodyFat
     var id: String { rawValue }
-    var displayName: String {
+    var displayName: LocalizedStringKey {
         switch self {
-        case .weight: "Weight"
-        case .bodyFat: "Body Fat"
+        case .weight: LocalizedStringKey("Weight")
+        case .bodyFat: LocalizedStringKey("Body Fat")
         }
     }
 }
@@ -570,6 +586,8 @@ struct BodyMetricsSection: View {
     /// the segmented toggle renders at all.
     let bodyFatAvailable: Bool
 
+    var dateRange: ClosedRange<Date>? = nil
+
     @State private var metric: BodyMetric = .weight
 
     var body: some View {
@@ -591,7 +609,8 @@ struct BodyMetricsSection: View {
                     weightEntries: weightEntries,
                     goalWeightKg: goalWeightKg,
                     currentWeightKg: currentWeightKg,
-                    onLogWeight: onLogWeight
+                    onLogWeight: onLogWeight,
+                    dateRange: dateRange
                 )
                 // Swipe right to flip to Body Fat (only when available).
                 .gesture(
@@ -609,7 +628,8 @@ struct BodyMetricsSection: View {
                     entries: bodyFatEntries,
                     goalBodyFatFraction: goalBodyFatFraction,
                     currentBodyFatFraction: currentBodyFatFraction,
-                    onLogBodyFat: onLogBodyFat
+                    onLogBodyFat: onLogBodyFat,
+                    dateRange: dateRange
                 )
                 // Swipe left to flip back to Weight.
                 .gesture(
@@ -635,6 +655,7 @@ struct BodyFatChartSection: View {
     let goalBodyFatFraction: Double?
     let currentBodyFatFraction: Double?
     let onLogBodyFat: () -> Void
+    var dateRange: ClosedRange<Date>? = nil
 
     private func displayPercent(_ fraction: Double) -> Double {
         fraction * 100
@@ -654,14 +675,14 @@ struct BodyFatChartSection: View {
             }
 
             if entries.isEmpty {
-                emptyState("Log your first body fat % to see trends")
+                emptyState(LocalizedStringKey("Log your first body fat % to see trends"))
             } else {
                 HStack(spacing: 16) {
                     if let current = currentBodyFatFraction {
-                        StatBadge(label: "Current", value: String(format: "%.1f%%", displayPercent(current)))
+                        StatBadge(label: LocalizedStringKey("Current"), value: String(format: "%.1f%%", displayPercent(current)))
                     }
                     if let goal = goalBodyFatFraction {
-                        StatBadge(label: "Goal", value: String(format: "%.1f%%", displayPercent(goal)))
+                        StatBadge(label: LocalizedStringKey("Goal"), value: String(format: "%.1f%%", displayPercent(goal)))
                     }
                 }
 
@@ -690,6 +711,7 @@ struct BodyFatChartSection: View {
                     }
                 }
                 .chartYScale(domain: bodyFatYDomain)
+                .chartXScaleIfNeeded(dateRange)
                 .chartXAxis {
                     AxisMarks(values: .stride(by: .day, count: xAxisStride)) { _ in
                         AxisGridLine()
@@ -706,12 +728,7 @@ struct BodyFatChartSection: View {
     }
 
     private var xAxisStride: Int {
-        let count = entries.count
-        if count <= 7 { return 1 }
-        if count <= 30 { return 5 }
-        if count <= 90 { return 14 }
-        if count <= 180 { return 30 }
-        return 60
+        rangeBasedStride(for: dateRange, fallbackCount: entries.count)
     }
 
     private var bodyFatYDomain: ClosedRange<Double> {
@@ -795,9 +812,41 @@ struct LogBodyFatSheet: View {
 
 // MARK: - Helpers
 
-private func emptyState(_ message: String) -> some View {
+private func emptyState(_ message: LocalizedStringKey) -> some View {
     Text(message)
         .font(.system(.subheadline, design: .rounded))
         .foregroundStyle(.secondary)
         .frame(maxWidth: .infinity, minHeight: 80)
+}
+
+/// Axis gridline stride (in days) sized to the selected window — so 1W shows
+/// daily ticks, 1Y shows roughly bi-monthly ticks. Falls back to entry count
+/// when the parent doesn't pass a range (e.g. `.allTime`).
+private func rangeBasedStride(for dateRange: ClosedRange<Date>?, fallbackCount: Int) -> Int {
+    let span: Int
+    if let dateRange {
+        let secs = dateRange.upperBound.timeIntervalSince(dateRange.lowerBound)
+        span = max(Int((secs / 86400).rounded()), 1)
+    } else {
+        span = fallbackCount
+    }
+    if span <= 7 { return 1 }
+    if span <= 30 { return 5 }
+    if span <= 90 { return 14 }
+    if span <= 180 { return 30 }
+    return 60
+}
+
+private extension View {
+    /// Apply `.chartXScale(domain:)` only when a range is provided. For
+    /// `.allTime` (range == nil) the chart auto-fits to data — a fixed
+    /// 10-year axis would crush real entries against the right edge.
+    @ViewBuilder
+    func chartXScaleIfNeeded(_ dateRange: ClosedRange<Date>?) -> some View {
+        if let dateRange {
+            self.chartXScale(domain: dateRange)
+        } else {
+            self
+        }
+    }
 }

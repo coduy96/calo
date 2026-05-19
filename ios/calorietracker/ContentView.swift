@@ -32,7 +32,7 @@ final class AddFoodIntent {
 
         var id: String { rawValue }
 
-        var title: String {
+        var title: LocalizedStringKey {
             switch self {
             case .camera: return "Camera"
             case .cameraWithContext: return "Camera + Note"
@@ -2164,7 +2164,7 @@ struct ProgressTabView: View {
                     // Segmented Picker
                     Picker("Time Range", selection: $timeRange) {
                         ForEach(TimeRange.allCases, id: \.self) { range in
-                            Text(range.rawValue).tag(range)
+                            Text(range.displayName).tag(range)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -2183,7 +2183,8 @@ struct ProgressTabView: View {
                         goalBodyFatFraction: userProfile.goalBodyFatPercentage,
                         currentBodyFatFraction: bodyFatStore.latestEntry?.bodyFatFraction ?? userProfile.bodyFatPercentage,
                         onLogBodyFat: { showLogBodyFat = true },
-                        bodyFatAvailable: showsBodyFatSection
+                        bodyFatAvailable: showsBodyFatSection,
+                        dateRange: timeRange == .allTime ? nil : dateRange
                     )
                     .padding(.horizontal)
 
@@ -2199,7 +2200,8 @@ struct ProgressTabView: View {
                     // Calorie Trend
                     CalorieChartSection(
                         dailyCalories: dailyCalories,
-                        calorieGoal: userProfile.effectiveCalories
+                        calorieGoal: userProfile.effectiveCalories,
+                        dateRange: timeRange == .allTime ? nil : dateRange
                     )
                     .padding(.horizontal)
 
