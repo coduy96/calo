@@ -112,14 +112,10 @@ struct WeightChartSection: View {
                 }
                 .chartYScale(domain: weightYDomain)
                 .chartXScaleIfNeeded(dateRange)
-                .chartXAxis {
-                    AxisMarks(values: .stride(by: .day, count: xAxisStride)) { _ in
-                        AxisGridLine()
-                        AxisValueLabel(format: .dateTime.month(.abbreviated).day())
-                    }
-                }
+                .chartXAxis { adaptiveDateAxis(spanDays: chartSpanDays) }
+                .chartYAxis { numericYAxis() }
+                .chartPlotStyle { $0.padding(.trailing, 6) }
                 .frame(height: 180)
-                .clipped()
             }
         }
         .padding()
@@ -127,8 +123,8 @@ struct WeightChartSection: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
-    private var xAxisStride: Int {
-        rangeBasedStride(for: dateRange, fallbackCount: weightEntries.count)
+    private var chartSpanDays: Int {
+        axisSpanDays(for: dateRange, fallback: weightEntries.map(\.date))
     }
 
     private var weightYDomain: ClosedRange<Double> {
@@ -181,12 +177,9 @@ struct CalorieChartSection: View {
                         .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
                 }
                 .chartXScaleIfNeeded(dateRange)
-                .chartXAxis {
-                    AxisMarks(values: .stride(by: .day, count: calorieXStride)) { _ in
-                        AxisGridLine()
-                        AxisValueLabel(format: .dateTime.month(.abbreviated).day())
-                    }
-                }
+                .chartXAxis { adaptiveDateAxis(spanDays: chartSpanDays) }
+                .chartYAxis { compactCalorieYAxis() }
+                .chartPlotStyle { $0.padding(.trailing, 6) }
                 .frame(height: 180)
             }
         }
@@ -195,8 +188,8 @@ struct CalorieChartSection: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
-    private var calorieXStride: Int {
-        rangeBasedStride(for: dateRange, fallbackCount: dailyCalories.count)
+    private var chartSpanDays: Int {
+        axisSpanDays(for: dateRange, fallback: dailyCalories.map(\.date))
     }
 }
 
@@ -712,14 +705,10 @@ struct BodyFatChartSection: View {
                 }
                 .chartYScale(domain: bodyFatYDomain)
                 .chartXScaleIfNeeded(dateRange)
-                .chartXAxis {
-                    AxisMarks(values: .stride(by: .day, count: xAxisStride)) { _ in
-                        AxisGridLine()
-                        AxisValueLabel(format: .dateTime.month(.abbreviated).day())
-                    }
-                }
+                .chartXAxis { adaptiveDateAxis(spanDays: chartSpanDays) }
+                .chartYAxis { numericYAxis() }
+                .chartPlotStyle { $0.padding(.trailing, 6) }
                 .frame(height: 180)
-                .clipped()
             }
         }
         .padding()
@@ -727,8 +716,8 @@ struct BodyFatChartSection: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
-    private var xAxisStride: Int {
-        rangeBasedStride(for: dateRange, fallbackCount: entries.count)
+    private var chartSpanDays: Int {
+        axisSpanDays(for: dateRange, fallback: entries.map(\.date))
     }
 
     private var bodyFatYDomain: ClosedRange<Double> {
@@ -819,22 +808,97 @@ private func emptyState(_ message: LocalizedStringKey) -> some View {
         .frame(maxWidth: .infinity, minHeight: 80)
 }
 
-/// Axis gridline stride (in days) sized to the selected window — so 1W shows
-/// daily ticks, 1Y shows roughly bi-monthly ticks. Falls back to entry count
-/// when the parent doesn't pass a range (e.g. `.allTime`).
-private func rangeBasedStride(for dateRange: ClosedRange<Date>?, fallbackCount: Int) -> Int {
-    let span: Int
+/// Day span used to drive axis label density and date format. Prefers the
+/// picker's selected window so the axis stays stable as data trickles in; for
+/// `.allTime` (range == nil) we derive span from the first/last data points.
+private func axisSpanDays(for dateRange: ClosedRange<Date>?, fallback dates: [Date]) -> Int {
     if let dateRange {
         let secs = dateRange.upperBound.timeIntervalSince(dateRange.lowerBound)
-        span = max(Int((secs / 86400).rounded()), 1)
-    } else {
-        span = fallbackCount
+        return max(Int((secs / 86400).rounded()), 1)
     }
-    if span <= 7 { return 1 }
-    if span <= 30 { return 5 }
-    if span <= 90 { return 14 }
-    if span <= 180 { return 30 }
-    return 60
+    guard let first = dates.min(), let last = dates.max() else { return 1 }
+    let secs = last.timeIntervalSince(first)
+    return max(Int((secs / 86400).rounded()), 1)
+}
+
+/// Tick count target for the x-axis. Picked so labels never collide on a
+/// ~330pt-wide chart at the chosen format (≈48pt per label minimum).
+private func axisLabelCount(spanDays: Int) -> Int {
+    if spanDays <= 7 { return 4 }
+    if spanDays <= 30 { return 5 }
+    if spanDays <= 90 { return 4 }
+    if spanDays <= 365 { return 5 }
+    return 5
+}
+
+/// Adaptive x-axis builder shared by all three charts. Uses `.automatic` tick
+/// placement (so SwiftUI rounds to nice dates) plus a span-appropriate format
+/// — day+month for short windows, month-only for quarter/half-year, month+year
+/// once we cross a year so the axis is unambiguous.
+@AxisContentBuilder
+private func adaptiveDateAxis(spanDays: Int) -> some AxisContent {
+    AxisMarks(values: .automatic(desiredCount: axisLabelCount(spanDays: spanDays))) { value in
+        AxisGridLine()
+            .foregroundStyle(Color.secondary.opacity(0.18))
+        AxisValueLabel(centered: false) {
+            if let date = value.as(Date.self) {
+                Text(date, format: axisDateFormat(spanDays: spanDays))
+                    .font(.system(.caption2, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+private func axisDateFormat(spanDays: Int) -> Date.FormatStyle {
+    if spanDays <= 90 {
+        return .dateTime.day().month(.abbreviated)
+    }
+    if spanDays <= 365 {
+        return .dateTime.month(.abbreviated)
+    }
+    return .dateTime.month(.abbreviated).year(.twoDigits)
+}
+
+/// Trailing numeric y-axis (used for weight and body-fat charts). Caption-2
+/// rounded labels, soft gridlines, so the axis recedes into the background.
+@AxisContentBuilder
+private func numericYAxis() -> some AxisContent {
+    AxisMarks(position: .trailing, values: .automatic(desiredCount: 4)) { _ in
+        AxisGridLine()
+            .foregroundStyle(Color.secondary.opacity(0.18))
+        AxisValueLabel()
+            .font(.system(.caption2, design: .rounded))
+            .foregroundStyle(.secondary)
+    }
+}
+
+/// Trailing calorie y-axis — same styling as `numericYAxis` but formats large
+/// values with a `k` suffix so e.g. 3000 → "3k" instead of "3.000".
+@AxisContentBuilder
+private func compactCalorieYAxis() -> some AxisContent {
+    AxisMarks(position: .trailing, values: .automatic(desiredCount: 4)) { value in
+        AxisGridLine()
+            .foregroundStyle(Color.secondary.opacity(0.18))
+        AxisValueLabel {
+            if let kcal = value.as(Int.self) {
+                Text(compactKcal(kcal))
+                    .font(.system(.caption2, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+private func compactKcal(_ value: Int) -> String {
+    if value >= 1_000 {
+        let k = Double(value) / 1_000.0
+        if k.truncatingRemainder(dividingBy: 1) == 0 {
+            return "\(Int(k))k"
+        }
+        return String(format: "%.1fk", k)
+    }
+    return "\(value)"
 }
 
 private extension View {
