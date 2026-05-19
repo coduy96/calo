@@ -108,11 +108,11 @@ struct ContentView: View {
             Tab("Home", systemImage: "house.fill", value: AppTab.home) {
                 HomeView()
             }
+            Tab("AI", systemImage: "sparkles", value: AppTab.coach) {
+                ChatThreadListView()
+            }
             Tab("Progress", systemImage: "chart.bar.fill", value: AppTab.progress) {
                 ProgressTabView()
-            }
-            Tab("Coach", systemImage: "bubble.left.and.bubble.right.fill", value: AppTab.coach) {
-                ChatThreadListView()
             }
             Tab("Add", systemImage: "plus", value: AppTab.add, role: .search) {
                 Color.clear
@@ -130,18 +130,18 @@ struct ContentView: View {
                     Text("Home")
                 }
 
+            ChatThreadListView()
+                .tag(AppTab.coach)
+                .tabItem {
+                    Image(systemName: "sparkles")
+                    Text("AI")
+                }
+
             ProgressTabView()
                 .tag(AppTab.progress)
                 .tabItem {
                     Image(systemName: "chart.bar.fill")
                     Text("Progress")
-                }
-
-            ChatThreadListView()
-                .tag(AppTab.coach)
-                .tabItem {
-                    Image(systemName: "bubble.left.and.bubble.right.fill")
-                    Text("Coach")
                 }
         }
     }

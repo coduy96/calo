@@ -34,7 +34,7 @@ struct ChatThreadListView: View {
                 }
             }
             .background(AppColors.appBackground)
-            .navigationTitle("Coach")
+            .navigationTitle("AI Coach")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(
                 text: $searchText,
