@@ -742,7 +742,7 @@ struct HomeView: View {
                 )
             }
             .fullScreenCover(isPresented: $showCamera) {
-                CameraView(image: $capturedImage)
+                CameraView(image: $capturedImage, mode: cameraMode)
                     .ignoresSafeArea()
             }
             .fullScreenCover(isPresented: $showBarcodeScanner) {
@@ -1653,6 +1653,7 @@ struct ContextDescriptionSheet: View {
 // MARK: - Camera View (UIKit wrapper)
 struct CameraView: UIViewControllerRepresentable {
     @Binding var image: UIImage?
+    var mode: CameraMode = .snapFood
     @Environment(\.dismiss) private var dismiss
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
@@ -1662,71 +1663,25 @@ struct CameraView: UIViewControllerRepresentable {
         picker.modalPresentationStyle = .fullScreen
         picker.edgesForExtendedLayout = .all
         picker.showsCameraControls = false
-
-        // Custom overlay with shutter + cancel buttons
-        let overlay = UIView(frame: UIScreen.main.bounds)
-        overlay.isUserInteractionEnabled = true
-        overlay.backgroundColor = .clear
-
-        let bottomBar = UIView()
-        bottomBar.backgroundColor = UIColor.black.withAlphaComponent(0.6)
-        bottomBar.translatesAutoresizingMaskIntoConstraints = false
-        overlay.addSubview(bottomBar)
-
-        let shutterOuter = UIView()
-        shutterOuter.backgroundColor = .white
-        shutterOuter.layer.cornerRadius = 37
-        shutterOuter.translatesAutoresizingMaskIntoConstraints = false
-        bottomBar.addSubview(shutterOuter)
-
-        let shutterInner = UIView()
-        shutterInner.backgroundColor = .white
-        shutterInner.layer.cornerRadius = 32
-        shutterInner.layer.borderWidth = 2
-        shutterInner.layer.borderColor = UIColor.black.withAlphaComponent(0.15).cgColor
-        shutterInner.translatesAutoresizingMaskIntoConstraints = false
-        shutterOuter.addSubview(shutterInner)
-
-        let shutterButton = UIButton(type: .system)
-        shutterButton.translatesAutoresizingMaskIntoConstraints = false
-        shutterButton.addTarget(context.coordinator, action: #selector(Coordinator.capture), for: .touchUpInside)
-        shutterOuter.addSubview(shutterButton)
-
-        let cancelButton = UIButton(type: .system)
-        cancelButton.setTitle("Cancel", for: .normal)
-        cancelButton.setTitleColor(.white, for: .normal)
-        cancelButton.titleLabel?.font = .systemFont(ofSize: 17)
-        cancelButton.translatesAutoresizingMaskIntoConstraints = false
-        cancelButton.addTarget(context.coordinator, action: #selector(Coordinator.cancel), for: .touchUpInside)
-        bottomBar.addSubview(cancelButton)
-
-        NSLayoutConstraint.activate([
-            bottomBar.leadingAnchor.constraint(equalTo: overlay.leadingAnchor),
-            bottomBar.trailingAnchor.constraint(equalTo: overlay.trailingAnchor),
-            bottomBar.bottomAnchor.constraint(equalTo: overlay.bottomAnchor),
-            bottomBar.heightAnchor.constraint(equalToConstant: 140),
-
-            shutterOuter.centerXAnchor.constraint(equalTo: bottomBar.centerXAnchor),
-            shutterOuter.centerYAnchor.constraint(equalTo: bottomBar.topAnchor, constant: 50),
-            shutterOuter.widthAnchor.constraint(equalToConstant: 74),
-            shutterOuter.heightAnchor.constraint(equalToConstant: 74),
-
-            shutterInner.centerXAnchor.constraint(equalTo: shutterOuter.centerXAnchor),
-            shutterInner.centerYAnchor.constraint(equalTo: shutterOuter.centerYAnchor),
-            shutterInner.widthAnchor.constraint(equalToConstant: 64),
-            shutterInner.heightAnchor.constraint(equalToConstant: 64),
-
-            shutterButton.leadingAnchor.constraint(equalTo: shutterOuter.leadingAnchor),
-            shutterButton.trailingAnchor.constraint(equalTo: shutterOuter.trailingAnchor),
-            shutterButton.topAnchor.constraint(equalTo: shutterOuter.topAnchor),
-            shutterButton.bottomAnchor.constraint(equalTo: shutterOuter.bottomAnchor),
-
-            cancelButton.leadingAnchor.constraint(equalTo: bottomBar.leadingAnchor, constant: 20),
-            cancelButton.centerYAnchor.constraint(equalTo: shutterOuter.centerYAnchor),
-        ])
-
-        picker.cameraOverlayView = overlay
         context.coordinator.picker = picker
+
+        // Scale the camera preview so it fills the screen vertically.
+        // Default UIImagePickerController preview is 4:3 (centered), leaving black bars
+        // above & below — this aspect-fills the preview to remove them.
+        let screenSize = UIScreen.main.bounds.size
+        let nativePreviewHeight = screenSize.width * 4.0 / 3.0
+        if nativePreviewHeight > 0 {
+            let scale = screenSize.height / nativePreviewHeight
+            if scale > 1 {
+                picker.cameraViewTransform = CGAffineTransform(scaleX: scale, y: scale)
+            }
+        }
+
+        let overlay = CameraOverlayView(mode: mode, coordinator: context.coordinator)
+        overlay.frame = UIScreen.main.bounds
+        overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        picker.cameraOverlayView = overlay
+        context.coordinator.overlay = overlay
 
         return picker
     }
@@ -1740,12 +1695,15 @@ struct CameraView: UIViewControllerRepresentable {
     class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
         let parent: CameraView
         weak var picker: UIImagePickerController?
+        weak var overlay: CameraOverlayView?
 
         init(_ parent: CameraView) {
             self.parent = parent
         }
 
         @objc func capture() {
+            overlay?.playCaptureFlash()
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             picker?.takePicture()
         }
 
@@ -1765,6 +1723,209 @@ struct CameraView: UIViewControllerRepresentable {
         }
     }
 }
+
+// MARK: - Camera Overlay (UIKit)
+final class CameraOverlayView: UIView {
+    private let flashView = UIView()
+    private let shutterInner = UIView()
+    private let shutterInnerGradient = CAGradientLayer()
+
+    init(mode: CameraMode, coordinator: CameraView.Coordinator) {
+        super.init(frame: .zero)
+        backgroundColor = .clear
+        isUserInteractionEnabled = true
+        setUp(coordinator: coordinator)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        shutterInnerGradient.frame = shutterInner.bounds
+        shutterInnerGradient.cornerRadius = shutterInner.bounds.width / 2
+    }
+
+    // Empty regions of the overlay pass touches through to the camera preview;
+    // only the actual controls (UIButtons) consume taps.
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let hit = super.hitTest(point, with: event)
+        return hit === self ? nil : hit
+    }
+
+    func playCaptureFlash() {
+        flashView.alpha = 0
+        UIView.animate(withDuration: 0.08, animations: { [weak self] in
+            self?.flashView.alpha = 0.85
+        }, completion: { [weak self] _ in
+            UIView.animate(withDuration: 0.28) { self?.flashView.alpha = 0 }
+        })
+    }
+
+    private func setUp(coordinator: CameraView.Coordinator) {
+        // 1) Full-screen capture flash overlay
+        flashView.translatesAutoresizingMaskIntoConstraints = false
+        flashView.backgroundColor = .white
+        flashView.alpha = 0
+        flashView.isUserInteractionEnabled = false
+        addSubview(flashView)
+
+        // 2) Close X — glassy circular button, brand primary icon tint
+        let closeBlur = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterialDark))
+        closeBlur.translatesAutoresizingMaskIntoConstraints = false
+        closeBlur.isUserInteractionEnabled = false
+        closeBlur.layer.cornerRadius = 26
+        closeBlur.layer.masksToBounds = true
+        closeBlur.layer.borderWidth = 0.5
+        closeBlur.layer.borderColor = UIColor.white.withAlphaComponent(0.35).cgColor
+        addSubview(closeBlur)
+
+        let closeShadow = UIView()
+        closeShadow.translatesAutoresizingMaskIntoConstraints = false
+        closeShadow.backgroundColor = .clear
+        closeShadow.isUserInteractionEnabled = false
+        closeShadow.layer.shadowColor = UIColor.black.cgColor
+        closeShadow.layer.shadowOpacity = 0.28
+        closeShadow.layer.shadowRadius = 10
+        closeShadow.layer.shadowOffset = CGSize(width: 0, height: 3)
+        closeShadow.layer.shadowPath = UIBezierPath(ovalIn: CGRect(x: 0, y: 0, width: 52, height: 52)).cgPath
+        insertSubview(closeShadow, belowSubview: closeBlur)
+
+        let closeButton = UIButton(type: .system)
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        closeButton.tintColor = UIColor(AppThemeColor.current.gradientColors.first ?? Color(hex: 0xFF375F))
+        closeButton.setImage(UIImage(systemName: "xmark",
+                                     withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)),
+                             for: .normal)
+        closeButton.addTarget(coordinator, action: #selector(CameraView.Coordinator.cancel), for: .touchUpInside)
+        closeButton.addTarget(self, action: #selector(closeTouchDown), for: .touchDown)
+        closeButton.addTarget(self, action: #selector(closeTouchUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+        addSubview(closeButton)
+
+        // 3) Shutter (white ring + brand-pink gradient inner) and tap target
+        let shutterOuter = UIView()
+        shutterOuter.translatesAutoresizingMaskIntoConstraints = false
+        shutterOuter.backgroundColor = .clear
+        shutterOuter.layer.borderWidth = 4
+        shutterOuter.layer.borderColor = UIColor.white.cgColor
+        shutterOuter.layer.cornerRadius = 38
+        shutterOuter.isUserInteractionEnabled = false
+        addSubview(shutterOuter)
+
+        shutterInner.translatesAutoresizingMaskIntoConstraints = false
+        shutterInner.backgroundColor = .clear
+        shutterInner.layer.masksToBounds = true
+        shutterInner.layer.cornerRadius = 30
+        shutterInner.layer.borderWidth = 0.5
+        shutterInner.layer.borderColor = UIColor.white.withAlphaComponent(0.4).cgColor
+        shutterInner.isUserInteractionEnabled = false
+        addSubview(shutterInner)
+
+        shutterInnerGradient.colors = AppThemeColor.current.gradientColors.map { UIColor($0).cgColor }
+        shutterInnerGradient.startPoint = CGPoint(x: 0, y: 0)
+        shutterInnerGradient.endPoint = CGPoint(x: 1, y: 1)
+        shutterInner.layer.insertSublayer(shutterInnerGradient, at: 0)
+
+        let shutterButton = UIButton(type: .custom)
+        shutterButton.translatesAutoresizingMaskIntoConstraints = false
+        shutterButton.backgroundColor = .clear
+        shutterButton.addTarget(coordinator, action: #selector(CameraView.Coordinator.capture), for: .touchUpInside)
+        shutterButton.addTarget(self, action: #selector(shutterTouchDown), for: .touchDown)
+        shutterButton.addTarget(self, action: #selector(shutterTouchUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+        addSubview(shutterButton)
+
+        NSLayoutConstraint.activate([
+            // Flash — fills the entire overlay
+            flashView.topAnchor.constraint(equalTo: topAnchor),
+            flashView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            flashView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            flashView.trailingAnchor.constraint(equalTo: trailingAnchor),
+
+            // Close X — sits in the camera controls row, left of the shutter
+            closeBlur.centerYAnchor.constraint(equalTo: shutterOuter.centerYAnchor),
+            closeBlur.trailingAnchor.constraint(equalTo: shutterOuter.leadingAnchor, constant: -36),
+            closeBlur.widthAnchor.constraint(equalToConstant: 52),
+            closeBlur.heightAnchor.constraint(equalToConstant: 52),
+
+            closeShadow.centerXAnchor.constraint(equalTo: closeBlur.centerXAnchor),
+            closeShadow.centerYAnchor.constraint(equalTo: closeBlur.centerYAnchor),
+            closeShadow.widthAnchor.constraint(equalToConstant: 52),
+            closeShadow.heightAnchor.constraint(equalToConstant: 52),
+
+            closeButton.centerXAnchor.constraint(equalTo: closeBlur.centerXAnchor),
+            closeButton.centerYAnchor.constraint(equalTo: closeBlur.centerYAnchor),
+            closeButton.widthAnchor.constraint(equalToConstant: 52),
+            closeButton.heightAnchor.constraint(equalToConstant: 52),
+
+            // Shutter — bottom center
+            shutterOuter.centerXAnchor.constraint(equalTo: centerXAnchor),
+            shutterOuter.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -14),
+            shutterOuter.widthAnchor.constraint(equalToConstant: 76),
+            shutterOuter.heightAnchor.constraint(equalToConstant: 76),
+
+            shutterInner.centerXAnchor.constraint(equalTo: shutterOuter.centerXAnchor),
+            shutterInner.centerYAnchor.constraint(equalTo: shutterOuter.centerYAnchor),
+            shutterInner.widthAnchor.constraint(equalToConstant: 60),
+            shutterInner.heightAnchor.constraint(equalToConstant: 60),
+
+            shutterButton.centerXAnchor.constraint(equalTo: shutterOuter.centerXAnchor),
+            shutterButton.centerYAnchor.constraint(equalTo: shutterOuter.centerYAnchor),
+            shutterButton.widthAnchor.constraint(equalToConstant: 88),
+            shutterButton.heightAnchor.constraint(equalToConstant: 88),
+        ])
+
+        self.shutterOuter = shutterOuter
+        self.closeContainer = closeBlur
+        self.closeShadowView = closeShadow
+    }
+
+    private weak var shutterOuter: UIView?
+    private weak var closeContainer: UIView?
+    private weak var closeShadowView: UIView?
+
+    @objc private func shutterTouchDown() {
+        UIView.animate(withDuration: 0.12,
+                       delay: 0,
+                       usingSpringWithDamping: 0.6,
+                       initialSpringVelocity: 0,
+                       options: [.allowUserInteraction]) { [weak self] in
+            self?.shutterOuter?.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+        }
+    }
+
+    @objc private func shutterTouchUp() {
+        UIView.animate(withDuration: 0.22,
+                       delay: 0,
+                       usingSpringWithDamping: 0.7,
+                       initialSpringVelocity: 0,
+                       options: [.allowUserInteraction]) { [weak self] in
+            self?.shutterOuter?.transform = .identity
+        }
+    }
+
+    @objc private func closeTouchDown() {
+        UIView.animate(withDuration: 0.12,
+                       delay: 0,
+                       usingSpringWithDamping: 0.6,
+                       initialSpringVelocity: 0,
+                       options: [.allowUserInteraction]) { [weak self] in
+            let t = CGAffineTransform(scaleX: 0.9, y: 0.9)
+            self?.closeContainer?.transform = t
+            self?.closeShadowView?.transform = t
+        }
+    }
+
+    @objc private func closeTouchUp() {
+        UIView.animate(withDuration: 0.22,
+                       delay: 0,
+                       usingSpringWithDamping: 0.7,
+                       initialSpringVelocity: 0,
+                       options: [.allowUserInteraction]) { [weak self] in
+            self?.closeContainer?.transform = .identity
+            self?.closeShadowView?.transform = .identity
+        }
+    }
+}
+
 
 // MARK: - Barcode Scanner
 struct BarcodeScannerView: UIViewControllerRepresentable {

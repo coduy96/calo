@@ -12,7 +12,7 @@ enum AppThemeColor: String, CaseIterable, Identifiable {
     case purple
 
     static let storageKey = "appThemeColor"
-    static let defaultColor: AppThemeColor = .fudPink
+    static let defaultColor: AppThemeColor = .orange
 
     var id: String { rawValue }
 
