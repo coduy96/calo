@@ -102,15 +102,17 @@ struct OnboardingView: View {
                         } label: {
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(AppColors.calorie)
                         }
 
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
                                 Capsule()
-                                    .fill(Color.primary.opacity(0.08))
+                                    .fill(AppColors.calorie.opacity(0.12))
                                 Capsule()
-                                    .fill(Color.primary)
+                                    .fill(
+                                        LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing)
+                                    )
                                     .frame(width: geo.size.width * CGFloat(step) / CGFloat(totalSteps - 1))
                                     .animation(.snappy, value: step)
                             }
@@ -149,6 +151,7 @@ struct OnboardingView: View {
                 ))
                 .animation(.snappy, value: step)
             }
+            .background(AppColors.appBackground.ignoresSafeArea())
             .sheet(isPresented: $showPaywall) {
                 PaywallView {
                     advanceAfterPlusPurchaseIfNeeded()
@@ -163,17 +166,21 @@ struct OnboardingView: View {
 
     // MARK: - Continue Button
 
-    private func continueButton(_ title: String = "Continue", action: @escaping () -> Void = {}) -> some View {
+    private func continueButton(_ title: LocalizedStringKey = "Continue", action: @escaping () -> Void = {}) -> some View {
         Button {
             action()
             withAnimation(.snappy) { step += 1 }
         } label: {
             Text(title)
                 .font(.system(.body, design: .rounded, weight: .semibold))
-                .foregroundStyle(Color(.systemBackground))
+                .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
-                .background(Color.primary, in: Capsule())
+                .background(
+                    LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing),
+                    in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                )
+                .shadow(color: AppColors.calorie.opacity(0.3), radius: 8, y: 4)
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 36)
@@ -196,7 +203,7 @@ struct OnboardingView: View {
                 Image("onboardingLogo")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 120, height: 120)
+                    .frame(width: 200, height: 200)
 
                 VStack(spacing: 8) {
                     Text("Eat Smart,")
@@ -219,13 +226,14 @@ struct OnboardingView: View {
             } label: {
                 Text("Get Started")
                     .font(.system(.headline, design: .rounded, weight: .semibold))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(
-                        LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing)
-                    )
                     .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 54)
+                    .background(
+                        LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing),
+                        in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    )
+                    .shadow(color: AppColors.calorie.opacity(0.3), radius: 8, y: 4)
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 36)
@@ -240,7 +248,7 @@ struct OnboardingView: View {
             Spacer()
             VStack(spacing: 12) {
                 ForEach(Gender.allCases, id: \.self) { g in
-                    selectionCard(icon: g.icon, title: g.displayName, isSelected: gender == g) {
+                    selectionCard(icon: g.icon, title: LocalizedStringKey(g.displayName), isSelected: gender == g) {
                         withAnimation(.spring(response: 0.3)) { gender = g }
                     }
                 }
@@ -437,7 +445,7 @@ struct OnboardingView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     ForEach(ActivityLevel.allCases, id: \.self) { level in
-                        selectionCard(icon: level.icon, title: level.displayName, subtitle: level.subtitle, isSelected: activityLevel == level) {
+                        selectionCard(icon: level.icon, title: LocalizedStringKey(level.displayName), subtitle: LocalizedStringKey(level.subtitle), isSelected: activityLevel == level) {
                             withAnimation(.spring(response: 0.3)) { activityLevel = level }
                         }
                     }
@@ -457,7 +465,7 @@ struct OnboardingView: View {
             Spacer()
             VStack(spacing: 12) {
                 ForEach(WeightGoal.allCases, id: \.self) { g in
-                    selectionCard(icon: g.icon, title: g.displayName, isSelected: goal == g) {
+                    selectionCard(icon: g.icon, title: LocalizedStringKey(g.displayName), isSelected: goal == g) {
                         withAnimation(.spring(response: 0.3)) { goal = g }
                     }
                 }
@@ -492,7 +500,7 @@ struct OnboardingView: View {
 
     private var desiredWeightStep: some View {
         VStack(alignment: .leading, spacing: 0) {
-            stepHeader(title: "What's your\ndesired weight?", subtitle: goal.displayName)
+            stepHeader(title: "What's your\ndesired weight?", subtitle: LocalizedStringKey(goal.displayName))
             Spacer()
             if isMetric {
                 decimalWeightWheel(whole: $targetWeightKgWhole, tenth: $targetWeightKgTenth, range: 30...250, unit: "kg")
@@ -550,11 +558,23 @@ struct OnboardingView: View {
     }
 
     private var goalSpeedStep: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            stepHeader(
-                title: goal == .maintain ? "Your pace" : "How fast do you want\nto reach your goal?",
-                subtitle: goal == .maintain ? "We'll set a balanced plan" : "\(goal == .lose ? "Weight loss" : "Weight gain") speed per week"
-            )
+        // Hold these as discrete LocalizedStringKeys (rather than interpolating
+        // a localized noun into a sentence) so each language gets natural word
+        // order — phrases like "Weight loss speed per week" don't translate
+        // well as substring + suffix in many languages.
+        let speedTitle: LocalizedStringKey = goal == .maintain
+            ? "Your pace"
+            : "How fast do you want\nto reach your goal?"
+        let speedSubtitle: LocalizedStringKey
+        if goal == .maintain {
+            speedSubtitle = "We'll set a balanced plan"
+        } else if goal == .lose {
+            speedSubtitle = "Weight loss speed per week"
+        } else {
+            speedSubtitle = "Weight gain speed per week"
+        }
+        return VStack(alignment: .leading, spacing: 0) {
+            stepHeader(title: speedTitle, subtitle: speedSubtitle)
             if goal == .maintain {
                 Spacer()
                 VStack(spacing: 12) {
@@ -676,7 +696,7 @@ struct OnboardingView: View {
                         } label: {
                             Text("Allow")
                                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(AppColors.calorie)
                                 .frame(maxWidth: .infinity)
                         }
                     }
@@ -709,13 +729,13 @@ struct OnboardingView: View {
             VStack(spacing: 20) {
                 ZStack {
                     Circle()
-                        .fill(Color.secondary.opacity(0.06))
+                        .fill(.ultraThinMaterial)
                         .frame(width: 120, height: 120)
 
                     Image(systemName: "heart.fill")
                         .font(.system(size: 48))
                         .foregroundStyle(
-                            LinearGradient(colors: [.pink, .red], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
                 }
 
@@ -777,7 +797,11 @@ struct OnboardingView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
-                        .background(AppColors.calorie, in: RoundedRectangle(cornerRadius: 16))
+                        .background(
+                            LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing),
+                            in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        )
+                        .shadow(color: AppColors.calorie.opacity(0.3), radius: 8, y: 4)
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 20)
@@ -880,7 +904,7 @@ struct OnboardingView: View {
         }
     }
 
-    private func aiSetupRow(number: String, text: String) -> some View {
+    private func aiSetupRow(number: String, text: LocalizedStringKey) -> some View {
         HStack(spacing: 12) {
             Text(number)
                 .font(.system(.caption, design: .rounded, weight: .bold))
@@ -894,7 +918,7 @@ struct OnboardingView: View {
         }
     }
 
-    private func aiAccessCard(mode: AIAccessMode, title: String, subtitle: String, badge: String) -> some View {
+    private func aiAccessCard(mode: AIAccessMode, title: LocalizedStringKey, subtitle: LocalizedStringKey, badge: LocalizedStringKey) -> some View {
         Button {
             selectedAccessMode = mode
             AIAccessSettings.mode = mode
@@ -1241,7 +1265,7 @@ struct OnboardingView: View {
         }
     }
 
-    private func editableMacroCard(label: String, value: Int, unit: String, gradientColors: [Color], field: EditableField) -> some View {
+    private func editableMacroCard(label: LocalizedStringKey, value: Int, unit: String, gradientColors: [Color], field: EditableField) -> some View {
         Button {
             withAnimation(.snappy) {
                 editingField = editingField == field ? nil : field
@@ -1278,22 +1302,20 @@ struct OnboardingView: View {
         .buttonStyle(.plain)
     }
 
-    private func stepHeader(title: String, subtitle: String) -> some View {
+    private func stepHeader(title: LocalizedStringKey, subtitle: LocalizedStringKey) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title).font(.system(size: 28, weight: .bold, design: .rounded))
-            if !subtitle.isEmpty {
-                Text(subtitle).font(.system(.callout, design: .rounded)).foregroundStyle(.secondary)
-            }
+            Text(subtitle).font(.system(.callout, design: .rounded)).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 24).padding(.top, 24)
     }
 
-    private func selectionCard(icon: String, title: String, subtitle: String? = nil, isSelected: Bool, action: @escaping () -> Void) -> some View {
+    private func selectionCard(icon: String, title: LocalizedStringKey, subtitle: LocalizedStringKey? = nil, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 16) {
                 Image(systemName: icon).font(.system(size: 22))
-                    .foregroundStyle(isSelected ? Color.primary : .secondary).frame(width: 40)
+                    .foregroundStyle(isSelected ? AppColors.calorie : .secondary).frame(width: 40)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).font(.system(.body, design: .rounded, weight: .semibold)).foregroundStyle(.primary)
                     if let subtitle {
@@ -1302,15 +1324,15 @@ struct OnboardingView: View {
                 }
                 Spacer()
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle").font(.system(size: 22))
-                    .foregroundStyle(isSelected ? Color.primary : Color.secondary.opacity(0.3))
+                    .foregroundStyle(isSelected ? AppColors.calorie : Color.secondary.opacity(0.3))
             }
             .padding(16)
             .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(isSelected ? Color.primary : Color.clear, lineWidth: 2))
+            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(isSelected ? AppColors.calorie : Color.clear, lineWidth: 2))
         }.buttonStyle(.plain)
     }
 
-    private func healthFeatureRow(icon: String, label: String) -> some View {
+    private func healthFeatureRow(icon: String, label: LocalizedStringKey) -> some View {
         HStack(spacing: 14) {
             Image(systemName: icon).font(.system(size: 18)).foregroundStyle(.secondary).frame(width: 28)
             Text(label).font(.system(.body, design: .rounded)).foregroundStyle(.primary)
@@ -1335,7 +1357,7 @@ struct BuildingPlanStepView: View {
     @State private var percent = 0
     @State private var checkItem = 0
 
-    private let items = [
+    private let items: [(LocalizedStringKey, String)] = [
         ("Calories", "flame.fill"),
         ("Carbs", "leaf.fill"),
         ("Protein", "fish.fill"),
@@ -1361,14 +1383,9 @@ struct BuildingPlanStepView: View {
             // Progress bar
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Color.primary.opacity(0.08))
+                    Capsule().fill(AppColors.calorie.opacity(0.12))
                     Capsule()
                         .fill(
-                            // Mono-pink to match the rest of the brand surface
-                            // (macro rings, home + button, PlanReady calorie
-                            // number) — earlier 3-stop gradient ended in blue
-                            // and read as off-brand against the otherwise
-                            // pink-only palette.
                             LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing)
                         )
                         .frame(width: geo.size.width * progress)
@@ -1396,7 +1413,7 @@ struct BuildingPlanStepView: View {
                         if index < checkItem {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 20))
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(AppColors.calorie)
                                 .transition(.scale.combined(with: .opacity))
                         }
                     }

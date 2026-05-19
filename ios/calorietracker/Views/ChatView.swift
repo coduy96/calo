@@ -188,7 +188,7 @@ struct ChatView: View {
                     }
                     if isSending {
                         HStack {
-                            TypingIndicator()
+                            VoidpenLoadingDots(size: .small)
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 10)
                                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -629,25 +629,3 @@ private struct MessageBubble: View {
 
 }
 
-private struct TypingIndicator: View {
-    @State private var phase = 0
-    var body: some View {
-        HStack(spacing: 5) {
-            ForEach(0..<3) { i in
-                Circle()
-                    .fill(
-                        LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
-                    )
-                    .frame(width: 7, height: 7)
-                    .opacity(phase == i ? 1 : 0.3)
-                    .scaleEffect(phase == i ? 1.15 : 1.0)
-                    .animation(.easeInOut(duration: 0.35), value: phase)
-            }
-        }
-        .onAppear {
-            Timer.scheduledTimer(withTimeInterval: 0.35, repeats: true) { _ in
-                phase = (phase + 1) % 3
-            }
-        }
-    }
-}

@@ -793,11 +793,37 @@ struct HomeView: View {
             .sheet(item: $activeSheet) { sheet in
                 switch sheet {
                 case .analyzing:
-                    AnalyzingView(image: currentImage)
+                    AnalyzingView(
+                        image: currentImage,
+                        message: "Analyzing your food…",
+                        subMessages: [
+                            "Identifying ingredients",
+                            "Estimating portions",
+                            "Calculating nutrition"
+                        ]
+                    )
                 case .analyzingText:
-                    AnalyzingView(image: nil, message: "Looking up nutrition...")
+                    AnalyzingView(
+                        image: nil,
+                        systemIcon: "text.magnifyingglass",
+                        message: "Looking up nutrition…",
+                        subMessages: [
+                            "Searching nutrition databases",
+                            "Crunching the numbers",
+                            "Almost there"
+                        ]
+                    )
                 case .lookingUpBarcode:
-                    AnalyzingView(image: nil, message: "Looking up barcode...")
+                    AnalyzingView(
+                        image: nil,
+                        systemIcon: "barcode.viewfinder",
+                        message: "Looking up barcode…",
+                        subMessages: [
+                            "Looking up product",
+                            "Fetching nutrition facts",
+                            "Almost there"
+                        ]
+                    )
                 case .foodResult:
                     if let result = currentFoodResult {
                         FoodResultView(
@@ -1729,6 +1755,7 @@ final class CameraOverlayView: UIView {
     private let flashView = UIView()
     private let shutterInner = UIView()
     private let shutterInnerGradient = CAGradientLayer()
+    private let cornerBracketsLayer = CAShapeLayer()
 
     init(mode: CameraMode, coordinator: CameraView.Coordinator) {
         super.init(frame: .zero)
@@ -1743,6 +1770,52 @@ final class CameraOverlayView: UIView {
         super.layoutSubviews()
         shutterInnerGradient.frame = shutterInner.bounds
         shutterInnerGradient.cornerRadius = shutterInner.bounds.width / 2
+        updateCornerBracketsPath()
+    }
+
+    private func updateCornerBracketsPath() {
+        guard bounds.width > 0, bounds.height > 0 else { return }
+        let side = min(bounds.width - 64, 340)
+        let frame = CGRect(
+            x: (bounds.width - side) / 2,
+            y: (bounds.height - side) / 2 - 48,
+            width: side,
+            height: side
+        )
+        let legLength: CGFloat = 36
+        let cornerRadius: CGFloat = 28
+        let path = UIBezierPath()
+
+        // top-left
+        path.move(to: CGPoint(x: frame.minX, y: frame.minY + cornerRadius + legLength))
+        path.addLine(to: CGPoint(x: frame.minX, y: frame.minY + cornerRadius))
+        path.addQuadCurve(to: CGPoint(x: frame.minX + cornerRadius, y: frame.minY),
+                          controlPoint: CGPoint(x: frame.minX, y: frame.minY))
+        path.addLine(to: CGPoint(x: frame.minX + cornerRadius + legLength, y: frame.minY))
+
+        // top-right
+        path.move(to: CGPoint(x: frame.maxX - cornerRadius - legLength, y: frame.minY))
+        path.addLine(to: CGPoint(x: frame.maxX - cornerRadius, y: frame.minY))
+        path.addQuadCurve(to: CGPoint(x: frame.maxX, y: frame.minY + cornerRadius),
+                          controlPoint: CGPoint(x: frame.maxX, y: frame.minY))
+        path.addLine(to: CGPoint(x: frame.maxX, y: frame.minY + cornerRadius + legLength))
+
+        // bottom-right
+        path.move(to: CGPoint(x: frame.maxX, y: frame.maxY - cornerRadius - legLength))
+        path.addLine(to: CGPoint(x: frame.maxX, y: frame.maxY - cornerRadius))
+        path.addQuadCurve(to: CGPoint(x: frame.maxX - cornerRadius, y: frame.maxY),
+                          controlPoint: CGPoint(x: frame.maxX, y: frame.maxY))
+        path.addLine(to: CGPoint(x: frame.maxX - cornerRadius - legLength, y: frame.maxY))
+
+        // bottom-left
+        path.move(to: CGPoint(x: frame.minX + cornerRadius + legLength, y: frame.maxY))
+        path.addLine(to: CGPoint(x: frame.minX + cornerRadius, y: frame.maxY))
+        path.addQuadCurve(to: CGPoint(x: frame.minX, y: frame.maxY - cornerRadius),
+                          controlPoint: CGPoint(x: frame.minX, y: frame.maxY))
+        path.addLine(to: CGPoint(x: frame.minX, y: frame.maxY - cornerRadius - legLength))
+
+        cornerBracketsLayer.frame = bounds
+        cornerBracketsLayer.path = path.cgPath
     }
 
     // Empty regions of the overlay pass touches through to the camera preview;
@@ -1768,6 +1841,19 @@ final class CameraOverlayView: UIView {
         flashView.alpha = 0
         flashView.isUserInteractionEnabled = false
         addSubview(flashView)
+
+        // Scan-frame corner brackets — short L-shaped strokes in brand primary color
+        let bracketColor = UIColor(AppThemeColor.current.gradientColors.first ?? Color(hex: 0xFF375F))
+        cornerBracketsLayer.fillColor = UIColor.clear.cgColor
+        cornerBracketsLayer.strokeColor = bracketColor.cgColor
+        cornerBracketsLayer.lineWidth = 5
+        cornerBracketsLayer.lineCap = .round
+        cornerBracketsLayer.lineJoin = .round
+        cornerBracketsLayer.shadowColor = UIColor.black.cgColor
+        cornerBracketsLayer.shadowOpacity = 0.28
+        cornerBracketsLayer.shadowRadius = 6
+        cornerBracketsLayer.shadowOffset = .zero
+        layer.addSublayer(cornerBracketsLayer)
 
         // 2) Close X — glassy circular button, brand primary icon tint
         let closeBlur = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterialDark))
@@ -3832,11 +3918,7 @@ private struct VoidpenPlusManagedSettingsSection: View {
             }
 
             if isLoadingQuota {
-                HStack {
-                    ProgressView()
-                    Text("Refreshing usage")
-                        .foregroundStyle(.secondary)
-                }
+                VoidpenLoadingCompact("Refreshing usage")
             } else if let quotaError {
                 Text(quotaError)
                     .font(.caption)

@@ -20,11 +20,11 @@ struct OptionalNutrientGoalsSettingsView: View {
                         Image(systemName: "sparkles")
                             .foregroundStyle(AppColors.calorie)
                             .frame(width: 22)
-                        Text(isSuggesting ? "Analyzing" : "Suggest with AI")
+                        Text(isSuggesting ? LocalizedStringKey("Analyzing") : LocalizedStringKey("Suggest with AI"))
                             .foregroundStyle(.primary)
                         Spacer()
                         if isSuggesting {
-                            ProgressView()
+                            VoidpenLoadingDots(size: .small)
                         }
                     }
                 }

@@ -62,7 +62,7 @@ struct VoiceInputView: View {
             // Transcription area
             ZStack(alignment: .topLeading) {
                 if transcription.isEmpty && !isTranscribing {
-                    Text(isRecording ? "Listening…" : "Tap the mic to start")
+                    Text(isRecording ? LocalizedStringKey("Listening…") : LocalizedStringKey("Tap the mic to start"))
                         .foregroundStyle(.tertiary)
                         .font(.body)
                         .padding(.horizontal, 6)
@@ -71,12 +71,9 @@ struct VoiceInputView: View {
                 }
 
                 if isTranscribing {
-                    HStack(spacing: 10) {
-                        ProgressView()
-                        Text("Transcribing via \(provider.rawValue)…")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
+                    VoidpenLoadingCompact(
+                        label: Text("Transcribing via \(provider.rawValue)…")
+                    )
                     .padding(.horizontal, 6)
                     .padding(.vertical, 10)
                 }
