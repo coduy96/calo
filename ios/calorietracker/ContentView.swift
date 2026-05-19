@@ -17,7 +17,7 @@ enum CameraMode {
 
 @Observable
 final class AddFoodIntent {
-    enum Action: Equatable {
+    enum Action: String, Equatable, CaseIterable, Identifiable {
         case camera
         case cameraWithContext
         case nutritionLabel
@@ -29,8 +29,59 @@ final class AddFoodIntent {
         case manual
         case savedMeals
         case copyFromDay
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .camera: return "Camera"
+            case .cameraWithContext: return "Camera + Note"
+            case .nutritionLabel: return "Nutrition Label"
+            case .barcode: return "Barcode"
+            case .fromPhotos: return "From Photos"
+            case .fromPhotosWithContext: return "From Photos + Note"
+            case .text: return "Text Input"
+            case .voice: return "Voice"
+            case .manual: return "Manual Entry"
+            case .savedMeals: return "Saved Meals"
+            case .copyFromDay: return "Copy from Day"
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .camera: return "camera.fill"
+            case .cameraWithContext: return "camera.badge.ellipsis"
+            case .nutritionLabel: return "text.viewfinder"
+            case .barcode: return "barcode.viewfinder"
+            case .fromPhotos: return "photo.on.rectangle"
+            case .fromPhotosWithContext: return "photo.badge.plus"
+            case .text: return "character.cursor.ibeam"
+            case .voice: return "mic.fill"
+            case .manual: return "square.and.pencil"
+            case .savedMeals: return "bookmark.fill"
+            case .copyFromDay: return "calendar"
+            }
+        }
     }
     var pendingAction: Action?
+}
+
+// MARK: - Add Food Options Order Persistence
+
+enum AddFoodOptionsOrder {
+    static let storageKey = "addFoodOptionsOrder"
+
+    static func decode(_ raw: String) -> [AddFoodIntent.Action] {
+        let saved = raw.split(separator: ",").compactMap { AddFoodIntent.Action(rawValue: String($0)) }
+        let savedSet = Set(saved)
+        let missing = AddFoodIntent.Action.allCases.filter { !savedSet.contains($0) }
+        return saved + missing
+    }
+
+    static func encode(_ actions: [AddFoodIntent.Action]) -> String {
+        actions.map(\.rawValue).joined(separator: ",")
+    }
 }
 
 enum AppTab: Hashable {
@@ -169,82 +220,81 @@ struct ContentView: View {
 private struct AddFoodOptionsSheet: View {
     let intent: AddFoodIntent
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(AddFoodOptionsOrder.storageKey) private var orderRaw: String = ""
+
+    private var orderedActions: [AddFoodIntent.Action] {
+        AddFoodOptionsOrder.decode(orderRaw)
+    }
 
     var body: some View {
         NavigationStack {
             List {
-                row("Camera", "camera.fill", .camera)
-                row("Camera + Note", "camera.badge.ellipsis", .cameraWithContext)
-                row("Nutrition Label", "text.viewfinder", .nutritionLabel)
-                row("Barcode", "barcode.viewfinder", .barcode)
-                row("From Photos", "photo.on.rectangle", .fromPhotos)
-                row("From Photos + Note", "photo.badge.plus", .fromPhotosWithContext)
-                row("Text Input", "character.cursor.ibeam", .text)
-                row("Voice", "mic.fill", .voice)
-                row("Manual Entry", "square.and.pencil", .manual)
-                row("Saved Meals", "bookmark.fill", .savedMeals)
-                row("Copy from Day", "calendar", .copyFromDay)
+                Section {
+                    ForEach(orderedActions) { action in
+                        row(action)
+                            .deleteDisabled(true)
+                    }
+                    .onMove(perform: move)
+                } footer: {
+                    Text("Tap a row to use it. Touch and hold the handle on the right to drag and reorder.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
             }
+            .environment(\.editMode, .constant(.active))
             .navigationTitle("Add Food")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        orderRaw = AddFoodOptionsOrder.encode(AddFoodIntent.Action.allCases)
+                    } label: {
+                        Text("Reset")
+                    }
+                    .disabled(orderRaw.isEmpty)
+                }
             }
         }
     }
 
     @ViewBuilder
-    private func row(_ title: String, _ image: String, _ action: AddFoodIntent.Action) -> some View {
+    private func row(_ action: AddFoodIntent.Action) -> some View {
         Button {
             intent.pendingAction = action
             dismiss()
         } label: {
-            Label(title, systemImage: image)
+            Label(action.title, systemImage: action.systemImage)
                 .foregroundStyle(.primary)
         }
+    }
+
+    private func move(from source: IndexSet, to destination: Int) {
+        var items = orderedActions
+        items.move(fromOffsets: source, toOffset: destination)
+        orderRaw = AddFoodOptionsOrder.encode(items)
     }
 }
 
 // MARK: - Floating Add Food Menu Button
 private struct AddFoodMenuButton: View {
     let intent: AddFoodIntent
+    @AppStorage(AddFoodOptionsOrder.storageKey) private var orderRaw: String = ""
+
+    private var orderedActions: [AddFoodIntent.Action] {
+        AddFoodOptionsOrder.decode(orderRaw)
+    }
 
     var body: some View {
         Menu {
-            Button { intent.pendingAction = .camera } label: {
-                Label("Camera", systemImage: "camera.fill")
-            }
-            Button { intent.pendingAction = .cameraWithContext } label: {
-                Label("Camera + Note", systemImage: "camera.badge.ellipsis")
-            }
-            Button { intent.pendingAction = .nutritionLabel } label: {
-                Label("Nutrition Label", systemImage: "text.viewfinder")
-            }
-            Button { intent.pendingAction = .barcode } label: {
-                Label("Barcode", systemImage: "barcode.viewfinder")
-            }
-            Button { intent.pendingAction = .fromPhotos } label: {
-                Label("From Photos", systemImage: "photo.on.rectangle")
-            }
-            Button { intent.pendingAction = .fromPhotosWithContext } label: {
-                Label("From Photos + Note", systemImage: "photo.badge.plus")
-            }
-            Button { intent.pendingAction = .text } label: {
-                Label("Text Input", systemImage: "character.cursor.ibeam")
-            }
-            Button { intent.pendingAction = .voice } label: {
-                Label("Voice", systemImage: "mic.fill")
-            }
-            Button { intent.pendingAction = .manual } label: {
-                Label("Manual Entry", systemImage: "square.and.pencil")
-            }
-            Button { intent.pendingAction = .savedMeals } label: {
-                Label("Saved Meals", systemImage: "bookmark.fill")
-            }
-            Button { intent.pendingAction = .copyFromDay } label: {
-                Label("Copy from Day", systemImage: "calendar")
+            ForEach(orderedActions) { action in
+                Button {
+                    intent.pendingAction = action
+                } label: {
+                    Label(action.title, systemImage: action.systemImage)
+                }
             }
         } label: {
             Image(systemName: "plus")

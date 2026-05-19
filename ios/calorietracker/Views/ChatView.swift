@@ -34,7 +34,7 @@ struct ChatView: View {
     private var messages: [ChatMessage] { thread?.messages ?? [] }
     private var navigationTitleText: String {
         let title = thread?.title ?? ""
-        return title.isEmpty ? "New Chat" : title
+        return title.isEmpty ? String(localized: "New Chat") : title
     }
 
     var body: some View {
@@ -120,7 +120,7 @@ struct ChatView: View {
                 do {
                     guard let data = try await item.loadTransferable(type: Data.self),
                           let image = UIImage(data: data) else {
-                        await MainActor.run { errorMessage = "Could not load that photo." }
+                        await MainActor.run { errorMessage = String(localized: "Could not load that photo.") }
                         return
                     }
                     await MainActor.run {
@@ -129,7 +129,7 @@ struct ChatView: View {
                     }
                 } catch {
                     await MainActor.run {
-                        errorMessage = "Could not load that photo."
+                        errorMessage = String(localized: "Could not load that photo.")
                     }
                 }
             }
@@ -283,10 +283,10 @@ struct ChatView: View {
             HStack(spacing: 8) {
                 ForEach(chips, id: \.self) { chip in
                     Button {
-                        draft = chip
+                        draft = String(localized: String.LocalizationValue(chip))
                         send()
                     } label: {
-                        Text(chip)
+                        Text(LocalizedStringKey(chip))
                             .font(.system(.footnote, design: .rounded, weight: .medium))
                             .padding(.horizontal, 14)
                             .padding(.vertical, 9)
@@ -457,7 +457,7 @@ struct ChatView: View {
         let image = attachedImage
         guard (!typedText.isEmpty || image != nil), !isSending else { return }
 
-        let text = typedText.isEmpty ? "Analyze this image." : typedText
+        let text = typedText.isEmpty ? String(localized: "Analyze this image.") : typedText
         let imageDataForAI = image.flatMap {
             resizedJPEGData(from: $0, maxDimension: 1600, compressionQuality: 0.78)
         }
@@ -465,7 +465,7 @@ struct ChatView: View {
             resizedJPEGData(from: $0, maxDimension: 700, compressionQuality: 0.68)
         }
         if image != nil, imageDataForAI == nil {
-            errorMessage = "Failed to process the image."
+            errorMessage = String(localized: "Failed to process the image.")
             return
         }
 
@@ -503,7 +503,7 @@ struct ChatView: View {
 
     private func openCamera() {
         guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
-            errorMessage = "Camera is not available on this device."
+            errorMessage = String(localized: "Camera is not available on this device.")
             return
         }
         showCamera = true

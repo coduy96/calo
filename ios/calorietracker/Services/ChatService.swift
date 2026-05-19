@@ -16,15 +16,15 @@ struct ChatService {
         var errorDescription: String? {
             switch self {
             case .noAPIKey:
-                return "No API key configured. Add your key in Settings → AI Provider."
+                return String(localized: "No API key configured. Add your key in Settings → AI Provider.")
             case .networkError(let err):
-                return "Network error: \(err.localizedDescription)"
+                return String(localized: "Network error: \(err.localizedDescription)")
             case .apiError(let msg):
-                return "API error: \(msg)"
+                return String(localized: "API error: \(msg)")
             case .invalidResponse:
-                return "Could not understand the AI response. Please try again."
+                return String(localized: "Could not understand the AI response. Please try again.")
             case .subscriptionRequired:
-                return "Voidpen Plus is not active. Subscribe or switch back to Bring Your Own Key in Settings."
+                return String(localized: "Voidpen Plus is not active. Subscribe or switch back to Bring Your Own Key in Settings.")
             }
         }
     }
@@ -212,7 +212,7 @@ struct ChatService {
 
     private static func callOpenAICompatible(baseURL: String, model: String, systemPrompt: String, history: [ChatMessage], newUserMessage: String, imageData: Data?, provider: AIProvider, tools: CoachTools) async throws -> String {
         guard let url = URL(string: "\(baseURL)/chat/completions") else {
-            throw ChatError.apiError("Invalid API URL.")
+            throw ChatError.apiError(String(localized: "Invalid API URL."))
         }
 
         var messages: [[String: Any]] = [["role": "system", "content": systemPrompt]]
@@ -278,7 +278,7 @@ struct ChatService {
             }
             throw ChatError.invalidResponse
         }
-        throw ChatError.apiError("Coach exceeded the tool-call round limit. Try rephrasing your question.")
+        throw ChatError.apiError(String(localized: "Coach exceeded the tool-call round limit. Try rephrasing your question."))
     }
 
     private static func openAIUserContent(text: String, imageData: Data) -> [[String: Any]] {
@@ -319,7 +319,7 @@ struct ChatService {
     private static func callAnthropic(baseURL: String, model: String, systemPrompt: String, history: [ChatMessage], newUserMessage: String, imageData: Data?, tools: CoachTools) async throws -> String {
         guard let apiKey = AIProviderSettings.currentAPIKey else { throw ChatError.noAPIKey }
         guard let url = URL(string: "\(baseURL)/messages") else {
-            throw ChatError.apiError("Invalid API URL.")
+            throw ChatError.apiError(String(localized: "Invalid API URL."))
         }
         var messages: [[String: Any]] = []
         for msg in history {
@@ -383,7 +383,7 @@ struct ChatService {
             }
             throw ChatError.invalidResponse
         }
-        throw ChatError.apiError("Coach exceeded the tool-call round limit. Try rephrasing your question.")
+        throw ChatError.apiError(String(localized: "Coach exceeded the tool-call round limit. Try rephrasing your question."))
     }
 
     private static func anthropicUserContent(text: String, imageData: Data) -> [[String: Any]] {
@@ -432,7 +432,7 @@ struct ChatService {
             throw ChatError.noAPIKey
         }
         guard let url = URL(string: "\(baseURL)/models/\(model):generateContent") else {
-            throw ChatError.apiError("Invalid API URL.")
+            throw ChatError.apiError(String(localized: "Invalid API URL."))
         }
 
         var contents: [[String: Any]] = []
@@ -499,7 +499,7 @@ struct ChatService {
             }
             throw ChatError.invalidResponse
         }
-        throw ChatError.apiError("Coach exceeded the tool-call round limit. Try rephrasing your question.")
+        throw ChatError.apiError(String(localized: "Coach exceeded the tool-call round limit. Try rephrasing your question."))
     }
 
     private static func geminiUserParts(text: String, imageData: Data?) -> [[String: Any]] {
@@ -570,11 +570,11 @@ struct ChatService {
     private static func friendlyMessage(for status: Int, raw: String) -> String {
         switch status {
         case 503, 529:
-            return "The AI provider is overloaded right now. We retried a few times — please try again in a minute, or switch to a different provider/model in Settings → AI Provider."
+            return String(localized: "The AI provider is overloaded right now. We retried a few times — please try again in a minute, or switch to a different provider/model in Settings → AI Provider.")
         case 429:
-            return "Rate limit hit on your API key. Wait a minute, or switch to another provider in Settings → AI Provider."
+            return String(localized: "Rate limit hit on your API key. Wait a minute, or switch to another provider in Settings → AI Provider.")
         case 401, 403:
-            return "Your API key was rejected. Open Settings → AI Provider and re-paste a valid key."
+            return String(localized: "Your API key was rejected. Open Settings → AI Provider and re-paste a valid key.")
         default:
             return raw
         }

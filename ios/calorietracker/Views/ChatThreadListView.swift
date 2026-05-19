@@ -223,7 +223,7 @@ private struct ChatThreadRow: View {
     }()
 
     private var titleText: String {
-        thread.title.isEmpty ? "New Chat" : thread.title
+        thread.title.isEmpty ? String(localized: "New Chat") : thread.title
     }
 
     private var previewText: String {
