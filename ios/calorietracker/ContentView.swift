@@ -2225,8 +2225,13 @@ struct ProgressTabView: View {
             .sheet(isPresented: $showLogWeight) {
                 LogWeightSheet(
                     currentWeightKg: weightStore.latestEntry?.weightKg ?? userProfile.weightKg
-                ) { weightKg in
-                    weightStore.addEntry(WeightEntry(weightKg: weightKg))
+                ) { weightKg, imageData in
+                    let id = UUID()
+                    var filename: String? = nil
+                    if let imageData {
+                        filename = WeightPhotoStore.shared.store(data: imageData, for: id)
+                    }
+                    weightStore.addEntry(WeightEntry(id: id, weightKg: weightKg, photoFilename: filename))
                 }
             }
             .sheet(isPresented: $showLogBodyFat) {
@@ -3484,6 +3489,7 @@ struct ProfileView: View {
                     // already cleans per-entry files, but a belt-and-braces
                     // deleteAll catches any orphans from earlier crash recovery.
                     FoodImageStore.shared.deleteAll()
+                    WeightPhotoStore.shared.deleteAll()
                     // Cancel all notifications
                     notificationManager.cancelAllNotifications()
                     // Wipe all persisted data

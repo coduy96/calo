@@ -106,6 +106,7 @@ struct CloudKitService {
         let record = CKRecord(recordType: weightType, recordID: recordID)
         record["date"] = entry.date
         record["weightKg"] = entry.weightKg
+        // photoFilename intentionally NOT synced (mirrors FoodEntry — local-only)
         return record
     }
 

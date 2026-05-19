@@ -30715,6 +30715,106 @@
           }
         }
       }
+    },
+    "Add Photo" : {
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "إضافة صورة" } },
+        "az" : { "stringUnit" : { "state" : "translated", "value" : "Şəkil əlavə et" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Foto hinzufügen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Photo" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir foto" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajouter une photo" } },
+        "hi" : { "stringUnit" : { "state" : "translated", "value" : "फ़ोटो जोड़ें" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi foto" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "写真を追加" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "사진 추가" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Foto toevoegen" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Adicionar foto" } },
+        "ro" : { "stringUnit" : { "state" : "translated", "value" : "Adaugă fotografie" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Добавить фото" } },
+        "vi" : { "stringUnit" : { "state" : "translated", "value" : "Thêm ảnh" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加照片" } }
+      }
+    },
+    "Change Photo" : {
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "تغيير الصورة" } },
+        "az" : { "stringUnit" : { "state" : "translated", "value" : "Şəkli dəyiş" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Foto ändern" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Change Photo" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cambiar foto" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Changer la photo" } },
+        "hi" : { "stringUnit" : { "state" : "translated", "value" : "फ़ोटो बदलें" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cambia foto" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "写真を変更" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "사진 변경" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Foto wijzigen" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Alterar foto" } },
+        "ro" : { "stringUnit" : { "state" : "translated", "value" : "Schimbă fotografia" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Изменить фото" } },
+        "vi" : { "stringUnit" : { "state" : "translated", "value" : "Đổi ảnh" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更换照片" } }
+      }
+    },
+    "Photo unavailable" : {
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الصورة غير متاحة" } },
+        "az" : { "stringUnit" : { "state" : "translated", "value" : "Şəkil mövcud deyil" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Foto nicht verfügbar" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Photo unavailable" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Foto no disponible" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Photo indisponible" } },
+        "hi" : { "stringUnit" : { "state" : "translated", "value" : "फ़ोटो उपलब्ध नहीं" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Foto non disponibile" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "写真は利用できません" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "사진을 사용할 수 없음" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Foto niet beschikbaar" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Foto indisponível" } },
+        "ro" : { "stringUnit" : { "state" : "translated", "value" : "Fotografie indisponibilă" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Фото недоступно" } },
+        "vi" : { "stringUnit" : { "state" : "translated", "value" : "Không có ảnh" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "照片不可用" } }
+      }
+    },
+    "Progress Photo" : {
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "صورة التقدم" } },
+        "az" : { "stringUnit" : { "state" : "translated", "value" : "İrəliləyiş şəkli" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fortschrittsfoto" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Progress Photo" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Foto de progreso" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Photo de progression" } },
+        "hi" : { "stringUnit" : { "state" : "translated", "value" : "प्रगति फ़ोटो" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Foto dei progressi" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "進捗写真" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "진행 상황 사진" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Voortgangsfoto" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Foto de progresso" } },
+        "ro" : { "stringUnit" : { "state" : "translated", "value" : "Fotografie de progres" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Фото прогресса" } },
+        "vi" : { "stringUnit" : { "state" : "translated", "value" : "Ảnh tiến trình" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "进度照片" } }
+      }
+    },
+    "Remove Photo" : {
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "إزالة الصورة" } },
+        "az" : { "stringUnit" : { "state" : "translated", "value" : "Şəkli sil" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Foto entfernen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove Photo" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Quitar foto" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer la photo" } },
+        "hi" : { "stringUnit" : { "state" : "translated", "value" : "फ़ोटो हटाएं" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovi foto" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "写真を削除" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "사진 제거" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Foto verwijderen" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Remover foto" } },
+        "ro" : { "stringUnit" : { "state" : "translated", "value" : "Elimină fotografia" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить фото" } },
+        "vi" : { "stringUnit" : { "state" : "translated", "value" : "Xoá ảnh" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除照片" } }
+      }
     }
   },
   "version" : "1.1"

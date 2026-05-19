@@ -1,5 +1,6 @@
 import SwiftUI
 import Charts
+import PhotosUI
 
 // MARK: - Time Range
 
@@ -330,12 +331,14 @@ struct LogWeightSheet: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("useMetric") private var useMetric = false
     let currentWeightKg: Double
-    let onSave: (Double) -> Void
+    let onSave: (Double, Data?) -> Void
 
     @State private var wholeNumber: Int
     @State private var decimal: Int
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var selectedImageData: Data?
 
-    init(currentWeightKg: Double, onSave: @escaping (Double) -> Void) {
+    init(currentWeightKg: Double, onSave: @escaping (Double, Data?) -> Void) {
         self.currentWeightKg = currentWeightKg
         self.onSave = onSave
         // Respect @AppStorage at the time the sheet is created.
@@ -396,8 +399,11 @@ struct LogWeightSheet: View {
                         .padding(.leading, 4)
                 }
 
+                photoAttachmentRow
+                    .padding(.horizontal, 24)
+
                 Button {
-                    onSave(selectedKg)
+                    onSave(selectedKg, selectedImageData)
                     dismiss()
                 } label: {
                     Text("Save")
@@ -420,8 +426,66 @@ struct LogWeightSheet: View {
                     Button("Cancel") { dismiss() }
                 }
             }
+            .onChange(of: selectedPhotoItem) { _, newItem in
+                guard let newItem else { return }
+                Task {
+                    if let data = try? await newItem.loadTransferable(type: Data.self) {
+                        await MainActor.run { selectedImageData = data }
+                    }
+                }
+            }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.large])
+    }
+
+    @ViewBuilder
+    private var photoAttachmentRow: some View {
+        if let data = selectedImageData, let uiImage = UIImage(data: data) {
+            HStack(spacing: 12) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 56, height: 56)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Progress Photo")
+                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                        .foregroundStyle(.primary)
+                    HStack(spacing: 16) {
+                        PhotosPicker(selection: $selectedPhotoItem, matching: .images, photoLibrary: .shared()) {
+                            Text("Change Photo")
+                                .font(.system(.caption, design: .rounded, weight: .medium))
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                        Button {
+                            selectedImageData = nil
+                            selectedPhotoItem = nil
+                        } label: {
+                            Text("Remove Photo")
+                                .font(.system(.caption, design: .rounded, weight: .medium))
+                                .foregroundStyle(.red)
+                        }
+                    }
+                }
+                Spacer()
+            }
+            .padding(12)
+            .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 14))
+        } else {
+            PhotosPicker(selection: $selectedPhotoItem, matching: .images, photoLibrary: .shared()) {
+                HStack(spacing: 10) {
+                    Image(systemName: "camera.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                    Text("Add Photo")
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                }
+                .foregroundStyle(AppColors.calorie)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(AppColors.calorie.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
+            }
+        }
     }
 }
 
@@ -472,6 +536,7 @@ struct AllWeightHistoryView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var pendingDeletion: WeightEntry?
+    @State private var presentedPhotoEntry: WeightEntry?
     // Local mirror so the list updates immediately after deletion without needing the parent to re-bind.
     @State private var visibleEntries: [WeightEntry] = []
 
@@ -479,16 +544,30 @@ struct AllWeightHistoryView: View {
         NavigationStack {
             List {
                 ForEach(visibleEntries) { entry in
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(displayWeight(entry.weightKg, useMetric: useMetric))
-                                .font(.system(.body, design: .rounded, weight: .medium))
-                            Text(weightHistoryFormatter.string(from: entry.date))
-                                .font(.system(.caption, design: .rounded))
-                                .foregroundStyle(.secondary)
+                    Button {
+                        if entry.photoFilename != nil {
+                            presentedPhotoEntry = entry
                         }
-                        Spacer()
+                    } label: {
+                        HStack(spacing: 12) {
+                            thumbnail(for: entry)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(displayWeight(entry.weightKg, useMetric: useMetric))
+                                    .font(.system(.body, design: .rounded, weight: .medium))
+                                    .foregroundStyle(.primary)
+                                Text(weightHistoryFormatter.string(from: entry.date))
+                                    .font(.system(.caption, design: .rounded))
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            if entry.photoFilename != nil {
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
                     }
+                    .buttonStyle(.plain)
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive) {
                             pendingDeletion = entry
@@ -508,6 +587,9 @@ struct AllWeightHistoryView: View {
             }
         }
         .onAppear { visibleEntries = entries }
+        .sheet(item: $presentedPhotoEntry) { entry in
+            WeightPhotoDetailView(entry: entry, useMetric: useMetric)
+        }
         .alert("Delete Weight Entry", isPresented: Binding(
             get: { pendingDeletion != nil },
             set: { if !$0 { pendingDeletion = nil } }
@@ -527,6 +609,88 @@ struct AllWeightHistoryView: View {
                     weightHistoryFormatter.string(from: entry.date),
                     displayWeight(entry.weightKg, useMetric: useMetric)
                 ))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func thumbnail(for entry: WeightEntry) -> some View {
+        if let filename = entry.photoFilename,
+           let data = WeightPhotoStore.shared.load(filename: filename),
+           let uiImage = UIImage(data: data) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 44, height: 44)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+        } else {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(AppColors.calorie.opacity(0.10))
+                .frame(width: 44, height: 44)
+                .overlay {
+                    Image(systemName: "scalemass.fill")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(AppColors.calorie.opacity(0.7))
+                }
+        }
+    }
+}
+
+// MARK: - Weight Photo Detail (full-screen viewer)
+
+struct WeightPhotoDetailView: View {
+    let entry: WeightEntry
+    let useMetric: Bool
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.black.ignoresSafeArea()
+
+                if let filename = entry.photoFilename,
+                   let data = WeightPhotoStore.shared.load(filename: filename),
+                   let uiImage = UIImage(data: data) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFit()
+                } else {
+                    VStack(spacing: 12) {
+                        Image(systemName: "photo.badge.exclamationmark")
+                            .font(.system(size: 36, weight: .regular))
+                            .foregroundStyle(.white.opacity(0.6))
+                        Text("Photo unavailable")
+                            .font(.system(.body, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.7))
+                    }
+                }
+
+                VStack {
+                    Spacer()
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(displayWeight(entry.weightKg, useMetric: useMetric))
+                                .font(.system(.title2, design: .rounded, weight: .bold))
+                                .foregroundStyle(.white)
+                            Text(weightHistoryFormatter.string(from: entry.date))
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.85))
+                        }
+                        Spacer()
+                    }
+                    .padding(16)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
+                    .environment(\.colorScheme, .dark)
+                    .padding(16)
+                }
+            }
+            .navigationTitle("Progress Photo")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
             }
         }
     }

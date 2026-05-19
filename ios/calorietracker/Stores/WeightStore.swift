@@ -61,6 +61,9 @@ class WeightStore {
     func deleteEntry(_ entry: WeightEntry) {
         let id = entry.id
         entries.removeAll { $0.id == id }
+        if let filename = entry.photoFilename {
+            WeightPhotoStore.shared.delete(filename: filename)
+        }
         saveEntries()
         onEntryDeleted?(id)
         syncProfileWeightToLatest()
