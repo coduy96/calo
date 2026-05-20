@@ -6,6 +6,16 @@
 	<string>$(APP_DISPLAY_NAME)</string>
 	<key>RevenueCatAppleAPIKey</key>
 	<string>$(REVENUECAT_API_KEY)</string>
+	<key>VoidpenBackendURL</key>
+	<string>https://ckllhxtjxevmnusdocbn.supabase.co</string>
+	<key>VoidpenBackendAnonKey</key>
+	<string>sb_publishable_QFOBRn3VS0D5EQWyfGBXRg_Tem4AWum</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Used to record short voice notes to log meals.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Take a photo of your meal or a nutrition label to log it.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Pick a photo of your meal or a nutrition label from your library.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Read your weight, height, and body composition to keep your profile accurate.</string>
 	<key>NSHealthUpdateUsageDescription</key>

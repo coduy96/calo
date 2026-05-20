@@ -11,9 +11,6 @@ struct OnboardingView: View {
     @Environment(StoreManager.self) private var storeManager
 
     @State private var step = 0
-    @State private var selectedAccessMode: AIAccessMode = .voidpenPlus
-    @State private var showPaywall = false
-    @State private var shouldAdvanceAfterPlusPurchase = false
     @State private var gender: Gender = .male
     @State private var birthday: Date = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     @AppStorage("useMetric") private var useMetric = false
@@ -53,7 +50,7 @@ struct OnboardingView: View {
         var id: String { rawValue }
     }
 
-    private let totalSteps = 15 // 0-14
+    private let totalSteps = 14 // 0-13
     private let onboardingReviewQuotes: [(title: String, author: String, quote: String)] = [
         ("Thankful", "Joel819", "This app is great, am recommending this to my friends."),
         ("One of the best", "2MitiN6", "Yours changes my life in real time for free."),
@@ -137,10 +134,9 @@ struct OnboardingView: View {
                     case 8: goalSpeedStep
                     case 9: notificationsStep
                     case 10: appleHealthStep
-                    case 11: aiProviderStep
-                    case 12: buildingPlanStep
-                    case 13: planReadyStep
-                    case 14: reviewStep
+                    case 11: buildingPlanStep
+                    case 12: planReadyStep
+                    case 13: reviewStep
                     default: EmptyView()
                     }
                 }
@@ -152,16 +148,6 @@ struct OnboardingView: View {
                 .animation(.snappy, value: step)
             }
             .background(AppColors.appBackground.ignoresSafeArea())
-            .sheet(isPresented: $showPaywall) {
-                PaywallView {
-                    advanceAfterPlusPurchaseIfNeeded()
-                }
-            }
-            .onChange(of: storeManager.isSubscribed) { _, isSubscribed in
-                if isSubscribed {
-                    advanceAfterPlusPurchaseIfNeeded()
-                }
-            }
     }
 
     // MARK: - Continue Button
@@ -184,14 +170,6 @@ struct OnboardingView: View {
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 36)
-    }
-
-    private func advanceAfterPlusPurchaseIfNeeded() {
-        guard shouldAdvanceAfterPlusPurchase, step == 11 else { return }
-        shouldAdvanceAfterPlusPurchase = false
-        showPaywall = false
-        AIAccessSettings.mode = .voidpenPlus
-        withAnimation(.snappy) { step += 1 }
     }
 
     // MARK: - 0: Welcome
@@ -809,168 +787,8 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 11: AI Provider Setup
 
-    private var aiProviderStep: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            VStack(spacing: 20) {
-                ZStack {
-                    Circle()
-                        .fill(.ultraThinMaterial)
-                        .frame(width: 120, height: 120)
-
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 48))
-                        .foregroundStyle(
-                            LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
-                        )
-                }
-
-                VStack(spacing: 8) {
-                    Text("Choose Your AI")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .multilineTextAlignment(.center)
-
-                    Text("BYOK keeps Voidpen free. Plus is optional for no API setup and supports development.")
-                        .font(.system(.callout, design: .rounded))
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-
-                VStack(spacing: 12) {
-                    aiAccessCard(
-                        mode: .voidpenPlus,
-                        title: "Voidpen Plus",
-                        subtitle: "No setup for non-technical users. Gemini food scans, voice, and Coach with fallback.",
-                        badge: storeManager.isSubscribed ? "Active" : "Default"
-                    )
-
-                    aiAccessCard(
-                        mode: .bringYourOwnKey,
-                        title: "Bring Your Own Key",
-                        subtitle: "Free app mode. Use your own Gemini key, OpenAI, Groq, or another provider.",
-                        badge: "Free"
-                    )
-
-                    if selectedAccessMode == .voidpenPlus && !storeManager.isSubscribed {
-                        Button {
-                            AIAccessSettings.mode = .voidpenPlus
-                            shouldAdvanceAfterPlusPurchase = true
-                            showPaywall = true
-                        } label: {
-                            Text("See Plans")
-                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 44)
-                                .background(AppColors.calorie, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        }
-                    }
-                }
-                .padding(.horizontal, 24)
-
-                Text("Calorie tracking should stay accessible: use BYOK freely if you can make an API key, or choose Plus for convenience.")
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(.tertiary)
-                    .multilineTextAlignment(.center)
-            }
-
-            Spacer()
-
-            Button {
-                AIAccessSettings.mode = selectedAccessMode
-                if selectedAccessMode == .voidpenPlus && !storeManager.isSubscribed {
-                    shouldAdvanceAfterPlusPurchase = true
-                    showPaywall = true
-                } else {
-                    withAnimation(.snappy) { step += 1 }
-                }
-            } label: {
-                Text(selectedAccessMode == .voidpenPlus && !storeManager.isSubscribed ? "Subscribe to Continue" : "Continue")
-                    .font(.system(.body, design: .rounded, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 54)
-                    .background(
-                        LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing),
-                        in: RoundedRectangle(cornerRadius: 16)
-                    )
-                    .shadow(color: AppColors.calorie.opacity(0.3), radius: 8, y: 4)
-            }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 36)
-        }
-    }
-
-    private func aiSetupRow(number: String, text: LocalizedStringKey) -> some View {
-        HStack(spacing: 12) {
-            Text(number)
-                .font(.system(.caption, design: .rounded, weight: .bold))
-                .foregroundStyle(.white)
-                .frame(width: 22, height: 22)
-                .background(AppColors.calorie, in: Circle())
-            Text(text)
-                .font(.system(.subheadline, design: .rounded))
-                .foregroundStyle(.primary)
-            Spacer(minLength: 0)
-        }
-    }
-
-    private func aiAccessCard(mode: AIAccessMode, title: LocalizedStringKey, subtitle: LocalizedStringKey, badge: LocalizedStringKey) -> some View {
-        Button {
-            selectedAccessMode = mode
-            AIAccessSettings.mode = mode
-        } label: {
-            HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                        .frame(width: 44, height: 44)
-                    Image(systemName: mode.icon)
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(AppColors.calorie)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
-                        Text(title)
-                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                            .foregroundStyle(.primary)
-                        Text(badge)
-                            .font(.system(.caption2, design: .rounded, weight: .bold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 2)
-                            .background(AppColors.calorie, in: Capsule())
-                    }
-                    Text(subtitle)
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer(minLength: 0)
-
-                Image(systemName: selectedAccessMode == mode ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 22))
-                    .foregroundStyle(selectedAccessMode == mode ? AppColors.calorie : .secondary.opacity(0.35))
-            }
-            .padding(14)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(.ultraThinMaterial)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .strokeBorder(selectedAccessMode == mode ? AppColors.calorie.opacity(0.45) : Color.white.opacity(0.10), lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
-    }
-
-    // MARK: - 14: Review
+    // MARK: - 13: Review
 
     private var reviewStep: some View {
         VStack(spacing: 0) {
@@ -1081,7 +899,7 @@ struct OnboardingView: View {
         )
     }
 
-    // MARK: - 12: Building Plan
+    // MARK: - 11: Building Plan
 
     private var buildingPlanStep: some View {
         BuildingPlanStepView(profile: profile) {
@@ -1089,7 +907,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 13: Plan Ready
+    // MARK: - 12: Plan Ready
 
     private var planCalories: Int { editedCalories ?? profile.dailyCalories }
     private var planProtein: Int { editedProtein ?? profile.proteinGoal }

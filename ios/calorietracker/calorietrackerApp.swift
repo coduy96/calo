@@ -8,6 +8,7 @@
 import SwiftUI
 import HealthKit
 import WidgetKit
+import Security
 
 @main
 struct calorietrackerApp: App {
@@ -42,7 +43,49 @@ struct calorietrackerApp: App {
         // AppleLanguages once at process startup, so applying it later in
         // the launch only takes effect on the next relaunch.
         AppLanguageSettings.applyToBundle()
-        APIKeyManager.migrateIfNeeded()
+        Self.purgeLegacyBYOKDataOnce()
+    }
+
+    /// One-shot cleanup for users upgrading from a BYOK build. Removes the
+    /// old provider/key UserDefaults entries and Keychain-stored API keys so
+    /// they don't linger as dead bytes on the device. Guarded by a flag so
+    /// it runs once and is then free.
+    private static func purgeLegacyBYOKDataOnce() {
+        let flagKey = "legacyBYOKDataPurged_v1"
+        guard !UserDefaults.standard.bool(forKey: flagKey) else { return }
+        let legacyDefaultsKeys = [
+            "aiAccessMode", "selectedAIProvider", "selectedAIModel", "aiUserContext",
+            "aiFallbackEnabled", "selectedFallbackAIProvider", "selectedFallbackAIModel",
+            "freeScansUsed", "dailyScansUsed", "lastScanDate",
+            "selectedSpeechProvider", "selectedSpeechLanguage",
+            "voidpenPlusIntroSeen_3_4", "voidpenPlusUpdateAnnouncementSeenID",
+            "voidpenProxyEndpoint",
+        ]
+        for key in legacyDefaultsKeys {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+        // Sweep prefix-keyed entries (e.g. customBaseURL_<provider>, selectedSpeechLanguage_<provider>).
+        for (key, _) in UserDefaults.standard.dictionaryRepresentation()
+        where key.hasPrefix("customBaseURL_") || key.hasPrefix("selectedSpeechLanguage_") {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+        // Old Keychain entries from BYOK / speech-key storage. The service
+        // identifier matches what KeychainHelper used.
+        purgeLegacyKeychainKeys(servicePrefixes: ["apikey_", "speechApiKey_"])
+        UserDefaults.standard.set(true, forKey: flagKey)
+    }
+
+    private static func purgeLegacyKeychainKeys(servicePrefixes: [String]) {
+        let service = "com.cotrinhhienduy.calorietracker"
+        // We don't know exact account names (provider rawValues are gone), so
+        // we delete by class+service. That clears every generic-password the
+        // app stored. Safe — the new build doesn't store anything in Keychain.
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+        ]
+        SecItemDelete(query as CFDictionary)
+        _ = servicePrefixes // suppress unused param warning; reserved for future targeted cleanup
     }
 
     var body: some Scene {

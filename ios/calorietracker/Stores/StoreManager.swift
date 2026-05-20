@@ -24,7 +24,7 @@ enum RevenueCatConfig {
         #if DEBUG
         Purchases.logLevel = .debug
         #endif
-        Purchases.configure(withAPIKey: apiKey, appUserID: AIAccessSettings.installID)
+        Purchases.configure(withAPIKey: apiKey, appUserID: AppIdentity.installID)
         didConfigure = true
     }
 }
@@ -40,6 +40,9 @@ struct PlusProduct: Identifiable {
     let title: String
     let displayPrice: String
     let detail: String
+    /// Localized intro-offer copy (e.g. "3 days free, then …"). nil when the
+    /// product has no intro offer or the user is no longer eligible.
+    let introOfferCopy: String?
     fileprivate let source: Source
 }
 
@@ -56,20 +59,9 @@ class StoreManager {
     // MARK: - Purchase State
     var products: [PlusProduct] = []
     var isSubscribed = false {
-        didSet { AIAccessSettings.setActivePlusEntitlement(isSubscribed) }
+        didSet { AppIdentity.setActiveEntitlement(isSubscribed) }
     }
     var currentSubscriptionProductID: String?
-
-    // MARK: - Scan Tracking (UserDefaults-backed)
-    var freeScansUsed: Int {
-        didSet { UserDefaults.standard.set(freeScansUsed, forKey: "freeScansUsed") }
-    }
-    var dailyScansUsed: Int {
-        didSet { UserDefaults.standard.set(dailyScansUsed, forKey: "dailyScansUsed") }
-    }
-    var lastScanDate: Date? {
-        didSet { UserDefaults.standard.set(lastScanDate, forKey: "lastScanDate") }
-    }
 
     // MARK: - Loading / Error
     var hasCheckedEntitlements = false
@@ -80,26 +72,6 @@ class StoreManager {
     private var transactionListener: Task<Void, Never>?
 
     // MARK: - Computed
-    var canScan: Bool {
-        if isSubscribed {
-            resetDailyCounterIfNeeded()
-            return dailyScansUsed < AIAccessSettings.paidFoodDailyRequestLimit
-        }
-        return freeScansUsed < 4
-    }
-
-    var canUseApp: Bool {
-        return isSubscribed || freeScansUsed < 4
-    }
-
-    var remainingScans: Int {
-        if isSubscribed {
-            resetDailyCounterIfNeeded()
-            return max(0, AIAccessSettings.paidFoodDailyRequestLimit - dailyScansUsed)
-        }
-        return max(0, 3 - freeScansUsed)
-    }
-
     var monthlyProduct: PlusProduct? {
         products.first { $0.id == Self.monthlyID }
     }
@@ -125,10 +97,6 @@ class StoreManager {
     // MARK: - Init
     init() {
         RevenueCatConfig.configureIfNeeded()
-
-        freeScansUsed = UserDefaults.standard.integer(forKey: "freeScansUsed")
-        dailyScansUsed = UserDefaults.standard.integer(forKey: "dailyScansUsed")
-        lastScanDate = UserDefaults.standard.object(forKey: "lastScanDate") as? Date
 
         if !RevenueCatConfig.isConfigured {
             transactionListener = listenForTransactions()
@@ -173,6 +141,7 @@ class StoreManager {
                     title: Self.title(forProductID: product.id),
                     displayPrice: product.displayPrice,
                     detail: detail(for: product),
+                    introOfferCopy: introCopy(for: product),
                     source: .storeKit(product)
                 )
             }
@@ -349,27 +318,6 @@ class StoreManager {
         applySubscriptionState(isSubscribed: subscribed, productID: productID)
     }
 
-    // MARK: - Scan Recording
-    func recordScan() {
-        if isSubscribed {
-            resetDailyCounterIfNeeded()
-            dailyScansUsed += 1
-        } else {
-            freeScansUsed += 1
-        }
-    }
-
-    func resetDailyCounterIfNeeded() {
-        guard let lastDate = lastScanDate else {
-            lastScanDate = .now
-            return
-        }
-        if !Calendar.current.isDateInToday(lastDate) {
-            dailyScansUsed = 0
-            lastScanDate = .now
-        }
-    }
-
     private func plusProducts(from offering: Offering) -> [PlusProduct] {
         var packages: [Package] = []
         if let annual = offering.annual { packages.append(annual) }
@@ -389,6 +337,7 @@ class StoreManager {
                 title: title(for: package),
                 displayPrice: package.localizedPriceString,
                 detail: detail(for: package),
+                introOfferCopy: introCopy(for: package),
                 source: .revenueCat(package)
             )
         }
@@ -464,5 +413,40 @@ class StoreManager {
         formatter.locale = product.priceFormatStyle.locale
         let monthlyStr = formatter.string(from: monthlyEquivalent as NSDecimalNumber) ?? ""
         return "\(monthlyStr)/mo"
+    }
+
+    /// "3 days free, then $X.XX/year" — built from the App Store intro offer
+    /// (free trial) configured at the product level. nil when the product
+    /// has no intro offer or the user has already used it.
+    private func introCopy(for product: Product) -> String? {
+        guard let offer = product.subscription?.introductoryOffer,
+              offer.paymentMode == .freeTrial else { return nil }
+        let days = numberOfDays(in: offer.period)
+        return String(localized: "\(days) days free, then \(product.displayPrice)")
+    }
+
+    private func introCopy(for package: Package) -> String? {
+        guard let offer = package.storeProduct.introductoryDiscount,
+              offer.paymentMode == .freeTrial else { return nil }
+        let period = offer.subscriptionPeriod
+        let multiplier: Int
+        switch period.unit {
+        case .day: multiplier = 1
+        case .week: multiplier = 7
+        case .month: multiplier = 30
+        case .year: multiplier = 365
+        }
+        let days = period.value * multiplier
+        return String(localized: "\(days) days free, then \(package.localizedPriceString)")
+    }
+
+    private func numberOfDays(in period: Product.SubscriptionPeriod) -> Int {
+        switch period.unit {
+        case .day: return period.value
+        case .week: return period.value * 7
+        case .month: return period.value * 30
+        case .year: return period.value * 365
+        @unknown default: return period.value
+        }
     }
 }

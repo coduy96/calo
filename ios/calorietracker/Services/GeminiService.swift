@@ -1,161 +1,11 @@
 import Foundation
 import UIKit
 
-enum VoidpenProxyClient {
-    enum ProxyTask: String {
-        case food
-        case coach
-        case speech
-    }
-
-    enum ProxyError: LocalizedError {
-        case subscriptionRequired
-        case quotaExceeded(String)
-        case apiError(String)
-        case invalidResponse
-        case networkError(Error)
-
-        var errorDescription: String? {
-            switch self {
-            case .subscriptionRequired:
-                return "Voidpen Plus is not active. Subscribe or switch back to Bring Your Own Key in Settings."
-            case .quotaExceeded(let message):
-                return message
-            case .apiError(let message):
-                return message
-            case .invalidResponse:
-                return "Unexpected response from Voidpen Plus."
-            case .networkError(let error):
-                return "Network error: \(error.localizedDescription)"
-            }
-        }
-    }
-
-    static func quotaSnapshot() async throws -> AIAccessQuotaSnapshot {
-        guard AIAccessSettings.hasActivePlusEntitlement else {
-            throw ProxyError.subscriptionRequired
-        }
-
-        var request = URLRequest(url: AIAccessSettings.proxyEndpoint)
-        request.httpMethod = "GET"
-        request.setValue("ios", forHTTPHeaderField: "X-Voidpen-Platform")
-        request.setValue(AIAccessSettings.installID, forHTTPHeaderField: "X-Voidpen-Install-ID")
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse else { throw ProxyError.invalidResponse }
-            guard (200..<300).contains(http.statusCode) else {
-                let message = parseProxyMessage(from: data) ?? "Voidpen Plus usage failed with HTTP \(http.statusCode)."
-                throw ProxyError.apiError(message)
-            }
-            return try JSONDecoder().decode(AIAccessQuotaSnapshot.self, from: data)
-        } catch let error as ProxyError {
-            throw error
-        } catch let error as DecodingError {
-            throw ProxyError.apiError(error.localizedDescription)
-        } catch {
-            throw ProxyError.networkError(error)
-        }
-    }
-
-    static func generateContent(task: ProxyTask, body: [String: Any]) async throws -> Data {
-        guard AIAccessSettings.hasActivePlusEntitlement else {
-            throw ProxyError.subscriptionRequired
-        }
-
-        let payload: [String: Any] = [
-            "task": task.rawValue,
-            "body": body,
-        ]
-
-        var request = URLRequest(url: AIAccessSettings.proxyEndpoint)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("ios", forHTTPHeaderField: "X-Voidpen-Platform")
-        request.setValue(AIAccessSettings.installID, forHTTPHeaderField: "X-Voidpen-Install-ID")
-        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse else { throw ProxyError.invalidResponse }
-            guard (200..<300).contains(http.statusCode) else {
-                let message = parseProxyMessage(from: data) ?? "Voidpen Plus request failed with HTTP \(http.statusCode)."
-                if http.statusCode == 402 || http.statusCode == 429 {
-                    throw ProxyError.quotaExceeded(message)
-                }
-                throw ProxyError.apiError(message)
-            }
-            return data
-        } catch let error as ProxyError {
-            throw error
-        } catch {
-            throw ProxyError.networkError(error)
-        }
-    }
-
-    static func transcribeSpeech(audioData: Data, languageCode: String?) async throws -> String {
-        guard AIAccessSettings.hasActivePlusEntitlement else {
-            throw ProxyError.subscriptionRequired
-        }
-
-        var body: [String: Any] = [
-            "audioBase64": audioData.base64EncodedString(),
-            "mimeType": "audio/m4a",
-        ]
-        if let languageCode {
-            body["language"] = languageCode
-        }
-
-        let payload: [String: Any] = [
-            "task": ProxyTask.speech.rawValue,
-            "body": body,
-        ]
-
-        var request = URLRequest(url: AIAccessSettings.proxyEndpoint)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("ios", forHTTPHeaderField: "X-Voidpen-Platform")
-        request.setValue(AIAccessSettings.installID, forHTTPHeaderField: "X-Voidpen-Install-ID")
-        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse else { throw ProxyError.invalidResponse }
-            guard (200..<300).contains(http.statusCode) else {
-                let message = parseProxyMessage(from: data) ?? "Voidpen Plus speech request failed with HTTP \(http.statusCode)."
-                if http.statusCode == 402 || http.statusCode == 429 {
-                    throw ProxyError.quotaExceeded(message)
-                }
-                throw ProxyError.apiError(message)
-            }
-            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let text = json["text"] as? String
-            else {
-                throw ProxyError.invalidResponse
-            }
-            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty else { throw ProxyError.invalidResponse }
-            return trimmed
-        } catch let error as ProxyError {
-            throw error
-        } catch {
-            throw ProxyError.networkError(error)
-        }
-    }
-
-    private static func parseProxyMessage(from data: Data) -> String? {
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
-        if let error = json["error"] as? String {
-            return error
-        }
-        if let error = json["error"] as? [String: Any],
-           let message = error["message"] as? String {
-            return message
-        }
-        return nil
-    }
-}
-
+/// Food / label / weight-trend / nutrient-goals AI calls. All go through
+/// BackendClient — the actual model lives on the server side and is
+/// configurable via Supabase `app_config`. The struct keeps the historical
+/// `GeminiService` name so call sites (HomeView, ContentView, etc.) don't
+/// need to change.
 struct GeminiService {
     struct FoodAnalysis {
         var name: String
@@ -224,32 +74,23 @@ struct GeminiService {
     }
 
     enum AnalysisError: LocalizedError {
-        case noAPIKey
         case imageConversionFailed
-        case networkError(Error)
         case invalidResponse
-        case apiError(String)
-        case subscriptionRequired
+        case backend(BackendClient.BackendError)
 
         var errorDescription: String? {
             switch self {
-            case .noAPIKey:
-                return "No API key configured. Add your key in Settings → AI Provider."
             case .imageConversionFailed:
-                return "Failed to process the image."
-            case .networkError(let error):
-                return "Network error: \(error.localizedDescription)"
+                return String(localized: "Failed to process the image.")
             case .invalidResponse:
-                return "Could not understand the AI response. Please try again."
-            case .apiError(let message):
-                return "API error: \(message)"
-            case .subscriptionRequired:
-                return "Voidpen Plus is not active. Subscribe or switch back to Bring Your Own Key in Settings."
+                return String(localized: "Could not understand the AI response. Please try again.")
+            case .backend(let err):
+                return err.errorDescription
             }
         }
     }
 
-    // MARK: - Public API (unchanged interface)
+    // MARK: - Public API
 
     static func analyzeTextInput(description: String) async throws -> FoodAnalysis {
         let prompt = """
@@ -262,7 +103,7 @@ struct GeminiService {
         unit_options is required when the text names an obvious non-gram serving unit, and optional otherwise. Use slice/piece for pizza, cake, bread, cookies, fruit pieces, etc.; use ml/cup/fl oz for drinks, milk, soup, smoothies, sauces, etc.; use tbsp/tsp for spooned foods; use can/packet when packaged. Its quantity must describe the whole analyzed amount, not always 1. Do not copy any sample number; use the quantity stated or clearly implied by the meal. Use [] only when no non-gram unit is apparent. Do not include g/grams in unit_options.
         Include a single food emoji that best represents the food. Use null for any nutrient you cannot estimate.
         """
-        let text = try await callAI(prompt: prompt, image: nil)
+        let text = try await callAI(task: .food, prompt: prompt, image: nil)
         let analysis = try parseFoodAnalysis(from: text)
         return await addingFallbackServingUnits(to: analysis, image: nil, description: description)
     }
@@ -281,7 +122,7 @@ struct GeminiService {
         unit_options is required for obvious non-gram units visible in the image or label. Use slice/piece for pizza, cake, bread, cookies, fruit pieces, etc.; use ml/cup/fl oz for drinks, milk, soup, smoothies, sauces, etc.; use tbsp/tsp for spooned foods; use can/packet when packaged. Its quantity must describe the whole analyzed amount, not always 1. For a whole or mostly-whole divisible food like cake, pie, or pizza, count the visible pieces/slices and derive grams_per_unit from serving_size_grams / quantity. If N slices are visible, return quantity N. Use quantity 1 only when a single piece/slice is actually the analyzed portion. Use [] only when no non-gram unit is apparent. Do not include g/grams in unit_options.
         Use null for any nutrient you cannot estimate.
         """
-        let text = try await callAI(prompt: prompt, image: image)
+        let text = try await callAI(task: .food, prompt: prompt, image: image)
         let analysis = try parseFoodAnalysis(from: text)
         return await addingFallbackServingUnits(to: analysis, image: image, description: nil)
     }
@@ -303,7 +144,7 @@ struct GeminiService {
             prompt += "\n\nAdditional context from the user about this meal: \(description)\nUse this context to improve accuracy of identification, portion size, and nutrition estimates."
         }
 
-        let text = try await callAI(prompt: prompt, image: image)
+        let text = try await callAI(task: .food, prompt: prompt, image: image)
         let analysis = try parseFoodAnalysis(from: text)
         return await addingFallbackServingUnits(to: analysis, image: image, description: description)
     }
@@ -322,7 +163,7 @@ struct GeminiService {
         The [] in unit_options above is only a JSON shape placeholder; replace it with options when a non-gram unit is visible.
         All values should be numbers. If serving size or any nutrient is not available, use null. unit_options is required when a non-gram label serving unit is visible, such as slice, piece, tbsp, cup, ml, fl oz, can, or packet. Do not copy any sample number; use the quantity shown on the label. Use [] only when no non-gram unit is visible. Do not include g/grams in unit_options.
         """
-        let text = try await callAI(prompt: prompt, image: image)
+        let text = try await callAI(task: .label, prompt: prompt, image: image)
         let analysis = try parseNutritionLabel(from: text)
         return await addingFallbackServingUnits(to: analysis, image: image)
     }
@@ -372,15 +213,10 @@ struct GeminiService {
         \(currentGoalLines)
         """
 
-        let text = try await callAI(prompt: prompt, image: nil)
+        let text = try await callAI(task: .goals, prompt: prompt, image: nil)
         return try parseOptionalNutrientGoals(from: text, fallback: currentGoals)
     }
 
-    // MARK: - Weight Forecast Insight
-
-    /// Asks the user's selected LLM to summarize their weight trend and suggest 2–3 adjustments
-    /// in plain English. Caller provides an already-computed WeightForecast so the LLM gets hard
-    /// numbers instead of guessing.
     static func analyzeWeightTrend(
         profile: UserProfile,
         forecast: WeightForecast,
@@ -441,293 +277,34 @@ struct GeminiService {
 
         \(lines.joined(separator: "\n"))
         """
-        return try await callAI(prompt: prompt, image: nil)
+        return try await callAI(task: .weight, prompt: prompt, image: nil)
     }
 
-    // MARK: - Unified AI Call Router
+    // MARK: - Backend call
 
-    private static func callAI(prompt: String, image: UIImage?) async throws -> String {
-        let usingVoidpenPlus = AIAccessSettings.isUsingVoidpenPlus
-        if usingVoidpenPlus, !AIAccessSettings.hasActivePlusEntitlement {
-            throw AnalysisError.subscriptionRequired
-        }
-
-        let primaryProvider = AIProviderSettings.selectedProvider
-        if !usingVoidpenPlus, primaryProvider.requiresAPIKey, AIProviderSettings.currentAPIKey == nil {
-            throw AnalysisError.noAPIKey
-        }
-
-        var imageData: Data?
+    private static func callAI(task: BackendClient.Task, prompt: String, image: UIImage?) async throws -> String {
+        var imageBase64: String?
         if let image {
             guard let data = image.jpegData(compressionQuality: 0.8) else {
                 throw AnalysisError.imageConversionFailed
             }
-            imageData = data
+            imageBase64 = data.base64EncodedString()
         }
 
-        if usingVoidpenPlus {
-            return try await dispatch(
-                provider: .gemini,
-                model: "gemini-2.5-flash-lite",
-                baseURL: AIProvider.gemini.baseURL,
-                apiKey: nil,
-                prompt: prompt,
-                imageData: imageData
-            )
-        }
+        let message = BackendClient.Message(
+            role: .user,
+            content: prompt,
+            imageBase64: imageBase64
+        )
 
         do {
-            return try await dispatch(
-                provider: primaryProvider,
-                model: AIProviderSettings.selectedModel,
-                baseURL: AIProviderSettings.currentBaseURL,
-                apiKey: AIProviderSettings.currentAPIKey,
-                prompt: prompt,
-                imageData: imageData
-            )
-        } catch {
-            // imageConversionFailed is local — fallback won't help, rethrow.
-            // For everything else (network / 5xx / 4xx / parser failure) try fallback.
-            if case AnalysisError.imageConversionFailed = error { throw error }
-            guard let fallback = AIProviderSettings.currentFallbackConfig(excludingPrimary: primaryProvider) else {
-                throw error
+            let response = try await BackendClient.generate(task: task, messages: [message])
+            guard let text = response.text, !text.isEmpty else {
+                throw AnalysisError.invalidResponse
             }
-            return try await dispatch(
-                provider: fallback.provider,
-                model: fallback.model,
-                baseURL: fallback.baseURL,
-                apiKey: fallback.apiKey,
-                prompt: prompt,
-                imageData: imageData
-            )
-        }
-    }
-
-    private static func dispatch(provider: AIProvider, model: String, baseURL: String, apiKey: String?, prompt: String, imageData: Data?) async throws -> String {
-        switch provider.apiFormat {
-        case .gemini:
-            if AIAccessSettings.isUsingVoidpenPlus {
-                return try await callGemini(baseURL: baseURL, model: model, apiKey: nil, prompt: prompt, imageData: imageData)
-            }
-            guard let key = apiKey else { throw AnalysisError.noAPIKey }
-            return try await callGemini(baseURL: baseURL, model: model, apiKey: key, prompt: prompt, imageData: imageData)
-        case .openaiCompatible:
-            return try await callOpenAICompatible(baseURL: baseURL, model: model, apiKey: apiKey, provider: provider, prompt: prompt, imageData: imageData)
-        case .anthropic:
-            guard let key = apiKey else { throw AnalysisError.noAPIKey }
-            return try await callAnthropic(baseURL: baseURL, model: model, apiKey: key, prompt: prompt, imageData: imageData)
-        }
-    }
-
-    // MARK: - Gemini Format
-
-    private static func callGemini(baseURL: String, model: String, apiKey: String?, prompt: String, imageData: Data?) async throws -> String {
-        // Send the API key in the X-goog-api-key header, not the URL query string,
-        // so it doesn't end up in server logs / proxies (CodeQL: cleartext transmission).
-        var parts: [[String: Any]] = []
-        if let imageData {
-            parts.append([
-                "inlineData": [
-                    "mimeType": "image/jpeg",
-                    "data": imageData.base64EncodedString()
-                ]
-            ])
-        }
-        parts.append(["text": prompt])
-
-        var body: [String: Any] = [
-            "contents": [["parts": parts]]
-        ]
-        if let userContext = AIProviderSettings.currentUserContext {
-            body["systemInstruction"] = ["parts": [["text": userContext]]]
-        }
-
-        let data: Data
-        if AIAccessSettings.isUsingVoidpenPlus {
-            data = try await VoidpenProxyClient.generateContent(task: .food, body: body)
-        } else {
-            guard let apiKey else { throw AnalysisError.noAPIKey }
-            guard let url = URL(string: "\(baseURL)/models/\(model):generateContent") else {
-                throw AnalysisError.apiError("Invalid API URL. Check your provider settings.")
-            }
-            data = try await makeRequest(
-                url: url,
-                headers: ["Content-Type": "application/json", "X-goog-api-key": apiKey],
-                body: body
-            )
-        }
-
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let candidates = json["candidates"] as? [[String: Any]],
-              let content = candidates.first?["content"] as? [String: Any],
-              let parts = content["parts"] as? [[String: Any]],
-              let text = parts.first?["text"] as? String
-        else { throw AnalysisError.invalidResponse }
-        return text
-    }
-
-    // MARK: - OpenAI-Compatible Format (OpenAI, xAI, OpenRouter, Together, Groq, Ollama)
-
-    private static func callOpenAICompatible(baseURL: String, model: String, apiKey: String?, provider: AIProvider, prompt: String, imageData: Data?) async throws -> String {
-        guard let url = URL(string: "\(baseURL)/chat/completions") else {
-            throw AnalysisError.apiError("Invalid API URL. Check your provider settings.")
-        }
-
-        var content: [[String: Any]] = []
-        if let imageData {
-            content.append([
-                "type": "image_url",
-                "image_url": ["url": "data:image/jpeg;base64,\(imageData.base64EncodedString())"]
-            ])
-        }
-        content.append(["type": "text", "text": prompt])
-
-        var messages: [[String: Any]] = []
-        if let userContext = AIProviderSettings.currentUserContext {
-            messages.append(["role": "system", "content": userContext])
-        }
-        messages.append(["role": "user", "content": content])
-
-        var body: [String: Any] = [
-            "model": model,
-            "messages": messages,
-        ]
-        body[provider.openAICompatibleTokenLimitKey(for: model)] = 1024
-
-        var headers = ["Content-Type": "application/json"]
-        if let apiKey {
-            headers["Authorization"] = "Bearer \(apiKey)"
-        }
-        if provider == .openrouter {
-            headers["HTTP-Referer"] = "https://github.com/cotrinhhienduy/voidpen"
-            headers["X-Title"] = "Voidpen"
-        }
-
-        let data = try await makeRequest(url: url, headers: headers, body: body)
-
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let choices = json["choices"] as? [[String: Any]],
-              let message = choices.first?["message"] as? [String: Any],
-              let text = message["content"] as? String
-        else { throw AnalysisError.invalidResponse }
-        return text
-    }
-
-    // MARK: - Anthropic Format
-
-    private static func callAnthropic(baseURL: String, model: String, apiKey: String, prompt: String, imageData: Data?) async throws -> String {
-        guard let url = URL(string: "\(baseURL)/messages") else {
-            throw AnalysisError.apiError("Invalid API URL. Check your provider settings.")
-        }
-
-        var content: [[String: Any]] = []
-        if let imageData {
-            content.append([
-                "type": "image",
-                "source": [
-                    "type": "base64",
-                    "media_type": "image/jpeg",
-                    "data": imageData.base64EncodedString()
-                ]
-            ])
-        }
-        content.append(["type": "text", "text": prompt])
-
-        var body: [String: Any] = [
-            "model": model,
-            "max_tokens": 1024,
-            "messages": [["role": "user", "content": content]],
-        ]
-        if let userContext = AIProviderSettings.currentUserContext {
-            body["system"] = userContext
-        }
-
-        let headers = [
-            "Content-Type": "application/json",
-            "x-api-key": apiKey,
-            "anthropic-version": "2023-06-01",
-        ]
-
-        let data = try await makeRequest(url: url, headers: headers, body: body)
-
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let contentArray = json["content"] as? [[String: Any]],
-              let text = contentArray.first?["text"] as? String
-        else { throw AnalysisError.invalidResponse }
-        return text
-    }
-
-    // MARK: - Network
-
-    private static func makeRequest(url: URL, headers: [String: String], body: [String: Any]) async throws -> Data {
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        for (key, value) in headers {
-            request.setValue(value, forHTTPHeaderField: key)
-        }
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-        // Retry transient overload responses (503/429/529) with exponential backoff: 1s, 2s, 4s.
-        // The "model is currently experiencing high demand" message is Google's global throttle on
-        // the Gemini model, not a per-key rate limit, so a quick retry usually succeeds.
-        let retryDelaysNs: [UInt64] = [1_000_000_000, 2_000_000_000, 4_000_000_000]
-        var lastError: AnalysisError = .apiError("Request failed")
-
-        for attempt in 0...retryDelaysNs.count {
-            let (data, response): (Data, URLResponse)
-            do {
-                (data, response) = try await URLSession.shared.data(for: request)
-            } catch {
-                throw AnalysisError.networkError(error)
-            }
-
-            guard let httpResponse = response as? HTTPURLResponse else { return data }
-
-            if httpResponse.statusCode == 200 {
-                return data
-            }
-
-            // Parse the API's error message once so we can surface the friendliest version.
-            // Fall back to a status-code-only message when parsing finds nothing OR when the
-            // parsed value is empty (some providers return `{"error": {"message": ""}}`,
-            // which used to slip through as a literal blank "API error: " alert).
-            let parsed = parseErrorMessage(from: data) ?? ""
-            let parsedMessage = parsed.isEmpty ? "HTTP \(httpResponse.statusCode)" : parsed
-            lastError = .apiError(friendlyMessage(for: httpResponse.statusCode, raw: parsedMessage))
-
-            let isRetryable = httpResponse.statusCode == 503
-                           || httpResponse.statusCode == 529
-                           || httpResponse.statusCode == 429
-            if isRetryable && attempt < retryDelaysNs.count {
-                try? await Task.sleep(nanoseconds: retryDelaysNs[attempt])
-                continue
-            }
-            throw lastError
-        }
-        throw lastError
-    }
-
-    private static func parseErrorMessage(from data: Data) -> String? {
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
-        if let error = json["error"] as? [String: Any], let message = error["message"] as? String {
-            return message
-        }
-        if let message = json["error"] as? String {
-            return message
-        }
-        return nil
-    }
-
-    private static func friendlyMessage(for status: Int, raw: String) -> String {
-        switch status {
-        case 503, 529:
-            return "The AI provider is overloaded right now. We retried a few times — please try again in a minute, or switch to a different provider/model in Settings → AI Provider."
-        case 429:
-            return "Rate limit hit on your API key. Wait a minute, or switch to another provider in Settings → AI Provider."
-        case 401, 403:
-            return "Your API key was rejected. Open Settings → AI Provider and re-paste a valid key."
-        default:
-            return raw
+            return text
+        } catch let err as BackendClient.BackendError {
+            throw AnalysisError.backend(err)
         }
     }
 
@@ -930,7 +507,7 @@ struct GeminiService {
         {"unit_options":[{"unit":"piece","quantity":5.0,"grams_per_unit":18.0}]}
         """
 
-        let text = try await callAI(prompt: prompt, image: image)
+        let text = try await callAI(task: .food, prompt: prompt, image: image)
         return try parseServingUnitOptions(from: text, servingSizeGrams: servingSizeGrams)
     }
 

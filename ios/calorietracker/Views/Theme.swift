@@ -77,7 +77,7 @@ enum AppThemeColor: String, CaseIterable, Identifiable {
         switch self {
         case .fudPink: return 0xFF375F
         case .red: return 0xFF3B30
-        case .orange: return 0xFF9500
+        case .orange: return 0xFF5A00
         case .green: return 0x34C759
         case .mint: return 0x00C7BE
         case .teal: return 0x30B0C7
@@ -90,7 +90,7 @@ enum AppThemeColor: String, CaseIterable, Identifiable {
         switch self {
         case .fudPink: return 0xFF6B8A
         case .red: return 0xFF6961
-        case .orange: return 0xFFB340
+        case .orange: return 0xFF8C00
         case .green: return 0x62D46F
         case .mint: return 0x66D4CF
         case .teal: return 0x64D2FF

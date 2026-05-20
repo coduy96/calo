@@ -7,7 +7,7 @@
 
   ],
   "settings" : {
-    "_applicationInternalID" : "1234567890",
+    "_applicationInternalID" : "6770921845",
     "_developerTeamID" : "XXXXXXXXXX",
     "_failTransactionsEnabled" : false,
     "_lastSynchronizedDate" : 744753600,
@@ -67,7 +67,7 @@
       "localizations" : [
 
       ],
-      "name" : "Voidpen Premium",
+      "name" : "Voidpen Plus",
       "subscriptions" : [
         {
           "adHocOffers" : [
@@ -76,46 +76,26 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "19.99",
-          "familyShareable" : false,
-          "groupNumber" : 2,
-          "internalID" : "monthly001",
-          "introductoryOffer" : null,
-          "localizations" : [
-            {
-              "description" : "No-key AI access with food, voice, and Coach daily limits",
-              "displayName" : "Monthly",
-              "locale" : "en_US"
-            }
-          ],
-          "productID" : "voidpen.plus.monthly",
-          "recurringSubscriptionPeriod" : "P1M",
-          "referenceName" : "Monthly",
-          "subscriptionGroupID" : "VoidpenPremium",
-          "type" : "RecurringSubscription"
-        },
-        {
-          "adHocOffers" : [
-
-          ],
-          "codeOffers" : [
-
-          ],
-          "displayPrice" : "199.99",
+          "displayPrice" : "39.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "yearly001",
-          "introductoryOffer" : null,
+          "introductoryOffer" : {
+            "internalID" : "yearly_intro_trial",
+            "paymentMode" : "free",
+            "numberOfPeriods" : 1,
+            "subscriptionPeriod" : "P3D"
+          },
           "localizations" : [
             {
-              "description" : "No-key AI access with food, voice, and Coach daily limits",
+              "description" : "Unlimited AI food scans, voice logging, and Coach. 3-day free trial.",
               "displayName" : "Yearly",
               "locale" : "en_US"
             }
           ],
           "productID" : "voidpen.plus.yearly",
           "recurringSubscriptionPeriod" : "P1Y",
-          "referenceName" : "Yearly",
+          "referenceName" : "Voidpen Plus Yearly",
           "subscriptionGroupID" : "VoidpenPremium",
           "type" : "RecurringSubscription"
         },
@@ -126,21 +106,56 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "5.99",
+          "displayPrice" : "14.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "monthly001",
+          "introductoryOffer" : {
+            "internalID" : "monthly_intro_trial",
+            "paymentMode" : "free",
+            "numberOfPeriods" : 1,
+            "subscriptionPeriod" : "P3D"
+          },
+          "localizations" : [
+            {
+              "description" : "Unlimited AI food scans, voice logging, and Coach. 3-day free trial.",
+              "displayName" : "Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "voidpen.plus.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Voidpen Plus Monthly",
+          "subscriptionGroupID" : "VoidpenPremium",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "4.99",
           "familyShareable" : false,
           "groupNumber" : 3,
           "internalID" : "weekly001",
-          "introductoryOffer" : null,
+          "introductoryOffer" : {
+            "internalID" : "weekly_intro_trial",
+            "paymentMode" : "free",
+            "numberOfPeriods" : 1,
+            "subscriptionPeriod" : "P3D"
+          },
           "localizations" : [
             {
-              "description" : "No-key AI access with food, voice, and Coach daily limits",
+              "description" : "Unlimited AI food scans, voice logging, and Coach. 3-day free trial.",
               "displayName" : "Weekly",
               "locale" : "en_US"
             }
           ],
           "productID" : "voidpen.plus.weekly",
           "recurringSubscriptionPeriod" : "P1W",
-          "referenceName" : "Weekly",
+          "referenceName" : "Voidpen Plus Weekly",
           "subscriptionGroupID" : "VoidpenPremium",
           "type" : "RecurringSubscription"
         }
