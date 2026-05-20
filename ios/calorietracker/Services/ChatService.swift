@@ -135,11 +135,11 @@ struct ChatService {
         lines.append("- Treat \"today\" as \(currentDate) when choosing tool date ranges.")
         lines.append("")
         lines.append("## How to use the data tools")
-        lines.append("You have access to functions that fetch the user's history on demand. The user profile + formulas + forecast below cover what's needed for most questions. Call a tool ONLY when the user asks about specific past dates, longer time ranges, individual meals, or trends that need raw data. Examples:")
+        lines.append("You have access to functions that fetch the user's history on demand. The user profile + formulas + forecast + today's logged foods below cover what's needed for most questions, including \"is my food today healthy?\", \"how many calories have I had today?\", and \"what's left in my budget?\" — answer those directly from the inline today data, do NOT call a tool. Call a tool ONLY when the user asks about specific past dates (not today), longer time ranges, or trends that need raw historical data. Examples:")
         lines.append("- \"How was my weight in March?\" → call get_weight_history(from, to)")
         lines.append("- \"What did I eat last Tuesday?\" → call get_food_entries(from, to)")
         lines.append("- \"What's my data range?\" → call get_data_summary")
-        lines.append("Do NOT call tools for questions you can answer from the profile/forecast below.")
+        lines.append("- \"Is what I ate today healthy?\" → answer from inline today's foods below, no tool call")
         lines.append("")
         lines.append("## User profile")
         lines.append("- Gender: \(profile.gender.rawValue)")
@@ -164,6 +164,31 @@ struct ChatService {
         lines.append("- Calorie goal: \(profile.effectiveCalories) kcal/day")
         lines.append("- Macro targets: \(profile.effectiveProtein)g protein, \(profile.effectiveCarbs)g carbs, \(profile.effectiveFat)g fat")
         lines.append("")
+        // Today's logged foods — embedded inline so the model can answer
+        // "is what I ate today healthy?" on day one without needing a tool
+        // call (and without being told the data isn't available).
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: Date())
+        let todaysFoods = foods
+            .filter { $0.timestamp >= startOfToday }
+            .sorted { $0.timestamp < $1.timestamp }
+        lines.append("## Today's logged foods (\(currentDate))")
+        if todaysFoods.isEmpty {
+            lines.append("- No foods logged yet today.")
+        } else {
+            let totalKcal = todaysFoods.reduce(0) { $0 + $1.calories }
+            let totalP = todaysFoods.reduce(0) { $0 + $1.protein }
+            let totalC = todaysFoods.reduce(0) { $0 + $1.carbs }
+            let totalF = todaysFoods.reduce(0) { $0 + $1.fat }
+            lines.append("- Totals so far: \(totalKcal) kcal, \(totalP)g protein, \(totalC)g carbs, \(totalF)g fat")
+            lines.append("- Remaining vs goal: \(profile.effectiveCalories - totalKcal) kcal, \(profile.effectiveProtein - totalP)g protein, \(profile.effectiveCarbs - totalC)g carbs, \(profile.effectiveFat - totalF)g fat")
+            lines.append("- Entries:")
+            for food in todaysFoods {
+                lines.append("  • \(food.mealType.rawValue): \(food.name) — \(food.calories) kcal, \(food.protein)g P / \(food.carbs)g C / \(food.fat)g F")
+            }
+        }
+        lines.append("")
+
         lines.append("## Computed forecast (from their logged data)")
         if forecast.hasEnoughData {
             lines.append("- Days of food logged (last 90d): \(forecast.daysOfFoodData)")
@@ -184,7 +209,7 @@ struct ChatService {
                 lines.append("- NOTE: Predicted and observed trends differ by >0.3 kg/week — user may be under-logging food.")
             }
         } else {
-            lines.append("- Not enough data yet (need ≥2 days food + ≥2 weights). Encourage the user to log more.")
+            lines.append("- Not enough history yet for trend forecasting (need ≥2 days food + ≥2 weights). This does NOT block answering questions about today — use today's logged foods above. Only encourage more logging if the user asks about trends or weight predictions.")
         }
         lines.append("")
         lines.append("## Data available")
