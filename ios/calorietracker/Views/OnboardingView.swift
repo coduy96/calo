@@ -50,12 +50,7 @@ struct OnboardingView: View {
         var id: String { rawValue }
     }
 
-    private let totalSteps = 14 // 0-13
-    private let onboardingReviewQuotes: [(title: String, author: String, quote: String)] = [
-        ("Thankful", "Joel819", "This app is great, am recommending this to my friends."),
-        ("One of the best", "2MitiN6", "Yours changes my life in real time for free."),
-        ("Cool App", "Sloosi", "I wrote a suggestion on GitHub and was approved and done instantly.")
-    ]
+    private let totalSteps = 16 // 0-15
 
     /// Combine the whole + tenth wheel selections into a single Double.
     private func combine(_ whole: Int, _ tenth: Int) -> Double { Double(whole) + Double(tenth) / 10.0 }
@@ -126,17 +121,19 @@ struct OnboardingView: View {
                     case 0: welcomeStep
                     case 1: genderStep
                     case 2: birthdayStep
-                    case 3: heightWeightStep
-                    case 4: bodyFatStep
-                    case 5: activityStep
-                    case 6: goalStep
-                    case 7: desiredWeightStep
-                    case 8: goalSpeedStep
-                    case 9: notificationsStep
-                    case 10: appleHealthStep
-                    case 11: buildingPlanStep
-                    case 12: planReadyStep
-                    case 13: reviewStep
+                    case 3: heightStep
+                    case 4: weightStep
+                    case 5: bodyFatStep
+                    case 6: activityStep
+                    case 7: goalStep
+                    case 8: desiredWeightStep
+                    case 9: goalSpeedStep
+                    case 10: notificationsStep
+                    case 11: appleHealthStep
+                    case 12: buildingPlanStep
+                    case 13: healthInsightsStep
+                    case 14: planReadyStep
+                    case 15: inlinePaywallStep
                     default: EmptyView()
                     }
                 }
@@ -252,11 +249,11 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 3: Height & Weight
+    // MARK: - 3: Height
 
-    private var heightWeightStep: some View {
+    private var heightStep: some View {
         VStack(alignment: .leading, spacing: 0) {
-            stepHeader(title: "Height & Weight", subtitle: "We'll keep this private")
+            stepHeader(title: "How tall are you?", subtitle: "We'll keep this private")
             Picker("Unit", selection: $isMetric) {
                 Text("Imperial").tag(false)
                 Text("Metric").tag(true)
@@ -266,46 +263,26 @@ struct OnboardingView: View {
             .padding(.top, 16)
             .onChange(of: isMetric) { _, newValue in useMetric = newValue }
             Spacer()
-            // Stack height + weight as two rows so the weight picker (whole +
-            // "." + tenth + unit = 4 sub-cells) gets the full screen width
-            // instead of competing with feet/inches for one-third of it. The
-            // 3-column imperial layout used to render the lbs whole-number
-            // wheel as "..." because there wasn't enough width for 3-digit
-            // values like 152 alongside the decimal column.
             if isMetric {
-                VStack(spacing: 8) {
-                    VStack(spacing: 4) {
-                        Text("Height").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
-                        Picker("cm", selection: $heightCm) {
-                            ForEach(100...250, id: \.self) { cm in Text("\(cm) cm").tag(cm) }
-                        }.pickerStyle(.wheel).frame(height: 130)
-                    }
-                    VStack(spacing: 4) {
-                        Text("Weight").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
-                        decimalWeightWheel(whole: $weightKgWhole, tenth: $weightKgTenth, range: 30...250, unit: "kg")
-                            .frame(height: 130)
-                    }
+                VStack(spacing: 4) {
+                    Text("Height").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
+                    Picker("cm", selection: $heightCm) {
+                        ForEach(100...250, id: \.self) { cm in Text("\(cm) cm").tag(cm) }
+                    }.pickerStyle(.wheel).frame(height: 180)
                 }.padding(.horizontal, 24)
             } else {
-                VStack(spacing: 8) {
-                    HStack(spacing: 8) {
-                        VStack(spacing: 4) {
-                            Text("Feet").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
-                            Picker("ft", selection: $heightFeet) {
-                                ForEach(3...8, id: \.self) { ft in Text("\(ft) ft").tag(ft) }
-                            }.pickerStyle(.wheel).frame(height: 130)
-                        }
-                        VStack(spacing: 4) {
-                            Text("Inches").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
-                            Picker("in", selection: $heightInches) {
-                                ForEach(0...11, id: \.self) { inch in Text("\(inch) in").tag(inch) }
-                            }.pickerStyle(.wheel).frame(height: 130)
-                        }
+                HStack(spacing: 12) {
+                    VStack(spacing: 4) {
+                        Text("Feet").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
+                        Picker("ft", selection: $heightFeet) {
+                            ForEach(3...8, id: \.self) { ft in Text("\(ft) ft").tag(ft) }
+                        }.pickerStyle(.wheel).frame(height: 180)
                     }
                     VStack(spacing: 4) {
-                        Text("Weight").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
-                        decimalWeightWheel(whole: $weightLbsWhole, tenth: $weightLbsTenth, range: 60...500, unit: "lbs")
-                            .frame(height: 130)
+                        Text("Inches").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(.secondary)
+                        Picker("in", selection: $heightInches) {
+                            ForEach(0...11, id: \.self) { inch in Text("\(inch) in").tag(inch) }
+                        }.pickerStyle(.wheel).frame(height: 180)
                     }
                 }.padding(.horizontal, 24)
             }
@@ -314,7 +291,31 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 4: Body Fat
+    // MARK: - 4: Weight
+
+    private var weightStep: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            stepHeader(title: "What's your current weight?", subtitle: "Tap the wheel to set it exactly")
+            Spacer()
+            VStack(spacing: 4) {
+                Text(isMetric ? "Weight (kg)" : "Weight (lbs)")
+                    .font(.system(.caption, design: .rounded, weight: .medium))
+                    .foregroundStyle(.secondary)
+                if isMetric {
+                    decimalWeightWheel(whole: $weightKgWhole, tenth: $weightKgTenth, range: 30...250, unit: "kg")
+                        .frame(height: 180)
+                } else {
+                    decimalWeightWheel(whole: $weightLbsWhole, tenth: $weightLbsTenth, range: 60...500, unit: "lbs")
+                        .frame(height: 180)
+                }
+            }
+            .padding(.horizontal, 24)
+            Spacer()
+            continueButton()
+        }
+    }
+
+    // MARK: - 5: Body Fat
 
     private var bodyFatStep: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -415,7 +416,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 5: Activity Level
+    // MARK: - 6: Activity Level
 
     private var activityStep: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -435,7 +436,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 6: Goal
+    // MARK: - 7: Goal
 
     private var goalStep: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -466,7 +467,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 7: Desired Weight
+    // MARK: - 8: Desired Weight
 
     private var weightUnit: String { isMetric ? "kg" : "lbs" }
 
@@ -524,7 +525,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 8: Goal Speed
+    // MARK: - 9: Goal Speed
 
     private var weeklyChangeKg: Double {
         switch goalSpeed { case 0: 0.25; case 2: 1.0; default: 0.5 }
@@ -620,7 +621,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 9: Notifications
+    // MARK: - 10: Notifications
 
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
 
@@ -698,7 +699,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 10: Apple Health
+    // MARK: - 11: Apple Health
 
     private var appleHealthStep: some View {
         VStack(spacing: 0) {
@@ -788,118 +789,7 @@ struct OnboardingView: View {
     }
 
 
-    // MARK: - 13: Review
-
-    private var reviewStep: some View {
-        VStack(spacing: 0) {
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 22) {
-                    VStack(spacing: 16) {
-                        ZStack {
-                            Circle()
-                                .fill(
-                                    LinearGradient(colors: [Color.pink.opacity(0.1), Color.yellow.opacity(0.1)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                )
-                                .frame(width: 116, height: 116)
-                            Image(systemName: "star.fill")
-                                .font(.system(size: 46))
-                                .foregroundStyle(AppColors.calorie)
-                        }
-
-                        VStack(spacing: 8) {
-                            Text("Enjoying fud so far?")
-                                .font(.system(size: 28, weight: .bold, design: .rounded))
-                                .multilineTextAlignment(.center)
-                            Text("A quick rating helps us grow\nand build more features for you!")
-                                .font(.system(.callout, design: .rounded))
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("What people are saying")
-                            .font(.system(.headline, design: .rounded, weight: .bold))
-                            .padding(.horizontal, 24)
-
-                        VStack(spacing: 10) {
-                            ForEach(onboardingReviewQuotes.indices, id: \.self) { index in
-                                onboardingReviewCard(onboardingReviewQuotes[index])
-                            }
-                        }
-                        .padding(.horizontal, 24)
-                    }
-                }
-                .padding(.top, 24)
-                .padding(.bottom, 18)
-            }
-
-            Button {
-                requestNativeReview()
-                hasCompletedOnboarding = true
-            } label: {
-                Text("Rate fud")
-                    .font(.system(.body, design: .rounded, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 54)
-                    .background(
-                        LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing),
-                        in: RoundedRectangle(cornerRadius: 16)
-                    )
-                    .shadow(color: AppColors.calorie.opacity(0.3), radius: 8, y: 4)
-            }
-            .padding(.horizontal, 24)
-
-            Button {
-                hasCompletedOnboarding = true
-            } label: {
-                Text("Maybe Later")
-                    .font(.system(.subheadline, design: .rounded, weight: .medium))
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.top, 12)
-            .padding(.bottom, 36)
-        }
-    }
-
-    private func onboardingReviewCard(_ review: (title: String, author: String, quote: String)) -> some View {
-        VStack(alignment: .leading, spacing: 7) {
-            HStack(spacing: 2) {
-                ForEach(0..<5, id: \.self) { _ in
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(AppColors.calorie)
-                }
-                Spacer(minLength: 8)
-                Text(review.author)
-                    .font(.system(.caption2, design: .rounded, weight: .medium))
-                    .foregroundStyle(.secondary)
-            }
-
-            Text(review.title)
-                .font(.system(.subheadline, design: .rounded, weight: .bold))
-                .foregroundStyle(.primary)
-
-            Text(review.quote)
-                .font(.system(.caption, design: .rounded))
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(.secondarySystemGroupedBackground).opacity(0.9))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-        )
-    }
-
-    // MARK: - 11: Building Plan
+    // MARK: - 12: Building Plan
 
     private var buildingPlanStep: some View {
         BuildingPlanStepView(profile: profile) {
@@ -907,7 +797,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 12: Plan Ready
+    // MARK: - 14: Plan Ready
 
     private var planCalories: Int { editedCalories ?? profile.dailyCalories }
     private var planProtein: Int { editedProtein ?? profile.proteinGoal }
@@ -1156,11 +1046,23 @@ struct OnboardingView: View {
         }
     }
 
-    private func requestNativeReview() {
-        if let scene = UIApplication.shared.connectedScenes
-            .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
-            AppStore.requestReview(in: scene)
+    // MARK: - 13: Health Insights
+
+    private var healthInsightsStep: some View {
+        HealthInsightsStepView(insights: HealthInsights(profile: profile)) {
+            withAnimation(.snappy) { step += 1 }
         }
+    }
+
+    // MARK: - 15: Inline Paywall
+
+    private var inlinePaywallStep: some View {
+        InlinePaywallStepView(
+            profile: profile,
+            insights: HealthInsights(profile: profile),
+            isMetric: isMetric,
+            hasCompletedOnboarding: $hasCompletedOnboarding
+        )
     }
 }
 

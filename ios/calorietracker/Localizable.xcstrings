@@ -584,6 +584,9 @@
         }
       }
     },
+    "%lld weeks" : {
+
+    },
     "%lld/%lld left" : {
       "comment" : "A label showing the remaining and total quota for a specific feature.",
       "extractionState" : "stale",
@@ -1182,6 +1185,9 @@
         }
       }
     },
+    "4.8 · Loved by thousands" : {
+
+    },
     "6M" : {
       "localizations" : {
         "ar" : {
@@ -1302,7 +1308,17 @@
         }
       }
     },
+    "A %lld cal deficit — sustainable and built around your TDEE, not a crash plan." : {
+
+    },
+    "A %lld cal surplus — paired with protein, this fuels lean growth." : {
+
+    },
+    "A clear-eyed look — no judgment, just numbers." : {
+
+    },
     "A quick rating helps us grow\nand build more features for you!" : {
+      "extractionState" : "stale",
       "localizations" : {
         "vi" : {
           "stringUnit" : {
@@ -5606,6 +5622,9 @@
         }
       }
     },
+    "Best Value" : {
+
+    },
     "Birthday" : {
       "localizations" : {
         "ar" : {
@@ -6095,6 +6114,9 @@
           }
         }
       }
+    },
+    "Body Mass Index" : {
+
     },
     "Body Measurements" : {
       "localizations" : {
@@ -9483,6 +9505,9 @@
         }
       }
     },
+    "Couldn't load plans" : {
+
+    },
     "Crunching the numbers" : {
       "localizations" : {
         "ar" : {
@@ -9991,6 +10016,9 @@
           }
         }
       }
+    },
+    "Daily Burn" : {
+
     },
     "daily calories" : {
       "localizations" : {
@@ -12150,6 +12178,7 @@
       }
     },
     "Enjoying fud so far?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -14576,6 +14605,9 @@
         }
       }
     },
+    "Frequent meals matter more than huge ones. Focus on recovery, sleep, and progressive lifts." : {
+
+    },
     "From Photos" : {
       "localizations" : {
         "ar" : {
@@ -16461,6 +16493,9 @@
           }
         }
       }
+    },
+    "Here's where you are today" : {
+
     },
     "High-protein foods I can add?" : {
       "extractionState" : "stale",
@@ -19168,6 +19203,9 @@
         }
       }
     },
+    "Katch-McArdle with your %lld%% body fat — more accurate than weight alone." : {
+
+    },
     "Keep Going" : {
       "localizations" : {
         "ar" : {
@@ -21846,6 +21884,7 @@
       }
     },
     "Maybe Later" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -22459,6 +22498,9 @@
           }
         }
       }
+    },
+    "Mifflin-St Jeor — a solid baseline from your height, weight, and age." : {
+
     },
     "Mode" : {
       "comment" : "A label displayed above a picker that lets the user select the mode of the app.",
@@ -25123,6 +25165,9 @@
         }
       }
     },
+    "One thing that matters most" : {
+
+    },
     "Open source" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -26561,6 +26606,9 @@
         }
       }
     },
+    "Protein first, then everything else falls into place. Aim for %lldg a day." : {
+
+    },
     "Provider" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -26863,6 +26911,7 @@
       }
     },
     "Rate fud" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -28991,6 +29040,9 @@
         }
       }
     },
+    "Resting Burn" : {
+
+    },
     "Resting metabolism (BMR)" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -29285,6 +29337,9 @@
           }
         }
       }
+    },
+    "Right at maintenance — your job is consistency, not restriction." : {
+
     },
     "Sat Fat" : {
       "localizations" : {
@@ -31486,6 +31541,9 @@
         }
       }
     },
+    "Start 3-Day Free Trial" : {
+
+    },
     "Start your first chat" : {
       "localizations" : {
         "ar" : {
@@ -31801,7 +31859,6 @@
       }
     },
     "Subscribe" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -32229,6 +32286,9 @@
           }
         }
       }
+    },
+    "Surplus plus strength training equals muscle, not just weight. Track protein religiously." : {
+
     },
     "Switch to BYOK" : {
       "comment" : "A button that allows the user to switch to Bring Your Own Key.",
@@ -33343,6 +33403,9 @@
         }
       }
     },
+    "This looks right" : {
+
+    },
     "This macro is auto-balanced from the others. Tap the lock icon to pin it, then tap the row to set a custom value." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -33443,6 +33506,9 @@
           }
         }
       }
+    },
+    "This pace is on the ambitious end — listen to your body." : {
+
     },
     "This will permanently delete all your data including food logs, weight entries, and profile. This action cannot be undone." : {
       "localizations" : {
@@ -33665,6 +33731,9 @@
           }
         }
       }
+    },
+    "Timeline" : {
+
     },
     "Title" : {
       "localizations" : {
@@ -33999,6 +34068,9 @@
         }
       }
     },
+    "Try again" : {
+
+    },
     "Try Again" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -34250,6 +34322,9 @@
           }
         }
       }
+    },
+    "Unlock your full plan" : {
+
     },
     "Upgrade to Plus" : {
       "comment" : "A button that opens the Voidpen Plus paywall.",
@@ -36874,6 +36949,7 @@
     },
     "What people are saying" : {
       "comment" : "A heading for the reviews of other users.",
+      "extractionState" : "stale",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "vi" : {
@@ -37972,6 +38048,9 @@
         }
       }
     },
+    "With your %@ routine, this is what your body spends on an average day." : {
+
+    },
     "Yes" : {
       "localizations" : {
         "ar" : {
@@ -38255,6 +38334,9 @@
         }
       }
     },
+    "You don't need to do more — you need to do this, consistently. Showing up is the win." : {
+
+    },
     "You got **27% off** your yearly plan!" : {
       "localizations" : {
         "ar" : {
@@ -38351,6 +38433,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "你的年度订阅享 **7.3 折**（**27% 折扣**）！"
+          }
+        }
+      }
+    },
+    "You'll reach %@ around %@. Patience compounds." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You'll reach %1$@ around %2$@. Patience compounds."
           }
         }
       }
@@ -38551,6 +38643,19 @@
           }
         }
       }
+    },
+    "You're %lld weeks from %@. Let's get you there." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You're %1$lld weeks from %2$@. Let's get you there."
+          }
+        }
+      }
+    },
+    "You're motivated — channel it into the first four weeks. Slower than your slider says will stick longer than faster." : {
+
     },
     "You've hit today's usage limit. Try again tomorrow." : {
       "localizations" : {
@@ -38858,6 +38963,21 @@
         }
       }
     },
+    "Your BMI is already healthy. Think recomposition: hit your protein target, lift twice a week, and let the scale move slowly." : {
+
+    },
+    "Your BMI is in the healthy range — a strong foundation to build on." : {
+
+    },
+    "Your BMI is in the obese range — small steady changes move it more than you'd think." : {
+
+    },
+    "Your BMI is in the overweight range — a starting point, not the whole story." : {
+
+    },
+    "Your BMI sits in the underweight range — a reference point, not a verdict." : {
+
+    },
     "Your coach can see your weight history, calorie log, and goals. Ask about expected weight, what to eat, or how to hit your target." : {
       "localizations" : {
         "ar" : {
@@ -39052,6 +39172,9 @@
           }
         }
       }
+    },
+    "Your Daily Target" : {
+
     },
     "Your logged calories and scale weight don't quite match. You may be under-logging food." : {
       "extractionState" : "stale",
@@ -39341,6 +39464,9 @@
           }
         }
       }
+    },
+    "Your plan is ready — let's keep the momentum going." : {
+
     },
     "Your typical week" : {
       "localizations" : {
