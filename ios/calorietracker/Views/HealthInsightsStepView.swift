@@ -44,9 +44,9 @@ struct HealthInsightsStepView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Here's where you are today")
+            Text("Here's your baseline")
                 .font(.system(size: 28, weight: .bold, design: .rounded))
-            Text("A clear-eyed look — no judgment, just numbers.")
+            Text("The numbers — straight, no spin.")
                 .font(.system(.callout, design: .rounded))
                 .foregroundStyle(.secondary)
         }
@@ -119,7 +119,7 @@ struct HealthInsightsStepView: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("One thing that matters most")
+                Text("Your one job")
                     .font(.system(.caption, design: .rounded, weight: .semibold))
                     .foregroundStyle(AppColors.calorie)
                     .textCase(.uppercase)
@@ -147,7 +147,7 @@ struct HealthInsightsStepView: View {
 
     private var continueButton: some View {
         Button(action: onContinue) {
-            Text("This looks right")
+            Text("Looks right")
                 .font(.system(.body, design: .rounded, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)

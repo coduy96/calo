@@ -60,16 +60,16 @@ struct HealthInsights {
         let tone: Tone
         switch bmiCategory {
         case .underweight:
-            copy = String(localized: "Your BMI sits in the underweight range — a reference point, not a verdict.")
+            copy = String(localized: "BMI puts you below the healthy range. A starting line, not a label.")
             tone = .caution
         case .healthy:
-            copy = String(localized: "Your BMI is in the healthy range — a strong foundation to build on.")
+            copy = String(localized: "BMI is in the healthy range. Strong place to build from.")
             tone = .positive
         case .overweight:
-            copy = String(localized: "Your BMI is in the overweight range — a starting point, not the whole story.")
+            copy = String(localized: "BMI reads overweight. It misses muscle and frame — but it's a fair signal.")
             tone = .neutral
         case .obese:
-            copy = String(localized: "Your BMI is in the obese range — small steady changes move it more than you'd think.")
+            copy = String(localized: "BMI reads obese. Small, steady moves shift it faster than you'd guess.")
             tone = .neutral
         }
         return Card(
@@ -86,9 +86,9 @@ struct HealthInsights {
         let copy: String
         if profile.usesBodyFatForBMR, let bf = profile.bodyFatPercentage {
             let bfPct = Int((bf * 100).rounded())
-            copy = String(localized: "Katch-McArdle with your \(bfPct)% body fat — more accurate than weight alone.")
+            copy = String(localized: "Katch–McArdle, using your \(bfPct)% body fat. Sharper than weight alone.")
         } else {
-            copy = String(localized: "Mifflin-St Jeor — a solid baseline from your height, weight, and age.")
+            copy = String(localized: "Mifflin–St Jeor — the cleanest estimate from height, weight, and age.")
         }
         return Card(
             id: "bmr",
@@ -107,7 +107,7 @@ struct HealthInsights {
             icon: "figure.walk",
             title: String(localized: "Daily Burn"),
             value: caloriesString(Int(profile.tdee)),
-            interpretation: String(localized: "With your \(activityName) routine, this is what your body spends on an average day."),
+            interpretation: String(localized: "Your \(activityName) routine puts your daily spend right here."),
             tone: .neutral
         )
     }
@@ -116,11 +116,11 @@ struct HealthInsights {
         let adj = profile.calorieAdjustment
         let copy: String
         if adj < 0 {
-            copy = String(localized: "A \(abs(adj)) cal deficit — sustainable and built around your TDEE, not a crash plan.")
+            copy = String(localized: "A \(abs(adj)) cal deficit — anchored to your TDEE, not pulled out of a hat.")
         } else if adj > 0 {
-            copy = String(localized: "A \(adj) cal surplus — paired with protein, this fuels lean growth.")
+            copy = String(localized: "A \(adj) cal surplus. Hit your protein and most of it becomes muscle.")
         } else {
-            copy = String(localized: "Right at maintenance — your job is consistency, not restriction.")
+            copy = String(localized: "Right at maintenance. Show up daily; the rest takes care of itself.")
         }
         return Card(
             id: "target",
@@ -141,9 +141,9 @@ struct HealthInsights {
         formatter.setLocalizedDateFormatFromTemplate("MMMd")
         let dateStr = formatter.string(from: date)
         let weightStr = String(format: "%.1f kg", target)
-        var copy = String(localized: "You'll reach \(weightStr) around \(dateStr). Patience compounds.")
+        var copy = String(localized: "You hit \(weightStr) around \(dateStr). The math is on your side if you stay in it.")
         if paceIsAggressive {
-            copy += " " + String(localized: "This pace is on the ambitious end — listen to your body.")
+            copy += " " + String(localized: "Pace is on the steep end — back off if your sleep or mood drops.")
         }
         let weeksValue = String(localized: "\(weeks) weeks")
         return Card(
@@ -159,17 +159,17 @@ struct HealthInsights {
     var primaryAdvice: String {
         switch (profile.goal, bmiCategory, paceIsAggressive) {
         case (.lose, .healthy, _):
-            return String(localized: "Your BMI is already healthy. Think recomposition: hit your protein target, lift twice a week, and let the scale move slowly.")
+            return String(localized: "Your BMI is already healthy — this is a recomp, not a cut. Hit protein, lift twice a week, ignore the scale for the first month.")
         case (.lose, .obese, true):
-            return String(localized: "You're motivated — channel it into the first four weeks. Slower than your slider says will stick longer than faster.")
+            return String(localized: "Spend your motivation on the first four weeks. Aim a notch slower than your slider — it sticks.")
         case (.lose, _, _):
-            return String(localized: "Protein first, then everything else falls into place. Aim for \(profile.proteinGoal)g a day.")
+            return String(localized: "Hit \(profile.proteinGoal)g protein every day. The rest sorts itself out.")
         case (.gain, .underweight, _):
-            return String(localized: "Frequent meals matter more than huge ones. Focus on recovery, sleep, and progressive lifts.")
+            return String(localized: "Eat more often, not just more. Lift heavy. Sleep more than you think you need.")
         case (.gain, _, _):
-            return String(localized: "Surplus plus strength training equals muscle, not just weight. Track protein religiously.")
+            return String(localized: "Surplus plus lifting equals muscle. Without lifting it's just fat. Track protein.")
         case (.maintain, _, _):
-            return String(localized: "You don't need to do more — you need to do this, consistently. Showing up is the win.")
+            return String(localized: "You don't need a new plan. You need to run this one every day.")
         }
     }
 

@@ -3371,7 +3371,7 @@ struct AIConsentSheetView: View {
         .interactiveDismissDisabled()
     }
 
-    private func consentRow(icon: String, title: String, text: String) -> some View {
+    private func consentRow(icon: String, title: LocalizedStringKey, text: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: icon)
                 .font(.system(size: 18))

@@ -72,7 +72,7 @@ struct InlinePaywallStepView: View {
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text("You earned this plan. Don't reset to zero.")
+            Text("Twelve screens to get here. Don't reset the counter.")
                 .font(.system(.callout, design: .rounded))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -85,9 +85,9 @@ struct InlinePaywallStepView: View {
         guard profile.goal != .maintain,
               let weeks = insights.weeksToGoal,
               let target = profile.goalWeightKg else {
-            return String(localized: "Your plan is built. Don't walk away from it.")
+            return String(localized: "The plan is built. Run it.")
         }
-        return String(localized: "You're \(weeks) weeks from \(weightDisplay(for: target)). Don't quit on yourself now.")
+        return String(localized: "\(weeks) weeks to \(weightDisplay(for: target)). Don't bail in the parking lot.")
     }
 
     // MARK: - Plan recap
@@ -168,7 +168,7 @@ struct InlinePaywallStepView: View {
 
     private var lossSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Without Plus, this plan disappears.")
+            Text("Walk away and this resets.")
                 .font(.system(.headline, design: .rounded, weight: .bold))
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -179,7 +179,7 @@ struct InlinePaywallStepView: View {
                 }
             }
 
-            Text("You'd be starting from scratch.")
+            Text("Day one, all over again.")
                 .font(.system(.caption, design: .rounded, weight: .medium))
                 .foregroundStyle(.secondary)
                 .padding(.top, 2)
@@ -189,15 +189,15 @@ struct InlinePaywallStepView: View {
 
     private var lossItems: [String] {
         var items: [String] = [
-            String(localized: "Your \(profile.dailyCalories) cal daily target, tuned to your TDEE"),
-            String(localized: "AI Coach that already knows your goal and pace"),
-            String(localized: "Photo and voice food logging"),
-            String(localized: "Weight forecasts that track your real trend")
+            String(localized: "Your \(profile.dailyCalories) cal target, tuned to your TDEE"),
+            String(localized: "Coach that already knows your goal, pace, and history"),
+            String(localized: "Snap-a-meal and voice logging"),
+            String(localized: "Trend forecasts that read your real curve, not daily noise")
         ]
         if let weeks = insights.weeksToGoal,
            let target = profile.goalWeightKg,
            profile.goal != .maintain {
-            items.append(String(localized: "Your \(weeks)-week path to \(weightDisplay(for: target))"))
+            items.append(String(localized: "The \(weeks)-week path to \(weightDisplay(for: target))"))
         }
         return items
     }
@@ -255,7 +255,7 @@ struct InlinePaywallStepView: View {
 
     private var recommendedBadge: String {
         if let weeks = insights.weeksToGoal, profile.goal != .maintain {
-            return String(localized: "Best for your \(weeks)-week plan")
+            return String(localized: "Matches your \(weeks)-week plan")
         }
         return String(localized: "Best Value")
     }

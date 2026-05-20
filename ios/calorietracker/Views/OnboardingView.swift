@@ -247,15 +247,15 @@ struct OnboardingView: View {
                     .frame(width: 200, height: 200)
 
                 VStack(spacing: 8) {
-                    Text("Eat Smart,")
+                    Text("Track less,")
                         .font(.system(size: 32, weight: .bold, design: .rounded))
-                    Text("Live Better")
+                    Text("Live more")
                         .font(.system(size: 32, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing)
                         )
                 }
-                Text("Just snap, track, and thrive.\nYour nutrition, simplified.")
+                Text("Snap your meals. Talk to your coach.\nLet the data do the work.")
                     .font(.system(.callout, design: .rounded))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -285,7 +285,7 @@ struct OnboardingView: View {
 
     private var genderStep: some View {
         VStack(alignment: .leading, spacing: 0) {
-            stepHeader(title: "What's your gender?", subtitle: "This helps us calculate your metabolism")
+            stepHeader(title: "What's your sex?", subtitle: "It shifts your daily burn estimate.")
             Spacer()
             VStack(spacing: 12) {
                 ForEach(Gender.allCases, id: \.self) { g in
@@ -304,7 +304,7 @@ struct OnboardingView: View {
 
     private var birthdayStep: some View {
         VStack(alignment: .leading, spacing: 0) {
-            stepHeader(title: "When's your birthday?", subtitle: "Used to calculate your daily needs")
+            stepHeader(title: "When were you born?", subtitle: "Age changes how many calories you burn at rest.")
             Spacer()
             DatePicker("Birthday", selection: $birthday, in: ...Date(), displayedComponents: .date)
                 .datePickerStyle(.wheel)
@@ -319,7 +319,7 @@ struct OnboardingView: View {
 
     private var heightStep: some View {
         VStack(alignment: .leading, spacing: 0) {
-            stepHeader(title: "How tall are you?", subtitle: "We'll keep this private")
+            stepHeader(title: "How tall are you?", subtitle: "Locks in your BMI baseline.")
             Picker("Unit", selection: $isMetric) {
                 Text("Imperial").tag(false)
                 Text("Metric").tag(true)
@@ -361,7 +361,7 @@ struct OnboardingView: View {
 
     private var weightStep: some View {
         VStack(alignment: .leading, spacing: 0) {
-            stepHeader(title: "What's your current weight?", subtitle: "Tap the wheel to set it exactly")
+            stepHeader(title: "What's your weight today?", subtitle: "Where you're starting. You'll update this daily.")
             Spacer()
             VStack(spacing: 4) {
                 Text(isMetric ? "Weight (kg)" : "Weight (lbs)")
@@ -385,7 +385,7 @@ struct OnboardingView: View {
 
     private var bodyFatStep: some View {
         VStack(alignment: .leading, spacing: 0) {
-            stepHeader(title: "Do you know your\nbody fat %?", subtitle: "Helps us calculate your metabolism more accurately")
+            stepHeader(title: "Do you know your\nbody fat %?", subtitle: "Optional — bumps your burn estimate from good to great.")
             Spacer()
             VStack(spacing: 12) {
                 selectionCard(icon: "checkmark.circle", title: "Yes", isSelected: knowsBodyFat) {
@@ -453,7 +453,7 @@ struct OnboardingView: View {
                                 .frame(height: 110)
                                 .padding(.horizontal, 24)
                             } else {
-                                Text("You can set this later in Settings.")
+                                Text("You can set this later.")
                                     .font(.system(.caption, design: .rounded))
                                     .foregroundStyle(.tertiary)
                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -469,7 +469,7 @@ struct OnboardingView: View {
                     Image(systemName: "function")
                         .font(.system(size: 28))
                         .foregroundStyle(.secondary)
-                    Text("No worries! We'll use a standard formula\nbased on your height, weight, and age.")
+                    Text("Skip it. Mifflin–St Jeor handles the math from your height, weight, and age.")
                         .font(.system(.callout, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -486,7 +486,7 @@ struct OnboardingView: View {
 
     private var activityStep: some View {
         VStack(alignment: .leading, spacing: 0) {
-            stepHeader(title: "How active are you?", subtitle: "Your typical week")
+            stepHeader(title: "How active are you?", subtitle: "Pick the closest match. Change it anytime.")
             ScrollView {
                 VStack(spacing: 12) {
                     ForEach(ActivityLevel.allCases, id: \.self) { level in
@@ -506,7 +506,7 @@ struct OnboardingView: View {
 
     private var goalStep: some View {
         VStack(alignment: .leading, spacing: 0) {
-            stepHeader(title: "What's your goal?", subtitle: "You can change this anytime")
+            stepHeader(title: "What are you here for?", subtitle: "Change your mind later — no penalty.")
             Spacer()
             VStack(spacing: 12) {
                 ForEach(WeightGoal.allCases, id: \.self) { g in
@@ -546,7 +546,7 @@ struct OnboardingView: View {
 
     private var desiredWeightStep: some View {
         VStack(alignment: .leading, spacing: 0) {
-            stepHeader(title: "What's your\ndesired weight?", subtitle: LocalizedStringKey(goal.displayName))
+            stepHeader(title: "Your target weight", subtitle: LocalizedStringKey(goal.displayName))
             Spacer()
             if isMetric {
                 decimalWeightWheel(whole: $targetWeightKgWhole, tenth: $targetWeightKgTenth, range: 30...250, unit: "kg")
@@ -609,15 +609,15 @@ struct OnboardingView: View {
         // order — phrases like "Weight loss speed per week" don't translate
         // well as substring + suffix in many languages.
         let speedTitle: LocalizedStringKey = goal == .maintain
-            ? "Your pace"
-            : "How fast do you want\nto reach your goal?"
+            ? "You're already set."
+            : "How aggressive?"
         let speedSubtitle: LocalizedStringKey
         if goal == .maintain {
-            speedSubtitle = "We'll set a balanced plan"
+            speedSubtitle = "We'll hold the line at maintenance."
         } else if goal == .lose {
-            speedSubtitle = "Weight loss speed per week"
+            speedSubtitle = "Loss per week. Slower lasts longer."
         } else {
-            speedSubtitle = "Weight gain speed per week"
+            speedSubtitle = "Gain per week. Slow builds muscle, not fat."
         }
         return VStack(alignment: .leading, spacing: 0) {
             stepHeader(title: speedTitle, subtitle: speedSubtitle)
@@ -626,9 +626,9 @@ struct OnboardingView: View {
                 VStack(spacing: 12) {
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 48)).foregroundStyle(AppColors.protein)
-                    Text("Balanced pace set")
+                    Text("Maintenance dialed in")
                         .font(.system(.title3, design: .rounded, weight: .semibold))
-                    Text("We'll keep your calories steady\nto maintain your current weight.")
+                    Text("Calories stay steady. So does the scale.")
                         .font(.system(.callout, design: .rounded)).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 }.frame(maxWidth: .infinity)
                 Spacer()
@@ -667,15 +667,15 @@ struct OnboardingView: View {
                     ), in: 0...2, step: 1).tint(AppColors.calorie).padding(.horizontal, 40)
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 0) {
-                            Text("You'll reach your goal in ")
+                            Text("You hit your goal in ")
                                 .font(.system(.subheadline, design: .rounded, weight: .medium))
                             Text("\(estimatedDays) days")
                                 .font(.system(.subheadline, design: .rounded, weight: .bold))
                                 .foregroundStyle(AppColors.calorie)
                         }
-                        Text(goalSpeed == 1 ? "The most balanced pace, motivating and sustainable."
-                             : goalSpeed == 0 ? "Gentle and sustainable. Great for long-term habits."
-                             : "Aggressive but doable. Requires strong discipline.")
+                        Text(goalSpeed == 1 ? "Fast enough to feel it. Slow enough to keep it."
+                             : goalSpeed == 0 ? "The pace that doesn't burn you out by week three."
+                             : "Steep. Doable if you stay strict — not for everyone.")
                             .font(.system(.caption, design: .rounded)).foregroundStyle(.secondary)
                     }
                     .padding(16).frame(maxWidth: .infinity, alignment: .leading)
@@ -701,11 +701,11 @@ struct OnboardingView: View {
                     .font(.system(size: 56))
                     .foregroundStyle(AppColors.calorie)
 
-                Text("Be reminded to\nlog meals")
+                Text("Stay on the plan")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .multilineTextAlignment(.center)
 
-                Text("Get gentle reminders at meal times\nso you never forget to track.")
+                Text("Three quiet pings — breakfast, lunch, dinner.\nThe streak builds itself.")
                     .font(.system(.callout, design: .rounded))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -786,11 +786,11 @@ struct OnboardingView: View {
                 }
 
                 VStack(spacing: 8) {
-                    Text("Connect to\nApple Health")
+                    Text("Sync with\nApple Health")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .multilineTextAlignment(.center)
 
-                    Text("Keep your nutrition and body\nmeasurements in sync automatically.")
+                    Text("Two-way sync for weight, height, and nutrition.\nOne source of truth.")
                         .font(.system(.callout, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -798,8 +798,8 @@ struct OnboardingView: View {
 
                 // Feature list
                 VStack(alignment: .leading, spacing: 12) {
-                    healthFeatureRow(icon: "fork.knife", label: "Nutrition Data")
-                    healthFeatureRow(icon: "scalemass.fill", label: "Weight Sync")
+                    healthFeatureRow(icon: "fork.knife", label: "Nutrition writes out")
+                    healthFeatureRow(icon: "scalemass.fill", label: "Weight reads in")
                     healthFeatureRow(icon: "figure.stand", label: "Body Measurements")
                 }
                 .padding(.horizontal, 40)
@@ -882,7 +882,7 @@ struct OnboardingView: View {
 
     private var planReadyStep: some View {
         VStack(spacing: 0) {
-            stepHeader(title: "Your Plan", subtitle: "Tap any value to adjust")
+            stepHeader(title: "Your plan", subtitle: "Tap a number to change it.")
 
             ScrollView {
                 VStack(spacing: 20) {
@@ -991,9 +991,9 @@ struct OnboardingView: View {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundStyle(.orange)
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Please consult with a doctor")
+                                Text("Talk to a doctor first")
                                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                                Text("The minimum recommendation is 1,200 calories per day.")
+                                Text("1,200 cal/day is the floor. Below that, get a professional in the loop.")
                                     .font(.system(.caption, design: .rounded))
                                     .foregroundStyle(.secondary)
                             }
@@ -1010,7 +1010,7 @@ struct OnboardingView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "book.fill")
                                 .font(.system(size: 11))
-                            Text("How is this calculated?")
+                            Text("Show the math")
                                 .font(.system(.footnote, design: .rounded, weight: .medium))
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 10, weight: .semibold))
@@ -1024,7 +1024,7 @@ struct OnboardingView: View {
                 .padding(.bottom, 100)
             }
 
-            continueButton("Let's get started!") {
+            continueButton("Lock it in") {
                 var editedProfile = profile
                 editedProfile.customCalories = editedCalories
                 editedProfile.customProtein = editedProtein
@@ -1161,7 +1161,7 @@ struct BuildingPlanStepView: View {
                     .contentTransition(.numericText())
                     .animation(.easeInOut(duration: 0.3), value: percent)
 
-                Text("We're setting everything\nup for you")
+                Text("Building your plan")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .multilineTextAlignment(.center)
             }
@@ -1181,13 +1181,13 @@ struct BuildingPlanStepView: View {
             .frame(height: 10)
             .padding(.horizontal, 40)
 
-            Text("Finalizing results...")
+            Text("Crunching the numbers…")
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(.secondary)
 
             // Checklist
             VStack(alignment: .leading, spacing: 14) {
-                Text("Daily recommendation for")
+                Text("Your daily target for")
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                 ForEach(0..<items.count, id: \.self) { index in
                     HStack(spacing: 10) {
