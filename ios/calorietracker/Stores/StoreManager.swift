@@ -43,6 +43,8 @@ struct PlusProduct: Identifiable {
     /// Localized intro-offer copy (e.g. "3 days free, then …"). nil when the
     /// product has no intro offer or the user is no longer eligible.
     let introOfferCopy: String?
+    /// Localized per-day price (e.g. "$0.27"). Populated for yearly products only.
+    let pricePerDayText: String?
     fileprivate let source: Source
 }
 
@@ -142,6 +144,7 @@ class StoreManager {
                     displayPrice: product.displayPrice,
                     detail: detail(for: product),
                     introOfferCopy: introCopy(for: product),
+                    pricePerDayText: pricePerDayText(for: product),
                     source: .storeKit(product)
                 )
             }
@@ -338,6 +341,7 @@ class StoreManager {
                 displayPrice: package.localizedPriceString,
                 detail: detail(for: package),
                 introOfferCopy: introCopy(for: package),
+                pricePerDayText: pricePerDayText(for: package),
                 source: .revenueCat(package)
             )
         }
@@ -448,5 +452,23 @@ class StoreManager {
         case .year: return period.value * 365
         @unknown default: return period.value
         }
+    }
+
+    private func pricePerDayText(for product: Product) -> String? {
+        guard product.id == Self.yearlyID else { return nil }
+        let perDay = product.price / 365
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = product.priceFormatStyle.locale
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: perDay as NSDecimalNumber)
+    }
+
+    private func pricePerDayText(for package: Package) -> String? {
+        guard package.storeProduct.productIdentifier == Self.yearlyID,
+              let formatter = package.storeProduct.priceFormatter else { return nil }
+        let perDay = package.storeProduct.price / 365
+        return formatter.string(from: perDay as NSDecimalNumber)
     }
 }

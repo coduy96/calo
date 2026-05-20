@@ -20,6 +20,7 @@ struct calorietrackerApp: App {
     @State private var profileStore = ProfileStore()
     @State private var chatStore = ChatStore()
     @State private var storeManager = StoreManager()
+    @State private var reviewPromptManager = ReviewPromptManager()
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("appearanceMode") private var appearanceMode = "system"
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
@@ -101,6 +102,7 @@ struct calorietrackerApp: App {
                         .environment(profileStore)
                         .environment(chatStore)
                         .environment(storeManager)
+                        .environment(reviewPromptManager)
                 } else {
                     OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
                         .environment(notificationManager)
@@ -111,6 +113,7 @@ struct calorietrackerApp: App {
                         .environment(profileStore)
                         .environment(chatStore)
                         .environment(storeManager)
+                        .environment(reviewPromptManager)
                 }
             }
             .tint(AppThemeColor.color(for: appThemeColorRaw).color)
@@ -303,8 +306,9 @@ struct calorietrackerApp: App {
             healthKitManager.deleteBodyFat(entryID: entryID)
         }
 
-        foodStore.onEntryAdded = { [healthKitManager] entry in
+        foodStore.onEntryAdded = { [healthKitManager, reviewPromptManager, foodStore] entry in
             healthKitManager.writeNutrition(for: entry)
+            reviewPromptManager.evaluateAndPromptIfEligible(foodStore: foodStore)
         }
 
         foodStore.onEntryDeleted = { [healthKitManager] entryID in

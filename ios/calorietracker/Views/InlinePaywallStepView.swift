@@ -12,19 +12,15 @@ struct InlinePaywallStepView: View {
     private let termsURL = URL(string: "https://voidpen.com/terms")!
     private let privacyURL = URL(string: "https://voidpen.com/privacy")!
 
-    private let testimonials: [(title: String, author: String, quote: String)] = [
-        ("Thankful", "Joel819", "This app is great, am recommending this to my friends."),
-        ("One of the best", "2MitiN6", "Yours changes my life in real time for free."),
-        ("Cool App", "Sloosi", "I wrote a suggestion on GitHub and was approved and done instantly.")
-    ]
-
     var body: some View {
         VStack(spacing: 0) {
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 24) {
+                VStack(spacing: 22) {
                     personalizedHeader
-                    socialProofBlock
+                    planRecapCard
+                    lossSection
                     tierCards
+                    trustStrip
                     footerLinks
                 }
                 .padding(.horizontal, 24)
@@ -41,9 +37,12 @@ struct InlinePaywallStepView: View {
                     .padding(.bottom, 8)
             }
 
-            subscribeButton
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
+            VStack(spacing: 10) {
+                subscribeButton
+                trialFinePrint
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 24)
         }
         .task {
             if storeManager.products.isEmpty {
@@ -73,7 +72,7 @@ struct InlinePaywallStepView: View {
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text("Your plan is ready — let's keep the momentum going.")
+            Text("You earned this plan. Don't reset to zero.")
                 .font(.system(.callout, design: .rounded))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -86,76 +85,135 @@ struct InlinePaywallStepView: View {
         guard profile.goal != .maintain,
               let weeks = insights.weeksToGoal,
               let target = profile.goalWeightKg else {
-            return String(localized: "Unlock your full plan")
+            return String(localized: "Your plan is built. Don't walk away from it.")
         }
-        let weightDisplay: String
-        if isMetric {
-            weightDisplay = String(format: "%.1f kg", target)
-        } else {
-            let lbs = target / 0.453592
-            weightDisplay = String(format: "%.1f lb", lbs)
-        }
-        return String(localized: "You're \(weeks) weeks from \(weightDisplay). Let's get you there.")
+        return String(localized: "You're \(weeks) weeks from \(weightDisplay(for: target)). Don't quit on yourself now.")
     }
 
-    // MARK: - Social proof
+    // MARK: - Plan recap
 
-    private var socialProofBlock: some View {
-        VStack(spacing: 14) {
-            HStack(spacing: 6) {
-                ForEach(0..<5, id: \.self) { _ in
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(AppColors.calorie)
-                }
-                Text("4.8 · Loved by thousands")
-                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .padding(.leading, 4)
-            }
-
-            VStack(spacing: 10) {
-                ForEach(testimonials.indices, id: \.self) { idx in
-                    testimonialCard(testimonials[idx])
-                }
-            }
-        }
-    }
-
-    private func testimonialCard(_ review: (title: String, author: String, quote: String)) -> some View {
-        VStack(alignment: .leading, spacing: 7) {
-            HStack(spacing: 2) {
-                ForEach(0..<5, id: \.self) { _ in
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(AppColors.calorie)
-                }
-                Spacer(minLength: 8)
-                Text(review.author)
-                    .font(.system(.caption2, design: .rounded, weight: .medium))
-                    .foregroundStyle(.secondary)
-            }
-
-            Text(review.title)
+    private var planRecapCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Your plan")
                 .font(.system(.subheadline, design: .rounded, weight: .bold))
                 .foregroundStyle(.primary)
 
-            Text(review.quote)
+            VStack(spacing: 10) {
+                recapRow(
+                    icon: "flame.fill",
+                    label: String(localized: "Daily target"),
+                    value: String(localized: "\(profile.dailyCalories) cal")
+                )
+
+                if let weeks = insights.weeksToGoal,
+                   let target = profile.goalWeightKg,
+                   profile.goal != .maintain {
+                    recapRow(
+                        icon: "arrow.right.circle.fill",
+                        label: String(localized: "Path"),
+                        value: String(localized: "\(weeks) weeks → \(weightDisplay(for: target))")
+                    )
+                }
+
+                if let date = insights.goalDate, profile.goal != .maintain {
+                    recapRow(
+                        icon: "calendar",
+                        label: String(localized: "Reach by"),
+                        value: goalDateText(date)
+                    )
+                }
+            }
+
+            Text(insights.primaryAdvice)
                 .font(.system(.caption, design: .rounded))
                 .foregroundStyle(.secondary)
-                .lineLimit(2)
+                .lineLimit(3)
                 .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 2)
         }
-        .padding(12)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(AppColors.appCard)
+            HStack(spacing: 0) {
+                LinearGradient(colors: AppColors.calorieGradient,
+                               startPoint: .top, endPoint: .bottom)
+                    .frame(width: 4)
+                AppColors.appCard
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
         )
+    }
+
+    private func recapRow(icon: String, label: String, value: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(AppColors.calorie)
+                .frame(width: 18)
+            Text(label)
+                .font(.system(.caption, design: .rounded))
+                .foregroundStyle(.secondary)
+            Spacer()
+            Text(value)
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .foregroundStyle(.primary)
+        }
+    }
+
+    // MARK: - Loss section
+
+    private var lossSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Without Plus, this plan disappears.")
+                .font(.system(.headline, design: .rounded, weight: .bold))
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            VStack(spacing: 8) {
+                ForEach(lossItems, id: \.self) { item in
+                    lossRow(item)
+                }
+            }
+
+            Text("You'd be starting from scratch.")
+                .font(.system(.caption, design: .rounded, weight: .medium))
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var lossItems: [String] {
+        var items: [String] = [
+            String(localized: "Your \(profile.dailyCalories) cal daily target, tuned to your TDEE"),
+            String(localized: "AI Coach that already knows your goal and pace"),
+            String(localized: "Photo and voice food logging"),
+            String(localized: "Weight forecasts that track your real trend")
+        ]
+        if let weeks = insights.weeksToGoal,
+           let target = profile.goalWeightKg,
+           profile.goal != .maintain {
+            items.append(String(localized: "Your \(weeks)-week path to \(weightDisplay(for: target))"))
+        }
+        return items
+    }
+
+    private func lossRow(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "xmark.circle.fill")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.red.opacity(0.85))
+                .padding(.top, 1)
+            Text(text)
+                .font(.system(.subheadline, design: .rounded))
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
     }
 
     // MARK: - Tier cards
@@ -183,19 +241,26 @@ struct InlinePaywallStepView: View {
         } else {
             VStack(spacing: 12) {
                 if let yearly = storeManager.yearlyProduct {
-                    tierCard(product: yearly, badge: String(localized: "Best Value"))
+                    tierCard(product: yearly, badge: recommendedBadge, isHighlighted: true)
                 }
                 if let monthly = storeManager.monthlyProduct {
-                    tierCard(product: monthly, badge: nil)
+                    tierCard(product: monthly, badge: nil, isHighlighted: false)
                 }
                 if let weekly = storeManager.weeklyProduct {
-                    tierCard(product: weekly, badge: nil)
+                    tierCard(product: weekly, badge: nil, isHighlighted: false)
                 }
             }
         }
     }
 
-    private func tierCard(product: PlusProduct, badge: String?) -> some View {
+    private var recommendedBadge: String {
+        if let weeks = insights.weeksToGoal, profile.goal != .maintain {
+            return String(localized: "Best for your \(weeks)-week plan")
+        }
+        return String(localized: "Best Value")
+    }
+
+    private func tierCard(product: PlusProduct, badge: String?, isHighlighted: Bool) -> some View {
         let isSelected = selectedProduct?.id == product.id
         return Button {
             let haptic = UIImpactFeedbackGenerator(style: .light)
@@ -220,6 +285,8 @@ struct InlinePaywallStepView: View {
                                                    endPoint: .trailing),
                                     in: Capsule()
                                 )
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.85)
                         }
                     }
                     if let intro = product.introOfferCopy {
@@ -231,6 +298,11 @@ struct InlinePaywallStepView: View {
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.secondary)
                     }
+                    if let perDay = product.pricePerDayText {
+                        Text("Less than \(perDay)/day")
+                            .font(.system(.caption2, design: .rounded, weight: .semibold))
+                            .foregroundStyle(AppColors.calorie.opacity(0.9))
+                    }
                 }
                 Spacer()
                 Text(product.displayPrice)
@@ -240,14 +312,58 @@ struct InlinePaywallStepView: View {
                     .font(.system(size: 22))
                     .foregroundStyle(isSelected ? AppColors.calorie : Color.secondary.opacity(0.3))
             }
-            .padding(16)
+            .padding(.horizontal, 16)
+            .padding(.vertical, isHighlighted ? 20 : 16)
             .background(AppColors.appCard, in: RoundedRectangle(cornerRadius: 16))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(isSelected ? AppColors.calorie : Color.clear, lineWidth: 2)
-            )
+            .overlay {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 16)
+                        .strokeBorder(AppColors.calorie, lineWidth: 2)
+                } else if isHighlighted {
+                    RoundedRectangle(cornerRadius: 16)
+                        .strokeBorder(
+                            LinearGradient(colors: AppColors.calorieGradient,
+                                           startPoint: .leading,
+                                           endPoint: .trailing),
+                            lineWidth: 1.5
+                        )
+                }
+            }
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - Trust strip
+
+    private var trustStrip: some View {
+        HStack(spacing: 8) {
+            trustPill(icon: "lock.shield.fill", label: String(localized: "Private. On-device."))
+            trustPill(icon: "arrow.uturn.backward.circle.fill", label: String(localized: "Cancel anytime"))
+            trustPill(icon: "gift.fill", label: String(localized: "3 days free"))
+        }
+    }
+
+    private func trustPill(icon: String, label: String) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .semibold))
+            Text(label)
+                .font(.system(.caption2, design: .rounded, weight: .medium))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .frame(maxWidth: .infinity)
+        .background(
+            Capsule()
+                .fill(AppColors.appCard)
+        )
+        .overlay(
+            Capsule()
+                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
+        )
     }
 
     // MARK: - Subscribe CTA
@@ -285,10 +401,43 @@ struct InlinePaywallStepView: View {
     }
 
     private var subscribeButtonTitle: String {
-        guard let product = selectedProduct else { return String(localized: "Subscribe") }
-        return product.introOfferCopy != nil
-            ? String(localized: "Start 3-Day Free Trial")
-            : String(localized: "Subscribe")
+        let hasIntro = selectedProduct?.introOfferCopy != nil
+        let weeks = profile.goal != .maintain ? insights.weeksToGoal : nil
+
+        if let weeks {
+            return hasIntro
+                ? String(localized: "Start My \(weeks)-Week Plan")
+                : String(localized: "Lock In My \(weeks)-Week Plan")
+        }
+        return hasIntro
+            ? String(localized: "Start My Plan — 3 Days Free")
+            : String(localized: "Lock In My Plan")
+    }
+
+    @ViewBuilder
+    private var trialFinePrint: some View {
+        if let product = selectedProduct {
+            Text(trialFinePrintText(for: product))
+                .font(.system(.caption2, design: .rounded))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func trialFinePrintText(for product: PlusProduct) -> String {
+        let period: String
+        switch product.id {
+        case StoreManager.yearlyID: period = String(localized: "year")
+        case StoreManager.monthlyID: period = String(localized: "month")
+        case StoreManager.weeklyID: period = String(localized: "week")
+        default: period = String(localized: "period")
+        }
+
+        if product.introOfferCopy != nil {
+            return String(localized: "3 days free, then \(product.displayPrice) per \(period). Auto-renews. Cancel anytime in Settings.")
+        }
+        return String(localized: "\(product.displayPrice) per \(period). Auto-renews. Cancel anytime in Settings.")
     }
 
     // MARK: - Footer
@@ -312,6 +461,20 @@ struct InlinePaywallStepView: View {
     }
 
     // MARK: - Helpers
+
+    private func weightDisplay(for kg: Double) -> String {
+        if isMetric {
+            return String(format: "%.1f kg", kg)
+        }
+        let lbs = kg / 0.453592
+        return String(format: "%.1f lb", lbs)
+    }
+
+    private func goalDateText(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.setLocalizedDateFormatFromTemplate("MMMd")
+        return formatter.string(from: date)
+    }
 
     private func selectDefaultProductIfNeeded() {
         if let selectedProduct,
