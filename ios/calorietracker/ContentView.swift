@@ -2417,8 +2417,6 @@ struct ProfileView: View {
     @State private var showClearFoodLogConfirmation = false
     @State private var showRecalculateConfirm = false
     @State private var showCalculationMethods = false
-    @State private var showAutoMacroEditAlert = false
-    @State private var showMaxPinnedAlert = false
     @State private var showInvalidGoalWeightAlert = false
     @State private var invalidGoalWeightMessage = ""
     @State private var showShareSheet = false
@@ -3024,28 +3022,22 @@ struct ProfileView: View {
                     NutritionPickerSheet(
                         label: "Protein", unit: "g",
                         currentValue: profile.effectiveProtein,
-                        range: 10...500, step: 5,
-                        onSave: { setMacro(.protein, to: $0) },
-                        onResetToAuto: profile.isPinned(.protein) ? { setMacro(.protein, to: nil) } : nil
-                    )
+                        range: 10...500, step: 5
+                    ) { setMacro(.protein, to: $0) }
 
                 case .editCarbs:
                     NutritionPickerSheet(
                         label: "Carbs", unit: "g",
                         currentValue: profile.effectiveCarbs,
-                        range: 0...800, step: 5,
-                        onSave: { setMacro(.carbs, to: $0) },
-                        onResetToAuto: profile.isPinned(.carbs) ? { setMacro(.carbs, to: nil) } : nil
-                    )
+                        range: 0...800, step: 5
+                    ) { setMacro(.carbs, to: $0) }
 
                 case .editFat:
                     NutritionPickerSheet(
                         label: "Fat", unit: "g",
                         currentValue: profile.effectiveFat,
-                        range: 10...300, step: 5,
-                        onSave: { setMacro(.fat, to: $0) },
-                        onResetToAuto: profile.isPinned(.fat) ? { setMacro(.fat, to: nil) } : nil
-                    )
+                        range: 10...300, step: 5
+                    ) { setMacro(.fat, to: $0) }
 
                 }
             }
@@ -3061,23 +3053,13 @@ struct ProfileView: View {
                 Button("Cancel", role: .cancel) { }
                 Button("Recalculate") { recalculateGoalsNow() }
             } message: {
-                Text("Recompute calories, protein, carbs, and fat from your current weight, activity, and goal? Your custom values will be replaced and Auto-balance will reset to Carbs.")
+                Text("Recompute calories, protein, carbs, and fat from your current weight, activity, and goal? Your custom values will be replaced.")
             }
             .sheet(isPresented: $showCalculationMethods) {
                 CalculationMethodsView()
             }
             .sheet(isPresented: $showShareSheet) {
                 ActivityShareSheet(activityItems: [shareMessage])
-            }
-            .alert("Auto-balanced", isPresented: $showAutoMacroEditAlert) {
-                Button("OK", role: .cancel) { }
-            } message: {
-                Text("This macro is auto-balanced from the others. Tap the lock icon to pin it, then tap the row to set a custom value.")
-            }
-            .alert("Max 2 Pinned", isPresented: $showMaxPinnedAlert) {
-                Button("OK", role: .cancel) { }
-            } message: {
-                Text("At most 2 macros can be pinned at a time. Unpin another macro first (tap its lock icon).")
             }
             .alert("Invalid Goal Weight", isPresented: $showInvalidGoalWeightAlert) {
                 Button("OK", role: .cancel) { }
@@ -3141,20 +3123,10 @@ struct ProfileView: View {
         saveProfile()
     }
 
-    /// Macro row. Tap to open the picker (which lets the user enter a value to pin, or reset to auto).
-    /// "(auto)" suffix when the macro is unpinned. Lock icon shows current pin state.
     @ViewBuilder
     private func macroRow(label: String, icon: String, macro: AutoBalanceMacro, value: Int, sheet: ActiveSheet) -> some View {
-        let pinned = profile.isPinned(macro)
         Button {
-            // Enforce max-2 only at the moment of trying to pin a NEW macro.
-            // Opening the picker on an already-pinned macro is fine; opening on an auto macro
-            // is also fine since user might just want to view + tap "Reset to Auto" to no-op.
-            if !pinned && profile.pinnedCount >= 2 {
-                showMaxPinnedAlert = true
-            } else {
-                activeSheet = sheet
-            }
+            activeSheet = sheet
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: icon)
@@ -3163,11 +3135,8 @@ struct ProfileView: View {
                 Text(label)
                     .foregroundStyle(.primary)
                 Spacer()
-                Text(pinned ? "\(value)g" : "\(value)g · auto")
+                Text("\(value)g")
                     .foregroundStyle(.secondary)
-                Image(systemName: pinned ? "lock.fill" : "lock.open")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(pinned ? AppColors.calorie : .secondary)
             }
         }
         .buttonStyle(.plain)

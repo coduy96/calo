@@ -640,6 +640,7 @@
       }
     },
     "%lldg · auto" : {
+      "extractionState" : "stale",
       "localizations" : {
         "vi" : {
           "stringUnit" : {
@@ -4749,6 +4750,7 @@
       }
     },
     "At most 2 macros can be pinned at a time. Unpin another macro first (tap its lock icon)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -4849,6 +4851,7 @@
       }
     },
     "Auto-balanced" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -21644,6 +21647,7 @@
       }
     },
     "Max 2 Pinned" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -27448,6 +27452,7 @@
       }
     },
     "Recompute calories, protein, carbs, and fat from your current weight, activity, and goal? Your custom values will be replaced and Auto-balance will reset to Carbs." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -27543,6 +27548,106 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "根据你当前的体重、活动量和目标重新计算卡路里、蛋白质、碳水化合物和脂肪？你的自定义数值将被替换，自动平衡将重置为碳水化合物。"
+          }
+        }
+      }
+    },
+    "Recompute calories, protein, carbs, and fat from your current weight, activity, and goal? Your custom values will be replaced." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة حساب السعرات والبروتين والكربوهيدرات والدهون استنادًا إلى وزنك ونشاطك وهدفك الحالي؟ ستُستبدل قيمك المخصصة."
+          }
+        },
+        "az" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hazırkı çəkiniz, fəaliyyətiniz və hədəfinizə əsasən kalorilər, protein, karbohidrat və yağı yenidən hesablayın? Fərdi dəyərləriniz əvəzlənəcək."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kalorien, Protein, Kohlenhydrate und Fett anhand deines aktuellen Gewichts, deiner Aktivität und deines Ziels neu berechnen? Deine benutzerdefinierten Werte werden ersetzt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recompute calories, protein, carbs, and fat from your current weight, activity, and goal? Your custom values will be replaced."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Recalcular calorías, proteínas, carbohidratos y grasas según tu peso, actividad y objetivo actuales? Tus valores personalizados se reemplazarán."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recalculer calories, protéines, glucides et lipides à partir de votre poids, activité et objectif actuels ? Vos valeurs personnalisées seront remplacées."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपने वर्तमान वजन, गतिविधि और लक्ष्य से कैलोरी, प्रोटीन, कार्ब्स और फैट की पुनः गणना करें? आपके कस्टम मान बदल दिए जाएंगे।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricalcolare calorie, proteine, carboidrati e grassi in base al tuo peso, attività e obiettivo attuali? I tuoi valori personalizzati verranno sostituiti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在の体重、活動量、目標からカロリー、タンパク質、炭水化物、脂質を再計算しますか？カスタム値は置き換えられます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 체중, 활동량, 목표를 기준으로 칼로리, 단백질, 탄수화물, 지방을 다시 계산하시겠습니까? 사용자 지정 값은 대체됩니다."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calorieën, eiwitten, koolhydraten en vetten opnieuw berekenen op basis van je huidige gewicht, activiteit en doel? Je aangepaste waarden worden vervangen."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recalcular calorias, proteínas, carboidratos e gorduras com base no seu peso, atividade e meta atuais? Seus valores personalizados serão substituídos."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recalculezi caloriile, proteinele, carbohidrații și grăsimile pe baza greutății, activității și obiectivului actual? Valorile personalizate vor fi înlocuite."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пересчитать калории, белки, углеводы и жиры на основе текущего веса, активности и цели? Ваши пользовательские значения будут заменены."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tính lại calo, đạm, carb và chất béo dựa trên cân nặng, mức vận động và mục tiêu hiện tại? Các giá trị tuỳ chỉnh của bạn sẽ bị thay thế."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "根据你当前的体重、活动量和目标重新计算卡路里、蛋白质、碳水化合物和脂肪？你的自定义数值将被替换。"
           }
         }
       }
@@ -28572,6 +28677,7 @@
       }
     },
     "Reset to Auto-balance" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -33068,6 +33174,7 @@
       }
     },
     "This macro is auto-balanced from the others. Tap the lock icon to pin it, then tap the row to set a custom value." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {

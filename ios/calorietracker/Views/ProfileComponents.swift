@@ -723,9 +723,6 @@ struct NutritionPickerSheet: View {
     let range: ClosedRange<Int>
     let step: Int
     let onSave: (Int) -> Void
-    /// Optional callback to revert this macro to auto-balanced (custom value cleared).
-    /// When provided, a "Reset to Auto" button appears in the sheet.
-    var onResetToAuto: (() -> Void)? = nil
 
     @State private var selectedValue: Int
 
@@ -735,8 +732,7 @@ struct NutritionPickerSheet: View {
         currentValue: Int,
         range: ClosedRange<Int>,
         step: Int,
-        onSave: @escaping (Int) -> Void,
-        onResetToAuto: (() -> Void)? = nil
+        onSave: @escaping (Int) -> Void
     ) {
         self.label = label
         self.unit = unit
@@ -744,7 +740,6 @@ struct NutritionPickerSheet: View {
         self.range = range
         self.step = step
         self.onSave = onSave
-        self.onResetToAuto = onResetToAuto
         // Snap to nearest step and clamp into range so the wheel opens at the current value.
         let snapped = (currentValue / step) * step
         let clamped = min(max(snapped, range.lowerBound), range.upperBound)
@@ -789,18 +784,6 @@ struct NutritionPickerSheet: View {
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
                 .padding(.horizontal, 24)
-
-                if let resetAction = onResetToAuto {
-                    Button {
-                        resetAction()
-                        dismiss()
-                    } label: {
-                        Text("Reset to Auto-balance")
-                            .font(.system(.subheadline, design: .rounded, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.top, 4)
-                }
 
                 Spacer()
             }

@@ -135,7 +135,6 @@ struct UserProfile: Codable, Equatable {
     var customProtein: Int?
     var customFat: Int?
     var customCarbs: Int?
-    var autoBalanceMacro: AutoBalanceMacro?
 
     var displayName: String {
         if let name, !name.isEmpty { return name }
@@ -211,77 +210,16 @@ struct UserProfile: Codable, Equatable {
 
     var effectiveCalories: Int { customCalories ?? dailyCalories }
 
-    /// A macro is "pinned" when its custom value is set; "auto" when nil.
-    /// Auto macros split the remaining calories (after subtracting pinned macros) using
-    /// their formula values as weights.
-    func isPinned(_ macro: AutoBalanceMacro) -> Bool {
-        customValue(macro) != nil
-    }
+    var effectiveProtein: Int { customProtein ?? proteinGoal }
+    var effectiveCarbs: Int { customCarbs ?? carbsGoal }
+    var effectiveFat: Int { customFat ?? fatGoal }
 
-    var pinnedCount: Int {
-        AutoBalanceMacro.allCases.filter { isPinned($0) }.count
-    }
-
-    var effectiveProtein: Int {
-        customProtein ?? autoMacroValue(.protein)
-    }
-
-    var effectiveCarbs: Int {
-        customCarbs ?? autoMacroValue(.carbs)
-    }
-
-    var effectiveFat: Int {
-        customFat ?? autoMacroValue(.fat)
-    }
-
-    private func customValue(_ macro: AutoBalanceMacro) -> Int? {
-        switch macro {
-        case .protein: return customProtein
-        case .carbs:   return customCarbs
-        case .fat:     return customFat
-        }
-    }
-
-    private func formulaValue(_ macro: AutoBalanceMacro) -> Int {
-        switch macro {
-        case .protein: return proteinGoal
-        case .carbs:   return carbsGoal
-        case .fat:     return fatGoal
-        }
-    }
-
-    /// Compute an auto (unpinned) macro's value: split remaining calories among auto macros
-    /// using their formula values as weights, then convert kcal -> grams.
-    private func autoMacroValue(_ macro: AutoBalanceMacro) -> Int {
-        let pinnedKcal = AutoBalanceMacro.allCases.reduce(0) { sum, m in
-            sum + (customValue(m).map { $0 * m.kcalPerGram } ?? 0)
-        }
-        let remaining = max(0, effectiveCalories - pinnedKcal)
-
-        let autoMacros = AutoBalanceMacro.allCases.filter { !isPinned($0) }
-        guard autoMacros.contains(macro) else { return 0 }
-
-        // Only one auto macro: it absorbs all the remaining calories.
-        if autoMacros.count == 1 {
-            return remaining / macro.kcalPerGram
-        }
-
-        // Multiple auto macros: split remaining calories proportional to their formula kcal.
-        let totalFormulaKcal = autoMacros.reduce(0) { $0 + formulaValue($1) * $1.kcalPerGram }
-        guard totalFormulaKcal > 0 else { return formulaValue(macro) }
-
-        let mySharedKcal = remaining * formulaValue(macro) * macro.kcalPerGram / totalFormulaKcal
-        return mySharedKcal / macro.kcalPerGram
-    }
-
-    /// Recompute calories from weight/activity/goal formulas and reset all three macros to auto.
-    /// User can pin individual macros afterwards (max 2).
+    /// Recompute calories + macros from weight/activity/goal formulas, clearing all overrides.
     mutating func recalculateGoalsFromFormulas() {
         customCalories = dailyCalories
         customProtein = nil
         customFat = nil
         customCarbs = nil
-        autoBalanceMacro = nil
     }
 
     static let `default` = UserProfile(
@@ -300,8 +238,7 @@ struct UserProfile: Codable, Equatable {
         customCalories: nil,
         customProtein: nil,
         customFat: nil,
-        customCarbs: nil,
-        autoBalanceMacro: nil
+        customCarbs: nil
     )
 
     // MARK: - Persistence
