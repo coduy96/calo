@@ -10,7 +10,7 @@ struct OnboardingView: View {
     @Environment(HealthKitManager.self) private var healthKitManager
     @Environment(StoreManager.self) private var storeManager
 
-    @State private var step = 0
+    @AppStorage("onboardingStep") private var step = 0
     @State private var gender: Gender = .male
     @State private var birthday: Date = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     @AppStorage("useMetric") private var useMetric = false
@@ -44,6 +44,72 @@ struct OnboardingView: View {
     @State private var editedCarbs: Int?
     @State private var editingField: EditableField?
     @State private var showCalculationSources = false
+
+    init(hasCompletedOnboarding: Binding<Bool>) {
+        self._hasCompletedOnboarding = hasCompletedOnboarding
+
+        // useMetric AppStorage is the source of truth for the unit pref, but
+        // the picker drives a separate @State to keep the SwiftUI binding
+        // local. Mirror it on launch so we don't lose the user's choice across
+        // app restarts.
+        _isMetric = State(initialValue: UserDefaults.standard.bool(forKey: "useMetric"))
+
+        guard let profile = UserProfile.load() else { return }
+
+        _gender = State(initialValue: profile.gender)
+        _birthday = State(initialValue: profile.birthday)
+        _activityLevel = State(initialValue: profile.activityLevel)
+        _goal = State(initialValue: profile.goal)
+
+        let cm = profile.heightCm
+        _heightCm = State(initialValue: Int(cm.rounded()))
+        let totalInches = cm / 2.54
+        let feet = Int(totalInches / 12)
+        let inches = Int(totalInches.truncatingRemainder(dividingBy: 12).rounded())
+        _heightFeet = State(initialValue: feet)
+        _heightInches = State(initialValue: inches)
+
+        let kg = profile.weightKg
+        let kgWhole = Int(kg)
+        let kgTenth = Int(((kg - Double(kgWhole)) * 10).rounded())
+        _weightKgWhole = State(initialValue: kgWhole)
+        _weightKgTenth = State(initialValue: min(9, max(0, kgTenth)))
+        let lbs = kg / 0.453592
+        let lbsWhole = Int(lbs)
+        let lbsTenth = Int(((lbs - Double(lbsWhole)) * 10).rounded())
+        _weightLbsWhole = State(initialValue: lbsWhole)
+        _weightLbsTenth = State(initialValue: min(9, max(0, lbsTenth)))
+
+        if let goalKg = profile.goalWeightKg {
+            let gkgWhole = Int(goalKg)
+            let gkgTenth = Int(((goalKg - Double(gkgWhole)) * 10).rounded())
+            _targetWeightKgWhole = State(initialValue: gkgWhole)
+            _targetWeightKgTenth = State(initialValue: min(9, max(0, gkgTenth)))
+            let goalLbs = goalKg / 0.453592
+            let glbsWhole = Int(goalLbs)
+            let glbsTenth = Int(((goalLbs - Double(glbsWhole)) * 10).rounded())
+            _targetWeightLbsWhole = State(initialValue: glbsWhole)
+            _targetWeightLbsTenth = State(initialValue: min(9, max(0, glbsTenth)))
+        }
+
+        if let rate = profile.weeklyChangeKg {
+            let speed: Int = rate <= 0.3 ? 0 : (rate >= 0.8 ? 2 : 1)
+            _goalSpeed = State(initialValue: speed)
+        }
+
+        if let bf = profile.bodyFatPercentage {
+            _knowsBodyFat = State(initialValue: true)
+            _bodyFatPercentage = State(initialValue: Int((bf * 100).rounded()))
+        }
+        if let goalBf = profile.goalBodyFatPercentage {
+            _goalBodyFatPercentInt = State(initialValue: Int((goalBf * 100).rounded()))
+        }
+
+        _editedCalories = State(initialValue: profile.customCalories)
+        _editedProtein = State(initialValue: profile.customProtein)
+        _editedFat = State(initialValue: profile.customFat)
+        _editedCarbs = State(initialValue: profile.customCarbs)
+    }
 
     private enum EditableField: String, Identifiable {
         case calories, protein, fat, carbs
@@ -230,7 +296,7 @@ struct OnboardingView: View {
             }
             .padding(.horizontal, 24)
             Spacer()
-            continueButton()
+            continueButton { profile.save() }
         }
     }
 
@@ -245,7 +311,7 @@ struct OnboardingView: View {
                 .labelsHidden()
                 .padding(.horizontal, 24)
             Spacer()
-            continueButton()
+            continueButton { profile.save() }
         }
     }
 
@@ -287,7 +353,7 @@ struct OnboardingView: View {
                 }.padding(.horizontal, 24)
             }
             Spacer()
-            continueButton()
+            continueButton { profile.save() }
         }
     }
 
@@ -311,7 +377,7 @@ struct OnboardingView: View {
             }
             .padding(.horizontal, 24)
             Spacer()
-            continueButton()
+            continueButton { profile.save() }
         }
     }
 
@@ -412,7 +478,7 @@ struct OnboardingView: View {
                 .frame(maxWidth: .infinity)
             }
             Spacer()
-            continueButton()
+            continueButton { profile.save() }
         }
     }
 
@@ -432,7 +498,7 @@ struct OnboardingView: View {
                 .padding(.horizontal, 24)
                 .padding(.vertical, 16)
             }
-            continueButton()
+            continueButton { profile.save() }
         }
     }
 
@@ -463,6 +529,7 @@ struct OnboardingView: View {
                 targetWeightLbsTenth = weightLbsTenth
                 targetWeightKgWhole  = newKgWhole
                 targetWeightKgTenth  = weightKgTenth
+                profile.save()
             }
         }
     }
@@ -489,7 +556,7 @@ struct OnboardingView: View {
                     .frame(height: 150).padding(.horizontal, 24)
             }
             Spacer()
-            continueButton()
+            continueButton { profile.save() }
         }
     }
 

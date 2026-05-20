@@ -39,6 +39,7 @@ struct calorietrackerApp: App {
         if CommandLine.arguments.contains("--reset-onboarding") {
             UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
             UserDefaults.standard.removeObject(forKey: "userProfile")
+            UserDefaults.standard.removeObject(forKey: "onboardingStep")
         }
         // Must run before any SwiftUI view loads — Foundation reads
         // AppleLanguages once at process startup, so applying it later in

@@ -374,6 +374,7 @@ struct InlinePaywallStepView: View {
             Task {
                 let success = await storeManager.purchase(product)
                 if success {
+                    UserDefaults.standard.removeObject(forKey: "onboardingStep")
                     hasCompletedOnboarding = true
                 }
             }
@@ -447,7 +448,10 @@ struct InlinePaywallStepView: View {
             Button {
                 Task {
                     let success = await storeManager.restorePurchases()
-                    if success { hasCompletedOnboarding = true }
+                    if success {
+                        UserDefaults.standard.removeObject(forKey: "onboardingStep")
+                        hasCompletedOnboarding = true
+                    }
                 }
             } label: {
                 Text("Restore Purchases")
