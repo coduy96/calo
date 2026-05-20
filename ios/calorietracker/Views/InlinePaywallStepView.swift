@@ -319,7 +319,7 @@ struct InlinePaywallStepView: View {
                 if isSelected {
                     RoundedRectangle(cornerRadius: 16)
                         .strokeBorder(AppColors.calorie, lineWidth: 2)
-                } else if isHighlighted {
+                } else if isHighlighted && selectedProduct == nil {
                     RoundedRectangle(cornerRadius: 16)
                         .strokeBorder(
                             LinearGradient(colors: AppColors.calorieGradient,
