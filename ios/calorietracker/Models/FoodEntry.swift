@@ -17,11 +17,11 @@ enum MealType: String, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .breakfast: "Breakfast"
-        case .lunch: "Lunch"
-        case .dinner: "Dinner"
-        case .snack: "Snack"
-        case .other: "Other"
+        case .breakfast: String(localized: "Breakfast")
+        case .lunch: String(localized: "Lunch")
+        case .dinner: String(localized: "Dinner")
+        case .snack: String(localized: "Snack")
+        case .other: String(localized: "Other")
         }
     }
 

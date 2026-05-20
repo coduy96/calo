@@ -38,19 +38,19 @@ enum OptionalNutrient: String, CaseIterable, Identifiable, Codable {
 
     var displayName: String {
         switch self {
-        case .fiber: "Fiber"
-        case .sugar: "Sugar"
-        case .addedSugar: "Added Sugar"
-        case .saturatedFat: "Saturated Fat"
-        case .cholesterol: "Cholesterol"
-        case .sodium: "Sodium"
-        case .potassium: "Potassium"
+        case .fiber: String(localized: "Fiber")
+        case .sugar: String(localized: "Sugar")
+        case .addedSugar: String(localized: "Added Sugar")
+        case .saturatedFat: String(localized: "Saturated Fat")
+        case .cholesterol: String(localized: "Cholesterol")
+        case .sodium: String(localized: "Sodium")
+        case .potassium: String(localized: "Potassium")
         }
     }
 
     var shortDisplayName: String {
         switch self {
-        case .saturatedFat: "Sat Fat"
+        case .saturatedFat: String(localized: "Sat Fat")
         default: displayName
         }
     }

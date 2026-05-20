@@ -92,6 +92,15 @@ struct GeminiService {
 
     // MARK: - Public API
 
+    /// Instruction appended to every prompt that emits a user-facing `name`
+    /// field. Tells the model to localize human-readable text to the user's
+    /// chosen app language while keeping JSON keys and unit identifiers in
+    /// English so downstream parsing/matching stays stable.
+    private static var languageDirective: String {
+        let lang = AppLanguageSettings.current.promptLanguageName
+        return "IMPORTANT: Write the `name` field and any other human-readable text in \(lang). Keep all JSON keys, the `emoji` value, and `unit` identifiers (slice/piece/ml/cup/tbsp/tsp/can/packet/bar/scoop/bowl/fl oz) in English — they are matched programmatically."
+    }
+
     static func analyzeTextInput(description: String) async throws -> FoodAnalysis {
         let prompt = """
         Estimate the nutritional content for: \(description)
@@ -102,6 +111,8 @@ struct GeminiService {
         The [] in unit_options above is only a JSON shape placeholder; replace it with options when a non-gram unit is obvious.
         unit_options is required when the text names an obvious non-gram serving unit, and optional otherwise. Use slice/piece for pizza, cake, bread, cookies, fruit pieces, etc.; use ml/cup/fl oz for drinks, milk, soup, smoothies, sauces, etc.; use tbsp/tsp for spooned foods; use can/packet when packaged. Its quantity must describe the whole analyzed amount, not always 1. Do not copy any sample number; use the quantity stated or clearly implied by the meal. Use [] only when no non-gram unit is apparent. Do not include g/grams in unit_options.
         Include a single food emoji that best represents the food. Use null for any nutrient you cannot estimate.
+
+        \(languageDirective)
         """
         let text = try await callAI(task: .food, prompt: prompt, image: nil)
         let analysis = try parseFoodAnalysis(from: text)
@@ -121,6 +132,8 @@ struct GeminiService {
         The [] in unit_options above is only a JSON shape placeholder; replace it with options when a non-gram unit is obvious.
         unit_options is required for obvious non-gram units visible in the image or label. Use slice/piece for pizza, cake, bread, cookies, fruit pieces, etc.; use ml/cup/fl oz for drinks, milk, soup, smoothies, sauces, etc.; use tbsp/tsp for spooned foods; use can/packet when packaged. Its quantity must describe the whole analyzed amount, not always 1. For a whole or mostly-whole divisible food like cake, pie, or pizza, count the visible pieces/slices and derive grams_per_unit from serving_size_grams / quantity. If N slices are visible, return quantity N. Use quantity 1 only when a single piece/slice is actually the analyzed portion. Use [] only when no non-gram unit is apparent. Do not include g/grams in unit_options.
         Use null for any nutrient you cannot estimate.
+
+        \(languageDirective)
         """
         let text = try await callAI(task: .food, prompt: prompt, image: image)
         let analysis = try parseFoodAnalysis(from: text)
@@ -144,6 +157,8 @@ struct GeminiService {
             prompt += "\n\nAdditional context from the user about this meal: \(description)\nUse this context to improve accuracy of identification, portion size, and nutrition estimates."
         }
 
+        prompt += "\n\n\(languageDirective)"
+
         let text = try await callAI(task: .food, prompt: prompt, image: image)
         let analysis = try parseFoodAnalysis(from: text)
         return await addingFallbackServingUnits(to: analysis, image: image, description: description)
@@ -162,6 +177,9 @@ struct GeminiService {
 
         The [] in unit_options above is only a JSON shape placeholder; replace it with options when a non-gram unit is visible.
         All values should be numbers. If serving size or any nutrient is not available, use null. unit_options is required when a non-gram label serving unit is visible, such as slice, piece, tbsp, cup, ml, fl oz, can, or packet. Do not copy any sample number; use the quantity shown on the label. Use [] only when no non-gram unit is visible. Do not include g/grams in unit_options.
+
+        \(languageDirective)
+        For the `name` field: if a product/brand name is printed on the label, copy it verbatim regardless of script; otherwise translate the food type to the target language.
         """
         let text = try await callAI(task: .label, prompt: prompt, image: image)
         let analysis = try parseNutritionLabel(from: text)
@@ -268,12 +286,13 @@ struct GeminiService {
             lines.append("- NOTE: predicted and observed trends differ by >0.3 kg/week (possibly under-logging food).")
         }
 
+        let langName = AppLanguageSettings.current.promptLanguageName
         let prompt = """
-        You are a nutrition coach analyzing a user's weight trend. Write 3–4 short sentences (plain English, no bullets, no markdown, no bold) that:
+        You are a nutrition coach analyzing a user's weight trend. Write 3–4 short sentences in \(langName) (plain prose, no bullets, no markdown, no bold) that:
         1. State the predicted weight in \(unit) 30 days out and whether they're on track for their goal.
         2. Give one or two specific, actionable suggestions (e.g. calorie target, protein amount, activity change) grounded in the numbers below.
         3. If predicted and observed trends disagree, mention possible under-logging briefly.
-        Be direct, factual, and encouraging. Do not exceed 100 words.
+        Be direct, factual, and encouraging. Do not exceed 100 words. Write the entire response in \(langName).
 
         \(lines.joined(separator: "\n"))
         """
@@ -498,6 +517,7 @@ struct GeminiService {
         - For packaged foods/drinks, use can, packet, bar, scoop, or bowl only when that unit is visible or strongly implied.
         - grams_per_unit is grams for one unit. For countable units, use total grams / visible quantity. For ml, use grams per ml.
         - Return [] only if no non-gram unit is apparent.
+        - IMPORTANT: Keep `unit` values in English (slice/piece/ml/cup/fl oz/tbsp/tsp/can/packet/bar/scoop/bowl) — they are matched programmatically.
 
         Good outputs:
         {"unit_options":[{"unit":"slice","quantity":8.0,"grams_per_unit":45.0}]}

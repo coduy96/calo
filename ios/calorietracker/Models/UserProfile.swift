@@ -7,9 +7,9 @@ enum Gender: String, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .male: "Male"
-        case .female: "Female"
-        case .other: "Other"
+        case .male: String(localized: "Male")
+        case .female: String(localized: "Female")
+        case .other: String(localized: "Other")
         }
     }
 
@@ -32,23 +32,23 @@ enum ActivityLevel: String, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .sedentary: "Sedentary"
-        case .light: "Lightly Active"
-        case .moderate: "Moderately Active"
-        case .active: "Active"
-        case .veryActive: "Very Active"
-        case .extraActive: "Extra Active"
+        case .sedentary: String(localized: "Sedentary")
+        case .light: String(localized: "Lightly Active")
+        case .moderate: String(localized: "Moderately Active")
+        case .active: String(localized: "Active")
+        case .veryActive: String(localized: "Very Active")
+        case .extraActive: String(localized: "Extra Active")
         }
     }
 
     var subtitle: String {
         switch self {
-        case .sedentary: "Little or no exercise"
-        case .light: "Exercise 1–3 times / week"
-        case .moderate: "Exercise 4–5 times / week"
-        case .active: "Daily exercise or intense 3–4x / week"
-        case .veryActive: "Intense exercise 6–7 times / week"
-        case .extraActive: "Very intense daily, or physical job"
+        case .sedentary: String(localized: "Little or no exercise")
+        case .light: String(localized: "Exercise 1–3 times / week")
+        case .moderate: String(localized: "Exercise 4–5 times / week")
+        case .active: String(localized: "Daily exercise or intense 3–4x / week")
+        case .veryActive: String(localized: "Intense exercise 6–7 times / week")
+        case .extraActive: String(localized: "Very intense daily, or physical job")
         }
     }
 
@@ -92,9 +92,9 @@ enum WeightGoal: String, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .lose: "Lose Weight"
-        case .maintain: "Maintain"
-        case .gain: "Gain Weight"
+        case .lose: String(localized: "Lose Weight")
+        case .maintain: String(localized: "Maintain")
+        case .gain: String(localized: "Gain Weight")
         }
     }
 
@@ -138,7 +138,7 @@ struct UserProfile: Codable, Equatable {
 
     var displayName: String {
         if let name, !name.isEmpty { return name }
-        return "User"
+        return String(localized: "User")
     }
 
     var initials: String {
@@ -266,6 +266,12 @@ extension Notification.Name {
 enum AutoBalanceMacro: String, Codable, CaseIterable, Identifiable {
     case protein, carbs, fat
     var id: String { rawValue }
-    var label: String { rawValue.capitalized }
+    var label: String {
+        switch self {
+        case .protein: String(localized: "Protein")
+        case .carbs: String(localized: "Carbs")
+        case .fat: String(localized: "Fat")
+        }
+    }
     var kcalPerGram: Int { self == .fat ? 9 : 4 }
 }

@@ -2504,9 +2504,9 @@ struct ProfileView: View {
                 // Section 1: Personal Info
                 Section("Personal Info") {
                     Picker(selection: profileBinding.gender) {
-                        Text("Male").tag(Gender.male)
-                        Text("Female").tag(Gender.female)
-                        Text("Other").tag(Gender.other)
+                        ForEach(Gender.allCases, id: \.self) { gender in
+                            Text(gender.displayName).tag(gender)
+                        }
                     } label: {
                         Label {
                             Text("Gender")

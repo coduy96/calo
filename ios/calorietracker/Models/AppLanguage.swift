@@ -50,6 +50,40 @@ enum AppLanguage: String, CaseIterable, Identifiable {
         case .simplifiedChinese: return "简体中文"
         }
     }
+
+    /// English name of this language, suitable for embedding in an LLM prompt
+    /// (e.g. "Respond in Vietnamese."). Gemini reliably understands the English
+    /// names of languages even when the user has the rest of the app in a
+    /// different locale. `.system` resolves to whatever the device's current
+    /// preferred localization is.
+    var promptLanguageName: String {
+        switch self {
+        case .system:
+            let code = Locale.current.language.languageCode?.identifier ?? "en"
+            let region = Locale.current.language.region?.identifier
+            let composed = region.map { "\(code)-\($0)" } ?? code
+            let englishLocale = Locale(identifier: "en")
+            return englishLocale.localizedString(forIdentifier: composed)
+                ?? englishLocale.localizedString(forLanguageCode: code)
+                ?? "English"
+        case .english: return "English"
+        case .vietnamese: return "Vietnamese"
+        case .arabic: return "Arabic"
+        case .azerbaijani: return "Azerbaijani"
+        case .german: return "German"
+        case .spanish: return "Spanish"
+        case .french: return "French"
+        case .hindi: return "Hindi"
+        case .italian: return "Italian"
+        case .japanese: return "Japanese"
+        case .korean: return "Korean"
+        case .dutch: return "Dutch"
+        case .portugueseBR: return "Brazilian Portuguese"
+        case .romanian: return "Romanian"
+        case .russian: return "Russian"
+        case .simplifiedChinese: return "Simplified Chinese"
+        }
+    }
 }
 
 enum AppLanguageSettings {
