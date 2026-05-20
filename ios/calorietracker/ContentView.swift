@@ -573,7 +573,7 @@ struct HomeView: View {
                     }
                 )
             }
-            .sheet(isPresented: $showVoicePopover) {
+            .fullScreenCover(isPresented: $showVoicePopover) {
                 VoiceInputView(
                     onCancel: {
                         showVoicePopover = false
