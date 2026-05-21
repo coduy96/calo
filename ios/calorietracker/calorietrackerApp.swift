@@ -121,9 +121,14 @@ struct calorietrackerApp: App {
             .preferredColorScheme(colorScheme)
             .onAppear {
                 AppThemeColor.applyAppIconIfNeeded(for: AppThemeColor.color(for: appThemeColorRaw))
+                if hasCompletedOnboarding {
+                    wireUpAppDataCallbacks()
+                    refreshWidgetSnapshot()
+                }
             }
             .onChange(of: appThemeColorRaw) { _, newValue in
                 AppThemeColor.applyAppIconIfNeeded(for: AppThemeColor.color(for: newValue))
+                refreshWidgetSnapshot()
             }
             .onReceive(NotificationCenter.default.publisher(for: .userProfileDidChange)) { _ in
                 refreshWidgetSnapshot()
@@ -140,12 +145,7 @@ struct calorietrackerApp: App {
                     )
                 }
                 if hasCompletedOnboarding {
-                    wireUpHealthKit()
-                    // Re-wire on every scene-active so the widget refresh callback
-                    // is connected for users who completed onboarding before this
-                    // hook existed (the .onChange(hasCompletedOnboarding) branch
-                    // only fires on the false→true transition, never on cold launch).
-                    wireUpFoodStoreCallback()
+                    wireUpAppDataCallbacks()
                 }
                 // Refresh on scene-active so widgets roll over at midnight even
                 // without an explicit food change.
@@ -154,8 +154,7 @@ struct calorietrackerApp: App {
         }
         .onChange(of: hasCompletedOnboarding) { _, completed in
             if completed {
-                wireUpFoodStoreCallback()
-                wireUpHealthKit()
+                wireUpAppDataCallbacks()
                 // Seed the user's first WeightEntry from their onboarding-entered profile
                 // weight. Used to be seeded in WeightStore.init with .default fallback,
                 // which produced a 70 kg phantom entry for every fresh user.
@@ -337,6 +336,11 @@ struct calorietrackerApp: App {
         )
     }
 
+    private func wireUpAppDataCallbacks() {
+        wireUpFoodStoreCallback()
+        wireUpHealthKit()
+    }
+
     private func wireUpFoodStoreCallback() {
         foodStore.onEntriesChanged = { [notificationManager, foodStore, weightStore, bodyFatStore] in
             if UserDefaults.standard.bool(forKey: "notificationsEnabled"),
@@ -345,14 +349,14 @@ struct calorietrackerApp: App {
                     foodStore: foodStore, weightStore: weightStore, bodyFatStore: bodyFatStore, profile: profile
                 )
             }
-            if let profile = UserProfile.load() {
+            if let profile = currentWidgetProfile {
                 WidgetSnapshotWriter.publish(foods: foodStore.entries, profile: profile)
             }
         }
     }
 
     private func refreshWidgetSnapshot() {
-        guard let profile = UserProfile.load() else {
+        guard let profile = currentWidgetProfile else {
             // No profile — onboarding not complete OR data was wiped. Clear the
             // shared snapshot so the widget shows an empty day instead of stale
             // numbers from a previous profile.
@@ -361,5 +365,9 @@ struct calorietrackerApp: App {
             return
         }
         WidgetSnapshotWriter.publish(foods: foodStore.entries, profile: profile)
+    }
+
+    private var currentWidgetProfile: UserProfile? {
+        UserProfile.load() ?? (hasCompletedOnboarding ? profileStore.profile : nil)
     }
 }

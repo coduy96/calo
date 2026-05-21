@@ -29,7 +29,8 @@ enum WidgetSnapshotWriter {
             carbs: c,
             carbsGoal: profile.effectiveCarbs,
             fat: f,
-            fatGoal: profile.effectiveFat
+            fatGoal: profile.effectiveFat,
+            themeColorRaw: AppThemeColor.current.rawValue
         )
 
         let previous = WidgetSnapshot.read()

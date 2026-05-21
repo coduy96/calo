@@ -1,16 +1,86 @@
 import SwiftUI
 import WidgetKit
 
-/// Match the main app's pink/red theme without importing Theme.swift
+/// Mirrors the main app theme colors without importing Theme.swift
 /// (which lives in the main app target).
-enum WidgetPalette {
-    static let calorie = Color(red: 0xFF / 255, green: 0x37 / 255, blue: 0x5F / 255)
-    static let calorieLight = Color(red: 0xFF / 255, green: 0x6B / 255, blue: 0x8A / 255)
-    static var calorieGradient: LinearGradient {
-        LinearGradient(colors: [calorie, calorieLight], startPoint: .topLeading, endPoint: .bottomTrailing)
+enum WidgetThemeColor: String {
+    case fudPink
+    case red
+    case orange
+    case green
+    case mint
+    case teal
+    case blue
+    case purple
+
+    static let defaultColor: WidgetThemeColor = .orange
+
+    static func color(for rawValue: String?) -> WidgetThemeColor {
+        guard let rawValue else { return defaultColor }
+        return WidgetThemeColor(rawValue: rawValue) ?? defaultColor
     }
+
+    var color: Color {
+        Color(hex: startHex)
+    }
+
+    var gradientColors: [Color] {
+        [Color(hex: startHex), Color(hex: endHex)]
+    }
+
+    private var startHex: UInt {
+        switch self {
+        case .fudPink: return 0xFF375F
+        case .red: return 0xFF3B30
+        case .orange: return 0xFF5A00
+        case .green: return 0x34C759
+        case .mint: return 0x00C7BE
+        case .teal: return 0x30B0C7
+        case .blue: return 0x0A84FF
+        case .purple: return 0xAF52DE
+        }
+    }
+
+    private var endHex: UInt {
+        switch self {
+        case .fudPink: return 0xFF6B8A
+        case .red: return 0xFF6961
+        case .orange: return 0xFF8C00
+        case .green: return 0x62D46F
+        case .mint: return 0x66D4CF
+        case .teal: return 0x64D2FF
+        case .blue: return 0x5EAEFF
+        case .purple: return 0xBF5AF2
+        }
+    }
+}
+
+enum WidgetPalette {
+    static func calorie(for snapshot: WidgetSnapshot) -> Color {
+        WidgetThemeColor.color(for: snapshot.themeColorRaw).color
+    }
+
+    static func calorieGradient(for snapshot: WidgetSnapshot) -> LinearGradient {
+        LinearGradient(
+            colors: WidgetThemeColor.color(for: snapshot.themeColorRaw).gradientColors,
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
     static var background: some ShapeStyle {
         Color(.systemBackground)
+    }
+}
+
+extension Color {
+    init(hex: UInt, opacity: Double = 1.0) {
+        self.init(
+            red: Double((hex >> 16) & 0xFF) / 255,
+            green: Double((hex >> 8) & 0xFF) / 255,
+            blue: Double(hex & 0xFF) / 255,
+            opacity: opacity
+        )
     }
 }
 
@@ -41,7 +111,7 @@ private struct SmallCalorieView: View {
             HStack(spacing: 6) {
                 Image(systemName: "flame.fill")
                     .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(WidgetPalette.calorieGradient)
+                    .foregroundStyle(WidgetPalette.calorieGradient(for: snapshot))
                 Text("Today")
                     .font(.system(.caption, design: .rounded, weight: .semibold))
                     .foregroundStyle(.secondary)
@@ -50,10 +120,10 @@ private struct SmallCalorieView: View {
 
             ZStack {
                 Circle()
-                    .stroke(WidgetPalette.calorie.opacity(0.15), lineWidth: 10)
+                    .stroke(WidgetPalette.calorie(for: snapshot).opacity(0.15), lineWidth: 10)
                 Circle()
                     .trim(from: 0, to: snapshot.calorieProgress)
-                    .stroke(WidgetPalette.calorieGradient, style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                    .stroke(WidgetPalette.calorieGradient(for: snapshot), style: StrokeStyle(lineWidth: 10, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                 VStack(spacing: 0) {
                     Text("\(snapshot.calories)")
@@ -81,10 +151,10 @@ private struct MediumCalorieView: View {
         HStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .stroke(WidgetPalette.calorie.opacity(0.15), lineWidth: 9)
+                    .stroke(WidgetPalette.calorie(for: snapshot).opacity(0.15), lineWidth: 9)
                 Circle()
                     .trim(from: 0, to: snapshot.calorieProgress)
-                    .stroke(WidgetPalette.calorieGradient, style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                    .stroke(WidgetPalette.calorieGradient(for: snapshot), style: StrokeStyle(lineWidth: 9, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                 VStack(spacing: 0) {
                     Text("\(snapshot.calories)")
@@ -102,9 +172,9 @@ private struct MediumCalorieView: View {
             .frame(width: 92, height: 92)
 
             VStack(alignment: .leading, spacing: 8) {
-                MacroBar(label: "Protein", value: snapshot.protein, goal: snapshot.proteinGoal, progress: snapshot.proteinProgress)
-                MacroBar(label: "Carbs",   value: snapshot.carbs,   goal: snapshot.carbsGoal,   progress: snapshot.carbsProgress)
-                MacroBar(label: "Fat",     value: snapshot.fat,     goal: snapshot.fatGoal,     progress: snapshot.fatProgress)
+                MacroBar(label: "Protein", value: snapshot.protein, goal: snapshot.proteinGoal, progress: snapshot.proteinProgress, snapshot: snapshot)
+                MacroBar(label: "Carbs",   value: snapshot.carbs,   goal: snapshot.carbsGoal,   progress: snapshot.carbsProgress, snapshot: snapshot)
+                MacroBar(label: "Fat",     value: snapshot.fat,     goal: snapshot.fatGoal,     progress: snapshot.fatProgress, snapshot: snapshot)
             }
             .frame(maxWidth: .infinity)
         }
@@ -116,6 +186,7 @@ private struct MacroBar: View {
     let value: Int
     let goal: Int
     let progress: Double
+    let snapshot: WidgetSnapshot
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
@@ -131,9 +202,9 @@ private struct MacroBar: View {
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(WidgetPalette.calorie.opacity(0.15))
+                        .fill(WidgetPalette.calorie(for: snapshot).opacity(0.15))
                     Capsule()
-                        .fill(WidgetPalette.calorieGradient)
+                        .fill(WidgetPalette.calorieGradient(for: snapshot))
                         .frame(width: max(4, geo.size.width * progress))
                 }
             }

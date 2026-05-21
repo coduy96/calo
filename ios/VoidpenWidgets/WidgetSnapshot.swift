@@ -14,6 +14,7 @@ struct WidgetSnapshot: Codable, Equatable {
     let carbsGoal: Int
     let fat: Int
     let fatGoal: Int
+    let themeColorRaw: String?
 
     static var appGroupID: String {
         Bundle.main.object(forInfoDictionaryKey: "AppGroupIdentifier") as? String
@@ -48,7 +49,8 @@ struct WidgetSnapshot: Codable, Equatable {
             calories: 1247, calorieGoal: 2000,
             protein: 84, proteinGoal: 150,
             carbs: 132, carbsGoal: 220,
-            fat: 42, fatGoal: 70
+            fat: 42, fatGoal: 70,
+            themeColorRaw: WidgetThemeColor.defaultColor.rawValue
         )
     }
 
@@ -60,7 +62,8 @@ struct WidgetSnapshot: Codable, Equatable {
             calories: 0, calorieGoal: 2000,
             protein: 0, proteinGoal: 150,
             carbs: 0, carbsGoal: 220,
-            fat: 0, fatGoal: 70
+            fat: 0, fatGoal: 70,
+            themeColorRaw: WidgetThemeColor.defaultColor.rawValue
         )
     }
 

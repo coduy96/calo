@@ -27,7 +27,7 @@ private struct SmallProteinView: View {
             HStack(spacing: 6) {
                 Image(systemName: "bolt.fill")
                     .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(WidgetPalette.calorieGradient)
+                    .foregroundStyle(WidgetPalette.calorieGradient(for: snapshot))
                 Text("Protein")
                     .font(.system(.caption, design: .rounded, weight: .semibold))
                     .foregroundStyle(.secondary)
@@ -36,10 +36,10 @@ private struct SmallProteinView: View {
 
             ZStack {
                 Circle()
-                    .stroke(WidgetPalette.calorie.opacity(0.15), lineWidth: 10)
+                    .stroke(WidgetPalette.calorie(for: snapshot).opacity(0.15), lineWidth: 10)
                 Circle()
                     .trim(from: 0, to: snapshot.proteinProgress)
-                    .stroke(WidgetPalette.calorieGradient, style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                    .stroke(WidgetPalette.calorieGradient(for: snapshot), style: StrokeStyle(lineWidth: 10, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                 VStack(spacing: 0) {
                     Text("\(snapshot.protein)g")
@@ -67,10 +67,10 @@ private struct MediumProteinView: View {
         HStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .stroke(WidgetPalette.calorie.opacity(0.15), lineWidth: 9)
+                    .stroke(WidgetPalette.calorie(for: snapshot).opacity(0.15), lineWidth: 9)
                 Circle()
                     .trim(from: 0, to: snapshot.proteinProgress)
-                    .stroke(WidgetPalette.calorieGradient, style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                    .stroke(WidgetPalette.calorieGradient(for: snapshot), style: StrokeStyle(lineWidth: 9, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                 VStack(spacing: 0) {
                     Text("\(snapshot.protein)")
@@ -88,9 +88,9 @@ private struct MediumProteinView: View {
             .frame(width: 92, height: 92)
 
             VStack(alignment: .leading, spacing: 8) {
-                ProteinMacroBar(label: "Calories", value: snapshot.calories, goal: snapshot.calorieGoal, progress: snapshot.calorieProgress, unit: "")
-                ProteinMacroBar(label: "Carbs",    value: snapshot.carbs,    goal: snapshot.carbsGoal,   progress: snapshot.carbsProgress, unit: "g")
-                ProteinMacroBar(label: "Fat",      value: snapshot.fat,      goal: snapshot.fatGoal,     progress: snapshot.fatProgress,   unit: "g")
+                ProteinMacroBar(label: "Calories", value: snapshot.calories, goal: snapshot.calorieGoal, progress: snapshot.calorieProgress, unit: "", snapshot: snapshot)
+                ProteinMacroBar(label: "Carbs",    value: snapshot.carbs,    goal: snapshot.carbsGoal,   progress: snapshot.carbsProgress, unit: "g", snapshot: snapshot)
+                ProteinMacroBar(label: "Fat",      value: snapshot.fat,      goal: snapshot.fatGoal,     progress: snapshot.fatProgress,   unit: "g", snapshot: snapshot)
             }
             .frame(maxWidth: .infinity)
         }
@@ -103,6 +103,7 @@ private struct ProteinMacroBar: View {
     let goal: Int
     let progress: Double
     let unit: String
+    let snapshot: WidgetSnapshot
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
@@ -118,9 +119,9 @@ private struct ProteinMacroBar: View {
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(WidgetPalette.calorie.opacity(0.15))
+                        .fill(WidgetPalette.calorie(for: snapshot).opacity(0.15))
                     Capsule()
-                        .fill(WidgetPalette.calorieGradient)
+                        .fill(WidgetPalette.calorieGradient(for: snapshot))
                         .frame(width: max(4, geo.size.width * progress))
                 }
             }

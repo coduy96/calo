@@ -17,6 +17,7 @@ struct WidgetSnapshot: Codable, Equatable {
     let carbsGoal: Int
     let fat: Int
     let fatGoal: Int
+    let themeColorRaw: String?
 
     static var appGroupID: String {
         Bundle.main.object(forInfoDictionaryKey: "AppGroupIdentifier") as? String
@@ -38,12 +39,14 @@ struct WidgetSnapshot: Codable, Equatable {
     static func write(_ snapshot: WidgetSnapshot) {
         guard let data = try? JSONEncoder().encode(snapshot) else { return }
         sharedDefaults?.set(data, forKey: key)
+        sharedDefaults?.synchronize()
     }
 
     /// Wipes the shared snapshot. Called from Delete All Data so widgets don't keep
     /// showing the previous profile's numbers after a reset.
     static func clear() {
         sharedDefaults?.removeObject(forKey: key)
+        sharedDefaults?.synchronize()
     }
 
     static var placeholder: WidgetSnapshot {
@@ -54,7 +57,8 @@ struct WidgetSnapshot: Codable, Equatable {
             calories: 1247, calorieGoal: 2000,
             protein: 84, proteinGoal: 150,
             carbs: 132, carbsGoal: 220,
-            fat: 42, fatGoal: 70
+            fat: 42, fatGoal: 70,
+            themeColorRaw: AppThemeColor.defaultColor.rawValue
         )
     }
 
@@ -66,7 +70,8 @@ struct WidgetSnapshot: Codable, Equatable {
             calories: 0, calorieGoal: 2000,
             protein: 0, proteinGoal: 150,
             carbs: 0, carbsGoal: 220,
-            fat: 0, fatGoal: 70
+            fat: 0, fatGoal: 70,
+            themeColorRaw: AppThemeColor.defaultColor.rawValue
         )
     }
 
