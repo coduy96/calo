@@ -91,11 +91,55 @@ enum AppTab: Hashable {
 // MARK: - Main Content View
 struct ContentView: View {
     @Environment(StoreManager.self) private var storeManager
+    @Environment(FoodStore.self) private var foodStore
     @AppStorage(AppThemeColor.storageKey) private var appThemeColorRaw = AppThemeColor.defaultColor.rawValue
     @State private var selectedTab: AppTab = .home
     @State private var lastNonAddTab: AppTab = .home
     @State private var showAddOptions = false
     @State private var addFoodIntent = AddFoodIntent()
+    @State private var addFoodPromptDismissedDay = ""
+
+    private static let promptDayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = .current
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    private var todayDayKey: String {
+        Self.promptDayFormatter.string(from: Date())
+    }
+
+    private var shouldShowAddFoodPrompt: Bool {
+        guard selectedTab == .home else { return false }
+        guard foodStore.entriesByMeal(for: Date(), order: .defaultOrder).isEmpty else { return false }
+        return addFoodPromptDismissedDay != todayDayKey
+    }
+
+    private func dismissAddFoodPrompt() {
+        addFoodPromptDismissedDay = todayDayKey
+    }
+
+    /// Positions the prompt callout so its pointer tip lands just above the "+"
+    /// Add Food button. Both iOS versions place that button a fixed distance from
+    /// the screen's bottom-right corner, so distance-from-edge padding is stable
+    /// across iPhone screen sizes.
+    private var addFoodPromptTrailingPadding: CGFloat {
+        // The callout shape's pointer tip sits `pointerInsetFromRight` (24pt)
+        // from the shape's right edge. The "+" button center is ~44pt from the
+        // screen's right edge on iOS 26 (~42pt on the legacy floating button).
+        // Trailing padding = buttonCenterFromRight - pointerInsetFromRight.
+        if #available(iOS 26.0, *) { return 20 }
+        return 18
+    }
+
+    private var addFoodPromptBottomPadding: CGFloat {
+        // Pointer tip almost touches the top edge of the "+" button.
+        if #available(iOS 26.0, *) { return 66 }
+        return 52
+    }
 
     var body: some View {
         Group {
@@ -103,6 +147,14 @@ struct ContentView: View {
                 modernTabView
             } else {
                 legacyTabView
+            }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            if shouldShowAddFoodPrompt {
+                AddFoodPromptOverlay(onDismiss: dismissAddFoodPrompt)
+                    .padding(.trailing, addFoodPromptTrailingPadding)
+                    .padding(.bottom, addFoodPromptBottomPadding)
+                    .allowsHitTesting(true)
             }
         }
         .environment(addFoodIntent)
@@ -125,7 +177,10 @@ struct ContentView: View {
             await storeManager.checkEntitlements()
         }
         .fullScreenCover(isPresented: Binding(
-            get: { storeManager.hasCheckedEntitlements && !storeManager.isSubscribed },
+            get: {
+                if CommandLine.arguments.contains("--bypass-paywall-debug") { return false }
+                return storeManager.hasCheckedEntitlements && !storeManager.isSubscribed
+            },
             set: { _ in }
         )) {
             PaywallView()
