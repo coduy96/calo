@@ -92,6 +92,13 @@ class BodyFatStore {
         }
     }
 
+    /// Re-read entries from UserDefaults. Used after MockDataSeeder rewrites
+    /// the store key so the live @State instance picks up the new data.
+    func reloadFromDisk() {
+        entries = []
+        loadEntries()
+    }
+
     private func loadEntries() {
         guard let data = UserDefaults.standard.data(forKey: storageKey),
               let decoded = try? JSONDecoder().decode([BodyFatEntry].self, from: data)

@@ -46,6 +46,21 @@ struct calorietrackerApp: App {
         // the launch only takes effect on the next relaunch.
         AppLanguageSettings.applyToBundle()
         Self.purgeLegacyBYOKDataOnce()
+
+        #if DEBUG
+        // Reseed marketing/screenshot data BEFORE the @State stores ran their
+        // own loadEntries on default-construction we can't intercept — the
+        // reload calls below replay the freshly written UserDefaults blobs
+        // into the live instances.
+        if MockDataSeeder.isRequested {
+            MockDataSeeder.seedIfRequested()
+            foodStore.reloadFromDisk()
+            weightStore.reloadFromDisk()
+            bodyFatStore.reloadFromDisk()
+            chatStore.reloadFromDisk()
+            profileStore.reloadFromDisk()
+        }
+        #endif
     }
 
     /// One-shot cleanup for users upgrading from a BYOK build. Removes the

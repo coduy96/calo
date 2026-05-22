@@ -179,6 +179,12 @@ struct ContentView: View {
         .fullScreenCover(isPresented: Binding(
             get: {
                 if CommandLine.arguments.contains("--bypass-paywall-debug") { return false }
+                #if DEBUG
+                // Screenshot seeding implies "I want a fully usable app right
+                // now" — having the paywall cover the seeded Home screen
+                // would defeat the purpose.
+                if CommandLine.arguments.contains(MockDataSeeder.flag) { return false }
+                #endif
                 return storeManager.hasCheckedEntitlements && !storeManager.isSubscribed
             },
             set: { _ in }

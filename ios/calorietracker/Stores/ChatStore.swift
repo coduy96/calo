@@ -127,6 +127,13 @@ class ChatStore {
         }
     }
 
+    /// Re-read threads from UserDefaults. Used after MockDataSeeder rewrites
+    /// the store key so the live @State instance picks up the new data.
+    func reloadFromDisk() {
+        threads = []
+        load()
+    }
+
     private func load() {
         guard let data = UserDefaults.standard.data(forKey: storageKey),
               let decoded = try? JSONDecoder().decode([ChatThread].self, from: data)

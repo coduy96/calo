@@ -352,6 +352,19 @@ class FoodStore {
         }
     }
 
+    /// Re-read entries + favorites from UserDefaults. Used after an external
+    /// process (e.g. MockDataSeeder, --reset-onboarding) rewrites the store
+    /// keys so the live @State instance picks up the new data without an app
+    /// relaunch. Fires `onEntriesChanged` so dependents (widget snapshot,
+    /// notifications) refresh too.
+    func reloadFromDisk() {
+        entries = []
+        favorites = []
+        loadEntries()
+        loadFavorites()
+        onEntriesChanged?()
+    }
+
     private func loadEntries() {
         guard let data = UserDefaults.standard.data(forKey: storageKey),
               let decoded = try? JSONDecoder().decode([FoodEntry].self, from: data)
