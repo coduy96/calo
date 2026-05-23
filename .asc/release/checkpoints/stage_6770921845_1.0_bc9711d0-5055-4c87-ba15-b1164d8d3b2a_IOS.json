@@ -1,0 +1,15 @@
+{
+  "appId": "6770921845",
+  "version": "1.0",
+  "buildId": "bc9711d0-5055-4c87-ba15-b1164d8d3b2a",
+  "metadataDir": "./ios/metadata",
+  "platform": "IOS",
+  "versionId": "0612f94d-4b1c-4eb8-be50-4c82ed09d1fe",
+  "mode": "stage",
+  "completed": {
+    "apply_metadata": true,
+    "attach_build": true,
+    "ensure_version": true
+  },
+  "updatedAt": "2026-05-22T06:15:23Z"
+}
