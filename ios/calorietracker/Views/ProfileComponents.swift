@@ -802,6 +802,10 @@ struct NutritionPickerSheet: View {
 
 struct NotificationSettingsView: View {
     @Environment(NotificationManager.self) private var notificationManager
+    @Environment(FoodStore.self) private var foodStore
+    @Environment(WeightStore.self) private var weightStore
+    @Environment(BodyFatStore.self) private var bodyFatStore
+    @Environment(ProfileStore.self) private var profileStore
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
 
     @AppStorage("breakfastReminderEnabled") private var breakfastEnabled = true
@@ -853,6 +857,7 @@ struct NotificationSettingsView: View {
                                 notificationsEnabled = false
                             } else {
                                 applyMealReminders()
+                                applySmartReminders()
                             }
                         }
                     } else {
@@ -921,6 +926,9 @@ struct NotificationSettingsView: View {
                         hour: $streakHour,
                         minute: $streakMinute
                     )
+                    .onChange(of: streakEnabled) { _, _ in applySmartReminders() }
+                    .onChange(of: streakHour) { _, _ in applySmartReminders() }
+                    .onChange(of: streakMinute) { _, _ in applySmartReminders() }
 
                     NotificationTimeRow(
                         label: "Daily Summary",
@@ -929,6 +937,9 @@ struct NotificationSettingsView: View {
                         hour: $summaryHour,
                         minute: $summaryMinute
                     )
+                    .onChange(of: summaryEnabled) { _, _ in applySmartReminders() }
+                    .onChange(of: summaryHour) { _, _ in applySmartReminders() }
+                    .onChange(of: summaryMinute) { _, _ in applySmartReminders() }
 
                     NotificationTimeRow(
                         label: "Log Weight",
@@ -937,6 +948,9 @@ struct NotificationSettingsView: View {
                         hour: $weightLogHour,
                         minute: $weightLogMinute
                     )
+                    .onChange(of: weightLogEnabled) { _, _ in applySmartReminders() }
+                    .onChange(of: weightLogHour) { _, _ in applySmartReminders() }
+                    .onChange(of: weightLogMinute) { _, _ in applySmartReminders() }
 
                     NotificationTimeRow(
                         label: "Log Body Fat",
@@ -945,6 +959,9 @@ struct NotificationSettingsView: View {
                         hour: $bodyFatLogHour,
                         minute: $bodyFatLogMinute
                     )
+                    .onChange(of: bodyFatLogEnabled) { _, _ in applySmartReminders() }
+                    .onChange(of: bodyFatLogHour) { _, _ in applySmartReminders() }
+                    .onChange(of: bodyFatLogMinute) { _, _ in applySmartReminders() }
                 } header: {
                     Text("Smart Notifications")
                 } footer: {
@@ -968,6 +985,15 @@ struct NotificationSettingsView: View {
             breakfastEnabled: breakfastEnabled, breakfastHour: breakfastHour, breakfastMinute: breakfastMinute,
             lunchEnabled: lunchEnabled, lunchHour: lunchHour, lunchMinute: lunchMinute,
             dinnerEnabled: dinnerEnabled, dinnerHour: dinnerHour, dinnerMinute: dinnerMinute
+        )
+    }
+
+    private func applySmartReminders() {
+        notificationManager.rescheduleDataDependentNotifications(
+            foodStore: foodStore,
+            weightStore: weightStore,
+            bodyFatStore: bodyFatStore,
+            profile: profileStore.profile
         )
     }
 }

@@ -2,8 +2,27 @@ import Foundation
 import UserNotifications
 
 @Observable
-class NotificationManager {
+class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     var authorizationStatus: UNAuthorizationStatus = .notDetermined
+
+    override init() {
+        super.init()
+        // Without a delegate, iOS suppresses notification banners while the app
+        // is in the foreground — the most common cause of "I never see any
+        // notification" reports. Installing the delegate here at app launch
+        // opts us into in-app banner/sound/badge presentation.
+        UNUserNotificationCenter.current().delegate = self
+    }
+
+    // MARK: - Foreground Presentation
+
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound, .badge, .list])
+    }
 
     // MARK: - Authorization
 
