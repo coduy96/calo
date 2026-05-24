@@ -2,18 +2,18 @@ import SwiftUI
 import AVFoundation
 import UIKit
 
-/// Voice input flow: record m4a → upload to the backend → show transcript.
-/// All transcription happens server-side (the paid feature); no on-device
-/// streaming. Recording auto-stops at 60s to keep the audio payload small.
+/// Voice input flow: live on-device transcription via SFSpeechRecognizer.
+/// Text streams into the editable transcript as the user speaks. Auto-stops
+/// after ~1.5s of silence; a generous 2-minute safety cap prevents a forgotten
+/// session from draining the mic forever.
 struct VoiceInputView: View {
+    @StateObject private var transcriber = LiveTranscriber()
+
     @State private var transcription = ""
     @State private var isRecording = false
-    @State private var isTranscribing = false
+    @State private var isPreparing = false
     @State private var permissionError: String?
-    @State private var remoteNotice: String?
 
-    @State private var audioRecorder: AVAudioRecorder?
-    @State private var recordedFileURL: URL?
     @State private var recordingLimitTask: Task<Void, Never>?
 
     @State private var samples: [CGFloat] = Array(repeating: 0, count: VoiceInputView.sampleCount)
@@ -21,72 +21,71 @@ struct VoiceInputView: View {
     @State private var meterTimer: Timer?
     @State private var pulseScale: CGFloat = 1.0
     @State private var pulseOpacity: Double = 0.6
-    @State private var didWarnNearLimit = false
+    @State private var dotOpacity: Double = 1.0
+    @State private var hasDetectedSpeech = false
+    @State private var silenceAccumulated: TimeInterval = 0
 
     var onCancel: () -> Void
     var onSubmit: (String) -> Void
 
-    private static let sampleCount = 40
-    private let maxRecordingSeconds: TimeInterval = 60
+    private static let sampleCount = 56
+    private let maxRecordingSeconds: TimeInterval = 120
+    // dBFS gates for VAD. Speech must clear -28 dB once to "arm" the detector;
+    // after that, any sample below -42 dB counts toward silenceAccumulated.
+    private let speechActivationDb: Float = -28
+    private let silenceThresholdDb: Float = -42
+    private let silenceAutoStopSeconds: TimeInterval = 1.5
+    private let minRecordingBeforeAutoStop: TimeInterval = 1.0
 
-    private var progress: CGFloat {
-        let value = 1 - CGFloat(elapsed / maxRecordingSeconds)
-        return max(0, min(1, value))
-    }
-
-    private var timeLabel: String {
+    private var elapsedLabel: String {
         let total = Int(elapsed.rounded())
-        return String(format: "%d:%02d / 1:00", total / 60, total % 60)
+        return String(format: "%d:%02d", total / 60, total % 60)
     }
 
-    private var isInFinalCountdown: Bool {
-        maxRecordingSeconds - elapsed <= 10 && isRecording
-    }
-
-    private var analyzeButtonDisabled: Bool {
-        if isRecording || isTranscribing { return true }
+    private var analyzeDisabled: Bool {
+        if isRecording { return true }
         return transcription.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     var body: some View {
         ZStack {
-            backgroundLayer
-                .ignoresSafeArea()
+            backgroundLayer.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 topBar
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
 
-                Spacer(minLength: 16)
-
                 transcriptCard
                     .padding(.horizontal, 20)
+                    .padding(.top, 18)
+                    .frame(maxHeight: .infinity)
 
-                Spacer(minLength: 12)
+                waveform
+                    .padding(.horizontal, 36)
+                    .padding(.top, 14)
 
-                WaveformStrip(samples: samples, isActive: isRecording)
-                    .frame(height: 64)
-                    .padding(.horizontal, 24)
-                    .opacity(isRecording ? 1.0 : (transcription.isEmpty ? 0.2 : 0.0))
-                    .animation(.easeInOut(duration: 0.25), value: isRecording)
-
-                Spacer(minLength: 12)
-
-                micButton
-                    .padding(.vertical, 8)
-
-                Spacer(minLength: 16)
+                micCluster
+                    .padding(.top, 18)
 
                 bottomActions
                     .padding(.horizontal, 20)
-                    .padding(.bottom, 12)
+                    .padding(.top, 20)
+                    .padding(.bottom, 16)
             }
         }
         .onAppear { startRecording() }
         .onDisappear {
             invalidateMeterTimer()
             stopRecording(skipTranscription: true)
+        }
+        .onReceive(transcriber.$transcript) { newValue in
+            // Mirror live partials into the editable transcript. After stop()
+            // SFSpeech may emit one final result (~200ms); we accept that
+            // overwrite, then no more updates fire.
+            if !newValue.isEmpty {
+                transcription = newValue
+            }
         }
     }
 
@@ -96,7 +95,7 @@ struct VoiceInputView: View {
         LinearGradient(
             colors: [
                 Color(.systemBackground),
-                AppColors.calorie.opacity(0.08),
+                AppColors.calorie.opacity(0.07),
                 Color(.systemBackground),
             ],
             startPoint: .top,
@@ -105,66 +104,118 @@ struct VoiceInputView: View {
     }
 
     private var topBar: some View {
-        HStack {
+        HStack(alignment: .center) {
             Button {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 stopRecording(skipTranscription: true)
                 onCancel()
             } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 30))
+                Image(systemName: "xmark")
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(.secondary)
-                    .symbolRenderingMode(.hierarchical)
+                    .frame(width: 34, height: 34)
+                    .background(Circle().fill(.ultraThinMaterial))
             }
             .accessibilityLabel("Close")
 
             Spacer()
 
-            Text(timeLabel)
-                .font(.system(.callout, design: .rounded).monospacedDigit())
-                .fontWeight(.semibold)
-                .foregroundStyle(isInFinalCountdown ? Color.red : .secondary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(
-                    Capsule()
-                        .fill(.ultraThinMaterial)
-                )
-                .accessibilityLabel("\(Int((maxRecordingSeconds - elapsed).rounded())) seconds remaining")
+            statusPill
         }
+    }
+
+    private var statusPill: some View {
+        HStack(spacing: 8) {
+            if isPreparing {
+                ProgressView()
+                    .controlSize(.mini)
+                    .tint(.secondary)
+            } else if isRecording {
+                Circle()
+                    .fill(Color.red)
+                    .frame(width: 8, height: 8)
+                    .opacity(dotOpacity)
+            } else if !transcription.isEmpty {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(AppColors.calorie)
+            } else {
+                Image(systemName: "mic.slash")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+            Text(statusLabel)
+                .font(.system(.footnote, design: .rounded).monospacedDigit())
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background(Capsule().fill(.ultraThinMaterial))
+        .accessibilityLabel(statusAccessibilityLabel)
+    }
+
+    private var statusLabel: String {
+        if isPreparing { return "Setting up…" }
+        if isRecording { return "Recording  \(elapsedLabel)" }
+        if !transcription.isEmpty { return "Ready" }
+        return "Idle"
+    }
+
+    private var statusAccessibilityLabel: String {
+        if isPreparing { return "Setting up microphone" }
+        if isRecording { return "Recording, \(elapsedLabel) elapsed" }
+        return "Stopped"
     }
 
     private var transcriptCard: some View {
         ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(.ultraThinMaterial)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .strokeBorder(AppColors.calorie.opacity(0.22), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .strokeBorder(AppColors.calorie.opacity(0.20), lineWidth: 1)
                 )
-                .shadow(color: AppColors.calorie.opacity(0.08), radius: 18, x: 0, y: 8)
+                .shadow(color: AppColors.calorie.opacity(0.07), radius: 18, x: 0, y: 8)
 
             Group {
-                if isTranscribing {
-                    VoidpenLoadingCompact(label: Text("Transcribing…"))
-                        .padding(20)
-                } else if transcription.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(isRecording ? "Listening…" : "Tap the mic to start")
-                            .font(.system(.title3, design: .rounded, weight: .semibold))
-                            .foregroundStyle(.primary)
-                        Text(isRecording ? "Describe what you ate. We'll stop at 60s." : "Tell us what you ate — meals, drinks, snacks.")
-                            .font(.footnote)
+                if isPreparing {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 10) {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(AppColors.calorie)
+                            Text("Setting up microphone…")
+                                .font(.system(.title3, design: .rounded, weight: .semibold))
+                                .foregroundStyle(.primary)
+                        }
+                        Text("This takes a moment the first time.")
+                            .font(.subheadline)
                             .foregroundStyle(.secondary)
+                        Spacer(minLength: 0)
                     }
-                    .padding(20)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                    .padding(22)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                } else if transcription.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(isRecording ? "Listening…" : "Tap the mic to start")
+                            .font(.system(.title2, design: .rounded, weight: .bold))
+                            .foregroundStyle(.primary)
+                        Text(isRecording
+                             ? "Describe what you ate. We'll stop when you do."
+                             : "Tell us what you ate — meals, drinks, snacks.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(22)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 } else {
                     TextEditor(text: $transcription)
-                        .font(.body)
+                        .font(.system(.title3))
                         .scrollContentBackground(.hidden)
                         .padding(.horizontal, 14)
-                        .padding(.vertical, 12)
+                        .padding(.vertical, 14)
                         .accessibilityLabel("Transcription")
                 }
             }
@@ -172,7 +223,7 @@ struct VoiceInputView: View {
             if let error = permissionError {
                 VStack {
                     Spacer()
-                    HStack(spacing: 6) {
+                    HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.caption)
                         Text(error)
@@ -180,59 +231,45 @@ struct VoiceInputView: View {
                             .multilineTextAlignment(.leading)
                     }
                     .foregroundStyle(.red)
-                    .padding(.horizontal, 14)
-                    .padding(.bottom, 10)
-                }
-            } else if let notice = remoteNotice {
-                VStack {
-                    Spacer()
-                    Text(notice)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.leading)
-                        .padding(.horizontal, 14)
-                        .padding(.bottom, 10)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 12)
                 }
             }
         }
-        .frame(minHeight: 160)
-        .animation(.easeInOut(duration: 0.2), value: isTranscribing)
         .animation(.easeInOut(duration: 0.2), value: transcription.isEmpty)
+        .animation(.easeInOut(duration: 0.2), value: isPreparing)
+    }
+
+    private var waveform: some View {
+        WaveformStrip(samples: samples)
+            .frame(height: 52)
+            .opacity(isRecording ? 1.0 : 0.0)
+            .animation(.easeInOut(duration: 0.25), value: isRecording)
+    }
+
+    private var micCluster: some View {
+        VStack(spacing: 10) {
+            micButton
+
+            Text(isRecording ? "Auto-stops when you go quiet" : "")
+                .font(.system(.caption, design: .rounded))
+                .foregroundStyle(.secondary)
+                .frame(height: 16)
+                .opacity(isRecording ? 1.0 : 0.0)
+                .animation(.easeInOut(duration: 0.25), value: isRecording)
+        }
     }
 
     private var micButton: some View {
         ZStack {
-            // Outer pulse ring (only when recording)
             if isRecording {
                 Circle()
                     .stroke(AppColors.calorie.opacity(0.5), lineWidth: 2)
-                    .frame(width: 120, height: 120)
+                    .frame(width: 116, height: 116)
                     .scaleEffect(pulseScale)
                     .opacity(pulseOpacity)
             }
 
-            // Countdown ring
-            Circle()
-                .stroke(Color.secondary.opacity(0.12), lineWidth: 4)
-                .frame(width: 116, height: 116)
-
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(
-                    LinearGradient(
-                        colors: isInFinalCountdown
-                            ? [Color.red, Color.orange]
-                            : AppColors.calorieGradient,
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    style: StrokeStyle(lineWidth: 4, lineCap: .round)
-                )
-                .frame(width: 116, height: 116)
-                .rotationEffect(.degrees(-90))
-                .animation(.linear(duration: 0.1), value: progress)
-
-            // Mic button
             Button {
                 if isRecording {
                     UIImpactFeedbackGenerator(style: .medium).impactOccurred()
@@ -242,211 +279,207 @@ struct VoiceInputView: View {
                     startRecording()
                 }
             } label: {
-                Image(systemName: isRecording ? "stop.fill" : "mic.fill")
-                    .font(.system(size: 32, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 96, height: 96)
-                    .background(
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: AppColors.calorieGradient,
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                ZStack {
+                    Circle().fill(
+                        LinearGradient(
+                            colors: AppColors.calorieGradient,
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                     )
-                    .shadow(color: AppColors.calorie.opacity(isRecording ? 0.55 : 0.35), radius: 24, x: 0, y: 10)
-                    .shadow(color: AppColors.calorie.opacity(isRecording ? 0.35 : 0.0), radius: 40, x: 0, y: 0)
-                    .opacity(isTranscribing ? 0.6 : 1.0)
+                    .frame(width: 84, height: 84)
+
+                    if isPreparing {
+                        ProgressView()
+                            .controlSize(.large)
+                            .tint(.white)
+                    } else {
+                        Image(systemName: isRecording ? "stop.fill" : "mic.fill")
+                            .font(.system(size: 30, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
+                }
+                .frame(width: 84, height: 84)
+                .shadow(color: AppColors.calorie.opacity(isRecording ? 0.55 : 0.35), radius: 22, x: 0, y: 10)
+                .opacity(isPreparing ? 0.85 : 1.0)
             }
-            .disabled(isTranscribing)
-            .accessibilityLabel(isRecording ? "Stop recording" : "Start recording")
-            .accessibilityHint("Records up to 60 seconds of voice for meal logging.")
+            .disabled(isPreparing)
+            .accessibilityLabel(isPreparing ? "Setting up microphone" : (isRecording ? "Stop recording" : "Start recording"))
+            .accessibilityHint("Transcribes your voice on-device for meal logging.")
         }
         .onChange(of: isRecording) { _, recording in
             if recording {
                 pulseScale = 1.0
                 pulseOpacity = 0.7
                 withAnimation(.easeOut(duration: 1.4).repeatForever(autoreverses: false)) {
-                    pulseScale = 1.6
+                    pulseScale = 1.55
                     pulseOpacity = 0.0
+                }
+                dotOpacity = 1.0
+                withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) {
+                    dotOpacity = 0.25
                 }
             } else {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     pulseScale = 1.0
                     pulseOpacity = 0.6
+                    dotOpacity = 1.0
                 }
             }
         }
     }
 
     private var bottomActions: some View {
-        VStack(spacing: 12) {
-            if !transcription.isEmpty && !isRecording && !isTranscribing {
-                Button {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    transcription = ""
-                    remoteNotice = nil
-                    permissionError = nil
-                    startRecording()
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "arrow.counterclockwise")
-                            .font(.system(size: 14, weight: .semibold))
-                        Text("Re-record")
-                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+        Group {
+            if !isRecording && !transcription.isEmpty {
+                HStack(spacing: 12) {
+                    Button {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        transcription = ""
+                        permissionError = nil
+                        startRecording()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.system(size: 13, weight: .semibold))
+                            Text("Re-record")
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        }
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 54)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(.ultraThinMaterial)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .strokeBorder(Color.secondary.opacity(0.20), lineWidth: 1)
+                                )
+                        )
                     }
-                    .foregroundStyle(AppColors.calorie)
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 10)
-                    .background(
-                        Capsule()
-                            .fill(.ultraThinMaterial)
-                            .overlay(
-                                Capsule()
-                                    .strokeBorder(AppColors.calorie.opacity(0.35), lineWidth: 1)
-                            )
-                    )
+
+                    Button {
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        onSubmit(transcription)
+                    } label: {
+                        HStack(spacing: 8) {
+                            Text("Analyze")
+                                .font(.system(.headline, design: .rounded, weight: .semibold))
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 14, weight: .bold))
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 54)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(
+                                    LinearGradient(
+                                        colors: AppColors.calorieGradient,
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                        )
+                        .shadow(color: AppColors.calorie.opacity(analyzeDisabled ? 0.0 : 0.35), radius: 14, x: 0, y: 6)
+                        .opacity(analyzeDisabled ? 0.45 : 1.0)
+                    }
+                    .disabled(analyzeDisabled)
                 }
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
+            } else {
+                Color.clear.frame(height: 54)
             }
-
-            Button {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                onSubmit(transcription)
-            } label: {
-                Text("Analyze")
-                    .font(.system(.headline, design: .rounded, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(
-                                LinearGradient(
-                                    colors: AppColors.calorieGradient,
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                    )
-                    .shadow(color: AppColors.calorie.opacity(analyzeButtonDisabled ? 0.0 : 0.35), radius: 14, x: 0, y: 6)
-                    .opacity(analyzeButtonDisabled ? 0.45 : 1.0)
-            }
-            .disabled(analyzeButtonDisabled)
         }
         .animation(.easeInOut(duration: 0.25), value: transcription.isEmpty)
         .animation(.easeInOut(duration: 0.25), value: isRecording)
-        .animation(.easeInOut(duration: 0.25), value: isTranscribing)
     }
 
     // MARK: - Recording
 
     private func startRecording() {
         permissionError = nil
-        remoteNotice = nil
         transcription = ""
-        didWarnNearLimit = false
         elapsed = 0
+        hasDetectedSpeech = false
+        silenceAccumulated = 0
         samples = Array(repeating: 0, count: VoiceInputView.sampleCount)
-        AVAudioApplication.requestRecordPermission { allowed in
-            DispatchQueue.main.async {
-                guard allowed else {
-                    UINotificationFeedbackGenerator().notificationOccurred(.error)
-                    permissionError = String(localized: "Microphone permission denied. Enable it in Settings.")
-                    return
-                }
-                beginRecording()
+        isPreparing = true
+
+        Task {
+            // Yield a frame so SwiftUI commits the `isPreparing` state before
+            // the (synchronous, main-actor) audio engine bring-up blocks the
+            // run loop — otherwise the spinner never appears on first launch.
+            try? await Task.sleep(for: .milliseconds(16))
+            await transcriber.start(languageCode: Locale.autoupdatingCurrent.language.languageCode?.identifier.lowercased())
+            isPreparing = false
+            if let error = transcriber.error {
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
+                permissionError = error.errorDescription
+                return
             }
-        }
-    }
-
-    private func beginRecording() {
-        let session = AVAudioSession.sharedInstance()
-        do {
-            try session.setCategory(.record, mode: .default, options: .duckOthers)
-            try session.setActive(true, options: .notifyOthersOnDeactivation)
-        } catch {
-            UINotificationFeedbackGenerator().notificationOccurred(.error)
-            permissionError = String(localized: "Failed to set up audio session.")
-            return
-        }
-
-        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("voice-\(UUID().uuidString).m4a")
-        recordedFileURL = fileURL
-
-        let settings: [String: Any] = [
-            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 16_000,
-            AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue,
-        ]
-        do {
-            let recorder = try AVAudioRecorder(url: fileURL, settings: settings)
-            recorder.isMeteringEnabled = true
-            recorder.record()
-            audioRecorder = recorder
             isRecording = true
             startMeterTimer()
             startRecordingLimit()
-        } catch {
-            UINotificationFeedbackGenerator().notificationOccurred(.error)
-            permissionError = String(localized: "Failed to start recording: \(error.localizedDescription)")
         }
     }
 
     private func stopRecording(skipTranscription: Bool = false) {
-        guard isRecording || audioRecorder != nil else { return }
+        guard isRecording else {
+            if skipTranscription { transcriber.stop() }
+            return
+        }
         recordingLimitTask?.cancel()
         recordingLimitTask = nil
         invalidateMeterTimer()
-        audioRecorder?.stop()
-        audioRecorder = nil
+        transcriber.stop()
         isRecording = false
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-
-        guard let fileURL = recordedFileURL else { return }
-        recordedFileURL = nil
 
         if skipTranscription {
-            try? FileManager.default.removeItem(at: fileURL)
+            transcription = ""
             return
         }
 
-        isTranscribing = true
-        Task {
-            defer { isTranscribing = false }
-            do {
-                let languageCode = Locale.autoupdatingCurrent.language.languageCode?.identifier.lowercased()
-                let text = try await SpeechService.transcribe(audioURL: fileURL, languageCode: languageCode)
-                transcription = text
-                UINotificationFeedbackGenerator().notificationOccurred(.success)
-            } catch {
-                UINotificationFeedbackGenerator().notificationOccurred(.error)
-                permissionError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-            }
-            try? FileManager.default.removeItem(at: fileURL)
+        let hasText = !transcription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if hasText {
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        } else if let error = transcriber.error {
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+            permissionError = error.errorDescription
         }
     }
 
     private func startMeterTimer() {
         invalidateMeterTimer()
-        let timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
-            guard let recorder = audioRecorder, isRecording else { return }
-            recorder.updateMeters()
-            let db = recorder.averagePower(forChannel: 0)
+        let tick: TimeInterval = 0.05
+        let timer = Timer.scheduledTimer(withTimeInterval: tick, repeats: true) { _ in
+            guard isRecording else { return }
+            let db = transcriber.currentDb()
             let normalized = normalizedPower(db: db)
             var next = samples
             next.removeFirst()
             next.append(CGFloat(normalized))
             samples = next
 
-            elapsed = min(elapsed + 0.05, maxRecordingSeconds)
+            elapsed = min(elapsed + tick, maxRecordingSeconds)
 
-            if !didWarnNearLimit && (maxRecordingSeconds - elapsed) <= 10 {
-                didWarnNearLimit = true
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            // Voice-activity auto-stop: once the user has clearly spoken,
+            // accumulate continuous silence and end the take when it crosses
+            // the threshold. Brief pauses mid-sentence reset the counter.
+            if db.isFinite {
+                if db >= speechActivationDb {
+                    hasDetectedSpeech = true
+                    silenceAccumulated = 0
+                } else if hasDetectedSpeech && db <= silenceThresholdDb {
+                    silenceAccumulated += tick
+                    if elapsed >= minRecordingBeforeAutoStop,
+                       silenceAccumulated >= silenceAutoStopSeconds {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        stopRecording()
+                    }
+                } else {
+                    silenceAccumulated = 0
+                }
             }
         }
         meterTimer = timer
@@ -459,8 +492,8 @@ struct VoiceInputView: View {
     }
 
     private func normalizedPower(db: Float) -> Float {
-        // averagePower returns dBFS in roughly [-160, 0]. Treat anything below
-        // -55 as silence so quiet noise floor doesn't visually fill the bars.
+        // dBFS roughly [-160, 0]. Treat anything below -55 as silence so the
+        // noise floor doesn't visually fill the bars.
         guard db.isFinite else { return 0 }
         let floor: Float = -55
         let clamped = max(floor, min(0, db))
@@ -474,7 +507,6 @@ struct VoiceInputView: View {
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 guard isRecording else { return }
-                remoteNotice = String(localized: "60-second limit reached. Transcribing your meal now.")
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 stopRecording()
             }
@@ -486,7 +518,6 @@ struct VoiceInputView: View {
 
 private struct WaveformStrip: View {
     let samples: [CGFloat]
-    let isActive: Bool
 
     var body: some View {
         GeometryReader { geo in

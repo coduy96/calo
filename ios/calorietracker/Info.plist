@@ -12,6 +12,8 @@
 	<string>sb_publishable_QFOBRn3VS0D5EQWyfGBXRg_Tem4AWum</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Used to record short voice notes to log meals.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Transcribes your voice notes on-device to log meals.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Take a photo of your meal or a nutrition label to log it.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
