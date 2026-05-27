@@ -115,8 +115,7 @@ struct GeminiService {
         \(languageDirective)
         """
         let text = try await callAI(task: .food, prompt: prompt, image: nil)
-        let analysis = try parseFoodAnalysis(from: text)
-        return await addingFallbackServingUnits(to: analysis, image: nil, description: description)
+        return try parseFoodAnalysis(from: text)
     }
 
     static func autoAnalyze(image: UIImage) async throws -> FoodAnalysis {
@@ -136,8 +135,7 @@ struct GeminiService {
         \(languageDirective)
         """
         let text = try await callAI(task: .food, prompt: prompt, image: image)
-        let analysis = try parseFoodAnalysis(from: text)
-        return await addingFallbackServingUnits(to: analysis, image: image, description: nil)
+        return try parseFoodAnalysis(from: text)
     }
 
     static func analyzeFood(image: UIImage, description: String? = nil) async throws -> FoodAnalysis {
@@ -160,8 +158,7 @@ struct GeminiService {
         prompt += "\n\n\(languageDirective)"
 
         let text = try await callAI(task: .food, prompt: prompt, image: image)
-        let analysis = try parseFoodAnalysis(from: text)
-        return await addingFallbackServingUnits(to: analysis, image: image, description: description)
+        return try parseFoodAnalysis(from: text)
     }
 
     static func analyzeNutritionLabel(image: UIImage) async throws -> NutritionLabelAnalysis {
@@ -182,8 +179,7 @@ struct GeminiService {
         For the `name` field: if a product/brand name is printed on the label, copy it verbatim regardless of script; otherwise translate the food type to the target language.
         """
         let text = try await callAI(task: .label, prompt: prompt, image: image)
-        let analysis = try parseNutritionLabel(from: text)
-        return await addingFallbackServingUnits(to: analysis, image: image)
+        return try parseNutritionLabel(from: text)
     }
 
     static func suggestOptionalNutrientGoals(
@@ -304,7 +300,11 @@ struct GeminiService {
     private static func callAI(task: BackendClient.Task, prompt: String, image: UIImage?) async throws -> String {
         var imageBase64: String?
         if let image {
-            guard let data = image.jpegData(compressionQuality: 0.8) else {
+            // Downscale before encoding: a full-res camera photo otherwise
+            // becomes a multi-MB base64 upload that blows BackendClient's 60s
+            // request timeout on constrained uplinks. 1536px keeps full Gemini
+            // analysis accuracy. See UIImage.downscaled(maxDimension:).
+            guard let data = image.downscaled(maxDimension: 1536).jpegData(compressionQuality: 0.8) else {
                 throw AnalysisError.imageConversionFailed
             }
             imageBase64 = data.base64EncodedString()
@@ -450,95 +450,6 @@ struct GeminiService {
         return goals.mergedWithDefaults()
     }
 
-    private static func addingFallbackServingUnits(
-        to analysis: FoodAnalysis,
-        image: UIImage?,
-        description: String?
-    ) async -> FoodAnalysis {
-        guard analysis.servingUnitOptions.isEmpty else { return analysis }
-        guard let options = try? await inferServingUnitOptions(
-            name: analysis.name,
-            servingSizeGrams: analysis.servingSizeGrams,
-            image: image,
-            description: description
-        ), !options.isEmpty else {
-            return analysis
-        }
-
-        var updated = analysis
-        updated.servingUnitOptions = options
-        updated.selectedServingUnit = options.first?.unit
-        updated.selectedServingQuantity = options.first?.quantity(for: analysis.servingSizeGrams)
-        return updated
-    }
-
-    private static func addingFallbackServingUnits(
-        to analysis: NutritionLabelAnalysis,
-        image: UIImage
-    ) async -> NutritionLabelAnalysis {
-        guard analysis.servingUnitOptions.isEmpty else { return analysis }
-        guard let servingSizeGrams = analysis.servingSizeGrams,
-              let options = try? await inferServingUnitOptions(
-                name: analysis.name,
-                servingSizeGrams: servingSizeGrams,
-                image: image,
-                description: nil
-              ), !options.isEmpty else {
-            return analysis
-        }
-
-        var updated = analysis
-        updated.servingUnitOptions = options
-        return updated
-    }
-
-    private static func inferServingUnitOptions(
-        name: String,
-        servingSizeGrams: Double,
-        image: UIImage?,
-        description: String?
-    ) async throws -> [ServingUnitOption] {
-        let context = description?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let contextLine = context.map { "\nUser context: \($0)" } ?? ""
-        let prompt = """
-        The previous food analysis returned grams only. Infer non-gram serving unit options for the same food and amount.
-
-        Food: \(name)
-        Total grams for the analyzed amount: \(String(format: "%.1f", servingSizeGrams))\(contextLine)
-
-        Return ONLY JSON:
-        {"unit_options":[{"unit":"slice","quantity":8.0,"grams_per_unit":45.0}]}
-
-        Rules:
-        - Replace the sample numbers with the actual best estimate. Do not copy 8 or 45 unless they fit the food.
-        - If the image shows countable portions, count visible pieces/slices. For pizza, cake, pie, bread, cookies, fruit pieces, nuggets, or sweets, use slice or piece.
-        - For liquids or pourable foods like milk, juice, soup, smoothies, dal, sauces, or yogurt, use ml when the volume is clearer than a count.
-        - For spooned foods like peanut butter, honey, oil, chutney, or ghee, use tbsp or tsp.
-        - For packaged foods/drinks, use can, packet, bar, scoop, or bowl only when that unit is visible or strongly implied.
-        - grams_per_unit is grams for one unit. For countable units, use total grams / visible quantity. For ml, use grams per ml.
-        - Return [] only if no non-gram unit is apparent.
-        - IMPORTANT: Keep `unit` values in English (slice/piece/ml/cup/fl oz/tbsp/tsp/can/packet/bar/scoop/bowl) — they are matched programmatically.
-
-        Good outputs:
-        {"unit_options":[{"unit":"slice","quantity":8.0,"grams_per_unit":45.0}]}
-        {"unit_options":[{"unit":"ml","quantity":250.0,"grams_per_unit":1.03},{"unit":"cup","quantity":1.0,"grams_per_unit":250.0}]}
-        {"unit_options":[{"unit":"tbsp","quantity":2.0,"grams_per_unit":16.0}]}
-        {"unit_options":[{"unit":"can","quantity":1.0,"grams_per_unit":330.0}]}
-        {"unit_options":[{"unit":"piece","quantity":5.0,"grams_per_unit":18.0}]}
-        """
-
-        let text = try await callAI(task: .food, prompt: prompt, image: image)
-        return try parseServingUnitOptions(from: text, servingSizeGrams: servingSizeGrams)
-    }
-
-    private static func parseServingUnitOptions(from text: String, servingSizeGrams: Double?) throws -> [ServingUnitOption] {
-        let jsonString = extractJSON(from: text)
-        guard let data = jsonString.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-        else { throw AnalysisError.invalidResponse }
-        return parseServingUnitOptions(from: json, servingSizeGrams: servingSizeGrams)
-    }
-
     private static func parseServingUnitOptions(from json: [String: Any], servingSizeGrams: Double?) -> [ServingUnitOption] {
         let rawOptions = json["unit_options"] as? [[String: Any]]
             ?? json["serving_unit_options"] as? [[String: Any]]
@@ -575,5 +486,40 @@ struct GeminiService {
             return Double(string)
         }
         return nil
+    }
+}
+
+// MARK: - Image downscaling
+
+extension UIImage {
+    /// Downscale so the longest edge is at most `maxDimension` pixels,
+    /// preserving aspect ratio. Returns an equivalent image when already within
+    /// bounds.
+    ///
+    /// A full-resolution camera photo (12–48 MP) encodes to a multi-megabyte
+    /// JPEG, and base64 inflates it another ~37%. That payload — uploaded to a
+    /// region-remote backend, sometimes twice on the food path — routinely
+    /// exceeds BackendClient's flat 60s request timeout on constrained uplinks,
+    /// so food analysis "always times out" while text-only AI calls (KB-sized)
+    /// succeed. Gemini downsamples images to ≤1568px tiles internally, so
+    /// 1536px loses no analysis accuracy while cutting the upload ~16×.
+    func downscaled(maxDimension: CGFloat) -> UIImage {
+        let pixelWidth = size.width * scale
+        let pixelHeight = size.height * scale
+        let longestEdge = max(pixelWidth, pixelHeight)
+        guard longestEdge > maxDimension else { return self }
+
+        let ratio = maxDimension / longestEdge
+        let targetSize = CGSize(
+            width: (pixelWidth * ratio).rounded(),
+            height: (pixelHeight * ratio).rounded()
+        )
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1 // we already resolved to pixel dimensions
+        format.opaque = true
+        let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
+        return renderer.image { _ in
+            draw(in: CGRect(origin: .zero, size: targetSize))
+        }
     }
 }
