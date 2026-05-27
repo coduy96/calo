@@ -379,6 +379,8 @@ struct HomeView: View {
     @AppStorage(HomeTopNutrient.storageKey) private var homeTopNutrientsRaw = HomeTopNutrient.storageValue(for: HomeTopNutrient.defaultSelection)
     @AppStorage(OptionalNutrientGoals.storageKey) private var optionalNutrientGoalsData = Data()
     @State private var showAIConsent = false
+    /// Action the user chose before consent was required; replayed once they tap Allow.
+    @State private var pendingConsentAction: (() -> Void)?
     @State private var showSettings = false
     @Environment(ProfileStore.self) private var profileStore
 
@@ -872,7 +874,14 @@ struct HomeView: View {
             .sheet(isPresented: $showSettings) {
                 ProfileView()
             }
-            .sheet(isPresented: $showAIConsent) {
+            .sheet(isPresented: $showAIConsent, onDismiss: {
+                // Replay the action the user originally chose, but only if they
+                // consented. Running it here (after the sheet has fully dismissed)
+                // avoids presenting the camera/picker while this sheet is closing.
+                let action = pendingConsentAction
+                pendingConsentAction = nil
+                if aiConsentGiven { action?() }
+            }) {
                 AIConsentSheetView(
                     onAllow: {
                         aiConsentGiven = true
@@ -887,8 +896,9 @@ struct HomeView: View {
     }
 
 
-    private func requireAIConsent(_ action: () -> Void) {
+    private func requireAIConsent(_ action: @escaping () -> Void) {
         guard aiConsentGiven else {
+            pendingConsentAction = action
             showAIConsent = true
             return
         }
