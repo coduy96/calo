@@ -453,32 +453,37 @@ struct VoiceInputView: View {
         invalidateMeterTimer()
         let tick: TimeInterval = 0.05
         let timer = Timer.scheduledTimer(withTimeInterval: tick, repeats: true) { _ in
-            guard isRecording else { return }
-            let db = transcriber.currentDb()
-            let normalized = normalizedPower(db: db)
-            var next = samples
-            next.removeFirst()
-            next.append(CGFloat(normalized))
-            samples = next
+            // The timer is added to RunLoop.main, so this callback always fires
+            // on the main thread. Assert that isolation so we can touch the
+            // main-actor-isolated transcriber and view state directly.
+            MainActor.assumeIsolated {
+                guard isRecording else { return }
+                let db = transcriber.currentDb()
+                let normalized = normalizedPower(db: db)
+                var next = samples
+                next.removeFirst()
+                next.append(CGFloat(normalized))
+                samples = next
 
-            elapsed = min(elapsed + tick, maxRecordingSeconds)
+                elapsed = min(elapsed + tick, maxRecordingSeconds)
 
-            // Voice-activity auto-stop: once the user has clearly spoken,
-            // accumulate continuous silence and end the take when it crosses
-            // the threshold. Brief pauses mid-sentence reset the counter.
-            if db.isFinite {
-                if db >= speechActivationDb {
-                    hasDetectedSpeech = true
-                    silenceAccumulated = 0
-                } else if hasDetectedSpeech && db <= silenceThresholdDb {
-                    silenceAccumulated += tick
-                    if elapsed >= minRecordingBeforeAutoStop,
-                       silenceAccumulated >= silenceAutoStopSeconds {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        stopRecording()
+                // Voice-activity auto-stop: once the user has clearly spoken,
+                // accumulate continuous silence and end the take when it crosses
+                // the threshold. Brief pauses mid-sentence reset the counter.
+                if db.isFinite {
+                    if db >= speechActivationDb {
+                        hasDetectedSpeech = true
+                        silenceAccumulated = 0
+                    } else if hasDetectedSpeech && db <= silenceThresholdDb {
+                        silenceAccumulated += tick
+                        if elapsed >= minRecordingBeforeAutoStop,
+                           silenceAccumulated >= silenceAutoStopSeconds {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            stopRecording()
+                        }
+                    } else {
+                        silenceAccumulated = 0
                     }
-                } else {
-                    silenceAccumulated = 0
                 }
             }
         }

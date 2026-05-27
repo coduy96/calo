@@ -33565,9 +33565,6 @@
         }
       }
     },
-    "Recording, %@ elapsed" : {
-
-    },
     "Records up to 30 seconds of voice for meal logging." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -36903,6 +36900,12 @@
         }
       }
     },
+    "Setting up microphone" : {
+
+    },
+    "Setting up microphone…" : {
+
+    },
     "Settings" : {
       "localizations" : {
         "ar" : {
@@ -38908,9 +38911,6 @@
           }
         }
       }
-    },
-    "Stopped" : {
-
     },
     "Streak and summary notifications update automatically based on your logged food." : {
       "extractionState" : "stale",
@@ -41803,6 +41803,9 @@
           }
         }
       }
+    },
+    "This takes a moment the first time." : {
+
     },
     "This will permanently delete all your data including food logs, weight entries, and profile. This action cannot be undone." : {
       "localizations" : {
