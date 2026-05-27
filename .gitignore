@@ -2,8 +2,12 @@
 *.xcodeproj/project.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
+*.xcuserstate
 DerivedData/
 build/
+
+# App Store Connect build artifacts
+**/.asc/artifacts/
 
 # Android Studio / Gradle
 .gradle/
