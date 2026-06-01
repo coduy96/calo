@@ -61,3 +61,10 @@ body {
   font-weight: 600;
   text-underline-offset: 2px;
 }
+/* Heading anchor links (rehype-autolink-headings, behavior: wrap) should look
+   like headings, not links — keep the ink color and drop the link underline. */
+.prose-voidpen :is(h1, h2, h3, h4) a {
+  color: inherit;
+  font-weight: inherit;
+  text-decoration: none;
+}
