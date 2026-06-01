@@ -94,7 +94,7 @@ export function getPostBySlug(slug: string, dir: string = BLOG_DIR): Post | null
 export function getAllPosts(dir: string = BLOG_DIR): Post[] {
   return getAllSlugs(dir)
     .map((slug) => parseFile(path.join(dir, `${slug}.mdx`), slug))
-    .sort((a, b) => (a.date < b.date ? 1 : -1));
+    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 }
 
 export function getRelatedPosts(
