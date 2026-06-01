@@ -11,6 +11,7 @@
 import { corsHeaders, json, preflight } from "./_shared/cors.ts";
 import { requireEntitlement } from "./_shared/auth.ts";
 import { enforceQuota } from "./_shared/quota.ts";
+import { recordTokenUsage } from "./_shared/usage.ts";
 import {
   generate,
   transcribe,
@@ -65,7 +66,10 @@ async function handleGenerate(req: Request): Promise<Response> {
 
   try {
     const result = await generate(body);
-    return json(result);
+    // Record token usage best-effort; recordTokenUsage never throws, so this
+    // can't turn a successful generation into an error response.
+    await recordTokenUsage(auth.installID, body.task, result.usage);
+    return json(result.response);
   } catch (e) {
     console.error("generate failed:", e);
     return json({ error: "upstream_error", message: String(e) }, 502);
@@ -92,7 +96,8 @@ async function handleTranscribe(req: Request): Promise<Response> {
 
   try {
     const result = await transcribe(body);
-    return json(result);
+    await recordTokenUsage(auth.installID, "transcribe", result.usage);
+    return json({ text: result.text });
   } catch (e) {
     console.error("transcribe failed:", e);
     return json({ error: "upstream_error", message: String(e) }, 502);

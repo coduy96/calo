@@ -40,7 +40,22 @@ export interface NormalizedResponse {
   tool_calls: NormalizedToolCall[] | null;
 }
 
-export async function generate(req: NormalizedRequest): Promise<NormalizedResponse> {
+// Per-request token accounting, captured from the provider's usage metadata.
+// Carried internally alongside the response so the edge function can record it;
+// never serialized into the client-facing JSON.
+export interface TokenUsage {
+  model: string;
+  promptTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+}
+
+export interface GenerateResult {
+  response: NormalizedResponse;
+  usage: TokenUsage;
+}
+
+export async function generate(req: NormalizedRequest): Promise<GenerateResult> {
   const cfg = await getConfig();
   const provider = getString(cfg, "llm_provider", "gemini");
   const model = pickModel(cfg, req.task);
@@ -83,7 +98,7 @@ async function geminiGenerate(
   model: string,
   req: NormalizedRequest,
   maxTokens: number,
-): Promise<NormalizedResponse> {
+): Promise<GenerateResult> {
   const apiKey = Deno.env.get("GEMINI_API_KEY");
   if (!apiKey) throw new Error("GEMINI_API_KEY not set");
 
@@ -159,7 +174,7 @@ async function geminiGenerate(
     throw new Error(`Gemini ${resp.status}: ${errText.slice(0, 500)}`);
   }
   const data = await resp.json();
-  return parseGeminiResponse(data);
+  return { response: parseGeminiResponse(data), usage: parseUsage(data, model) };
 }
 
 function parseGeminiResponse(data: unknown): NormalizedResponse {
@@ -187,6 +202,22 @@ function parseGeminiResponse(data: unknown): NormalizedResponse {
     text: text.length > 0 ? text : null,
     tool_calls: toolCalls.length > 0 ? toolCalls : null,
   };
+}
+
+// Gemini reports token counts in usageMetadata on every successful response.
+// Parse defensively — a missing block yields zeros rather than a throw, and an
+// absent total falls back to prompt + output.
+function parseUsage(data: unknown, model: string): TokenUsage {
+  const json = data as Record<string, unknown>;
+  const um = (json.usageMetadata ?? {}) as Record<string, unknown>;
+  const promptTokens = numberOr(um.promptTokenCount, 0);
+  const outputTokens = numberOr(um.candidatesTokenCount, 0);
+  const totalTokens = numberOr(um.totalTokenCount, promptTokens + outputTokens);
+  return { model, promptTokens, outputTokens, totalTokens };
+}
+
+function numberOr(v: unknown, fallback: number): number {
+  return typeof v === "number" && Number.isFinite(v) ? v : fallback;
 }
 
 function safeParseJSON(s: string): unknown {
@@ -225,7 +256,9 @@ export interface TranscribeRequest {
   language?: string | null;
 }
 
-export async function transcribe(req: TranscribeRequest): Promise<{ text: string }> {
+export async function transcribe(
+  req: TranscribeRequest,
+): Promise<{ text: string; usage: TokenUsage }> {
   const cfg = await getConfig();
   const provider = getString(cfg, "llm_provider", "gemini");
   const model = getString(cfg, "llm_model_transcribe", getString(cfg, "llm_model_default", "gemini-2.5-flash-lite"));
@@ -274,5 +307,5 @@ export async function transcribe(req: TranscribeRequest): Promise<{ text: string
   const parsed = parseGeminiResponse(data);
   const text = (parsed.text ?? "").trim();
   if (!text) throw new Error("empty_transcript");
-  return { text };
+  return { text, usage: parseUsage(data, model) };
 }
