@@ -43,6 +43,11 @@ export function Footer() {
                   </Link>
                 </li>
                 <li>
+                  <Link href="/blogs" className="transition hover:text-accent">
+                    Blog
+                  </Link>
+                </li>
+                <li>
                   <Link href="/support" className="transition hover:text-accent">
                     Support
                   </Link>

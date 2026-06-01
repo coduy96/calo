@@ -20,6 +20,12 @@ export function Header() {
         </Link>
         <nav className="flex items-center gap-1 text-sm font-semibold text-ink-2 sm:gap-3">
           <Link
+            href="/blogs"
+            className="rounded-md px-3 py-1.5 transition hover:text-accent"
+          >
+            Blog
+          </Link>
+          <Link
             href="/support"
             className="rounded-md px-3 py-1.5 transition hover:text-accent"
           >
