@@ -91,6 +91,7 @@ export default function Home() {
             <a href="#how">How it works</a>
             <a href="#coach">AI Coach</a>
             <a href="#faq">FAQ</a>
+            <Link href="/blogs">Blog</Link>
           </nav>
           <div className="nav-cta">
             <AppStoreBadge href={APP_STORE_URL} />
@@ -113,6 +114,7 @@ export default function Home() {
         <a href="#how">How it works</a>
         <a href="#coach">AI Coach</a>
         <a href="#faq">FAQ</a>
+        <Link href="/blogs">Blog</Link>
         <AppStoreBadge href={APP_STORE_URL} />
       </div>
 
@@ -781,7 +783,7 @@ export default function Home() {
                   <a href="#">About</a>
                 </li>
                 <li>
-                  <a href="#">Blog</a>
+                  <Link href="/blogs">Blog</Link>
                 </li>
                 <li>
                   <a href="#">Careers</a>
