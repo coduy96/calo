@@ -1,11 +1,15 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { CATEGORY_LABELS, getPostBySlug } from "@/lib/blog";
+import { CATEGORY_LABELS, getAllSlugs, getPostBySlug } from "@/lib/blog";
 
 export const alt = "The Voidpen Blog";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+
+export function generateStaticParams() {
+  return getAllSlugs().map((slug) => ({ slug }));
+}
 
 export default async function OgImage({
   params,
