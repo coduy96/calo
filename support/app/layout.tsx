@@ -1,10 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Archivo, Hanken_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+});
+
+// Landing-page type system (Archivo = heavy display, Hanken Grotesk = body).
+// Both are variable fonts, so the full weight axis (incl. 900) is available.
+const archivo = Archivo({
+  variable: "--font-archivo",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const hanken = Hanken_Grotesk({
+  variable: "--font-hanken",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 const siteUrl = "https://voidpen.com";
@@ -50,16 +64,13 @@ export const metadata: Metadata = {
       "Snap a photo, talk to your Coach, hit your goals. AI calorie tracking that feels effortless.",
     images: ["/og.png"],
   },
-  icons: {
-    icon: "/favicon.ico",
-  },
   alternates: {
     canonical: siteUrl,
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0a",
+  themeColor: "#F6EFE4",
   width: "device-width",
   initialScale: 1,
 };
@@ -70,8 +81,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-[#0a0a0a] text-neutral-100 font-sans">
+    <html
+      lang="en"
+      className={`${inter.variable} ${archivo.variable} ${hanken.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col bg-cream text-ink font-sans">
         {children}
       </body>
     </html>

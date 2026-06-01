@@ -43,51 +43,51 @@ export default function SupportPage() {
         <section className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
           <Link
             href="/"
-            className="text-sm text-neutral-500 transition hover:text-[#a78bfa]"
+            className="text-sm text-ink-soft transition hover:text-accent"
           >
             ← Back to home
           </Link>
-          <h1 className="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl">
+          <h1 className="mt-6 font-display text-4xl font-black uppercase leading-[0.95] tracking-tight text-ink sm:text-5xl">
             Support
           </h1>
-          <p className="mt-4 text-lg text-neutral-400">
+          <p className="mt-4 text-lg text-ink-2">
             Real humans, real fast. Most questions are answered below — if
             you’re still stuck, email us.
           </p>
 
-          <div className="mt-10 rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6">
-            <h2 className="text-lg font-semibold text-neutral-100">
+          <div className="mt-10 rounded-2xl border border-line bg-card shadow-soft p-6">
+            <h2 className="text-lg font-display font-bold text-ink">
               Email support
             </h2>
-            <p className="mt-2 text-sm text-neutral-400">
+            <p className="mt-2 text-sm text-ink-2">
               We reply within one business day, usually faster.
             </p>
             <a
               href="mailto:coduy96@gmail.com?subject=Voidpen%20support"
-              className="mt-5 inline-flex items-center justify-center rounded-lg bg-[#a78bfa] px-5 py-2.5 text-sm font-medium text-neutral-950 transition hover:bg-[#b8a3fb]"
+              className="mt-5 inline-flex items-center justify-center rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-2"
             >
               coduy96@gmail.com
             </a>
-            <p className="mt-4 text-xs text-neutral-500">
+            <p className="mt-4 text-xs text-ink-soft">
               When you write in, include your iOS version and a screenshot if
               you can. It helps us help you faster.
             </p>
           </div>
 
           <section className="mt-14">
-            <h2 className="text-2xl font-semibold tracking-tight">
+            <h2 className="text-2xl font-display font-bold tracking-tight">
               Quick answers
             </h2>
             <div className="mt-6 grid gap-3">
               {topics.map((t) => (
                 <div
                   key={t.title}
-                  className="rounded-xl border border-neutral-800/80 bg-neutral-900/40 p-5"
+                  className="rounded-xl border border-line bg-card shadow-soft p-5"
                 >
-                  <h3 className="text-base font-semibold text-neutral-100">
+                  <h3 className="text-base font-display font-bold text-ink">
                     {t.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-neutral-400">
+                  <p className="mt-2 text-sm leading-relaxed text-ink-2">
                     {t.body}
                   </p>
                 </div>
@@ -95,22 +95,22 @@ export default function SupportPage() {
             </div>
           </section>
 
-          <section className="mt-14 rounded-2xl border border-neutral-800/80 bg-neutral-900/40 p-6">
-            <h2 className="text-lg font-semibold text-neutral-100">
+          <section className="mt-14 rounded-2xl border border-line bg-card shadow-soft p-6">
+            <h2 className="text-lg font-display font-bold text-ink">
               Other resources
             </h2>
-            <ul className="mt-4 space-y-2 text-sm text-neutral-400">
+            <ul className="mt-4 space-y-2 text-sm text-ink-2">
               <li>
                 <Link
                   href="/privacy"
-                  className="text-[#a78bfa] hover:underline"
+                  className="text-accent hover:underline"
                 >
                   Privacy Policy
                 </Link>
                 {" — "}what we collect and how we use it.
               </li>
               <li>
-                <Link href="/terms" className="text-[#a78bfa] hover:underline">
+                <Link href="/terms" className="text-accent hover:underline">
                   Terms of Service
                 </Link>
                 {" — "}subscription terms and governing law.
@@ -118,7 +118,7 @@ export default function SupportPage() {
               <li>
                 <Link
                   href="/delete-account"
-                  className="text-[#a78bfa] hover:underline"
+                  className="text-accent hover:underline"
                 >
                   Delete account
                 </Link>

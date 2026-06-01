@@ -16,20 +16,20 @@ export default function PrivacyPage() {
         <section className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
           <Link
             href="/"
-            className="text-sm text-neutral-500 transition hover:text-[#a78bfa]"
+            className="text-sm text-ink-soft transition hover:text-accent"
           >
             ← Back to home
           </Link>
-          <h1 className="mt-6 text-4xl font-semibold tracking-tight">
+          <h1 className="mt-6 font-display text-4xl font-black uppercase leading-[0.95] tracking-tight text-ink sm:text-5xl">
             Privacy Policy
           </h1>
-          <p className="mt-3 text-sm text-neutral-500">
+          <p className="mt-3 text-sm text-ink-soft">
             Last updated: May 2026
           </p>
 
           <section className="mt-10 space-y-4">
-            <h2 className="text-xl font-semibold">What data we collect</h2>
-            <ul className="list-disc space-y-2 pl-5 text-neutral-300">
+            <h2 className="text-xl font-display font-bold">What data we collect</h2>
+            <ul className="list-disc space-y-2 pl-5 text-ink-2">
               <li>
                 An anonymous install identifier used to associate your data
                 with your device. We don’t ask for your name, email, or login.
@@ -51,8 +51,8 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mt-10 space-y-4">
-            <h2 className="text-xl font-semibold">How we use it</h2>
-            <ul className="list-disc space-y-2 pl-5 text-neutral-300">
+            <h2 className="text-xl font-display font-bold">How we use it</h2>
+            <ul className="list-disc space-y-2 pl-5 text-ink-2">
               <li>
                 To provide AI features such as photo scanning, voice
                 transcription, and the Coach chat experience.
@@ -65,15 +65,15 @@ export default function PrivacyPage() {
                 To manage your subscription entitlement through RevenueCat.
               </li>
             </ul>
-            <p className="text-neutral-300">
+            <p className="text-ink-2">
               We do not sell your data, run ads, or share data with third
               parties for advertising or analytics.
             </p>
           </section>
 
           <section className="mt-10 space-y-4">
-            <h2 className="text-xl font-semibold">Third parties</h2>
-            <ul className="list-disc space-y-2 pl-5 text-neutral-300">
+            <h2 className="text-xl font-display font-bold">Third parties</h2>
+            <ul className="list-disc space-y-2 pl-5 text-ink-2">
               <li>
                 <strong>Supabase</strong> — backend hosting and storage of
                 your account data.
@@ -94,20 +94,20 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mt-10 space-y-4">
-            <h2 className="text-xl font-semibold">Children</h2>
-            <p className="text-neutral-300">
+            <h2 className="text-xl font-display font-bold">Children</h2>
+            <p className="text-ink-2">
               Voidpen is not directed at children under 13 and we do not
               knowingly collect data from them.
             </p>
           </section>
 
           <section className="mt-10 space-y-4">
-            <h2 className="text-xl font-semibold">Data retention & deletion</h2>
-            <p className="text-neutral-300">
+            <h2 className="text-xl font-display font-bold">Data retention & deletion</h2>
+            <p className="text-ink-2">
               Your data is retained until you request deletion. Use our{" "}
               <Link
                 href="/delete-account"
-                className="text-[#a78bfa] hover:underline"
+                className="text-accent hover:underline"
               >
                 delete account page
               </Link>{" "}
@@ -117,20 +117,20 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mt-10 space-y-4">
-            <h2 className="text-xl font-semibold">Your rights</h2>
-            <p className="text-neutral-300">
+            <h2 className="text-xl font-display font-bold">Your rights</h2>
+            <p className="text-ink-2">
               You can request access to, correction of, or deletion of your
               data at any time by emailing us at coduy96@gmail.com.
             </p>
           </section>
 
           <section className="mt-10 space-y-4">
-            <h2 className="text-xl font-semibold">Contact</h2>
-            <p className="text-neutral-300">
+            <h2 className="text-xl font-display font-bold">Contact</h2>
+            <p className="text-ink-2">
               Questions about privacy? Email{" "}
               <a
                 href="mailto:coduy96@gmail.com"
-                className="text-[#a78bfa] hover:underline"
+                className="text-accent hover:underline"
               >
                 coduy96@gmail.com
               </a>

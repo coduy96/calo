@@ -1,16 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --accent: #a78bfa;
+  --background: #f6efe4; /* cream */
+  --foreground: #1b1611; /* ink */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-accent: var(--accent);
-  --font-sans: var(--font-inter);
+
+  /* voidpen brand palette (matches the landing page) */
+  --color-cream: #f6efe4;
+  --color-cream-2: #fbf6ee;
+  --color-cream-3: #f1e7d8;
+  --color-card: #ffffff;
+  --color-ink: #1b1611;
+  --color-ink-2: #4a423a;
+  --color-ink-soft: #837a6e;
+  --color-line: #e9e0d2;
+  --color-accent: #ff5a1f;
+  --color-accent-2: #ff9a2e;
+
+  --shadow-soft: 0 2px 8px rgba(67, 45, 20, 0.06);
+  --shadow-card: 0 18px 44px rgba(67, 45, 20, 0.1);
+
+  --font-sans: var(--font-hanken);
+  --font-display: var(--font-archivo);
 }
 
 html,

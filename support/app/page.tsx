@@ -1,142 +1,552 @@
+import type { Metadata, Viewport } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { AppStoreBadge } from "@/components/app-store-badge";
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
+import { LandingEnhancements } from "@/components/landing-enhancements";
+import "./landing.css";
 
-const features = [
-  {
-    title: "Snap a photo, get calories",
-    description:
-      "Point your camera at a meal. Voidpen reads it and logs calories and macros in seconds — no barcode, no menu hunting.",
-  },
-  {
-    title: "Talk it through",
-    description:
-      "Press and speak. “Two eggs and a piece of toast.” Done. Voice logging that actually keeps up with you.",
-  },
-  {
-    title: "Coach in your pocket",
-    description:
-      "Ask your AI nutritionist anything — “What should I eat for dinner?”, “Am I on track?” Personal, fast, judgment-free.",
-  },
-  {
-    title: "HealthKit, both ways",
-    description:
-      "Two-way sync for weight, height, and body composition. Your data stays in one place — yours.",
-  },
-  {
-    title: "Built for your day",
-    description:
-      "Widgets, fast logging, photo memories of past meals. Built to fit a real life, not just a sticker chart.",
-  },
-  {
-    title: "Private by default",
-    description:
-      "No accounts. No tracking. An anonymous install ID is all we need. Delete anytime.",
-  },
-];
+/*
+ * voidpen.com landing page.
+ * Ported pixel-for-pixel from the Claude Design HTML/CSS handoff
+ * ("voidpen-landing"). Styles live in ./landing.css, scoped under
+ * `.vp-landing`. Interactivity (sticky nav, mobile menu, scroll reveal)
+ * is progressively enhanced by <LandingEnhancements />.
+ *
+ * Every "Download on the App Store" badge links to the live listing.
+ * Region-agnostic URL (no /ma/ etc.) so visitors land in their own store.
+ */
+const APP_STORE_URL = "https://apps.apple.com/app/id6770921845";
 
-const highlights = [
-  { label: "Languages", value: "16" },
-  { label: "Camera tap to log", value: "<2s" },
-  { label: "Sign-up needed", value: "None" },
-];
+export const metadata: Metadata = {
+  title: { absolute: "voidpen — Hit Your Macros, Effortlessly" },
+  description:
+    "Snap, speak, scan or type. voidpen logs your food in seconds, tracks every macro, and coaches you to your goals with AI.",
+  alternates: { canonical: "https://voidpen.com" },
+};
 
-const screenshots = [
-  { src: "/screenshots/home.png", alt: "Home dashboard", w: "tall" },
-  { src: "/screenshots/snap.png", alt: "AI photo scan", w: "tall" },
-  { src: "/screenshots/coach.png", alt: "AI coach chat", w: "tall" },
-  { src: "/screenshots/progress.png", alt: "Progress and trends", w: "tall" },
-] as const;
+export const viewport: Viewport = {
+  themeColor: "#F6EFE4",
+};
 
-const faqs = [
-  {
-    q: "Does Voidpen need an account?",
-    a: "No. Voidpen uses an anonymous install ID — no email, no password, nothing to remember. Your data is tied to your install.",
-  },
-  {
-    q: "How accurate is the photo scan?",
-    a: "Voidpen uses state-of-the-art vision models. Estimates are typically within ±15% — close enough to spot trends. Always double-check labels if you need exact numbers.",
-  },
-  {
-    q: "Does it work offline?",
-    a: "Basic logging works offline. AI features (photo, voice, Coach) need an internet connection because they run in the cloud.",
-  },
-  {
-    q: "How do I cancel my subscription?",
-    a: "On iPhone: Settings → Apple ID → Subscriptions → Voidpen → Cancel. Your access continues until the end of the current billing period.",
-  },
-  {
-    q: "How do I delete my data?",
-    a: "Visit our delete account page, or email coduy96@gmail.com. We permanently remove your data within 30 days.",
-  },
-];
+function AppStoreBadge({
+  href,
+  ariaLabel = "Download on the App Store",
+}: {
+  href: string;
+  ariaLabel?: string;
+}) {
+  return (
+    <a href={href} className="appstore" aria-label={ariaLabel}>
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M16.36 12.78c-.02-2.2 1.8-3.26 1.88-3.31-1.02-1.5-2.62-1.7-3.19-1.73-1.36-.14-2.65.8-3.34.8-.69 0-1.75-.78-2.88-.76-1.48.02-2.85.86-3.61 2.19-1.54 2.67-.39 6.62 1.11 8.78.73 1.06 1.6 2.25 2.74 2.2 1.1-.04 1.51-.71 2.85-.71 1.32 0 1.71.71 2.87.69 1.19-.02 1.94-1.08 2.66-2.14.84-1.23 1.19-2.42 1.21-2.48-.03-.01-2.32-.89-2.34-3.52ZM14.17 6.0c.61-.74 1.02-1.77.91-2.8-.88.04-1.94.59-2.57 1.32-.56.65-1.06 1.69-.93 2.69.98.08 1.98-.5 2.59-1.21Z" />
+      </svg>
+      <span className="as-text">
+        <span className="as-small">Download on the</span>
+        <span className="as-big">App Store</span>
+      </span>
+    </a>
+  );
+}
+
+function Check() {
+  return (
+    <span className="chk">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M5 13l4 4 10-11" />
+      </svg>
+    </span>
+  );
+}
 
 export default function Home() {
   return (
-    <>
-      <Header />
-      <main className="flex-1 w-full">
-        {/* Hero */}
-        <section className="relative overflow-hidden">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 -top-40 h-[480px] bg-[radial-gradient(ellipse_at_top,rgba(167,139,250,0.18),transparent_60%)]"
-          />
-          <div className="mx-auto max-w-6xl px-6 pt-20 pb-12 sm:pt-28">
-            <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900/60 px-3 py-1 text-xs text-neutral-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#a78bfa]" />
-                  Now on the App Store
-                </div>
-                <h1 className="mt-6 text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
-                  Track less.
-                  <br />
-                  <span className="bg-gradient-to-r from-[#c4b5fd] via-[#a78bfa] to-[#7c3aed] bg-clip-text text-transparent">
-                    Live more.
-                  </span>
-                </h1>
-                <p className="mt-6 max-w-xl text-lg text-neutral-400 sm:text-xl">
-                  Snap a photo, talk to your Coach, hit your goals. Voidpen is
-                  the calorie tracker that disappears into your day.
-                </p>
-                <div className="mt-8 flex flex-wrap items-center gap-3">
-                  <AppStoreBadge />
-                  <Link
-                    href="/support"
-                    className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-900/60 px-5 py-3 text-sm font-medium text-neutral-200 transition hover:bg-neutral-900"
-                  >
-                    Get help
-                  </Link>
-                </div>
-                <dl className="mt-10 grid max-w-md grid-cols-3 gap-6 border-t border-neutral-900 pt-6">
-                  {highlights.map((h) => (
-                    <div key={h.label}>
-                      <dt className="text-xs uppercase tracking-wide text-neutral-500">
-                        {h.label}
-                      </dt>
-                      <dd className="mt-1 text-2xl font-semibold tracking-tight text-neutral-100">
-                        {h.value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
+    <div className="vp-landing">
+      <noscript>
+        {/* If JS is unavailable, never leave reveal content hidden. */}
+        <style>{`.vp-landing .reveal{opacity:1 !important;transform:none !important}`}</style>
+      </noscript>
+
+      {/* ================= NAV ================= */}
+      <header className="nav" id="nav">
+        <div className="wrap nav-inner">
+          <a className="brand" href="#top">
+            <span className="brand-mark">
+              <Image
+                src="/voidpen-logo.png"
+                alt="voidpen logo"
+                width={40}
+                height={40}
+              />
+            </span>
+            <span className="brand-name">voidpen</span>
+          </a>
+          <nav className="nav-links">
+            <a href="#features">Features</a>
+            <a href="#how">How it works</a>
+            <a href="#coach">AI Coach</a>
+            <a href="#faq">FAQ</a>
+          </nav>
+          <div className="nav-cta">
+            <AppStoreBadge href={APP_STORE_URL} />
+          </div>
+          <button className="nav-toggle" id="navToggle" aria-label="Open menu">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+            >
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </button>
+        </div>
+      </header>
+      <div className="mobile-menu" id="mobileMenu">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#coach">AI Coach</a>
+        <a href="#faq">FAQ</a>
+        <AppStoreBadge href={APP_STORE_URL} />
+      </div>
+
+      <main id="top">
+        {/* ================= HERO ================= */}
+        <section className="hero">
+          <div className="wrap hero-grid">
+            <div className="hero-copy">
+              <p className="eyebrow reveal">AI nutrition tracking</p>
+              <h1 className="display reveal d1">
+                Hit your
+                <br />
+                <span className="line2">macros</span>
+                <br />
+                effortlessly
+              </h1>
+              <p className="lead reveal d2">
+                Calories, protein, carbs and fat at a glance. Snap a photo, say
+                it out loud, or scan a label — <span className="brand-name">voidpen</span>{" "}
+                does the math.
+              </p>
+              <div className="hero-actions reveal d2">
+                <AppStoreBadge href={APP_STORE_URL} />
+                <a href="#features" className="btn btn-ghost">
+                  See how it works
+                </a>
               </div>
-              <div className="relative mx-auto w-full max-w-sm">
-                <div
-                  aria-hidden
-                  className="absolute -inset-6 rounded-[44px] bg-gradient-to-tr from-[#a78bfa]/25 via-transparent to-transparent blur-2xl"
+              <div className="hero-proof reveal d3">
+                <div className="avatars">
+                  <span
+                    style={{ backgroundImage: "url('https://i.pravatar.cc/80?img=32')" }}
+                  />
+                  <span
+                    style={{ backgroundImage: "url('https://i.pravatar.cc/80?img=12')" }}
+                  />
+                  <span
+                    style={{ backgroundImage: "url('https://i.pravatar.cc/80?img=45')" }}
+                  />
+                  <span
+                    style={{ backgroundImage: "url('https://i.pravatar.cc/80?img=5')" }}
+                  />
+                </div>
+                <div className="proof-text">
+                  <div className="stars">★★★★★</div>
+                  <span>
+                    <strong>4.9</strong> from <strong>12,000+</strong> reviews
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Real app home screen, framed in a phone */}
+            <div className="hero-stage">
+              <div className="hero-glow" />
+              <div className="hero-phone reveal d2">
+                <Image
+                  src="/screenshots/hero-home.png"
+                  alt="voidpen app home screen — calorie ring and macro breakdown"
+                  width={1206}
+                  height={2622}
+                  priority
+                  sizes="(max-width: 480px) 80vw, 300px"
                 />
-                <div className="relative overflow-hidden rounded-[36px] border border-neutral-800 bg-neutral-900 shadow-2xl shadow-black/40">
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ================= TRUST STATS ================= */}
+        <section className="stats">
+          <div className="wrap">
+            <div className="stats-inner reveal">
+              <div className="stat">
+                <div className="num grad-text">4.9★</div>
+                <div className="lbl">App Store rating</div>
+              </div>
+              <div className="stat">
+                <div className="num">2M+</div>
+                <div className="lbl">Meals logged</div>
+              </div>
+              <div className="stat">
+                <div className="num">5s</div>
+                <div className="lbl">Avg. log time</div>
+              </div>
+              <div className="stat">
+                <div className="num">600k+</div>
+                <div className="lbl">Foods in database</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ================= SCREENSHOT GALLERY ================= */}
+        <section className="sec gallery" id="features">
+          <div className="wrap sec-head">
+            <p className="eyebrow reveal">Built for real life</p>
+            <h2 className="display reveal d1">
+              Everything you need,
+              <br />
+              <span className="accent-text">nothing you don&apos;t</span>
+            </h2>
+            <p className="lead reveal d2">
+              A complete look at the app — log food, track macros, chat with your
+              coach and watch real progress add up.
+            </p>
+          </div>
+          <div className="gallery-rail reveal d1">
+            <div className="shot">
+              <Image
+                src="/screenshots/screen-macros.png"
+                alt="Macro dashboard with calorie ring"
+                width={1242}
+                height={2688}
+                style={{ height: "auto" }}
+              />
+            </div>
+            <div className="shot">
+              <Image
+                src="/screenshots/screen-input.png"
+                alt="Multiple ways to log food"
+                width={1242}
+                height={2688}
+                style={{ height: "auto" }}
+              />
+            </div>
+            <div className="shot">
+              <Image
+                src="/screenshots/screen-coach.png"
+                alt="AI coach chat"
+                width={1242}
+                height={2688}
+                style={{ height: "auto" }}
+              />
+            </div>
+            <div className="shot">
+              <Image
+                src="/screenshots/screen-progress.png"
+                alt="Progress charts"
+                width={1242}
+                height={2688}
+                style={{ height: "auto" }}
+              />
+            </div>
+            <div className="shot">
+              <Image
+                src="/screenshots/screen-widgets.png"
+                alt="Home screen widgets"
+                width={1242}
+                height={2688}
+                style={{ height: "auto" }}
+              />
+            </div>
+          </div>
+          <p className="gallery-hint reveal">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+            Swipe to explore every screen
+          </p>
+        </section>
+
+        {/* ================= FEATURE ROWS ================= */}
+        <section className="sec">
+          <div className="wrap">
+            <div className="frow">
+              <div className="frow-copy">
+                <p className="eyebrow reveal">Snap. Speak. Scan. Type.</p>
+                <h3 className="reveal d1">Log food in seconds</h3>
+                <p className="lead reveal d2">
+                  Multiple ways to input. One smart way to log. However you eat,
+                  there&apos;s a faster way to track it — no endless searching.
+                </p>
+                <ul className="flist reveal d2">
+                  <li>
+                    <Check />
+                    <div>
+                      <b>Photo &amp; voice</b>
+                      <p>
+                        Point your camera at a plate or just describe your meal
+                        out loud.
+                      </p>
+                    </div>
+                  </li>
+                  <li>
+                    <Check />
+                    <div>
+                      <b>Barcode &amp; label scan</b>
+                      <p>
+                        Scan packaged foods and nutrition labels for exact
+                        numbers.
+                      </p>
+                    </div>
+                  </li>
+                  <li>
+                    <Check />
+                    <div>
+                      <b>AI text input</b>
+                      <p>
+                        Type &quot;two eggs and toast&quot; — the AI estimates the
+                        macros instantly.
+                      </p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <div className="frow-media reveal d1">
+                <div className="blob" />
+                <Image
+                  src="/screenshots/screen-input.png"
+                  alt="Multiple ways to log food in voidpen"
+                  width={1242}
+                  height={2688}
+                  style={{ height: "auto" }}
+                />
+              </div>
+            </div>
+
+            <div className="frow flip">
+              <div className="frow-media reveal d1">
+                <div className="blob" />
+                <Image
+                  src="/screenshots/screen-macros.png"
+                  alt="Macro dashboard at a glance"
+                  width={1242}
+                  height={2688}
+                  style={{ height: "auto" }}
+                />
+                <div className="media-tag" style={{ top: "14%", left: "-6%" }}>
+                  <span className="fi">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2c1 3-1 4-1 6 0 1 .8 1.8 2 2 .5-1 1.5-1.5 1.5-3 2 1.5 3.5 4 3.5 7a6 6 0 1 1-12 0c0-3 2-5 3-7 .5 1 1 1.5 2 2-.5-2-1-5 1-7Z" />
+                    </svg>
+                  </span>
+                  104 / 115g
+                </div>
+              </div>
+              <div className="frow-copy">
+                <p className="eyebrow reveal">Hit your macros</p>
+                <h3 className="reveal d1">
+                  Your whole day,
+                  <br />
+                  one glance
+                </h3>
+                <p className="lead reveal d2">
+                  Calories, protein, carbs and fat — all on one beautiful
+                  dashboard. See what&apos;s left in your day the moment you open
+                  the app.
+                </p>
+                <ul className="flist reveal d2">
+                  <li>
+                    <Check />
+                    <div>
+                      <b>Live calorie ring</b>
+                      <p>Watch your budget fill up in real time as you log.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <Check />
+                    <div>
+                      <b>Per-meal breakdown</b>
+                      <p>
+                        Tap any meal to see exactly where your macros came from.
+                      </p>
+                    </div>
+                  </li>
+                  <li>
+                    <Check />
+                    <div>
+                      <b>Home screen widgets</b>
+                      <p>
+                        Keep your targets one tap away, right on your lock screen.
+                      </p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ================= HOW IT WORKS ================= */}
+        <section className="sec steps" id="how">
+          <div className="wrap">
+            <div className="sec-head">
+              <p className="eyebrow reveal">How it works</p>
+              <h2 className="display reveal d1">Three taps to tracked</h2>
+              <p className="lead reveal d2">
+                No food scales, no spreadsheets, no guilt. Just open, log, and get
+                on with your day.
+              </p>
+            </div>
+            <div className="steps-grid">
+              <div className="step reveal d1">
+                <span className="step-num">1</span>
+                <span className="si">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M4 8a2 2 0 0 1 2-2h1.5l1-1.6h7l1 1.6H18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />
+                    <circle cx="12" cy="12.5" r="3.4" />
+                  </svg>
+                </span>
+                <h4>Capture it</h4>
+                <p>
+                  Snap a photo, speak, scan a barcode or type. Whatever&apos;s
+                  fastest in the moment.
+                </p>
+              </div>
+              <div className="step reveal d2">
+                <span className="step-num">2</span>
+                <span className="si">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3Z" />
+                    <path d="M18 14l.7 2 2 .8-2 .7L18 20l-.7-2-2-.7 2-.8.7-1.5Z" />
+                  </svg>
+                </span>
+                <h4>AI does the math</h4>
+                <p>
+                  voidpen identifies the food and fills in calories and every
+                  macro automatically.
+                </p>
+              </div>
+              <div className="step reveal d3">
+                <span className="step-num">3</span>
+                <span className="si">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M4 17l5-5 3 3 7-8" />
+                    <path d="M16 7h4v4" />
+                  </svg>
+                </span>
+                <h4>Watch progress</h4>
+                <p>
+                  See weight, calories and trends line up over weeks — and stay on
+                  track for good.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ================= AI COACH ================= */}
+        <section className="sec" id="coach">
+          <div className="wrap">
+            <div className="coach">
+              <div className="coach-inner">
+                <div>
+                  <p className="eyebrow reveal" style={{ color: "var(--accent-2)" }}>
+                    Meet your AI coach
+                  </p>
+                  <h2 className="reveal d1">
+                    Smart help for
+                    <br />
+                    meals, goals <span className="g">&amp; habits</span>
+                  </h2>
+                  <p className="lead reveal d2">
+                    Ask anything. Your coach knows your targets and your history —
+                    so the advice actually fits your day, not a generic plan.
+                  </p>
+                  <div className="coach-chips reveal d2">
+                    <span className="chip">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <circle cx="12" cy="12" r="8" />
+                        <circle cx="12" cy="12" r="3.2" />
+                      </svg>
+                      Hit my protein goal
+                    </span>
+                    <span className="chip">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <circle
+                          cx="12"
+                          cy="12"
+                          r="9"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        />
+                        <circle cx="9" cy="10" r="1.3" />
+                        <circle cx="15" cy="10" r="1.3" />
+                        <path
+                          d="M8 14a4 4 0 0 0 8 0"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      Suggest meals
+                    </span>
+                    <span className="chip">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M4 17l5-5 3 3 7-8" />
+                        <path d="M16 7h4v4" />
+                      </svg>
+                      Track my progress
+                    </span>
+                  </div>
+                </div>
+                <div className="coach-media reveal d2">
                   <Image
-                    src="/screenshots/home.png"
-                    alt="Voidpen home screen"
-                    width={1320}
-                    height={2868}
-                    priority
-                    className="h-auto w-full"
+                    src="/screenshots/screen-coach.png"
+                    alt="AI coach conversation in voidpen"
+                    width={1242}
+                    height={2688}
+                    style={{ height: "auto" }}
                   />
                 </div>
               </div>
@@ -144,111 +554,290 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Features */}
-        <section className="mx-auto max-w-6xl px-6 py-20">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              The least-friction calorie tracker on iOS.
-            </h2>
-            <p className="mt-4 text-neutral-400">
-              No barcodes. No 12-screen onboarding. No subscription paywall
-              before you can even open the app. Voidpen earns its place.
-            </p>
-          </div>
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className="group relative rounded-2xl border border-neutral-800/80 bg-neutral-900/40 p-6 transition hover:border-neutral-700 hover:bg-neutral-900/70"
-              >
-                <h3 className="text-base font-semibold text-neutral-100">
-                  {f.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-400">
-                  {f.description}
+        {/* ================= TESTIMONIALS ================= */}
+        <section className="sec">
+          <div className="wrap">
+            <div className="sec-head">
+              <p className="eyebrow reveal">Loved by trackers</p>
+              <h2 className="display reveal d1">People stick with it</h2>
+            </div>
+            <div className="quotes-grid">
+              <div className="quote reveal d1">
+                <div className="stars">★★★★★</div>
+                <p>
+                  &quot;I&apos;ve tried every tracker out there. Snapping a photo
+                  and getting macros back in seconds is the only reason I&apos;ve
+                  logged 90 days straight.&quot;
                 </p>
+                <div className="who">
+                  <span
+                    className="av"
+                    style={{ backgroundImage: "url('https://i.pravatar.cc/88?img=47')" }}
+                  />
+                  <div>
+                    <b>Maya R.</b>
+                    <span>Down 14 lbs</span>
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Screenshots */}
-        <section className="mx-auto max-w-6xl px-6 pb-20">
-          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-            See it in action.
-          </h2>
-          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {screenshots.map((s) => (
-              <div
-                key={s.src}
-                className="overflow-hidden rounded-2xl border border-neutral-800/80 bg-neutral-900"
-              >
-                <Image
-                  src={s.src}
-                  alt={s.alt}
-                  width={1320}
-                  height={2868}
-                  className="h-auto w-full"
-                />
+              <div className="quote reveal d2">
+                <div className="stars">★★★★★</div>
+                <p>
+                  &quot;The AI coach feels like texting a nutritionist who actually
+                  remembers my goals. It nudged me to fix my protein and it
+                  worked.&quot;
+                </p>
+                <div className="who">
+                  <span
+                    className="av"
+                    style={{ backgroundImage: "url('https://i.pravatar.cc/88?img=15')" }}
+                  />
+                  <div>
+                    <b>Daniel K.</b>
+                    <span>Lean bulk, +6 lbs muscle</span>
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="mx-auto max-w-6xl px-6 pb-20">
-          <div className="relative overflow-hidden rounded-3xl border border-neutral-800 bg-gradient-to-br from-neutral-900 to-neutral-950 p-10 sm:p-14">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#a78bfa]/20 blur-3xl"
-            />
-            <div className="relative max-w-2xl">
-              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                Stop fighting your food log.
-              </h2>
-              <p className="mt-4 text-neutral-400">
-                Free to try. No account. Cancel anytime.
-              </p>
-              <div className="mt-8">
-                <AppStoreBadge />
+              <div className="quote reveal d3">
+                <div className="stars">★★★★★</div>
+                <p>
+                  &quot;The dashboard is gorgeous and the widgets keep me honest.
+                  First app that&apos;s made tracking feel light instead of like a
+                  chore.&quot;
+                </p>
+                <div className="who">
+                  <span
+                    className="av"
+                    style={{ backgroundImage: "url('https://i.pravatar.cc/88?img=31')" }}
+                  />
+                  <div>
+                    <b>Priya S.</b>
+                    <span>Maintaining for 1 year</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* FAQ */}
-        <section className="mx-auto max-w-3xl px-6 pb-24">
-          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-            Common questions
-          </h2>
-          <div className="mt-10 divide-y divide-neutral-800 rounded-2xl border border-neutral-800/80 bg-neutral-900/40">
-            {faqs.map((item) => (
-              <details key={item.q} className="group p-6">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-base font-medium text-neutral-100">
-                  {item.q}
-                  <span className="text-neutral-500 transition group-open:rotate-45">
-                    +
+        {/* ================= FAQ ================= */}
+        <section className="sec steps" id="faq">
+          <div className="wrap">
+            <div className="sec-head">
+              <p className="eyebrow reveal">Questions</p>
+              <h2 className="display reveal d1">Good to know</h2>
+            </div>
+            <div className="faq-list">
+              <details className="faq-item reveal" open>
+                <summary>
+                  How accurate is the photo logging?
+                  <span className="q-ico">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                    >
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
                   </span>
                 </summary>
-                <p className="mt-3 text-sm leading-relaxed text-neutral-400">
-                  {item.a}
-                </p>
+                <div className="a">
+                  voidpen&apos;s AI recognizes thousands of common foods and
+                  estimates portion size from the photo. You can always tap to
+                  adjust grams or pick a more specific match — and it learns the
+                  foods you eat most.
+                </div>
               </details>
-            ))}
+              <details className="faq-item reveal">
+                <summary>
+                  Is there a free version?
+                  <span className="q-ico">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                    >
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                  </span>
+                </summary>
+                <div className="a">
+                  Yes. You can log food, track macros and use widgets for free. The
+                  AI coach and unlimited photo logging are part of voidpen Pro,
+                  with a free trial to start.
+                </div>
+              </details>
+              <details className="faq-item reveal">
+                <summary>
+                  Does it work with Apple Health?
+                  <span className="q-ico">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                    >
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                  </span>
+                </summary>
+                <div className="a">
+                  voidpen syncs weight, calories and activity with Apple Health, so
+                  your nutrition data lives alongside the rest of your health
+                  picture.
+                </div>
+              </details>
+              <details className="faq-item reveal">
+                <summary>
+                  Can it set my macro targets for me?
+                  <span className="q-ico">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                    >
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                  </span>
+                </summary>
+                <div className="a">
+                  Absolutely. Tell the app your goal — lose, maintain or gain — and
+                  it calculates calorie and macro targets, then adjusts them as
+                  your weight trends change.
+                </div>
+              </details>
+            </div>
           </div>
-          <p className="mt-8 text-sm text-neutral-500">
-            Still stuck?{" "}
-            <a
-              href="mailto:coduy96@gmail.com"
-              className="text-[#a78bfa] hover:underline"
-            >
-              Email coduy96@gmail.com
-            </a>{" "}
-            and a real human will reply.
-          </p>
+        </section>
+
+        {/* ================= FINAL CTA ================= */}
+        <section className="sec cta-band" id="download">
+          <div className="cta-inner reveal">
+            <h2>
+              Your macros,
+              <br />
+              finally handled
+            </h2>
+            <p>
+              Download <span className="brand-name">voidpen</span> and log your
+              first meal in under five seconds. Free to start.
+            </p>
+            <div className="cta-actions">
+              <AppStoreBadge href={APP_STORE_URL} />
+            </div>
+          </div>
         </section>
       </main>
-      <Footer />
-    </>
+
+      {/* ================= FOOTER ================= */}
+      <footer className="footer">
+        <div className="wrap">
+          <div className="footer-grid">
+            <div>
+              <a className="brand" href="#top">
+                <span className="brand-mark">
+                  <Image
+                    src="/voidpen-logo.png"
+                    alt="voidpen logo"
+                    width={40}
+                    height={40}
+                  />
+                </span>
+                <span className="brand-name">voidpen</span>
+              </a>
+              <p className="footer-about">
+                AI nutrition tracking that keeps up with how you actually eat.
+                Snap, speak, scan or type.
+              </p>
+            </div>
+            <div>
+              <h5>Product</h5>
+              <ul>
+                <li>
+                  <a href="#features">Features</a>
+                </li>
+                <li>
+                  <a href="#how">How it works</a>
+                </li>
+                <li>
+                  <a href="#coach">AI Coach</a>
+                </li>
+                <li>
+                  <a href="#download">Download</a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h5>Company</h5>
+              <ul>
+                <li>
+                  <a href="#">About</a>
+                </li>
+                <li>
+                  <a href="#">Blog</a>
+                </li>
+                <li>
+                  <a href="#">Careers</a>
+                </li>
+                <li>
+                  <a href="#">Press</a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h5>Support</h5>
+              <ul>
+                <li>
+                  <Link href="/support">Help center</Link>
+                </li>
+                <li>
+                  <a href="mailto:info@voidpen.com">info@voidpen.com</a>
+                </li>
+                <li>
+                  <Link href="/privacy">Privacy</Link>
+                </li>
+                <li>
+                  <Link href="/terms">Terms</Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <span>
+              © 2026 <span className="brand-name">voidpen</span>. All rights
+              reserved.
+            </span>
+            <div className="socials">
+              <a href="#" aria-label="X">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.5 3h3l-6.6 7.5L21.8 21h-6l-4.3-5.6L6.4 21H3.3l7-8L2.5 3h6.1l3.9 5.1L17.5 3Zm-1.1 16h1.7L7.8 4.8H6L16.4 19Z" />
+                </svg>
+              </a>
+              <a href="#" aria-label="Instagram">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="18" height="18" rx="5" />
+                  <circle cx="12" cy="12" r="4" />
+                  <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none" />
+                </svg>
+              </a>
+              <a href="#" aria-label="TikTok">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M15 3c.3 2.2 1.7 3.8 4 4v3c-1.5 0-2.9-.5-4-1.2V15a6 6 0 1 1-6-6c.3 0 .7 0 1 .1v3.1A3 3 0 1 0 12 15V3h3Z" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      <LandingEnhancements />
+    </div>
   );
 }
