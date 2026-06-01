@@ -1,11 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 
-const social = {
-  x: "M17.5 3h3l-6.6 7.5L21.8 21h-6l-4.3-5.6L6.4 21H3.3l7-8L2.5 3h6.1l3.9 5.1L17.5 3Zm-1.1 16h1.7L7.8 4.8H6L16.4 19Z",
-  ig: "",
-};
-
 export function Footer() {
   return (
     <footer className="border-t border-line bg-cream">
@@ -102,34 +97,6 @@ export function Footer() {
             © 2026 <span className="font-display lowercase">voidpen</span>. All
             rights reserved.
           </span>
-          <div className="flex gap-3">
-            <a
-              href="#"
-              aria-label="X"
-              className="grid h-9 w-9 place-items-center rounded-full bg-white text-ink-2 shadow-soft transition hover:-translate-y-0.5 hover:text-accent"
-            >
-              <svg viewBox="0 0 24 24" fill="currentColor" className="h-[18px] w-[18px]">
-                <path d={social.x} />
-              </svg>
-            </a>
-            <a
-              href="#"
-              aria-label="Instagram"
-              className="grid h-9 w-9 place-items-center rounded-full bg-white text-ink-2 shadow-soft transition hover:-translate-y-0.5 hover:text-accent"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="h-[18px] w-[18px]"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="5" />
-                <circle cx="12" cy="12" r="4" />
-                <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none" />
-              </svg>
-            </a>
-          </div>
         </div>
       </div>
     </footer>

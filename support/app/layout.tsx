@@ -1,11 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Hanken_Grotesk, Inter } from "next/font/google";
+import { Archivo, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
 
 // Landing-page type system (Archivo = heavy display, Hanken Grotesk = body).
 // Both are variable fonts, so the full weight axis (incl. 900) is available.
@@ -83,7 +78,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${archivo.variable} ${hanken.variable} h-full antialiased`}
+      className={`${archivo.variable} ${hanken.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-cream text-ink font-sans">
         {children}
