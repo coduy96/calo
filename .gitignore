@@ -25,3 +25,10 @@ ios/calorietracker/Resources/Secrets.plist
 .claude/
 ios/build-sim/
 .vercel
+
+# Secrets — never commit App Store Connect / signing keys
+AuthKey_*.p8
+*.p8
+*.mobileprovision
+*.cer
+*.p12
