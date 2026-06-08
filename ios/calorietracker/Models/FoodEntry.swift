@@ -96,6 +96,7 @@ struct FoodEntry: Identifiable, Codable {
     var carbs: Int
     var fat: Int
     let timestamp: Date
+    var modifiedAt: Date?
     /// In-memory image bytes. NEVER persisted directly — see `imageFilename`.
     /// Kept as a property so existing views continue to read `entry.imageData`
     /// unchanged; the on-disk filename is the source of truth for persistence.
@@ -123,6 +124,8 @@ struct FoodEntry: Identifiable, Codable {
     var selectedServingUnit: String?
     var selectedServingQuantity: Double?
 
+    var effectiveModifiedAt: Date { modifiedAt ?? .distantPast }
+
     init(
         id: UUID = UUID(),
         name: String,
@@ -148,7 +151,8 @@ struct FoodEntry: Identifiable, Codable {
         servingSizeGrams: Double? = nil,
         servingUnitOptions: [ServingUnitOption] = [],
         selectedServingUnit: String? = nil,
-        selectedServingQuantity: Double? = nil
+        selectedServingQuantity: Double? = nil,
+        modifiedAt: Date? = Date()
     ) {
         self.id = id
         self.name = name
@@ -175,6 +179,7 @@ struct FoodEntry: Identifiable, Codable {
         self.servingUnitOptions = servingUnitOptions
         self.selectedServingUnit = selectedServingUnit
         self.selectedServingQuantity = selectedServingQuantity
+        self.modifiedAt = modifiedAt
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -186,6 +191,7 @@ struct FoodEntry: Identifiable, Codable {
         case monounsaturatedFat, polyunsaturatedFat
         case cholesterol, sodium, potassium, servingSizeGrams
         case servingUnitOptions, selectedServingUnit, selectedServingQuantity
+        case modifiedAt
     }
 
     init(from decoder: Decoder) throws {
@@ -224,6 +230,7 @@ struct FoodEntry: Identifiable, Codable {
         servingUnitOptions = try container.decodeIfPresent([ServingUnitOption].self, forKey: .servingUnitOptions) ?? []
         selectedServingUnit = try container.decodeIfPresent(String.self, forKey: .selectedServingUnit)
         selectedServingQuantity = try container.decodeIfPresent(Double.self, forKey: .selectedServingQuantity)
+        modifiedAt = try container.decodeIfPresent(Date.self, forKey: .modifiedAt)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -256,6 +263,7 @@ struct FoodEntry: Identifiable, Codable {
         }
         try container.encodeIfPresent(selectedServingUnit, forKey: .selectedServingUnit)
         try container.encodeIfPresent(selectedServingQuantity, forKey: .selectedServingQuantity)
+        try container.encodeIfPresent(modifiedAt, forKey: .modifiedAt)
     }
 
     var timeString: String {

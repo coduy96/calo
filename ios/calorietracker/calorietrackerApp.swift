@@ -9,9 +9,49 @@ import SwiftUI
 import HealthKit
 import WidgetKit
 import Security
+import UIKit
+
+/// Registers the app for remote notifications so `CKSyncEngine` receives live
+/// CloudKit pushes (cross-device updates arrive in the background, not just on
+/// foreground/launch). `Info.plist` already declares
+/// `UIBackgroundModes → remote-notification`.
+///
+/// IMPORTANT — verified against the iOS 26.5 simulator CloudKit `.swiftinterface`
+/// and Apple's `sample-cloudkit-sync-engine`: `CKSyncEngine` exposes NO public
+/// method to forward a remote notification (its public surface is `init`,
+/// `database`, `state`, `fetchChanges`, `sendChanges`, `cancelOperations`). With
+/// `automaticallySync = true` (set in `CloudSyncCoordinator.start()`), the engine
+/// internally creates its own `CKDatabaseSubscription` and consumes the CloudKit
+/// silent push itself once the app is registered. So registration alone is
+/// sufficient — there is NO manual forwarding to do. `didReceiveRemoteNotification`
+/// is implemented only to satisfy the system's background-fetch completion
+/// contract (and to surface non-CloudKit pushes, of which we have none).
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        UIApplication.shared.registerForRemoteNotifications()
+        return true
+    }
+
+    func application(
+        _ application: UIApplication,
+        didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+        fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    ) {
+        // CKSyncEngine (automaticallySync = true) owns its CKDatabaseSubscription
+        // and ingests the CloudKit push directly — there is nothing to forward
+        // here. We report `.noData` because, from this delegate's perspective, no
+        // user-facing payload was handled; the engine's own fetch happens out of
+        // band. See the type doc above for the verification notes.
+        completionHandler(.noData)
+    }
+}
 
 @main
 struct calorietrackerApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var foodStore = FoodStore()
     @State private var weightStore = WeightStore()
     @State private var bodyFatStore = BodyFatStore()
@@ -21,6 +61,7 @@ struct calorietrackerApp: App {
     @State private var chatStore = ChatStore()
     @State private var storeManager = StoreManager()
     @State private var reviewPromptManager = ReviewPromptManager()
+    @State private var syncCoordinator: CloudSyncCoordinator?
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("appearanceMode") private var appearanceMode = "system"
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
@@ -119,6 +160,7 @@ struct calorietrackerApp: App {
                         .environment(chatStore)
                         .environment(storeManager)
                         .environment(reviewPromptManager)
+                        .environment(syncCoordinator)
                 } else {
                     OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
                         .environment(notificationManager)
@@ -147,6 +189,12 @@ struct calorietrackerApp: App {
             }
             .onReceive(NotificationCenter.default.publisher(for: .userProfileDidChange)) { _ in
                 refreshWidgetSnapshot()
+                // Skip the outbound push when this notification was triggered by
+                // the coordinator applying an inbound cloud profile — otherwise
+                // we'd echo the just-received profile straight back up.
+                if let coordinator = syncCoordinator, !coordinator.isApplyingInboundProfile {
+                    coordinator.recordProfileChange()
+                }
             }
         }
         .onChange(of: scenePhase) { _, newPhase in
@@ -354,6 +402,20 @@ struct calorietrackerApp: App {
     private func wireUpAppDataCallbacks() {
         wireUpFoodStoreCallback()
         wireUpHealthKit()
+        wireUpCloudSync()
+    }
+
+    private func wireUpCloudSync() {
+        guard hasCompletedOnboarding, syncCoordinator == nil else { return }
+        let coordinator = CloudSyncCoordinator(
+            stores: SyncStores(food: foodStore, weight: weightStore, bodyFat: bodyFatStore, chat: chatStore)
+        )
+        foodStore.onSyncMutation = { [weak coordinator] in coordinator?.record($0) }
+        weightStore.onSyncMutation = { [weak coordinator] in coordinator?.record($0) }
+        bodyFatStore.onSyncMutation = { [weak coordinator] in coordinator?.record($0) }
+        chatStore.onSyncMutation = { [weak coordinator] in coordinator?.record($0) }
+        syncCoordinator = coordinator
+        coordinator.start()
     }
 
     private func wireUpFoodStoreCallback() {

@@ -17,6 +17,7 @@ class BodyFatStore {
     /// Wired to HealthKitManager.deleteBodyFat(entryID:) so per-entry deletes
     /// also pull the matching HK sample (matched by voidpen_bodyfat_id metadata).
     var onEntryDeleted: ((UUID) -> Void)?
+    var onSyncMutation: ((SyncMutation) -> Void)?
 
     private let storageKey = "bodyFatEntries"
 
@@ -43,9 +44,12 @@ class BodyFatStore {
     }
 
     func addEntry(_ entry: BodyFatEntry) {
+        var entry = entry
+        entry.modifiedAt = Date()
         entries.append(entry)
         saveEntries()
         onEntryAdded?(entry)
+        onSyncMutation?(SyncMutation(kind: .bodyFat, id: entry.id, deleted: false))
         syncProfileBodyFatToLatest()
     }
 
@@ -54,6 +58,7 @@ class BodyFatStore {
         entries.removeAll { $0.id == id }
         saveEntries()
         onEntryDeleted?(id)
+        onSyncMutation?(SyncMutation(kind: .bodyFat, id: id, deleted: true))
         syncProfileBodyFatToLatest()
     }
 
@@ -84,6 +89,24 @@ class BodyFatStore {
         entries.append(contentsOf: external)
         saveEntries()
         syncProfileBodyFatToLatest()
+    }
+
+    // MARK: - Cloud inbound (no echo, LWW)
+
+    func applyCloudUpsert(_ incoming: BodyFatEntry) {
+        if let idx = entries.firstIndex(where: { $0.id == incoming.id }) {
+            guard incoming.effectiveModifiedAt >= entries[idx].effectiveModifiedAt else { return }
+            entries[idx] = incoming
+        } else {
+            entries.append(incoming)
+        }
+        saveEntries()
+    }
+
+    func applyCloudDelete(id: UUID) {
+        guard entries.contains(where: { $0.id == id }) else { return }
+        entries.removeAll { $0.id == id }
+        saveEntries()
     }
 
     private func saveEntries() {

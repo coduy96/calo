@@ -10,13 +10,17 @@ struct BodyFatEntry: Identifiable, Codable {
     let date: Date
     /// Stored as a fraction (0.0–1.0), same convention as `UserProfile.bodyFatPercentage`.
     var bodyFatFraction: Double
+    var modifiedAt: Date?
 
-    init(id: UUID = UUID(), date: Date = .now, bodyFatFraction: Double) {
+    init(id: UUID = UUID(), date: Date = .now, bodyFatFraction: Double, modifiedAt: Date? = Date()) {
         self.id = id
         self.date = date
         self.bodyFatFraction = bodyFatFraction
+        self.modifiedAt = modifiedAt
     }
 
     /// Convenience for views that prefer 0–100 scale (e.g. "23%").
     var bodyFatPercent: Double { bodyFatFraction * 100 }
+
+    var effectiveModifiedAt: Date { modifiedAt ?? .distantPast }
 }
