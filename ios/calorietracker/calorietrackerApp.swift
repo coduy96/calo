@@ -9,9 +9,49 @@ import SwiftUI
 import HealthKit
 import WidgetKit
 import Security
+import UIKit
+
+/// Registers the app for remote notifications so `CKSyncEngine` receives live
+/// CloudKit pushes (cross-device updates arrive in the background, not just on
+/// foreground/launch). `Info.plist` already declares
+/// `UIBackgroundModes → remote-notification`.
+///
+/// IMPORTANT — verified against the iOS 26.5 simulator CloudKit `.swiftinterface`
+/// and Apple's `sample-cloudkit-sync-engine`: `CKSyncEngine` exposes NO public
+/// method to forward a remote notification (its public surface is `init`,
+/// `database`, `state`, `fetchChanges`, `sendChanges`, `cancelOperations`). With
+/// `automaticallySync = true` (set in `CloudSyncCoordinator.start()`), the engine
+/// internally creates its own `CKDatabaseSubscription` and consumes the CloudKit
+/// silent push itself once the app is registered. So registration alone is
+/// sufficient — there is NO manual forwarding to do. `didReceiveRemoteNotification`
+/// is implemented only to satisfy the system's background-fetch completion
+/// contract (and to surface non-CloudKit pushes, of which we have none).
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        UIApplication.shared.registerForRemoteNotifications()
+        return true
+    }
+
+    func application(
+        _ application: UIApplication,
+        didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+        fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    ) {
+        // CKSyncEngine (automaticallySync = true) owns its CKDatabaseSubscription
+        // and ingests the CloudKit push directly — there is nothing to forward
+        // here. We report `.noData` because, from this delegate's perspective, no
+        // user-facing payload was handled; the engine's own fetch happens out of
+        // band. See the type doc above for the verification notes.
+        completionHandler(.noData)
+    }
+}
 
 @main
 struct calorietrackerApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var foodStore = FoodStore()
     @State private var weightStore = WeightStore()
     @State private var bodyFatStore = BodyFatStore()

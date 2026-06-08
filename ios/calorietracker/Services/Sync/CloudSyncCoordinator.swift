@@ -129,6 +129,39 @@ final class CloudSyncCoordinator {
 
     var recordZoneID: CKRecordZone.ID { zoneID }
 
+    // MARK: - Full cloud wipe
+
+    /// Delete the entire CloudKit zone so a "Delete All Data" wipe doesn't get
+    /// resurrected from iCloud on the next sync. Enqueues a zone deletion on the
+    /// engine, then flushes it with `sendChanges()` so the delete actually goes
+    /// out to the server before the caller clears local state.
+    ///
+    /// `async` because `CKSyncEngine.sendChanges(_:)` is awaitable — awaiting it
+    /// guarantees the zone-delete is sent (or at least attempted) before the
+    /// Delete-All-Data flow tears down `ckSyncEngineState` and local stores.
+    /// Without the flush the delete would only leave on the next `automaticallySync`
+    /// opportunity, which may never come if the user immediately re-onboards.
+    ///
+    /// On the re-onboard path the engine is later recreated with nil state and an
+    /// empty zone is recreated on first push; `pushAllLocal()` then uploads the
+    /// (now empty) stores, so nothing resurrects.
+    ///
+    /// If `sendChanges()` throws (offline, not authenticated), the delete stays
+    /// pending in the engine's serialized state and will flush on the next sync
+    /// opportunity — the local wipe still proceeds either way.
+    func deleteAllCloudData() async {
+        guard let engine else { return }
+        engine.state.add(pendingDatabaseChanges: [.deleteZone(zoneID)])
+        do {
+            // Default scope `.all` flushes the pending database change (the zone
+            // delete) along with any pending record-zone changes; the zone delete
+            // supersedes everything in it server-side.
+            try await engine.sendChanges()
+        } catch {
+            log.error("deleteAllCloudData: sendChanges failed, zone delete left pending: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
     /// Mutate `status` from the delegate extension.
     func setStatus(_ newStatus: CloudSyncStatus) { status = newStatus }
 

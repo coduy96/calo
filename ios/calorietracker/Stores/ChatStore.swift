@@ -115,9 +115,11 @@ class ChatStore {
         threads = []
         save()
         // NOTE: reset() does NOT emit per-thread delete mutations intentionally.
-        // A full wipe is handled at the sync-coordinator level; emitting N individual
-        // delete mutations here would be noisy and incorrect (IDs are gone by the time
-        // the coordinator would act on them).
+        // A full wipe is handled by deleting the whole CloudKit zone via
+        // CloudSyncCoordinator.deleteAllCloudData() (called from the Delete All Data
+        // flow before local stores are cleared); emitting N individual delete
+        // mutations here would be noisy and incorrect (IDs are gone by the time the
+        // coordinator would act on them, and the zone delete supersedes them anyway).
     }
 
     // MARK: - Cloud inbound (no echo, LWW by updatedAt)

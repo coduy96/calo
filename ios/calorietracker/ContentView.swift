@@ -3156,29 +3156,42 @@ struct ProfileView: View {
             .alert("Delete All Data", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete Everything", role: .destructive) {
-                    // Delete All Data is local-only. We intentionally do NOT touch Apple
-                    // Health samples — that data is personal and belongs to the user, not
-                    // this app's storage. If they want HK cleaned up they can do it from
-                    // the Health app's Sources → Voidpen screen.
-                    foodStore.replaceAllEntries([])
-                    weightStore.replaceAllEntries([])
-                    // Wipe the food-image folder defensively — replaceAllEntries
-                    // already cleans per-entry files, but a belt-and-braces
-                    // deleteAll catches any orphans from earlier crash recovery.
-                    FoodImageStore.shared.deleteAll()
-                    WeightPhotoStore.shared.deleteAll()
-                    // Cancel all notifications
-                    notificationManager.cancelAllNotifications()
-                    // Wipe all persisted data
-                    let domain = Bundle.main.bundleIdentifier ?? ""
-                    UserDefaults.standard.removePersistentDomain(forName: domain)
-                    chatStore.reset()
-                    // Wipe the widget snapshot out of the App Group container —
-                    // it lives outside UserDefaults.standard and would otherwise
-                    // keep showing the previous profile's numbers on the widget.
-                    WidgetSnapshot.clear()
-                    WidgetCenter.shared.reloadAllTimelines()
-                    hasCompletedOnboarding = false
+                    // Delete All Data does NOT touch Apple Health samples — that data is
+                    // personal and belongs to the user, not this app's storage. If they
+                    // want HK cleaned up they can do it from the Health app's
+                    // Sources → Voidpen screen.
+                    //
+                    // The CloudKit zone delete must be enqueued and flushed BEFORE we
+                    // clear local state, because `removePersistentDomain` below wipes
+                    // `ckSyncEngineState` — clearing it first would orphan the pending
+                    // delete. We therefore run the whole wipe inside a Task so we can
+                    // `await` the zone delete first; without the server-side delete the
+                    // data would re-download from iCloud after re-onboarding. If
+                    // `syncCoordinator` is nil (sync never started), the wipe is
+                    // local-only — that's fine.
+                    Task { @MainActor in
+                        await syncCoordinator?.deleteAllCloudData()
+
+                        foodStore.replaceAllEntries([])
+                        weightStore.replaceAllEntries([])
+                        // Wipe the food-image folder defensively — replaceAllEntries
+                        // already cleans per-entry files, but a belt-and-braces
+                        // deleteAll catches any orphans from earlier crash recovery.
+                        FoodImageStore.shared.deleteAll()
+                        WeightPhotoStore.shared.deleteAll()
+                        // Cancel all notifications
+                        notificationManager.cancelAllNotifications()
+                        // Wipe all persisted data (this also clears ckSyncEngineState).
+                        let domain = Bundle.main.bundleIdentifier ?? ""
+                        UserDefaults.standard.removePersistentDomain(forName: domain)
+                        chatStore.reset()
+                        // Wipe the widget snapshot out of the App Group container —
+                        // it lives outside UserDefaults.standard and would otherwise
+                        // keep showing the previous profile's numbers on the widget.
+                        WidgetSnapshot.clear()
+                        WidgetCenter.shared.reloadAllTimelines()
+                        hasCompletedOnboarding = false
+                    }
                 }
             } message: {
                 Text("This will permanently delete all your data including food logs, weight entries, and profile. This action cannot be undone.")
