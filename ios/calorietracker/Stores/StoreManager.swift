@@ -357,6 +357,28 @@ class StoreManager {
         }
     }
 
+    /// Savings of the yearly plan vs the monthly plan annualized (×12),
+    /// falling back to weekly (×52) when there is no monthly plan.
+    /// Returns nil when not computable or when savings would be < 1%.
+    nonisolated static func savingsPercent(yearly: Decimal, monthly: Decimal?, weekly: Decimal?) -> Int? {
+        let yearlyValue = (yearly as NSDecimalNumber).doubleValue
+        guard yearlyValue > 0 else { return nil }
+
+        let baseline: Double?
+        if let monthly {
+            baseline = (monthly as NSDecimalNumber).doubleValue * 12
+        } else if let weekly {
+            baseline = (weekly as NSDecimalNumber).doubleValue * 52
+        } else {
+            baseline = nil
+        }
+        guard let baseline, baseline > 0 else { return nil }
+
+        let percent = (1 - yearlyValue / baseline) * 100
+        let rounded = Int(percent.rounded())
+        return rounded >= 1 ? rounded : nil
+    }
+
     private static func title(forProductID productID: String) -> String {
         switch productID {
         case yearlyID: return "Yearly"
