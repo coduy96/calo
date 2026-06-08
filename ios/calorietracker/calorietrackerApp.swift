@@ -21,6 +21,7 @@ struct calorietrackerApp: App {
     @State private var chatStore = ChatStore()
     @State private var storeManager = StoreManager()
     @State private var reviewPromptManager = ReviewPromptManager()
+    @State private var syncCoordinator: CloudSyncCoordinator?
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("appearanceMode") private var appearanceMode = "system"
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
@@ -147,6 +148,7 @@ struct calorietrackerApp: App {
             }
             .onReceive(NotificationCenter.default.publisher(for: .userProfileDidChange)) { _ in
                 refreshWidgetSnapshot()
+                syncCoordinator?.recordProfileChange()
             }
         }
         .onChange(of: scenePhase) { _, newPhase in
@@ -354,6 +356,20 @@ struct calorietrackerApp: App {
     private func wireUpAppDataCallbacks() {
         wireUpFoodStoreCallback()
         wireUpHealthKit()
+        wireUpCloudSync()
+    }
+
+    private func wireUpCloudSync() {
+        guard hasCompletedOnboarding, syncCoordinator == nil else { return }
+        let coordinator = CloudSyncCoordinator(
+            stores: SyncStores(food: foodStore, weight: weightStore, bodyFat: bodyFatStore, chat: chatStore)
+        )
+        foodStore.onSyncMutation = { [weak coordinator] in coordinator?.record($0) }
+        weightStore.onSyncMutation = { [weak coordinator] in coordinator?.record($0) }
+        bodyFatStore.onSyncMutation = { [weak coordinator] in coordinator?.record($0) }
+        chatStore.onSyncMutation = { [weak coordinator] in coordinator?.record($0) }
+        syncCoordinator = coordinator
+        coordinator.start()
     }
 
     private func wireUpFoodStoreCallback() {
