@@ -59,13 +59,24 @@ struct InlinePaywallStepView: View {
 
     private var personalizedHeader: some View {
         VStack(spacing: 14) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 38))
-                .foregroundStyle(
-                    LinearGradient(colors: AppColors.calorieGradient,
-                                   startPoint: .topLeading,
-                                   endPoint: .bottomTrailing)
-                )
+            ZStack {
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [AppColors.calorie.opacity(0.28), AppColors.calorie.opacity(0.0)],
+                            center: .center, startRadius: 3, endRadius: 46
+                        )
+                    )
+                    .frame(width: 92, height: 92)
+                Circle()
+                    .fill(AppColors.appCard)
+                    .frame(width: 64, height: 64)
+                    .shadow(color: AppColors.calorie.opacity(0.22), radius: 8, y: 3)
+                Image("onboardingLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+            }
 
             Text(headlineCopy)
                 .font(.system(size: 26, weight: .bold, design: .rounded))
