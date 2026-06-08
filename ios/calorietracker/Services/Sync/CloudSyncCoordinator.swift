@@ -26,6 +26,12 @@ final class CloudSyncCoordinator {
 
     private(set) var status: CloudSyncStatus = .idle
 
+    /// True only while `applyIncomingProfile` is writing an inbound cloud profile
+    /// to disk. The profile save posts `.userProfileDidChange`, which the app's
+    /// `.onReceive` would otherwise turn into a redundant outbound push (an echo).
+    /// The app reads this via `isApplyingInboundProfile` to skip that push.
+    private(set) var isApplyingInboundProfile = false
+
     let stores: SyncStores
     private let container: CKContainer
     private let zoneID: CKRecordZone.ID
@@ -48,10 +54,24 @@ final class CloudSyncCoordinator {
         config.automaticallySync = true
         self.engine = CKSyncEngine(config)
         status = .syncing
-        Task { await self.pushAllLocalIfFreshZone() }
+        Task { await self.pushAllLocal() }
+    }
+
+    /// Tear down the live engine and rebuild it from persisted state. Called on
+    /// account change after `removeObject(forKey: stateKey)` so the rebuilt
+    /// engine starts with `stateSerialization: nil` (no stale sync tokens bound
+    /// to the previous account). `start()`'s `guard engine == nil` makes the
+    /// rebuild safe: nil-ing first lets `start()` create a fresh engine.
+    func resetEngine() {
+        engine = nil
+        start()
     }
 
     /// Record an outbound local mutation reported by a store.
+    ///
+    /// If no engine exists yet (mutation arrived before `start()`), the change is
+    /// dropped here — but that's fine: `pushAllLocal()` runs at startup and reads
+    /// the current store state, so any pre-`start()` mutation is still uploaded.
     func record(_ mutation: SyncMutation) {
         guard let engine else { return }
         let recordID = CKRecord.ID(recordName: mutation.kind.recordName(for: mutation.id), zoneID: zoneID)
@@ -87,10 +107,11 @@ final class CloudSyncCoordinator {
 
     // MARK: - Full push
 
-    /// Queue every local record for upload. Used on first run / fresh zone, on
-    /// sign-in, and after zone re-creation. The engine dedupes and LWW makes
-    /// redundant pushes no-ops, so this is safe to call repeatedly.
-    func pushAllLocalIfFreshZone() async {
+    /// Queue every local record for upload. Used at startup, on sign-in/account
+    /// switch, and after zone re-creation. This unconditionally enqueues all
+    /// records; the engine dedupes and LWW makes redundant pushes no-ops, so it
+    /// is safe to call repeatedly.
+    func pushAllLocal() async {
         guard let engine else { return }
         var changes: [CKSyncEngine.PendingRecordZoneChange] = []
         for e in stores.food.entries { changes.append(.saveRecord(id(.food, e.id))) }
@@ -110,4 +131,7 @@ final class CloudSyncCoordinator {
 
     /// Mutate `status` from the delegate extension.
     func setStatus(_ newStatus: CloudSyncStatus) { status = newStatus }
+
+    /// Set the inbound-profile echo guard from the delegate extension.
+    func setApplyingInboundProfile(_ applying: Bool) { isApplyingInboundProfile = applying }
 }

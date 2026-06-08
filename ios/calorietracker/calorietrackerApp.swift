@@ -148,7 +148,12 @@ struct calorietrackerApp: App {
             }
             .onReceive(NotificationCenter.default.publisher(for: .userProfileDidChange)) { _ in
                 refreshWidgetSnapshot()
-                syncCoordinator?.recordProfileChange()
+                // Skip the outbound push when this notification was triggered by
+                // the coordinator applying an inbound cloud profile — otherwise
+                // we'd echo the just-received profile straight back up.
+                if let coordinator = syncCoordinator, !coordinator.isApplyingInboundProfile {
+                    coordinator.recordProfileChange()
+                }
             }
         }
         .onChange(of: scenePhase) { _, newPhase in

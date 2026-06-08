@@ -65,6 +65,12 @@ extension CloudSyncCoordinator: CKSyncEngineDelegate {
             for failed in e.failedRecordSaves {
                 handleSendFailure(record: failed.record, error: failed.error, syncEngine: syncEngine)
             }
+            // `failedRecordDeletes` is a [CKRecord.ID: CKError] dictionary on
+            // SentRecordZoneChanges. A delete can't raise `.serverRecordChanged`,
+            // so there's no LWW to apply here — the record is already gone locally.
+            for (recordID, error) in e.failedRecordDeletes {
+                handleDeleteFailure(recordID: recordID, error: error, syncEngine: syncEngine)
+            }
         case .willFetchChanges, .willSendChanges:
             setStatus(.syncing)
         case .didFetchChanges, .didSendChanges:
@@ -95,7 +101,12 @@ extension CloudSyncCoordinator: CKSyncEngineDelegate {
         guard let incoming = ProfileRecordMapper.profile(from: record) else { return }
         let localStamp = UserProfile.load()?.effectiveModifiedAt ?? .distantPast
         guard incoming.effectiveModifiedAt >= localStamp else { return }
+        // `savePreservingTimestamp()` posts `.userProfileDidChange`; guard the
+        // app's listener so applying this inbound profile doesn't trigger a
+        // redundant outbound push (echo).
+        setApplyingInboundProfile(true)
         incoming.savePreservingTimestamp()
+        setApplyingInboundProfile(false)
     }
 
     private func applyIncomingDelete(recordName: String) {
@@ -118,6 +129,12 @@ extension CloudSyncCoordinator: CKSyncEngineDelegate {
         case .serverRecordChanged:
             // Last-writer-wins by modifiedAt. If the server copy is newer (or
             // equal), accept it locally; otherwise re-queue our save to overwrite.
+            //
+            // Note: chat records carry no top-level `modifiedAt` field — their LWW
+            // key is `updatedAt` inside the JSON payload — so for chat the
+            // `localStamp` lookup below is nil and this falls through to the
+            // re-enqueue branch. That's acceptable: inbound chat LWW still applies
+            // correctly via `updatedAt` in `applyIncoming` / the store upsert.
             if let serverRecord = error.serverRecord,
                let serverStamp = serverRecord["modifiedAt"] as? Date,
                let localStamp = record["modifiedAt"] as? Date,
@@ -129,7 +146,7 @@ extension CloudSyncCoordinator: CKSyncEngineDelegate {
         case .zoneNotFound, .userDeletedZone:
             // Zone is gone server-side. Re-create it and push everything again.
             syncEngine.state.add(pendingDatabaseChanges: [.saveZone(CKRecordZone(zoneID: recordZoneID))])
-            Task { await pushAllLocalIfFreshZone() }
+            Task { await pushAllLocal() }
         case .notAuthenticated, .accountTemporarilyUnavailable:
             setStatus(.unavailable)
         case .quotaExceeded:
@@ -139,18 +156,61 @@ extension CloudSyncCoordinator: CKSyncEngineDelegate {
         }
     }
 
+    /// Handle a failed DELETE reported in `failedRecordDeletes`. The record is
+    /// already gone locally, so there's nothing to re-push per-record. On a
+    /// missing/deleted zone we recreate it and re-push all surviving local
+    /// records; everything else is logged.
+    private func handleDeleteFailure(recordID: CKRecord.ID, error: CKError, syncEngine: CKSyncEngine) {
+        switch error.code {
+        case .zoneNotFound, .userDeletedZone:
+            // Zone is gone server-side. Re-create it and re-push all surviving
+            // local records. The deleted record is already gone locally, so it
+            // simply won't be among them — no per-record re-push needed.
+            syncEngine.state.add(pendingDatabaseChanges: [.saveZone(CKRecordZone(zoneID: recordZoneID))])
+            Task { await pushAllLocal() }
+        case .notAuthenticated, .accountTemporarilyUnavailable:
+            setStatus(.unavailable)
+        case .unknownItem:
+            // Server already has no such record — the delete is effectively done.
+            break
+        default:
+            log.error("Unhandled delete failure for \(recordID.recordName, privacy: .public): \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
     // MARK: - Account changes
 
     private func handleAccountChange(_ e: CKSyncEngine.Event.AccountChange) async {
+        // CKSyncEngine does NOT reset its own in-memory state on an account
+        // change — per Apple's `sample-cloudkit-sync-engine`, the app must
+        // re-initialize the engine to flush state bound to the previous account.
+        // We clear persisted state first, then rebuild the engine via
+        // `resetEngine()` so it comes back with `stateSerialization: nil` (no
+        // stale sync tokens). The teardown/rebuild and re-push are dispatched on
+        // a fresh task hop because `handleEvent` is mid-callback on the live
+        // engine — deallocating it inside its own callback would be unsafe.
         switch e.changeType {
         case .signIn:
             // New account signed in: push all local data up to the new account.
-            await pushAllLocalIfFreshZone()
-        case .switchAccounts, .signOut:
-            // Different/no account: drop the engine's sync state so we don't
-            // mingle data, but keep the local data intact on this device.
+            // No engine reset needed — there was no prior account state to flush.
+            await pushAllLocal()
+        case .switchAccounts:
+            // Different account is now active. Drop persisted state, rebuild the
+            // engine, and re-push all local data so the newly-active account
+            // receives this device's data. Local data is kept intact.
             UserDefaults.standard.removeObject(forKey: CloudSyncCoordinator.stateKey)
-            setStatus(.unavailable)
+            Task { @MainActor in
+                self.resetEngine()
+                await self.pushAllLocal()
+            }
+        case .signOut:
+            // No account: drop persisted state and rebuild the engine so no
+            // stale tokens linger, then mark unavailable. Local data is kept.
+            UserDefaults.standard.removeObject(forKey: CloudSyncCoordinator.stateKey)
+            Task { @MainActor in
+                self.resetEngine()
+                self.setStatus(.unavailable)
+            }
         @unknown default:
             break
         }
