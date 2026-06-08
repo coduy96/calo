@@ -6,6 +6,7 @@ class WeightStore {
     private(set) var entries: [WeightEntry] = []
     var onEntryAdded: ((WeightEntry) -> Void)?
     var onEntryDeleted: ((UUID) -> Void)?
+    var onSyncMutation: ((SyncMutation) -> Void)?
 
     private let storageKey = "weightEntries"
 
@@ -37,10 +38,13 @@ class WeightStore {
     }
 
     func addEntry(_ entry: WeightEntry) {
+        var entry = entry
+        entry.modifiedAt = Date()
         let previousLatest = entries.sorted { $0.date > $1.date }.first
         entries.append(entry)
         saveEntries()
         onEntryAdded?(entry)
+        onSyncMutation?(SyncMutation(kind: .weight, id: entry.id, deleted: false))
 
         syncProfileWeightToLatest()
 
@@ -66,6 +70,7 @@ class WeightStore {
         }
         saveEntries()
         onEntryDeleted?(id)
+        onSyncMutation?(SyncMutation(kind: .weight, id: id, deleted: true))
         syncProfileWeightToLatest()
     }
 
@@ -95,6 +100,25 @@ class WeightStore {
         entries.append(contentsOf: external)
         saveEntries()
         syncProfileWeightToLatest()
+    }
+
+    // MARK: - Cloud inbound (no echo, LWW)
+
+    func applyCloudUpsert(_ incoming: WeightEntry) {
+        if let idx = entries.firstIndex(where: { $0.id == incoming.id }) {
+            guard incoming.effectiveModifiedAt >= entries[idx].effectiveModifiedAt else { return }
+            entries[idx] = incoming
+        } else {
+            entries.append(incoming)
+        }
+        saveEntries()
+    }
+
+    func applyCloudDelete(id: UUID) {
+        guard let entry = entries.first(where: { $0.id == id }) else { return }
+        if let filename = entry.photoFilename { WeightPhotoStore.shared.delete(filename: filename) }
+        entries.removeAll { $0.id == id }
+        saveEntries()
     }
 
     private func saveEntries() {
