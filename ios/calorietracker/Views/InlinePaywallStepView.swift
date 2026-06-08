@@ -337,7 +337,6 @@ struct InlinePaywallStepView: View {
 
     private var trustStrip: some View {
         HStack(spacing: 8) {
-            trustPill(icon: "lock.shield.fill", label: String(localized: "Private. On-device."))
             trustPill(icon: "arrow.uturn.backward.circle.fill", label: String(localized: "Cancel anytime"))
             trustPill(icon: "gift.fill", label: String(localized: "3 days free"))
         }
