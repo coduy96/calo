@@ -90,6 +90,7 @@ class ChatStore {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         threads[idx].title = trimmed
+        threads[idx].updatedAt = .now
         save()
         onSyncMutation?(SyncMutation(kind: .chat, id: threadID, deleted: false))
     }

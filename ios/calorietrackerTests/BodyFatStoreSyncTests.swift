@@ -12,7 +12,7 @@ struct BodyFatStoreSyncTests {
         let store = freshStore()
         var m: SyncMutation?; store.onSyncMutation = { m = $0 }
         let e = BodyFatEntry(bodyFatFraction: 0.2); store.addEntry(e)
-        #expect(m?.kind == .bodyFat); #expect(m?.deleted == false)
+        #expect(m?.kind == .bodyFat); #expect(m?.id == e.id); #expect(m?.deleted == false)
     }
     @Test func applyCloudUpsertLWWNoEcho() {
         let store = freshStore()
