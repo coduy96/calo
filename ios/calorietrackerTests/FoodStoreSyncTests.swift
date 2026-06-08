@@ -96,4 +96,32 @@ import Foundation
         #expect(m?.deleted == true)
         #expect(m?.kind == .favorite)
     }
+
+    @Test func applyCloudUpsertRepopulatesImageDataFromDisk() {
+        let store = freshStore()
+        let id = UUID()
+        // Image bytes already on disk under the entry's id — exactly what
+        // FoodRecordMapper writes when it decodes a cloud record's CKAsset.
+        let jpeg = Data([0xFF, 0xD8, 0xFF, 0xD9])
+        let filename = FoodImageStore.shared.store(data: jpeg, for: id)!
+        defer { FoodImageStore.shared.delete(filename: filename) }
+        // A cloud-decoded entry arrives with imageData == nil but imageFilename set.
+        let incoming = FoodEntry(id: id, name: "Photo meal", calories: 1, protein: 0, carbs: 0, fat: 0,
+                                 imageData: nil, imageFilename: filename, source: .manual, modifiedAt: Date())
+        store.applyCloudUpsert(incoming)
+        // The food-log UI renders entry.imageData, so it must be repopulated from disk.
+        #expect(store.entries.first { $0.id == id }?.imageData == jpeg)
+    }
+
+    @Test func applyCloudFavoriteUpsertRepopulatesImageDataFromDisk() {
+        let store = freshStore()
+        let id = UUID()
+        let jpeg = Data([0xFF, 0xD8, 0xFF, 0xD9])
+        let filename = FoodImageStore.shared.store(data: jpeg, for: id)!
+        defer { FoodImageStore.shared.delete(filename: filename) }
+        let incoming = FoodEntry(id: id, name: "Fav photo", calories: 1, protein: 0, carbs: 0, fat: 0,
+                                 imageData: nil, imageFilename: filename, source: .manual, modifiedAt: Date())
+        store.applyCloudFavoriteUpsert(incoming)
+        #expect(store.favorites.first { $0.id == id }?.imageData == jpeg)
+    }
 }

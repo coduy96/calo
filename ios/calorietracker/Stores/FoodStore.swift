@@ -315,6 +315,7 @@ class FoodStore {
     func applyCloudUpsert(_ incoming: FoodEntry) {
         var incoming = incoming
         offloadImageToDiskIfNeeded(&incoming)
+        repopulateImageDataFromDisk(&incoming)
         if let idx = entries.firstIndex(where: { $0.id == incoming.id }) {
             // >= so an equal-timestamp incoming wins (tolerates cross-device clock skew).
             guard incoming.effectiveModifiedAt >= entries[idx].effectiveModifiedAt else { return }
@@ -337,9 +338,20 @@ class FoodStore {
         onEntriesChanged?()
     }
 
+    /// Cloud-decoded entries arrive with `imageData == nil` (the JPEG bytes live on
+    /// disk, referenced by `imageFilename`). Reload the bytes into memory so the
+    /// food-log UI — which renders `entry.imageData` directly — shows the photo
+    /// immediately, and so re-applying a cloud copy (e.g. the self-echo on relaunch)
+    /// never blanks an already-visible photo.
+    private func repopulateImageDataFromDisk(_ entry: inout FoodEntry) {
+        guard entry.imageData == nil, let filename = entry.imageFilename else { return }
+        entry.imageData = FoodImageStore.shared.load(filename: filename)
+    }
+
     func applyCloudFavoriteUpsert(_ incoming: FoodEntry) {
         var incoming = incoming
         offloadImageToDiskIfNeeded(&incoming)
+        repopulateImageDataFromDisk(&incoming)
         if let idx = favorites.firstIndex(where: { $0.id == incoming.id }) {
             // >= so an equal-timestamp incoming wins (tolerates cross-device clock skew).
             guard incoming.effectiveModifiedAt >= favorites[idx].effectiveModifiedAt else { return }
