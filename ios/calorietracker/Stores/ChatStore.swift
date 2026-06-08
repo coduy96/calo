@@ -8,6 +8,7 @@ import SwiftUI
 @Observable
 class ChatStore {
     private(set) var threads: [ChatThread] = []
+    var onSyncMutation: ((SyncMutation) -> Void)?
 
     private let storageKey = "coachChatThreads"
     /// Per-thread cap on the trailing slice sent to the LLM. The system prompt is built
@@ -51,6 +52,7 @@ class ChatStore {
         let draft = ChatThread()
         threads.append(draft)
         save()
+        onSyncMutation?(SyncMutation(kind: .chat, id: draft.id, deleted: false))
         return draft
     }
 
@@ -63,6 +65,7 @@ class ChatStore {
             threads[idx].title = autoTitle(from: message.content)
         }
         save()
+        onSyncMutation?(SyncMutation(kind: .chat, id: threadID, deleted: false))
     }
 
     /// Replace the last assistant message in a thread. Useful for error-fix retries.
@@ -79,6 +82,7 @@ class ChatStore {
         )
         threads[tIdx].updatedAt = .now
         save()
+        onSyncMutation?(SyncMutation(kind: .chat, id: threadID, deleted: false))
     }
 
     func rename(threadID: UUID, to title: String) {
@@ -87,11 +91,13 @@ class ChatStore {
         guard !trimmed.isEmpty else { return }
         threads[idx].title = trimmed
         save()
+        onSyncMutation?(SyncMutation(kind: .chat, id: threadID, deleted: false))
     }
 
     func delete(threadID: UUID) {
         threads.removeAll { $0.id == threadID }
         save()
+        onSyncMutation?(SyncMutation(kind: .chat, id: threadID, deleted: true))
     }
 
     /// Removes the thread only if it has no messages — used to clean up drafts that
@@ -101,10 +107,33 @@ class ChatStore {
         guard threads[idx].messages.isEmpty else { return }
         threads.remove(at: idx)
         save()
+        onSyncMutation?(SyncMutation(kind: .chat, id: threadID, deleted: true))
     }
 
     func reset() {
         threads = []
+        save()
+        // NOTE: reset() does NOT emit per-thread delete mutations intentionally.
+        // A full wipe is handled at the sync-coordinator level; emitting N individual
+        // delete mutations here would be noisy and incorrect (IDs are gone by the time
+        // the coordinator would act on them).
+    }
+
+    // MARK: - Cloud inbound (no echo, LWW by updatedAt)
+
+    func applyCloudUpsert(_ incoming: ChatThread) {
+        if let idx = threads.firstIndex(where: { $0.id == incoming.id }) {
+            guard incoming.updatedAt >= threads[idx].updatedAt else { return }
+            threads[idx] = incoming
+        } else {
+            threads.append(incoming)
+        }
+        save()
+    }
+
+    func applyCloudDelete(id: UUID) {
+        guard threads.contains(where: { $0.id == id }) else { return }
+        threads.removeAll { $0.id == id }
         save()
     }
 
