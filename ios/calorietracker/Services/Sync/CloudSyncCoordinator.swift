@@ -36,6 +36,15 @@ final class CloudSyncCoordinator {
     private let container: CKContainer
     private let zoneID: CKRecordZone.ID
     private var engine: CKSyncEngine?
+
+    /// Records reconstructed during conflict resolution that must be sent WITH
+    /// the server's change tag (not a fresh tagless record). Keyed by recordID
+    /// and consumed once by `nextRecordZoneChangeBatch`. Without this, a save
+    /// that loses a `serverRecordChanged` race would re-send a tagless record
+    /// and conflict again forever — the loop that prevented chat *updates* from
+    /// ever syncing.
+    @ObservationIgnored
+    var resolvedConflictRecords: [CKRecord.ID: CKRecord] = [:]
     let log = Logger(subsystem: "com.cotrinhhienduy.calorietracker", category: "sync")
 
     init(stores: SyncStores) {

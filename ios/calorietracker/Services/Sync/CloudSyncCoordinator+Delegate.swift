@@ -15,14 +15,23 @@ extension CloudSyncCoordinator: CKSyncEngineDelegate {
         }
         guard !pending.isEmpty else { return nil }
         return await CKSyncEngine.RecordZoneChangeBatch(pendingChanges: pending) { recordID in
-            await self.materialize(recordID: recordID)
+            // A conflict-resolved record (carrying the server's change tag) takes
+            // precedence over a freshly built one, so the retried save lands
+            // instead of conflicting again.
+            if let resolved = await self.takeResolvedConflictRecord(recordID) { return resolved }
+            return await self.buildLocalRecord(recordID)
         }
+    }
+
+    /// Pop a conflict-resolved record queued by `handleSendFailure`, if any.
+    func takeResolvedConflictRecord(_ recordID: CKRecord.ID) -> CKRecord? {
+        resolvedConflictRecords.removeValue(forKey: recordID)
     }
 
     /// Build a fresh `CKRecord` from CURRENT store state. Returns nil to drop a
     /// pending change whose underlying model no longer exists (the engine then
     /// discards it rather than uploading stale data).
-    private func materialize(recordID: CKRecord.ID) async -> CKRecord? {
+    func buildLocalRecord(_ recordID: CKRecord.ID) -> CKRecord? {
         let name = recordID.recordName
         if name == SyncRecordKind.profile.fixedRecordName {
             guard let profile = UserProfile.load() else { return nil }
@@ -127,21 +136,30 @@ extension CloudSyncCoordinator: CKSyncEngineDelegate {
     private func handleSendFailure(record: CKRecord, error: CKError, syncEngine: CKSyncEngine) {
         switch error.code {
         case .serverRecordChanged:
-            // Last-writer-wins by modifiedAt. If the server copy is newer (or
-            // equal), accept it locally; otherwise re-queue our save to overwrite.
-            //
-            // Note: chat records carry no top-level `modifiedAt` field — their LWW
-            // key is `updatedAt` inside the JSON payload — so for chat the
-            // `localStamp` lookup below is nil and this falls through to the
-            // re-enqueue branch. That's acceptable: inbound chat LWW still applies
-            // correctly via `updatedAt` in `applyIncoming` / the store upsert.
-            if let serverRecord = error.serverRecord,
-               let serverStamp = serverRecord["modifiedAt"] as? Date,
-               let localStamp = record["modifiedAt"] as? Date,
-               localStamp <= serverStamp {
+            // The server already has a different version of this record than the
+            // one we tried to save (our materialized record is tagless, so any
+            // save to an existing record lands here).
+            guard let serverRecord = error.serverRecord else {
+                syncEngine.state.add(pendingRecordZoneChanges: [.saveRecord(record.recordID)])
+                return
+            }
+            let serverStamp = serverRecord["modifiedAt"] as? Date
+            let localStamp = record["modifiedAt"] as? Date
+            if let serverStamp, let localStamp, localStamp <= serverStamp {
+                // Server copy is newer (or equal) — accept it locally.
                 applyIncoming(serverRecord)
             } else {
-                syncEngine.state.add(pendingRecordZoneChanges: [.saveRecord(record.recordID)])
+                // Local wins: newer, or no comparable timestamp (e.g. chat, whose
+                // LWW key lives inside its JSON payload). Re-send our CURRENT field
+                // values ON TOP of the server record so the retried save carries
+                // the server's change tag. Re-queuing a fresh tagless record (the
+                // old behavior) would hit serverRecordChanged again forever — the
+                // loop that stopped chat updates (and any edited record) from
+                // ever syncing.
+                guard let fresh = buildLocalRecord(record.recordID) else { return }
+                for key in fresh.allKeys() { serverRecord[key] = fresh[key] }
+                resolvedConflictRecords[serverRecord.recordID] = serverRecord
+                syncEngine.state.add(pendingRecordZoneChanges: [.saveRecord(serverRecord.recordID)])
             }
         case .zoneNotFound, .userDeletedZone:
             // Zone is gone server-side. Re-create it and push everything again.
