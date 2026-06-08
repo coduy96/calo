@@ -135,6 +135,9 @@ struct UserProfile: Codable, Equatable {
     var customProtein: Int?
     var customFat: Int?
     var customCarbs: Int?
+    var modifiedAt: Date?
+
+    var effectiveModifiedAt: Date { modifiedAt ?? .distantPast }
 
     var displayName: String {
         if let name, !name.isEmpty { return name }
@@ -238,7 +241,8 @@ struct UserProfile: Codable, Equatable {
         customCalories: nil,
         customProtein: nil,
         customFat: nil,
-        customCarbs: nil
+        customCarbs: nil,
+        modifiedAt: nil
     )
 
     // MARK: - Persistence
@@ -251,6 +255,17 @@ struct UserProfile: Codable, Equatable {
     }
 
     func save() {
+        var copy = self
+        copy.modifiedAt = Date()
+        if let data = try? JSONEncoder().encode(copy) {
+            UserDefaults.standard.set(data, forKey: "userProfile")
+            NotificationCenter.default.post(name: .userProfileDidChange, object: nil)
+        }
+    }
+
+    /// Save WITHOUT bumping modifiedAt — used when applying a cloud profile so the
+    /// incoming timestamp is preserved (otherwise it would always look "newer").
+    func savePreservingTimestamp() {
         if let data = try? JSONEncoder().encode(self) {
             UserDefaults.standard.set(data, forKey: "userProfile")
             NotificationCenter.default.post(name: .userProfileDidChange, object: nil)

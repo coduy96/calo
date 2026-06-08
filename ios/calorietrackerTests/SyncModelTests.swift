@@ -2,6 +2,19 @@ import Testing
 import Foundation
 @testable import calorietracker
 
+// MARK: - 1.4 UserProfile
+
+struct UserProfileModifiedAtTests {
+    @Test func saveBumpsModifiedAtOnDisk() throws {
+        var p = UserProfile.default
+        p.weightKg = 81
+        p.save()
+        let loaded = try #require(UserProfile.load())
+        #expect(loaded.modifiedAt != nil)
+        #expect(loaded.weightKg == 81)
+    }
+}
+
 // MARK: - 1.3 FoodEntry
 
 struct FoodEntryModifiedAtTests {
