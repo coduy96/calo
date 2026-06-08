@@ -45,6 +45,9 @@ struct PlusProduct: Identifiable {
     let introOfferCopy: String?
     /// Localized per-day price (e.g. "$0.27"). Populated for yearly products only.
     let pricePerDayText: String?
+    /// Honest savings vs the monthly plan annualized (e.g. "SAVE 50%").
+    /// Populated for the yearly product only; nil when not computable.
+    let savingsText: String?
     fileprivate let source: Source
 }
 
@@ -136,6 +139,10 @@ class StoreManager {
     private func loadStoreKitProducts() async {
         do {
             let storeProducts = try await Product.products(for: Self.allProductIDs)
+            let priceByID = Dictionary(
+                storeProducts.map { ($0.id, $0.price) },
+                uniquingKeysWith: { first, _ in first }
+            )
             products = storeProducts.map { product in
                 PlusProduct(
                     id: product.id,
@@ -145,6 +152,7 @@ class StoreManager {
                     detail: detail(for: product),
                     introOfferCopy: introCopy(for: product),
                     pricePerDayText: pricePerDayText(for: product),
+                    savingsText: savingsText(forProductID: product.id, priceByID: priceByID),
                     source: .storeKit(product)
                 )
             }
@@ -333,6 +341,10 @@ class StoreManager {
             }
         }
 
+        let priceByID = Dictionary(
+            packages.map { ($0.storeProduct.productIdentifier, $0.storeProduct.price) },
+            uniquingKeysWith: { first, _ in first }
+        )
         return packages.map { package in
             PlusProduct(
                 id: package.storeProduct.productIdentifier,
@@ -342,6 +354,7 @@ class StoreManager {
                 detail: detail(for: package),
                 introOfferCopy: introCopy(for: package),
                 pricePerDayText: pricePerDayText(for: package),
+                savingsText: savingsText(forProductID: package.storeProduct.productIdentifier, priceByID: priceByID),
                 source: .revenueCat(package)
             )
         }
@@ -377,6 +390,16 @@ class StoreManager {
         let percent = (1 - yearlyValue / baseline) * 100
         let rounded = Int(percent.rounded())
         return rounded >= 1 ? rounded : nil
+    }
+
+    private func savingsText(forProductID productID: String, priceByID: [String: Decimal]) -> String? {
+        guard productID == Self.yearlyID, let yearly = priceByID[Self.yearlyID] else { return nil }
+        guard let percent = Self.savingsPercent(
+            yearly: yearly,
+            monthly: priceByID[Self.monthlyID],
+            weekly: priceByID[Self.weeklyID]
+        ) else { return nil }
+        return String(localized: "SAVE \(percent)%")
     }
 
     private static func title(forProductID productID: String) -> String {
