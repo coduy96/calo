@@ -93,6 +93,7 @@ struct VoidpenLoadingHero: View {
     var systemIcon: String = "text.magnifyingglass"
     var message: LocalizedStringKey
     var subMessages: [LocalizedStringKey] = []
+    var onCancel: (() -> Void)? = nil
 
     @State private var rotationOuter: Double = 0
     @State private var rotationInner: Double = 0
@@ -157,13 +158,15 @@ struct VoidpenLoadingHero: View {
                     .rotationEffect(.degrees(rotationInner))
 
                 if let image {
+                    // Match the Review Food image: full photo, scaled to fit,
+                    // rounded rectangle (no crop, no circle) — consistent end-to-end.
                     Image(uiImage: image)
                         .resizable()
-                        .scaledToFill()
-                        .frame(width: imageSize, height: imageSize)
-                        .clipShape(Circle())
+                        .scaledToFit()
+                        .frame(maxWidth: imageSize, maxHeight: imageSize)
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         .overlay(
-                            Circle()
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .stroke(Color.white.opacity(0.25), lineWidth: 0.7)
                         )
                         .shadow(color: AppColors.calorie.opacity(0.32), radius: 20, x: 0, y: 12)
@@ -229,6 +232,21 @@ struct VoidpenLoadingHero: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(.background)
+        .overlay(alignment: .topLeading) {
+            if let onCancel {
+                Button(action: onCancel) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 38, height: 38)
+                        .background(.ultraThinMaterial, in: Circle())
+                        .overlay(Circle().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
+                }
+                .padding(.top, 14)
+                .padding(.leading, 16)
+                .accessibilityLabel("Cancel")
+            }
+        }
         .onAppear {
             startRotation()
             startHalo()

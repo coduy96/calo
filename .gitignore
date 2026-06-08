@@ -35,3 +35,6 @@ AuthKey_*.p8
 *.mobileprovision
 *.cer
 *.p12
+
+# Local build artifacts (asc archive/export/upload)
+.asc/

@@ -5,13 +5,15 @@ struct AnalyzingView: View {
     var systemIcon: String = "text.magnifyingglass"
     var message: LocalizedStringKey = "Analyzing your food…"
     var subMessages: [LocalizedStringKey] = []
+    var onCancel: (() -> Void)? = nil
 
     var body: some View {
         VoidpenLoadingHero(
             image: image,
             systemIcon: systemIcon,
             message: message,
-            subMessages: subMessages
+            subMessages: subMessages,
+            onCancel: onCancel
         )
     }
 }
