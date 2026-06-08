@@ -36,6 +36,10 @@ class FoodStore {
     var onEntryDeleted: ((UUID) -> Void)?
     var onEntryUpdated: ((FoodEntry) -> Void)?
 
+    /// Outbound sync hook. Additive — distinct from onEntryAdded/Updated/Deleted
+    /// (those are owned by HealthKit). Fired ONLY on user-driven mutations.
+    var onSyncMutation: ((SyncMutation) -> Void)?
+
     private let storageKey = "foodEntries"
     private let favoritesKey = "favoriteFoodEntries"
     private(set) var favorites: [FoodEntry] = []
@@ -222,7 +226,10 @@ class FoodStore {
 
     func toggleFavorite(_ entry: FoodEntry) {
         if let index = favorites.firstIndex(where: { $0.favoriteKey == entry.favoriteKey }) {
+            let removedID = favorites[index].id
             favorites.remove(at: index)
+            saveFavorites()
+            onSyncMutation?(SyncMutation(kind: .favorite, id: removedID, deleted: true))
         } else {
             // Remove any existing entry with same id to prevent duplicates
             favorites.removeAll { $0.id == entry.id }
@@ -235,8 +242,9 @@ class FoodStore {
             var favorite = entry
             offloadImageToDiskIfNeeded(&favorite)
             favorites.append(favorite)
+            saveFavorites()
+            onSyncMutation?(SyncMutation(kind: .favorite, id: favorite.id, deleted: false))
         }
-        saveFavorites()
     }
 
     func moveFavorite(from source: IndexSet, to destination: Int) {
@@ -262,22 +270,26 @@ class FoodStore {
 
     func addEntry(_ entry: FoodEntry) {
         var entry = entry
+        entry.modifiedAt = Date()
         offloadImageToDiskIfNeeded(&entry)
         entries.append(entry)
         saveEntries()
         onEntriesChanged?()
         onEntryAdded?(entry)
+        onSyncMutation?(SyncMutation(kind: .food, id: entry.id, deleted: false))
     }
 
     func updateEntry(_ entry: FoodEntry) {
         guard let index = entries.firstIndex(where: { $0.id == entry.id }) else { return }
         var entry = entry
+        entry.modifiedAt = Date()
         offloadImageToDiskIfNeeded(&entry)
         entries[index] = entry
         saveEntries()
         onEntriesChanged?()
         // Single callback so HealthKit can serialize delete-then-write atomically.
         onEntryUpdated?(entry)
+        onSyncMutation?(SyncMutation(kind: .food, id: entry.id, deleted: false))
     }
 
     func deleteEntry(_ entry: FoodEntry) {
@@ -293,6 +305,49 @@ class FoodStore {
         saveEntries()
         onEntriesChanged?()
         onEntryDeleted?(id)
+        onSyncMutation?(SyncMutation(kind: .food, id: id, deleted: true))
+    }
+
+    // MARK: - Cloud Sync (inbound)
+
+    /// Apply a food entry received from iCloud. Last-writer-wins by modifiedAt.
+    /// Never emits onSyncMutation (no echo). Refreshes UI via onEntriesChanged.
+    func applyCloudUpsert(_ incoming: FoodEntry) {
+        if let idx = entries.firstIndex(where: { $0.id == incoming.id }) {
+            guard incoming.effectiveModifiedAt >= entries[idx].effectiveModifiedAt else { return }
+            entries[idx] = incoming
+        } else {
+            entries.append(incoming)
+        }
+        saveEntries()
+        onEntriesChanged?()
+    }
+
+    func applyCloudDelete(id: UUID) {
+        guard entries.contains(where: { $0.id == id }) else { return }
+        if let entry = entries.first(where: { $0.id == id }),
+           let filename = entry.imageFilename,
+           !isImageStillReferenced(filename: filename, excludingEntryID: id) {
+            FoodImageStore.shared.delete(filename: filename)
+        }
+        entries.removeAll { $0.id == id }
+        saveEntries()
+        onEntriesChanged?()
+    }
+
+    func applyCloudFavoriteUpsert(_ incoming: FoodEntry) {
+        if let idx = favorites.firstIndex(where: { $0.id == incoming.id }) {
+            guard incoming.effectiveModifiedAt >= favorites[idx].effectiveModifiedAt else { return }
+            favorites[idx] = incoming
+        } else {
+            favorites.append(incoming)
+        }
+        saveFavorites()
+    }
+
+    func applyCloudFavoriteDelete(id: UUID) {
+        favorites.removeAll { $0.id == id }
+        saveFavorites()
     }
 
     func replaceAllEntries(_ newEntries: [FoodEntry]) {
