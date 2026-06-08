@@ -136,6 +136,8 @@ struct PaywallView: View {
                             Text(badge)
                                 .font(.system(.caption2, design: .rounded, weight: .bold))
                                 .foregroundStyle(.white)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.85)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
                                 .background(
