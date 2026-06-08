@@ -2,8 +2,7 @@ import Testing
 import Foundation
 @testable import calorietracker
 
-@MainActor
-struct FoodStoreSyncTests {
+@Suite(.serialized) @MainActor struct FoodStoreSyncTests {
     private func freshStore() -> FoodStore {
         UserDefaults.standard.removeObject(forKey: "foodEntries")
         UserDefaults.standard.removeObject(forKey: "favoriteFoodEntries")
@@ -74,5 +73,27 @@ struct FoodStoreSyncTests {
         let e = FoodEntry(name: "CloudFav", calories: 10, protein: 0, carbs: 0, fat: 0, source: .manual)
         store.applyCloudFavoriteUpsert(e)
         #expect(store.favorites.contains { $0.id == e.id }); #expect(echoed == false)
+    }
+
+    @Test func applyCloudUpsertNewerClobbersOlderLocal() {
+        let store = freshStore()
+        let id = UUID()
+        let old = FoodEntry(id: id, name: "Old", calories: 100, protein: 0, carbs: 0, fat: 0, source: .manual, modifiedAt: Date(timeIntervalSince1970: 0))
+        store.applyCloudUpsert(old)
+        let newer = FoodEntry(id: id, name: "New", calories: 200, protein: 0, carbs: 0, fat: 0, source: .manual, modifiedAt: Date())
+        store.applyCloudUpsert(newer)
+        #expect(store.entries.first { $0.id == id }?.name == "New")
+        #expect(store.entries.first { $0.id == id }?.calories == 200)
+    }
+
+    @Test func toggleFavoriteRemoveEmitsDeletedMutation() {
+        let store = freshStore()
+        let e = FoodEntry(name: "Fav", calories: 50, protein: 0, carbs: 0, fat: 0, source: .manual)
+        store.toggleFavorite(e)          // add
+        var m: SyncMutation?
+        store.onSyncMutation = { if $0.kind == .favorite { m = $0 } }
+        store.toggleFavorite(e)          // remove
+        #expect(m?.deleted == true)
+        #expect(m?.kind == .favorite)
     }
 }

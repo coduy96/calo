@@ -313,7 +313,10 @@ class FoodStore {
     /// Apply a food entry received from iCloud. Last-writer-wins by modifiedAt.
     /// Never emits onSyncMutation (no echo). Refreshes UI via onEntriesChanged.
     func applyCloudUpsert(_ incoming: FoodEntry) {
+        var incoming = incoming
+        offloadImageToDiskIfNeeded(&incoming)
         if let idx = entries.firstIndex(where: { $0.id == incoming.id }) {
+            // >= so an equal-timestamp incoming wins (tolerates cross-device clock skew).
             guard incoming.effectiveModifiedAt >= entries[idx].effectiveModifiedAt else { return }
             entries[idx] = incoming
         } else {
@@ -324,9 +327,8 @@ class FoodStore {
     }
 
     func applyCloudDelete(id: UUID) {
-        guard entries.contains(where: { $0.id == id }) else { return }
-        if let entry = entries.first(where: { $0.id == id }),
-           let filename = entry.imageFilename,
+        guard let entry = entries.first(where: { $0.id == id }) else { return }
+        if let filename = entry.imageFilename,
            !isImageStillReferenced(filename: filename, excludingEntryID: id) {
             FoodImageStore.shared.delete(filename: filename)
         }
@@ -336,7 +338,10 @@ class FoodStore {
     }
 
     func applyCloudFavoriteUpsert(_ incoming: FoodEntry) {
+        var incoming = incoming
+        offloadImageToDiskIfNeeded(&incoming)
         if let idx = favorites.firstIndex(where: { $0.id == incoming.id }) {
+            // >= so an equal-timestamp incoming wins (tolerates cross-device clock skew).
             guard incoming.effectiveModifiedAt >= favorites[idx].effectiveModifiedAt else { return }
             favorites[idx] = incoming
         } else {
@@ -346,6 +351,7 @@ class FoodStore {
     }
 
     func applyCloudFavoriteDelete(id: UUID) {
+        guard favorites.contains(where: { $0.id == id }) else { return }
         favorites.removeAll { $0.id == id }
         saveFavorites()
     }
