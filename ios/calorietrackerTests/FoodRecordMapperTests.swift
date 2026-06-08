@@ -36,11 +36,21 @@ struct FoodRecordMapperTests {
         let e = FoodEntry(id: id, name: "WithPhoto", calories: 1, protein: 0, carbs: 0, fat: 0,
                           imageFilename: filename, source: .manual)
         let rec = FoodRecordMapper.record(from: e, kind: .food, zoneID: zoneID)
-        #expect(rec["photo"] as? CKAsset != nil)
-        FoodImageStore.shared.delete(filename: filename)   // simulate inbound on a fresh device
+        let asset = try #require(rec["photo"] as? CKAsset)
+        let assetURL = try #require(asset.fileURL)
+
+        // Simulate cross-device delivery: CloudKit hands the receiver the asset as a
+        // freshly downloaded temp file, and the receiver's local store has no image yet.
+        let downloadURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".jpg")
+        try Data(contentsOf: assetURL).write(to: downloadURL)
+        rec["photo"] = CKAsset(fileURL: downloadURL)
+        FoodImageStore.shared.delete(filename: filename)
+
         let back = try #require(FoodRecordMapper.foodEntry(from: rec))
         #expect(back.imageFilename == filename)
         #expect(FoodImageStore.shared.load(filename: filename) == jpeg)
+
         FoodImageStore.shared.delete(filename: filename)
+        try? FileManager.default.removeItem(at: downloadURL)
     }
 }

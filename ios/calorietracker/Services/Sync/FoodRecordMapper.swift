@@ -30,18 +30,11 @@ enum FoodRecordMapper {
         }
         if let filename = entry.imageFilename,
            let storeURL = FoodImageStore.shared.fileURL(for: filename),
-           FileManager.default.fileExists(atPath: storeURL.path),
-           let data = try? Data(contentsOf: storeURL) {
-            // Write to a temp file so the CKAsset URL is independent of the
-            // FoodImageStore path. CloudKit uploads from this temp URL and the
-            // store file can be deleted independently (e.g. on a fresh device).
-            let tmpURL = FileManager.default.temporaryDirectory
-                .appendingPathComponent(UUID().uuidString + ".jpg")
-            if (try? data.write(to: tmpURL)) != nil {
-                record["photoFilename"] = filename
-                record["photo"] = CKAsset(fileURL: tmpURL)
-            }
+           FileManager.default.fileExists(atPath: storeURL.path) {
+            record["photoFilename"] = filename
+            record["photo"] = CKAsset(fileURL: storeURL)
         }
+        // Note: servingUnitOptions/selectedServingUnit/selectedServingQuantity are device-local presentation hints, not synced.
         return record
     }
 
