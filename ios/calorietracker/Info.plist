@@ -24,5 +24,9 @@
 	<string>Read your weight, height, and body composition to keep your profile accurate.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Write your nutrition and body measurements so all your health data stays in one place.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>
