@@ -62,6 +62,29 @@ export const metadata: Metadata = {
   alternates: {
     canonical: siteUrl,
   },
+  verification: {
+    google: "D9KFX7hltfWdm-9R-4O3HNpZfKshupZKLkSmR7S5ZYk",
+  },
+};
+
+// Sitewide structured data: tells Google who/what Voidpen is.
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": `${siteUrl}/#organization`,
+  name: "Voidpen",
+  url: siteUrl,
+  logo: `${siteUrl}/voidpen-logo.png`,
+  email: "info@voidpen.com",
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${siteUrl}/#website`,
+  name: "Voidpen",
+  url: siteUrl,
+  publisher: { "@id": `${siteUrl}/#organization` },
 };
 
 export const viewport: Viewport = {
@@ -81,6 +104,14 @@ export default function RootLayout({
       className={`${archivo.variable} ${hanken.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-cream text-ink font-sans">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
         {children}
       </body>
     </html>

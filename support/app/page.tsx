@@ -17,10 +17,66 @@ import "./landing.css";
 const APP_STORE_URL = "https://apps.apple.com/app/id6770921845";
 
 export const metadata: Metadata = {
-  title: { absolute: "voidpen — Hit Your Macros, Effortlessly" },
+  title: { absolute: "voidpen — AI Calorie Tracker: Snap a Photo, Hit Your Macros" },
   description:
     "Snap, speak, scan or type. voidpen logs your food in seconds, tracks every macro, and coaches you to your goals with AI.",
   alternates: { canonical: "https://voidpen.com" },
+};
+
+// Structured data for Google rich results.
+// NOTE: no aggregateRating on purpose — only add one when the App Store
+// listing has real, verifiable ratings, or Google may issue a manual action.
+const appJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "MobileApplication",
+  name: "Voidpen: Calorie Tracker",
+  operatingSystem: "iOS",
+  applicationCategory: "HealthApplication",
+  description:
+    "AI calorie tracker for iPhone. Snap a photo, speak, scan a label or type — Voidpen logs calories, protein, carbs and fat in seconds and syncs with Apple Health.",
+  url: "https://voidpen.com",
+  installUrl: APP_STORE_URL,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  author: { "@id": "https://voidpen.com/#organization" },
+};
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "How accurate is the photo logging?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "voidpen's AI recognizes thousands of common foods and estimates portion size from the photo. You can always tap to adjust grams or pick a more specific match — and it learns the foods you eat most.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Is there a free version?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes. You can log food, track macros and use widgets for free. The AI coach and unlimited photo logging are part of voidpen Pro, with a free trial to start.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Does it work with Apple Health?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "voidpen syncs weight, calories and activity with Apple Health, so your nutrition data lives alongside the rest of your health picture.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Can it set my macro targets for me?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Absolutely. Tell the app your goal — lose, maintain or gain — and it calculates calorie and macro targets, then adjusts them as your weight trends change.",
+      },
+    },
+  ],
 };
 
 export const viewport: Viewport = {
@@ -67,6 +123,14 @@ function Check() {
 export default function Home() {
   return (
     <div className="vp-landing">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(appJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <noscript>
         {/* If JS is unavailable, never leave reveal content hidden. */}
         <style>{`.vp-landing .reveal{opacity:1 !important;transform:none !important}`}</style>
@@ -780,16 +844,10 @@ export default function Home() {
               <h5>Company</h5>
               <ul>
                 <li>
-                  <a href="#">About</a>
-                </li>
-                <li>
                   <Link href="/blogs">Blog</Link>
                 </li>
                 <li>
-                  <a href="#">Careers</a>
-                </li>
-                <li>
-                  <a href="#">Press</a>
+                  <a href="mailto:info@voidpen.com">Contact</a>
                 </li>
               </ul>
             </div>
@@ -816,25 +874,8 @@ export default function Home() {
               © 2026 <span className="brand-name">voidpen</span>. All rights
               reserved.
             </span>
-            <div className="socials">
-              <a href="#" aria-label="X">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.5 3h3l-6.6 7.5L21.8 21h-6l-4.3-5.6L6.4 21H3.3l7-8L2.5 3h6.1l3.9 5.1L17.5 3Zm-1.1 16h1.7L7.8 4.8H6L16.4 19Z" />
-                </svg>
-              </a>
-              <a href="#" aria-label="Instagram">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="18" height="18" rx="5" />
-                  <circle cx="12" cy="12" r="4" />
-                  <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none" />
-                </svg>
-              </a>
-              <a href="#" aria-label="TikTok">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M15 3c.3 2.2 1.7 3.8 4 4v3c-1.5 0-2.9-.5-4-1.2V15a6 6 0 1 1-6-6c.3 0 .7 0 1 .1v3.1A3 3 0 1 0 12 15V3h3Z" />
-                </svg>
-              </a>
-            </div>
+            {/* Social icons removed until real profiles exist — dead "#" links
+                hurt crawl quality. Re-add with real URLs when ready. */}
           </div>
         </div>
       </footer>
