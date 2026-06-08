@@ -56,6 +56,13 @@ struct WeightPhotoStore {
         try? FileManager.default.removeItem(at: url)
     }
 
+    /// Full file URL for a stored filename, or nil if the container is unavailable.
+    /// The file may not exist yet — callers should check before reading.
+    func fileURL(for filename: String) -> URL? {
+        guard let folderURL else { return nil }
+        return folderURL.appendingPathComponent(filename)
+    }
+
     /// Wipes the entire photo folder (used by Delete All Data).
     func deleteAll() {
         guard let folderURL else { return }
