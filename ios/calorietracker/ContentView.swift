@@ -676,7 +676,7 @@ struct HomeView: View {
                 )
             }
             .fullScreenCover(isPresented: $showCamera) {
-                CameraView(image: $capturedImage, mode: cameraMode)
+                CameraView(image: $capturedImage, mode: cameraMode, cropsToFocusSquare: true)
                     .ignoresSafeArea()
             }
             .fullScreenCover(isPresented: $showBarcodeScanner) {
@@ -1618,10 +1618,167 @@ struct ContextDescriptionSheet: View {
     }
 }
 
+// MARK: - Focus-frame crop geometry (single source of truth)
+//
+// The orange focus-frame square is defined ONCE here so the overlay drawing
+// (CameraOverlayView.updateCornerBracketsPath) and the capture crop
+// (FocusCrop.focusCropRect / cropToFocusSquare) read the exact same rect and
+// can never drift. All math is in screen POINTS in `bounds` space, which is
+// UIScreen.main.bounds (the overlay frame and the transform reference frame).
+enum FocusCrop {
+
+    /// The orange bracket square, in the overlay's point coordinate space.
+    /// `bounds` is the overlay bounds == UIScreen.main.bounds.
+    /// Mirrors the original inline math: side = min(width - 64, 340),
+    /// centered horizontally, vertically offset by -48 from center.
+    static func bracketRect(in bounds: CGRect) -> CGRect {
+        let side = min(bounds.width - 64, 340)
+        return CGRect(
+            x: (bounds.width - side) / 2,
+            y: (bounds.height - side) / 2 - 48,
+            width: side,
+            height: side
+        )
+    }
+}
+
+extension FocusCrop {
+    /// Pure, UIKit-free mapping from the on-screen bracket square to a pixel
+    /// crop rect on the orientation-normalized (.up) captured image.
+    ///
+    /// `imagePixelSize` is the normalized image's CGImage pixel size
+    /// (width = cgImage.width, height = cgImage.height); for a portrait food
+    /// still this is 3:4 (e.g. 3024 x 4032).
+    /// `screenSize` is the SAME UIScreen.main.bounds.size that produced the
+    /// preview transform and the overlay (points).
+    ///
+    /// Returns an integer, in-bounds, guaranteed-SQUARE CGRect in image pixels.
+    /// Returns .null if the inputs are degenerate (caller falls back to original).
+    ///
+    /// Derivation (verified): the picker renders the full 4:3 sensor fit-to-width
+    /// (width = w pts, height = w*4/3 pts) then scales uniformly by
+    /// scale = h/(w*4/3) ONLY when scale > 1 (aspect-fill). The displayed preview
+    /// therefore has size (scaleApplied*w) x (scaleApplied*w*4/3) pts, centered in
+    /// the screen. A point in screen space maps into the displayed-preview space by
+    /// subtracting the (possibly negative) offset between the screen origin and the
+    /// preview origin, then multiplying by K = imagePixelHeight / displayedPreviewH.
+    static func focusCropRect(imagePixelSize: CGSize, screenSize: CGSize) -> CGRect {
+        let w = screenSize.width
+        let h = screenSize.height
+        let imgW = imagePixelSize.width
+        let imgH = imagePixelSize.height
+        guard w > 0, h > 0, imgW > 0, imgH > 0 else { return .null }
+
+        // Aspect-fill scale, matching makeUIViewController's guard (only > 1 applied).
+        let nativePreviewHeight = w * 4.0 / 3.0
+        guard nativePreviewHeight > 0 else { return .null }
+        let rawScale = h / nativePreviewHeight
+        let scaleApplied = rawScale > 1 ? rawScale : 1
+
+        // Actually-displayed preview rect, in screen points, centered on the screen.
+        // When scaleApplied > 1 the preview overflows the screen WIDTH and exactly
+        // fills the height (previewOriginX <= 0, previewOriginY == 0). When
+        // scaleApplied == 1 (transform not applied) the fit-to-width preview is
+        // TALLER than the screen and overflows TOP/BOTTOM (previewOriginY <= 0) --
+        // it is cropped by the screen, there are no black bars.
+        let displayedPreviewW = scaleApplied * w
+        let displayedPreviewH = scaleApplied * nativePreviewHeight
+        let previewOriginX = (w - displayedPreviewW) / 2  // <= 0 when overflowing width
+        let previewOriginY = (h - displayedPreviewH) / 2  // <= 0 when overflowing height
+
+        // Uniform pixels-per-point. The displayed preview preserves the 3:4 ratio
+        // (uniform transform), so width and height factors are equal; use height.
+        let k = imgH / displayedPreviewH
+
+        // The bracket square in screen points.
+        let bracket = FocusCrop.bracketRect(in: CGRect(origin: .zero, size: screenSize))
+
+        // Screen point -> displayed-preview point -> image pixel.
+        let pxX = (bracket.minX - previewOriginX) * k
+        let pxY = (bracket.minY - previewOriginY) * k
+        // One side in pixels, reused for width AND height so it stays square.
+        var sidePx = Int((bracket.width * k).rounded())
+
+        let imgWi = Int(imgW)
+        let imgHi = Int(imgH)
+        guard sidePx > 0, imgWi > 0, imgHi > 0 else { return .null }
+
+        // Clamp origin into [0, img - 1], then shrink the (square) side to fit both axes.
+        var originX = Int(pxX.rounded())
+        var originY = Int(pxY.rounded())
+        originX = max(0, min(originX, imgWi - 1))
+        originY = max(0, min(originY, imgHi - 1))
+        sidePx = min(sidePx, imgWi - originX)
+        sidePx = min(sidePx, imgHi - originY)
+        guard sidePx > 0 else { return .null }
+
+        return CGRect(x: originX, y: originY, width: sidePx, height: sidePx)
+    }
+}
+
+extension FocusCrop {
+    /// Crop a captured camera still to exactly the orange focus-frame square.
+    /// Normalizes orientation to `.up`, maps the bracket rect to pixels via the
+    /// pure `focusCropRect`, and crops the CGImage. Returns the ORIGINAL image
+    /// unchanged on any failure (nil cgImage, degenerate/empty rect, non-4:3 sensor).
+    ///
+    /// `screenSize` MUST be the same UIScreen.main.bounds.size captured when the
+    /// preview transform and overlay were created.
+    static func cropToFocusSquare(_ image: UIImage, screenSize: CGSize) -> UIImage {
+        return autoreleasepool {
+            let upright = image.normalizedUp()
+            guard let cg = upright.cgImage else { return image }
+
+            let imgW = CGFloat(cg.width)
+            let imgH = CGFloat(cg.height)
+
+            // The geometry assumes a 3:4 portrait still; bail (return original) otherwise.
+            let aspect = imgW / imgH
+            guard abs(aspect - 3.0 / 4.0) < 0.02 else { return image }
+
+            let rect = focusCropRect(
+                imagePixelSize: CGSize(width: imgW, height: imgH),
+                screenSize: screenSize
+            )
+            guard !rect.isNull, rect.width >= 1, rect.height >= 1,
+                  let cropped = cg.cropping(to: rect) else { return image }
+
+            return UIImage(cgImage: cropped, scale: 1, orientation: .up)
+        }
+    }
+}
+
+extension UIImage {
+    /// Redraw the image baking in its `imageOrientation` so the result is `.up`
+    /// and its CGImage pixel dimensions equal `size` in points (scale resolved to 1).
+    /// Camera stills are typically `.right` with a swapped backing buffer, so this
+    /// MUST run before any pixel-space crop. Returns `self` when already upright.
+    ///
+    /// NOTE: this redraw runs synchronously on the MAIN thread during picker
+    /// dismiss. It is bounded to UIImagePickerController's standard ~12MP still
+    /// (a one-shot transient bitmap, scoped by the caller's autoreleasepool). If a
+    /// future change feeds larger images (e.g. 48MP ProRAW), move the redraw off
+    /// the main thread before assigning the result to a SwiftUI binding.
+    func normalizedUp() -> UIImage {
+        if imageOrientation == .up { return self }
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        format.opaque = true
+        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+        return renderer.image { _ in
+            draw(in: CGRect(origin: .zero, size: size))
+        }
+    }
+}
+
 // MARK: - Camera View (UIKit wrapper)
 struct CameraView: UIViewControllerRepresentable {
     @Binding var image: UIImage?
     var mode: CameraMode = .snapFood
+    // When true, the captured still is cropped to exactly the orange focus-frame
+    // square (food-capture flow). Default false so the shared Coordinator leaves
+    // chat-attachment photos (ChatView) full-frame.
+    var cropsToFocusSquare: Bool = false
     @Environment(\.dismiss) private var dismiss
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
@@ -1681,7 +1838,16 @@ struct CameraView: UIViewControllerRepresentable {
 
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
             if let image = info[.originalImage] as? UIImage {
-                parent.image = image
+                // Crop to exactly the orange focus-frame square so Review == the
+                // bracket region. Only the food-capture flow opts in via
+                // cropsToFocusSquare; chat attachments stay full-frame. Uses the
+                // SAME screen size that produced the preview transform & overlay,
+                // and falls back to the original image on any crop failure.
+                if parent.cropsToFocusSquare {
+                    parent.image = FocusCrop.cropToFocusSquare(image, screenSize: UIScreen.main.bounds.size)
+                } else {
+                    parent.image = image
+                }
             }
             parent.dismiss()
         }
@@ -1717,13 +1883,8 @@ final class CameraOverlayView: UIView {
 
     private func updateCornerBracketsPath() {
         guard bounds.width > 0, bounds.height > 0 else { return }
-        let side = min(bounds.width - 64, 340)
-        let frame = CGRect(
-            x: (bounds.width - side) / 2,
-            y: (bounds.height - side) / 2 - 48,
-            width: side,
-            height: side
-        )
+        // Shared source of truth with the capture crop so overlay & crop can't drift.
+        let frame = FocusCrop.bracketRect(in: bounds)
         let legLength: CGFloat = 36
         let cornerRadius: CGFloat = 28
         let path = UIBezierPath()
