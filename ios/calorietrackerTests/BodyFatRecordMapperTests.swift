@@ -14,6 +14,7 @@ struct BodyFatRecordMapperTests {
         )
         let rec = BodyFatRecordMapper.record(from: e, zoneID: zoneID)
         #expect(rec.recordType == "BodyFatEntry")
+        #expect(rec.recordID.recordName == "bodyfat_\(e.id.uuidString)")
         let back = try #require(BodyFatRecordMapper.bodyFatEntry(from: rec))
         #expect(back.id == e.id)
         #expect(back.bodyFatFraction == 0.21)
