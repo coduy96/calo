@@ -2,6 +2,22 @@ import Testing
 import Foundation
 @testable import calorietracker
 
+// MARK: - 1.2 BodyFatEntry
+
+struct BodyFatEntryModifiedAtTests {
+    @Test func newEntryHasModifiedAt() {
+        #expect(BodyFatEntry(bodyFatFraction: 0.2).modifiedAt != nil)
+    }
+    @Test func legacyDecodesToNil() throws {
+        let legacy = """
+        {"id":"\(UUID().uuidString)","date":\(Date().timeIntervalSinceReferenceDate),"bodyFatFraction":0.18}
+        """.data(using: .utf8)!
+        let e = try JSONDecoder().decode(BodyFatEntry.self, from: legacy)
+        #expect(e.modifiedAt == nil)
+        #expect(e.effectiveModifiedAt == .distantPast)
+    }
+}
+
 // MARK: - 1.1 WeightEntry
 
 struct WeightEntryModifiedAtTests {
