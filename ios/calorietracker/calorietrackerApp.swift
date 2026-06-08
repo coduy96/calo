@@ -120,6 +120,7 @@ struct calorietrackerApp: App {
                         .environment(chatStore)
                         .environment(storeManager)
                         .environment(reviewPromptManager)
+                        .environment(syncCoordinator)
                 } else {
                     OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
                         .environment(notificationManager)

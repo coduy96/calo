@@ -2462,6 +2462,7 @@ struct ProfileView: View {
     @Environment(NotificationManager.self) private var notificationManager
     @Environment(HealthKitManager.self) private var healthKitManager
     @Environment(StoreManager.self) private var storeManager
+    @Environment(CloudSyncCoordinator.self) private var syncCoordinator: CloudSyncCoordinator?
     @Environment(\.dismiss) private var dismiss
     private var profile: UserProfile {
         get { profileStore.profile }
@@ -2879,6 +2880,16 @@ struct ProfileView: View {
                 }
                 .listRowBackground(AppColors.appCard)
 
+
+                // Section 4: iCloud Sync
+                if let syncCoordinator {
+                    Section {
+                        CloudSyncStatusRow(status: syncCoordinator.status)
+                    } footer: {
+                        Text("Your data syncs to your private iCloud.")
+                    }
+                    .listRowBackground(AppColors.appCard)
+                }
 
                 // Section 5: Health & Data
                 Section("Health & Data") {
