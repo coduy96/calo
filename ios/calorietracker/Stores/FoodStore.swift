@@ -313,16 +313,6 @@ class FoodStore {
         onEntriesChanged?()
     }
 
-    func mergeWithCloudEntries(_ cloudEntries: [FoodEntry]) {
-        var merged = Dictionary(uniqueKeysWithValues: entries.map { ($0.id, $0) })
-        for cloudEntry in cloudEntries {
-            merged[cloudEntry.id] = cloudEntry
-        }
-        entries = Array(merged.values)
-        saveEntries()
-        onEntriesChanged?()
-    }
-
     /// If `entry` carries in-memory `imageData` but no `imageFilename`, write
     /// the bytes to disk and stamp the filename onto the entry. No-op when
     /// there are no bytes, or when a filename is already set (idempotent).

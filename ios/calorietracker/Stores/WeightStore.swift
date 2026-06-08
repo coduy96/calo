@@ -97,15 +97,6 @@ class WeightStore {
         syncProfileWeightToLatest()
     }
 
-    func mergeWithCloudEntries(_ cloudEntries: [WeightEntry]) {
-        var merged = Dictionary(uniqueKeysWithValues: entries.map { ($0.id, $0) })
-        for cloudEntry in cloudEntries {
-            merged[cloudEntry.id] = cloudEntry
-        }
-        entries = Array(merged.values)
-        saveEntries()
-    }
-
     private func saveEntries() {
         if let data = try? JSONEncoder().encode(entries) {
             UserDefaults.standard.set(data, forKey: storageKey)
