@@ -41,7 +41,7 @@ struct PaywallView: View {
 
     private var header: some View {
         VStack(spacing: 8) {
-            logoHalo
+            logoMark
             Text("VOIDPEN PLUS")
                 .font(.system(.caption, design: .rounded, weight: .heavy))
                 .tracking(2)
@@ -54,25 +54,11 @@ struct PaywallView: View {
         .padding(.horizontal, 24)
     }
 
-    private var logoHalo: some View {
-        ZStack {
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [AppColors.calorie.opacity(0.28), AppColors.calorie.opacity(0.0)],
-                        center: .center, startRadius: 4, endRadius: 58
-                    )
-                )
-                .frame(width: 116, height: 116)
-            Circle()
-                .fill(AppColors.appCard)
-                .frame(width: 78, height: 78)
-                .shadow(color: AppColors.calorie.opacity(0.22), radius: 10, y: 4)
-            Image("onboardingLogo")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 48, height: 48)
-        }
+    private var logoMark: some View {
+        Image("onboardingLogo")
+            .resizable()
+            .scaledToFit()
+            .frame(width: 120, height: 120)
     }
 
     // MARK: - Features
