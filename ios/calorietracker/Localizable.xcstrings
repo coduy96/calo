@@ -21210,6 +21210,9 @@
         }
       }
     },
+    "iCloud Sync" : {
+
+    },
     "Identifying ingredients" : {
       "localizations" : {
         "ar" : {
@@ -50266,6 +50269,9 @@
           }
         }
       }
+    },
+    "Your data syncs to your private iCloud." : {
+
     },
     "Your logged calories and scale weight don't quite match. You may be under-logging food." : {
       "extractionState" : "stale",
