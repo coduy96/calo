@@ -1,0 +1,141 @@
+DEFINE SCHEMA
+
+    RECORD TYPE Users (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        roles           LIST<INT64>,
+        GRANT WRITE TO "_creator",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE FoodEntry (
+        "___createTime"    TIMESTAMP,
+        "___createdBy"     REFERENCE,
+        "___etag"          STRING,
+        "___modTime"       TIMESTAMP,
+        "___modifiedBy"    REFERENCE,
+        "___recordID"      REFERENCE,
+        entryID            STRING,
+        name               STRING,
+        calories           INT64,
+        protein            INT64,
+        carbs              INT64,
+        fat                INT64,
+        timestamp          TIMESTAMP,
+        emoji              STRING,
+        source             STRING,
+        mealType           STRING,
+        modifiedAt         TIMESTAMP,
+        sugar              DOUBLE,
+        addedSugar         DOUBLE,
+        fiber              DOUBLE,
+        saturatedFat       DOUBLE,
+        monounsaturatedFat DOUBLE,
+        polyunsaturatedFat DOUBLE,
+        cholesterol        DOUBLE,
+        sodium             DOUBLE,
+        potassium          DOUBLE,
+        servingSizeGrams   DOUBLE,
+        photoFilename      STRING,
+        photo              ASSET,
+        GRANT WRITE TO "_creator",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE FoodFavorite (
+        "___createTime"    TIMESTAMP,
+        "___createdBy"     REFERENCE,
+        "___etag"          STRING,
+        "___modTime"       TIMESTAMP,
+        "___modifiedBy"    REFERENCE,
+        "___recordID"      REFERENCE,
+        entryID            STRING,
+        name               STRING,
+        calories           INT64,
+        protein            INT64,
+        carbs              INT64,
+        fat                INT64,
+        timestamp          TIMESTAMP,
+        emoji              STRING,
+        source             STRING,
+        mealType           STRING,
+        modifiedAt         TIMESTAMP,
+        sugar              DOUBLE,
+        addedSugar         DOUBLE,
+        fiber              DOUBLE,
+        saturatedFat       DOUBLE,
+        monounsaturatedFat DOUBLE,
+        polyunsaturatedFat DOUBLE,
+        cholesterol        DOUBLE,
+        sodium             DOUBLE,
+        potassium          DOUBLE,
+        servingSizeGrams   DOUBLE,
+        photoFilename      STRING,
+        photo              ASSET,
+        GRANT WRITE TO "_creator",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE WeightEntry (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        entryID         STRING,
+        date            TIMESTAMP,
+        weightKg        DOUBLE,
+        modifiedAt      TIMESTAMP,
+        photoFilename   STRING,
+        photo           ASSET,
+        GRANT WRITE TO "_creator",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE BodyFatEntry (
+        "___createTime"  TIMESTAMP,
+        "___createdBy"   REFERENCE,
+        "___etag"        STRING,
+        "___modTime"     TIMESTAMP,
+        "___modifiedBy"  REFERENCE,
+        "___recordID"    REFERENCE,
+        entryID          STRING,
+        date             TIMESTAMP,
+        bodyFatFraction  DOUBLE,
+        modifiedAt       TIMESTAMP,
+        GRANT WRITE TO "_creator",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE ChatThread (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        threadID        STRING,
+        updatedAt       TIMESTAMP,
+        payload         STRING,
+        GRANT WRITE TO "_creator",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE UserProfile (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        modifiedAt      TIMESTAMP,
+        payload         STRING,
+        optionalGoals   STRING,
+        GRANT WRITE TO "_creator",
+        GRANT READ TO "_world"
+    );
