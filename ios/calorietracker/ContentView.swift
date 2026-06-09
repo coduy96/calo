@@ -681,7 +681,7 @@ struct HomeView: View {
                 )
             }
             .fullScreenCover(isPresented: $showCamera) {
-                CameraView(image: $capturedImage, mode: cameraMode)
+                CameraView(image: $capturedImage, mode: cameraMode, cropsToPreview: true)
                     .ignoresSafeArea()
             }
             .fullScreenCover(isPresented: $showBarcodeScanner) {
@@ -1644,6 +1644,10 @@ struct ContextDescriptionSheet: View {
 struct CameraView: UIViewControllerRepresentable {
     @Binding var image: UIImage?
     var mode: CameraMode = .snapFood
+    /// When true, the captured photo is cropped to the live preview's visible
+    /// viewport ("what you framed is what you get"). Off for the chat-attachment
+    /// camera, which keeps the full sensor frame for the coach.
+    var cropsToPreview: Bool = false
     @Environment(\.dismiss) private var dismiss
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
@@ -1703,7 +1707,13 @@ struct CameraView: UIViewControllerRepresentable {
 
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
             if let image = info[.originalImage] as? UIImage {
-                parent.image = image
+                if parent.cropsToPreview {
+                    let screen = UIScreen.main.bounds.size
+                    let screenAspect = screen.height > 0 ? screen.width / screen.height : 0
+                    parent.image = CameraPreviewCrop.cropToPreview(image, screenAspect: screenAspect)
+                } else {
+                    parent.image = image
+                }
             }
             parent.dismiss()
         }
