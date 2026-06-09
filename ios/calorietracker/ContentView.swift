@@ -2019,23 +2019,40 @@ struct FoodCameraView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: FoodCameraViewController, context: Context) {}
 }
 
-final class FoodCameraViewController: UIViewController, AVCapturePhotoCaptureDelegate {
+final class FoodCameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, UIGestureRecognizerDelegate {
     var onImage: ((UIImage) -> Void)?
     var onCancel: (() -> Void)?
 
     private let session = AVCaptureSession()
     private let photoOutput = AVCapturePhotoOutput()
     private var previewLayer: AVCaptureVideoPreviewLayer?
+    private var device: AVCaptureDevice?
     private weak var overlay: CameraOverlayView?
     private let sessionQueue = DispatchQueue(label: "voidpen.food-camera.session")
     private var isConfigured = false
     /// Guards against a double-tap on the shutter firing a second capture.
     private var isCapturing = false
 
+    /// Tap-to-focus reticle — a brand-tinted square that springs in then fades.
+    private lazy var focusReticle: UIView = {
+        let v = UIView(frame: CGRect(x: 0, y: 0, width: 78, height: 78))
+        v.layer.borderColor = UIColor(AppThemeColor.current.gradientColors.first ?? Color(hex: 0xFF375F)).cgColor
+        v.layer.borderWidth = 1.5
+        v.layer.cornerRadius = 6
+        v.layer.shadowColor = UIColor.black.cgColor
+        v.layer.shadowOpacity = 0.25
+        v.layer.shadowRadius = 4
+        v.layer.shadowOffset = .zero
+        v.isUserInteractionEnabled = false
+        v.alpha = 0
+        return v
+    }()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
         buildOverlay()
+        addFocusTapGesture()
         checkCameraAccess()
     }
 
@@ -2106,6 +2123,7 @@ final class FoodCameraViewController: UIViewController, AVCapturePhotoCaptureDel
                 Self.applyPortrait(previewLayer.connection)
                 self.view.layer.insertSublayer(previewLayer, at: 0)
                 self.previewLayer = previewLayer
+                self.device = camera
                 self.isConfigured = true
             }
 
@@ -2122,6 +2140,57 @@ final class FoodCameraViewController: UIViewController, AVCapturePhotoCaptureDel
             }
         } else if connection.isVideoOrientationSupported {
             connection.videoOrientation = .portrait
+        }
+    }
+
+    // MARK: Tap to focus
+
+    private func addFocusTapGesture() {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(handleFocusTap(_:)))
+        tap.delegate = self
+        view.addGestureRecognizer(tap)
+    }
+
+    /// Don't steal taps that land on the shutter / close buttons.
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        !(touch.view is UIControl)
+    }
+
+    @objc private func handleFocusTap(_ gesture: UITapGestureRecognizer) {
+        guard isConfigured, let previewLayer, let device else { return }
+        let point = gesture.location(in: view)
+        let devicePoint = previewLayer.captureDevicePointConverted(fromLayerPoint: point)
+        showFocusReticle(at: point)
+
+        sessionQueue.async {
+            do { try device.lockForConfiguration() } catch { return }
+            if device.isFocusPointOfInterestSupported, device.isFocusModeSupported(.autoFocus) {
+                device.focusPointOfInterest = devicePoint
+                device.focusMode = .autoFocus
+            }
+            if device.isExposurePointOfInterestSupported, device.isExposureModeSupported(.continuousAutoExposure) {
+                device.exposurePointOfInterest = devicePoint
+                device.exposureMode = .continuousAutoExposure
+            }
+            device.unlockForConfiguration()
+        }
+    }
+
+    private func showFocusReticle(at point: CGPoint) {
+        if focusReticle.superview == nil { view.addSubview(focusReticle) }
+        view.bringSubviewToFront(focusReticle)
+        focusReticle.center = point
+        focusReticle.layer.removeAllAnimations()
+        focusReticle.transform = CGAffineTransform(scaleX: 1.35, y: 1.35)
+        focusReticle.alpha = 1
+        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.7,
+                       initialSpringVelocity: 0.4,
+                       options: [.allowUserInteraction, .beginFromCurrentState]) {
+            self.focusReticle.transform = .identity
+        }
+        UIView.animate(withDuration: 0.35, delay: 0.9,
+                       options: [.allowUserInteraction, .beginFromCurrentState]) {
+            self.focusReticle.alpha = 0
         }
     }
 
