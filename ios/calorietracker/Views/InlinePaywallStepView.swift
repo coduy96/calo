@@ -39,7 +39,6 @@ struct InlinePaywallStepView: View {
             }
 
             VStack(spacing: 10) {
-                RiskReversalLine(trialEligible: selectedProduct?.introOfferCopy != nil)
                 subscribeButton
                 trialFinePrint
             }
@@ -434,7 +433,7 @@ struct InlinePaywallStepView: View {
         if let product = selectedProduct {
             Text(trialFinePrintText(for: product))
                 .font(.system(.caption2, design: .rounded))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.primary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -450,9 +449,9 @@ struct InlinePaywallStepView: View {
         }
 
         if product.introOfferCopy != nil {
-            return String(localized: "3 days free, then \(product.displayPrice) per \(period). Auto-renews. Cancel anytime in Settings.")
+            return String(localized: "3 days free, then \(product.displayPrice) per \(period) — $0 if it's not for you. Auto-renews; cancel anytime in 2 taps in Settings.")
         }
-        return String(localized: "\(product.displayPrice) per \(period). Auto-renews. Cancel anytime in Settings.")
+        return String(localized: "\(product.displayPrice) per \(period). Auto-renews; cancel anytime in 2 taps in Settings.")
     }
 
     // MARK: - Footer
