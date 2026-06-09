@@ -39,16 +39,10 @@ struct AddFoodPromptOverlay: View {
         .padding(.vertical, 12)
         .padding(.bottom, AddFoodPromptCallout.pointerHeight)
         .frame(maxWidth: 286)
-        .background(
-            AddFoodPromptCallout()
-                .fill(AppColors.appCard)
-                .shadow(color: .black.opacity(0.12), radius: 10, x: 0, y: 5)
-                .shadow(color: .black.opacity(0.06), radius: 3, x: 0, y: 1)
-        )
-        .overlay(
-            AddFoodPromptCallout()
-                .stroke(AppColors.calorie.opacity(0.35), lineWidth: 1.5)
-        )
+        // Same glass chrome the tab/navigation bar uses, clipped to the callout shape
+        // (tail included) so the prompt reads as part of that chrome rather than an
+        // opaque card floating over it.
+        .modifier(CalloutGlassBackground())
         .fixedSize(horizontal: false, vertical: true)
         .offset(y: reduceMotion ? 0 : (isLifted ? -2 : 0))
         .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: isLifted)
@@ -79,6 +73,30 @@ struct AddFoodPromptOverlay: View {
         .shadow(color: AppColors.calorie.opacity(0.3), radius: 4, y: 2)
         .scaleEffect(reduceMotion ? 1 : (isLifted ? 1.04 : 1))
         .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: isLifted)
+    }
+}
+
+/// Applies the same glass chrome as the tab/navigation bar to the callout silhouette.
+/// On iOS 26+ this is the system Liquid Glass material; on earlier releases it falls
+/// back to the app's standard `.ultraThinMaterial` + hairline-stroke glass so the
+/// prompt stays consistent with the navigation chrome of whichever OS it runs on.
+private struct CalloutGlassBackground: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.glassEffect(.regular, in: AddFoodPromptCallout())
+        } else {
+            content
+                .background(
+                    AddFoodPromptCallout()
+                        .fill(.ultraThinMaterial)
+                        .shadow(color: .black.opacity(0.12), radius: 10, x: 0, y: 5)
+                        .shadow(color: .black.opacity(0.06), radius: 3, x: 0, y: 1)
+                )
+                .overlay(
+                    AddFoodPromptCallout()
+                        .stroke(Color.white.opacity(0.15), lineWidth: 0.5)
+                )
+        }
     }
 }
 
