@@ -93,6 +93,31 @@ struct CameraPreviewCropTests {
         #expect(out.imageOrientation == .up)
     }
 
+    // MARK: - Focus-frame square crop (loading thumbnail)
+
+    /// The focus-frame crop is a square (the bracket is square and resizeAspect
+    /// preserves aspect uniformly), centred horizontally, strictly inside the
+    /// photo — i.e. it actually crops to the framed region.
+    @Test func focusSquareIsSquareAndInsidePhoto() {
+        let base = solidImage(width: 300, height: 400) // 3:4 like a real photo
+        let out = CameraPreviewCrop.focusSquareImage(base, screenSize: CGSize(width: 390, height: 844))
+        let w = out.size.width * out.scale
+        let h = out.size.height * out.scale
+        #expect(abs(w - h) <= 2)        // square
+        #expect(w < 300)                // actually cropped (not the whole frame)
+        #expect(h < 400)
+        #expect(w > 100)                // and a meaningful region, not degenerate
+        #expect(out.imageOrientation == .up)
+    }
+
+    /// Degenerate screen size falls back to the (upright) full image, no crash.
+    @Test func focusSquareDegenerateFallsBack() {
+        let base = solidImage(width: 300, height: 400)
+        let out = CameraPreviewCrop.focusSquareImage(base, screenSize: .zero)
+        #expect(Int(out.size.width.rounded()) == 300)
+        #expect(Int(out.size.height.rounded()) == 400)
+    }
+
     // MARK: - Helpers
 
     private func solidImage(width: CGFloat, height: CGFloat) -> UIImage {

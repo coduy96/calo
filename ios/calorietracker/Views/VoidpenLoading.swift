@@ -95,138 +95,97 @@ struct VoidpenLoadingHero: View {
     var subMessages: [LocalizedStringKey] = []
     var onCancel: (() -> Void)? = nil
 
-    @State private var rotationOuter: Double = 0
-    @State private var rotationInner: Double = 0
-    @State private var haloScale: CGFloat = 1.0
-    @State private var haloOpacity: Double = 0.55
-    @State private var iconBreath: CGFloat = 1.0
+    @State private var arcRotation: Double = 0
     @State private var subIndex: Int = 0
     @State private var subTimer: Timer?
 
-    private let frameSize: CGFloat = 320
-    private let imageSize: CGFloat = 210
-    private let iconCardSize: CGFloat = 170
-    private let outerRingSize: CGFloat = 280
-    private let innerRingSize: CGFloat = 248
+    private let photoSize: CGFloat = 150
+    private let arcSize: CGFloat = 188
+
+    /// The food photo cropped to the camera's focus-frame square (what the user
+    /// framed), shown in the circle. Cheap for camera photos (already upright →
+    /// CGImage crop is lazy). `nil` for non-photo flows (label / text / voice).
+    private var thumbnail: UIImage? {
+        image.map { CameraPreviewCrop.focusSquareImage($0, screenSize: UIScreen.main.bounds.size) }
+    }
 
     var body: some View {
-        VStack(spacing: 28) {
+        VStack(spacing: 30) {
             Spacer(minLength: 0)
 
             ZStack {
+                // Faint full track so the comet reads as moving along a path.
                 Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [AppColors.calorie.opacity(0.24), .clear],
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: 175
-                        )
-                    )
-                    .frame(width: frameSize + 40, height: frameSize + 40)
-                    .scaleEffect(haloScale)
-                    .opacity(haloOpacity)
+                    .stroke(Color.primary.opacity(0.06), lineWidth: 3.5)
+                    .frame(width: arcSize, height: arcSize)
 
+                // Single sweeping arc — a comet that orbits the photo.
                 Circle()
-                    .trim(from: 0, to: 0.72)
+                    .trim(from: 0, to: 0.25)
                     .stroke(
                         AngularGradient(
                             gradient: Gradient(stops: [
                                 .init(color: AppColors.calorie.opacity(0.0), location: 0.0),
-                                .init(color: (AppColors.calorieGradient.last ?? AppColors.calorie).opacity(0.55), location: 0.55),
-                                .init(color: AppColors.calorieGradient.first ?? AppColors.calorie, location: 1.0),
+                                .init(color: AppColors.calorie, location: 0.25),
                             ]),
                             center: .center
                         ),
-                        style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                        style: StrokeStyle(lineWidth: 3.5, lineCap: .round)
                     )
-                    .frame(width: outerRingSize, height: outerRingSize)
-                    .rotationEffect(.degrees(rotationOuter))
-                    .shadow(color: AppColors.calorie.opacity(0.35), radius: 6, x: 0, y: 0)
+                    .frame(width: arcSize, height: arcSize)
+                    .rotationEffect(.degrees(arcRotation))
 
-                Circle()
-                    .trim(from: 0, to: 0.30)
-                    .stroke(
-                        LinearGradient(
-                            colors: AppColors.calorieGradient,
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
-                    )
-                    .frame(width: innerRingSize, height: innerRingSize)
-                    .rotationEffect(.degrees(rotationInner))
+                // Center: circular focus-frame photo, or icon for non-photo flows.
+                Group {
+                    if let thumbnail {
+                        Image(uiImage: thumbnail)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: photoSize, height: photoSize)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.white.opacity(0.14), lineWidth: 0.7))
+                    } else {
+                        ZStack {
+                            Circle().fill(AppColors.calorie.opacity(0.10))
+                            Image(systemName: systemIcon)
+                                .font(.system(size: 52, weight: .light))
+                                .foregroundStyle(
+                                    LinearGradient(colors: AppColors.calorieGradient,
+                                                   startPoint: .topLeading, endPoint: .bottomTrailing)
+                                )
+                        }
+                        .frame(width: photoSize, height: photoSize)
+                    }
+                }
+                .shadow(color: .black.opacity(0.12), radius: 14, x: 0, y: 6)
+            }
+            .frame(width: arcSize, height: arcSize)
 
-                if let image {
-                    // Match the Review Food image: full photo, scaled to fit,
-                    // rounded rectangle (no crop, no circle) — consistent end-to-end.
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(maxWidth: imageSize, maxHeight: imageSize)
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(Color.white.opacity(0.25), lineWidth: 0.7)
-                        )
-                        .shadow(color: AppColors.calorie.opacity(0.32), radius: 20, x: 0, y: 12)
-                        .scaleEffect(iconBreath)
-                } else {
-                    ZStack {
-                        Circle()
-                            .fill(AppColors.calorie.opacity(0.12))
-                            .frame(width: iconCardSize, height: iconCardSize)
-                            .overlay(
-                                Circle()
-                                    .stroke(
-                                        LinearGradient(
-                                            colors: AppColors.calorieGradient,
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        ).opacity(0.4),
-                                        lineWidth: 1
-                                    )
-                            )
-                            .shadow(color: AppColors.calorie.opacity(0.26), radius: 18, x: 0, y: 10)
+            VStack(spacing: 8) {
+                Text(message)
+                    .font(.system(.title3, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
 
-                        Image(systemName: systemIcon)
-                            .font(.system(size: 64, weight: .light))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: AppColors.calorieGradient,
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
+                ZStack {
+                    if !subMessages.isEmpty {
+                        Text(subMessages[subIndex])
+                            .font(.system(.subheadline, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                            .id(subIndex)
+                            .transition(
+                                .asymmetric(
+                                    insertion: .opacity.combined(with: .move(edge: .bottom)),
+                                    removal: .opacity.combined(with: .move(edge: .top))
                                 )
                             )
                     }
-                    .scaleEffect(iconBreath)
                 }
+                .frame(height: 22)
             }
-            .frame(width: frameSize, height: frameSize)
-
-            Text(message)
-                .font(.system(.title3, design: .rounded, weight: .semibold))
-                .foregroundStyle(AppColors.calorie)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
-
-            ZStack {
-                if !subMessages.isEmpty {
-                    Text(subMessages[subIndex])
-                        .font(.system(.footnote, design: .rounded))
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
-                        .id(subIndex)
-                        .transition(
-                            .asymmetric(
-                                insertion: .opacity.combined(with: .move(edge: .bottom)),
-                                removal: .opacity.combined(with: .move(edge: .top))
-                            )
-                        )
-                }
-            }
-            .frame(height: 22)
 
             Spacer(minLength: 0)
         }
@@ -248,36 +207,14 @@ struct VoidpenLoadingHero: View {
             }
         }
         .onAppear {
-            startRotation()
-            startHalo()
-            startBreath()
+            withAnimation(.linear(duration: 1.1).repeatForever(autoreverses: false)) {
+                arcRotation = 360
+            }
             startSubRotation()
         }
         .onDisappear {
             subTimer?.invalidate()
             subTimer = nil
-        }
-    }
-
-    private func startRotation() {
-        withAnimation(.linear(duration: 2.4).repeatForever(autoreverses: false)) {
-            rotationOuter = 360
-        }
-        withAnimation(.linear(duration: 3.6).repeatForever(autoreverses: false)) {
-            rotationInner = -360
-        }
-    }
-
-    private func startHalo() {
-        withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true)) {
-            haloScale = 1.06
-            haloOpacity = 0.9
-        }
-    }
-
-    private func startBreath() {
-        withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) {
-            iconBreath = 1.03
         }
     }
 

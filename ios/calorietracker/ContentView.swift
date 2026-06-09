@@ -1749,15 +1749,21 @@ final class CameraOverlayView: UIView {
         updateCornerBracketsPath()
     }
 
-    private func updateCornerBracketsPath() {
-        guard bounds.width > 0, bounds.height > 0 else { return }
-        let side = min(bounds.width - 64, 340)
-        let frame = CGRect(
-            x: (bounds.width - side) / 2,
-            y: (bounds.height - side) / 2 - 48,
+    /// The focus-frame square in a view of `size` — the single source of truth
+    /// shared between the on-screen brackets and the loading-thumbnail crop.
+    static func focusFrameRect(in size: CGSize) -> CGRect {
+        let side = min(size.width - 64, 340)
+        return CGRect(
+            x: (size.width - side) / 2,
+            y: (size.height - side) / 2 - 48,
             width: side,
             height: side
         )
+    }
+
+    private func updateCornerBracketsPath() {
+        guard bounds.width > 0, bounds.height > 0 else { return }
+        let frame = CameraOverlayView.focusFrameRect(in: bounds.size)
         let legLength: CGFloat = 36
         let cornerRadius: CGFloat = 28
         let path = UIBezierPath()

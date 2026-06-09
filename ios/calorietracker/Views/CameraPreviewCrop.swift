@@ -76,6 +76,46 @@ enum CameraPreviewCrop {
         normalizedUp(image)
     }
 
+    /// Crops the captured full-frame photo to the camera's focus-frame square
+    /// (the on-screen bracket region), mapped through the `resizeAspect` preview
+    /// into image space. Returns an upright square crop for the circular loading
+    /// thumbnail — the full saved photo is left untouched. Falls back to a
+    /// centred square (or the whole image) for degenerate input.
+    static func focusSquareImage(_ image: UIImage, screenSize: CGSize) -> UIImage {
+        let upright = normalizedUp(image)
+        guard let cg = upright.cgImage, cg.width > 0, cg.height > 0,
+              screenSize.width > 0, screenSize.height > 0 else { return upright }
+
+        let imgW = CGFloat(cg.width)
+        let imgH = CGFloat(cg.height)
+        let imageAspect = imgW / imgH
+        let screenAspect = screenSize.width / screenSize.height
+
+        // The preview rect: the photo aspect-FIT (resizeAspect) into the screen.
+        let previewRect: CGRect
+        if imageAspect > screenAspect {
+            let h = screenSize.width / imageAspect
+            previewRect = CGRect(x: 0, y: (screenSize.height - h) / 2, width: screenSize.width, height: h)
+        } else {
+            let w = screenSize.height * imageAspect
+            previewRect = CGRect(x: (screenSize.width - w) / 2, y: 0, width: w, height: screenSize.height)
+        }
+        guard previewRect.width > 0, previewRect.height > 0 else { return upright }
+
+        // Map the focus-frame square (screen coords) into image pixels.
+        let bracket = CameraOverlayView.focusFrameRect(in: screenSize)
+        let px = (bracket.minX - previewRect.minX) / previewRect.width * imgW
+        let py = (bracket.minY - previewRect.minY) / previewRect.height * imgH
+        let pw = bracket.width / previewRect.width * imgW
+        let ph = bracket.height / previewRect.height * imgH
+
+        let rect = CGRect(x: px, y: py, width: pw, height: ph)
+            .integral
+            .intersection(CGRect(x: 0, y: 0, width: imgW, height: imgH))
+        guard rect.width > 0, rect.height > 0, let cropped = cg.cropping(to: rect) else { return upright }
+        return UIImage(cgImage: cropped, scale: upright.scale, orientation: .up)
+    }
+
     /// Redraws `image` so its pixel buffer is upright (`.up` orientation),
     /// letting the crop be expressed directly in display coordinates.
     private static func normalizedUp(_ image: UIImage) -> UIImage {
