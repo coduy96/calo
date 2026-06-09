@@ -19,8 +19,10 @@ struct PaywallView: View {
                 header
                 featureList
                     .padding(.top, 24)
+                valueCard
+                    .padding(.top, 24)
                 planCards
-                    .padding(.top, 28)
+                    .padding(.top, 24)
             }
             .padding(.top, 32)
             .padding(.bottom, 12)
@@ -47,7 +49,7 @@ struct PaywallView: View {
                 .tracking(2)
                 .foregroundStyle(AppColors.calorie)
                 .padding(.top, 4)
-            Text("Everything unlocked")
+            Text("Hit your goal. No guesswork.")
                 .font(.system(size: 28, weight: .bold, design: .rounded))
                 .multilineTextAlignment(.center)
         }
@@ -65,10 +67,10 @@ struct PaywallView: View {
 
     private var featureList: some View {
         VStack(alignment: .leading, spacing: 12) {
-            featureRow("Snap or speak any meal — instant macros")
-            featureRow("Personal AI Coach trained on your data")
-            featureRow("Smart nutrition-label scanning")
-            featureRow("Weight forecasts and trend analysis")
+            featureRow("Snap or say any meal — macros in seconds")
+            featureRow("A personal AI coach that learns your body")
+            featureRow("Scan any label, get the real numbers")
+            featureRow("See where your weight is actually heading")
         }
         .padding(.horizontal, 32)
     }
@@ -107,6 +109,19 @@ struct PaywallView: View {
         .padding(.horizontal, 24)
     }
 
+    // MARK: - Value anchor
+
+    @ViewBuilder
+    private var valueCard: some View {
+        if let voidpenPrice = storeManager.yearlyProduct?.detail {
+            ReplacesValueCard(voidpenPrice: voidpenPrice, showsFromPrefix: true)
+                .padding(.horizontal, 24)
+        } else if let monthly = storeManager.monthlyProduct?.displayPrice {
+            ReplacesValueCard(voidpenPrice: monthly, showsFromPrefix: false)
+                .padding(.horizontal, 24)
+        }
+    }
+
     private func paywallCard(product: PlusProduct, badge: String?) -> some View {
         let isSelected = selectedProduct?.id == product.id
         return Button {
@@ -141,6 +156,11 @@ struct PaywallView: View {
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.secondary)
                     }
+                    if let perDay = product.pricePerDayText {
+                        Text("Less than \(perDay)/day")
+                            .font(.system(.caption2, design: .rounded, weight: .semibold))
+                            .foregroundStyle(AppColors.calorie.opacity(0.9))
+                    }
                 }
                 Spacer()
                 Text(product.displayPrice)
@@ -172,6 +192,9 @@ struct PaywallView: View {
                     .padding(.horizontal, 24)
                     .padding(.bottom, 8)
             }
+            RiskReversalLine(trialEligible: selectedProduct?.introOfferCopy != nil)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 10)
             subscribeButton
             trustRow
                 .padding(.top, 12)
@@ -249,8 +272,8 @@ struct PaywallView: View {
     // MARK: - Helpers
 
     private var subscribeButtonTitle: String {
-        guard let product = selectedProduct else { return "Subscribe" }
-        return product.introOfferCopy != nil ? "Start 3-Day Free Trial" : "Subscribe"
+        guard let product = selectedProduct else { return "Unlock Everything" }
+        return product.introOfferCopy != nil ? "Start My 3-Day Free Trial" : "Unlock Everything"
     }
 
     private func selectDefaultProductIfNeeded() {
