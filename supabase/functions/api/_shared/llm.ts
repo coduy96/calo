@@ -64,10 +64,17 @@ export async function generate(req: NormalizedRequest): Promise<GenerateResult> 
     req.task === "chat" ? "chat_max_output_tokens" : "max_output_tokens",
     1024,
   );
+  const thinkingLevel = thinkingLevelFor(cfg, model);
+  // Tasks that must return a parseable JSON object. Forcing the provider's JSON
+  // output mode stops chattier models (e.g. Gemma 4) from wrapping the answer in
+  // prose or refusals, which the client can't parse. chat/weight return prose
+  // (and chat uses tools, which is incompatible with JSON mode), so they opt out.
+  const jsonOutput =
+    req.task === "food" || req.task === "label" || req.task === "goals";
 
   switch (provider) {
     case "gemini":
-      return await geminiGenerate(model, req, maxTokens);
+      return await geminiGenerate(model, req, maxTokens, thinkingLevel, jsonOutput);
     default:
       // Other providers can be added by writing an adapter here. The DB lets
       // you flip the config, but the code needs to know how to translate.
@@ -79,6 +86,19 @@ function pickModel(cfg: Record<string, unknown>, task: NormalizedRequest["task"]
   const defaultModel = getString(cfg, "llm_model_default", "gemini-2.5-flash-lite");
   if (task === "chat") return getString(cfg, "llm_model_chat", defaultModel);
   return defaultModel;
+}
+
+// Gemma 4 (and other Gemini-3-architecture models) are *thinking* models: left
+// unconstrained they spend the whole output budget on internal reasoning and
+// return an empty/truncated answer — which the client then can't parse. They
+// expose `thinkingLevel`, and only "MINIMAL" or "HIGH" are valid ("thinkingBudget"
+// is rejected, includeThoughts is a no-op, and thinking can't be fully disabled).
+// Pin it low so the token budget goes to the actual response. The 2.5 family uses
+// a different knob (thinkingBudget) and rejects this one, so only emit it for
+// models that accept it. Returns undefined to send no thinkingConfig at all.
+function thinkingLevelFor(cfg: Record<string, unknown>, model: string): string | undefined {
+  if (!model.startsWith("gemma")) return undefined;
+  return getString(cfg, "llm_thinking_level", "MINIMAL");
 }
 
 // ─── Gemini adapter ─────────────────────────────────────────────────────────
@@ -98,6 +118,8 @@ async function geminiGenerate(
   model: string,
   req: NormalizedRequest,
   maxTokens: number,
+  thinkingLevel?: string,
+  jsonOutput = false,
 ): Promise<GenerateResult> {
   const apiKey = Deno.env.get("GEMINI_API_KEY");
   if (!apiKey) throw new Error("GEMINI_API_KEY not set");
@@ -139,9 +161,18 @@ async function geminiGenerate(
     contents.push({ role, parts });
   }
 
+  const generationConfig: Record<string, unknown> = { maxOutputTokens: maxTokens };
+  if (thinkingLevel) {
+    generationConfig.thinkingConfig = { thinkingLevel };
+  }
+  // JSON output mode is mutually exclusive with function calling, so only set it
+  // when the request carries no tools.
+  if (jsonOutput && !(req.tools && req.tools.length > 0)) {
+    generationConfig.responseMimeType = "application/json";
+  }
   const body: Record<string, unknown> = {
     contents,
-    generationConfig: { maxOutputTokens: maxTokens },
+    generationConfig,
   };
   if (req.system) {
     body.systemInstruction = { parts: [{ text: req.system }] };
