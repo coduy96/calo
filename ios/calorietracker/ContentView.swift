@@ -681,7 +681,7 @@ struct HomeView: View {
                 )
             }
             .fullScreenCover(isPresented: $showCamera) {
-                CameraView(image: $capturedImage, mode: cameraMode, cropsToPreview: true)
+                FoodCameraView(image: $capturedImage)
                     .ignoresSafeArea()
             }
             .fullScreenCover(isPresented: $showBarcodeScanner) {
@@ -1644,10 +1644,6 @@ struct ContextDescriptionSheet: View {
 struct CameraView: UIViewControllerRepresentable {
     @Binding var image: UIImage?
     var mode: CameraMode = .snapFood
-    /// When true, the captured photo is cropped to the live preview's visible
-    /// viewport ("what you framed is what you get"). Off for the chat-attachment
-    /// camera, which keeps the full sensor frame for the coach.
-    var cropsToPreview: Bool = false
     @Environment(\.dismiss) private var dismiss
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
@@ -1671,7 +1667,12 @@ struct CameraView: UIViewControllerRepresentable {
             }
         }
 
-        let overlay = CameraOverlayView(mode: mode, coordinator: context.coordinator)
+        let coordinator = context.coordinator
+        let overlay = CameraOverlayView(
+            mode: mode,
+            onCapture: { [weak coordinator] in coordinator?.capture() },
+            onCancel: { [weak coordinator] in coordinator?.cancel() }
+        )
         overlay.frame = UIScreen.main.bounds
         overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         picker.cameraOverlayView = overlay
@@ -1707,13 +1708,7 @@ struct CameraView: UIViewControllerRepresentable {
 
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
             if let image = info[.originalImage] as? UIImage {
-                if parent.cropsToPreview {
-                    let screen = UIScreen.main.bounds.size
-                    let screenAspect = screen.height > 0 ? screen.width / screen.height : 0
-                    parent.image = CameraPreviewCrop.cropToPreview(image, screenAspect: screenAspect)
-                } else {
-                    parent.image = image
-                }
+                parent.image = image
             }
             parent.dismiss()
         }
@@ -1730,13 +1725,20 @@ final class CameraOverlayView: UIView {
     private let shutterInner = UIView()
     private let shutterInnerGradient = CAGradientLayer()
     private let cornerBracketsLayer = CAShapeLayer()
+    private let onCapture: () -> Void
+    private let onCancel: () -> Void
 
-    init(mode: CameraMode, coordinator: CameraView.Coordinator) {
+    init(mode: CameraMode, onCapture: @escaping () -> Void, onCancel: @escaping () -> Void) {
+        self.onCapture = onCapture
+        self.onCancel = onCancel
         super.init(frame: .zero)
         backgroundColor = .clear
         isUserInteractionEnabled = true
-        setUp(coordinator: coordinator)
+        setUp()
     }
+
+    @objc private func handleCapture() { onCapture() }
+    @objc private func handleCancel() { onCancel() }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
@@ -1808,7 +1810,7 @@ final class CameraOverlayView: UIView {
         })
     }
 
-    private func setUp(coordinator: CameraView.Coordinator) {
+    private func setUp() {
         // 1) Full-screen capture flash overlay
         flashView.translatesAutoresizingMaskIntoConstraints = false
         flashView.backgroundColor = .white
@@ -1856,7 +1858,7 @@ final class CameraOverlayView: UIView {
         closeButton.setImage(UIImage(systemName: "xmark",
                                      withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)),
                              for: .normal)
-        closeButton.addTarget(coordinator, action: #selector(CameraView.Coordinator.cancel), for: .touchUpInside)
+        closeButton.addTarget(self, action: #selector(handleCancel), for: .touchUpInside)
         closeButton.addTarget(self, action: #selector(closeTouchDown), for: .touchDown)
         closeButton.addTarget(self, action: #selector(closeTouchUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
         addSubview(closeButton)
@@ -1888,7 +1890,7 @@ final class CameraOverlayView: UIView {
         let shutterButton = UIButton(type: .custom)
         shutterButton.translatesAutoresizingMaskIntoConstraints = false
         shutterButton.backgroundColor = .clear
-        shutterButton.addTarget(coordinator, action: #selector(CameraView.Coordinator.capture), for: .touchUpInside)
+        shutterButton.addTarget(self, action: #selector(handleCapture), for: .touchUpInside)
         shutterButton.addTarget(self, action: #selector(shutterTouchDown), for: .touchDown)
         shutterButton.addTarget(self, action: #selector(shutterTouchUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
         addSubview(shutterButton)
@@ -1986,6 +1988,161 @@ final class CameraOverlayView: UIView {
     }
 }
 
+
+// MARK: - Food Camera (AVCapture — preview & saved crop share one geometry)
+
+/// Full-screen camera for food / nutrition-label capture, built on AVCapture so
+/// the live preview (`resizeAspectFill`) and the saved photo are cropped from the
+/// SAME geometry — the result is provably what was framed. (UIImagePickerController's
+/// preview is opaque and over-zooms, which made the saved image show more than the
+/// preview.) Reuses `CameraOverlayView` for the shutter / close / brackets UI.
+struct FoodCameraView: UIViewControllerRepresentable {
+    @Binding var image: UIImage?
+    @Environment(\.dismiss) private var dismiss
+
+    func makeUIViewController(context: Context) -> FoodCameraViewController {
+        let controller = FoodCameraViewController()
+        controller.onImage = { captured in
+            image = captured
+            dismiss()
+        }
+        controller.onCancel = { dismiss() }
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: FoodCameraViewController, context: Context) {}
+}
+
+final class FoodCameraViewController: UIViewController, AVCapturePhotoCaptureDelegate {
+    var onImage: ((UIImage) -> Void)?
+    var onCancel: (() -> Void)?
+
+    private let session = AVCaptureSession()
+    private let photoOutput = AVCapturePhotoOutput()
+    private var previewLayer: AVCaptureVideoPreviewLayer?
+    private weak var overlay: CameraOverlayView?
+    private let sessionQueue = DispatchQueue(label: "voidpen.food-camera.session")
+    private var isConfigured = false
+    /// Aspect (w/h) of the on-screen preview at the moment of capture — used to
+    /// crop the photo to exactly the resizeAspectFill visible region.
+    private var captureAspect: CGFloat = 0
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        buildOverlay()
+        checkCameraAccess()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        previewLayer?.frame = view.bounds
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        sessionQueue.async { [session] in
+            if session.isRunning { session.stopRunning() }
+        }
+    }
+
+    private func buildOverlay() {
+        let overlay = CameraOverlayView(
+            mode: .snapFood,
+            onCapture: { [weak self] in self?.capturePhoto() },
+            onCancel: { [weak self] in self?.onCancel?() }
+        )
+        overlay.frame = view.bounds
+        overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.addSubview(overlay)
+        self.overlay = overlay
+    }
+
+    private func checkCameraAccess() {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            configureSession()
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                DispatchQueue.main.async {
+                    if granted { self?.configureSession() } else { self?.onCancel?() }
+                }
+            }
+        default:
+            onCancel?()
+        }
+    }
+
+    private func configureSession() {
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            self.session.beginConfiguration()
+            self.session.sessionPreset = .photo
+
+            guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+                  let input = try? AVCaptureDeviceInput(device: camera),
+                  self.session.canAddInput(input),
+                  self.session.canAddOutput(self.photoOutput) else {
+                self.session.commitConfiguration()
+                DispatchQueue.main.async { self.onCancel?() }
+                return
+            }
+            self.session.addInput(input)
+            self.session.addOutput(self.photoOutput)
+            self.session.commitConfiguration()
+
+            DispatchQueue.main.async {
+                let previewLayer = AVCaptureVideoPreviewLayer(session: self.session)
+                previewLayer.videoGravity = .resizeAspectFill
+                previewLayer.frame = self.view.bounds
+                Self.applyPortrait(previewLayer.connection)
+                self.view.layer.insertSublayer(previewLayer, at: 0)
+                self.previewLayer = previewLayer
+                self.isConfigured = true
+            }
+
+            self.session.startRunning()
+        }
+    }
+
+    /// Lock the connection to portrait so the preview and captured photo are upright.
+    private static func applyPortrait(_ connection: AVCaptureConnection?) {
+        guard let connection else { return }
+        if #available(iOS 17.0, *) {
+            if connection.isVideoRotationAngleSupported(90) {
+                connection.videoRotationAngle = 90
+            }
+        } else if connection.isVideoOrientationSupported {
+            connection.videoOrientation = .portrait
+        }
+    }
+
+    private func capturePhoto() {
+        guard isConfigured else { return }
+        let bounds = view.bounds
+        captureAspect = bounds.height > 0 ? bounds.width / bounds.height : 0
+        overlay?.playCaptureFlash()
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        Self.applyPortrait(photoOutput.connection(with: .video))
+        photoOutput.capturePhoto(with: AVCapturePhotoSettings(), delegate: self)
+    }
+
+    func photoOutput(_ output: AVCapturePhotoOutput,
+                     didFinishProcessingPhoto photo: AVCapturePhoto,
+                     error: Error?) {
+        guard error == nil,
+              let data = photo.fileDataRepresentation(),
+              let image = UIImage(data: data) else {
+            DispatchQueue.main.async { [weak self] in self?.onCancel?() }
+            return
+        }
+        // resizeAspectFill into the full-screen preview == aspect-fill the photo to
+        // the screen, which is exactly what cropToPreview computes — so the saved
+        // image matches the preview the user framed.
+        let cropped = CameraPreviewCrop.cropToPreview(image, screenAspect: captureAspect)
+        DispatchQueue.main.async { [weak self] in self?.onImage?(cropped) }
+    }
+}
 
 // MARK: - Barcode Scanner
 struct BarcodeScannerView: UIViewControllerRepresentable {
