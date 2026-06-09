@@ -2029,6 +2029,8 @@ final class FoodCameraViewController: UIViewController, AVCapturePhotoCaptureDel
     private weak var overlay: CameraOverlayView?
     private let sessionQueue = DispatchQueue(label: "voidpen.food-camera.session")
     private var isConfigured = false
+    /// Guards against a double-tap on the shutter firing a second capture.
+    private var isCapturing = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -2124,7 +2126,8 @@ final class FoodCameraViewController: UIViewController, AVCapturePhotoCaptureDel
     }
 
     private func capturePhoto() {
-        guard isConfigured else { return }
+        guard isConfigured, !isCapturing else { return }
+        isCapturing = true
         overlay?.playCaptureFlash()
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         Self.applyPortrait(photoOutput.connection(with: .video))
