@@ -69,6 +69,13 @@ enum CameraPreviewCrop {
         return UIImage(cgImage: cropped, scale: upright.scale, orientation: .up)
     }
 
+    /// Returns `image` with its pixel buffer baked to `.up` orientation (no
+    /// crop). Use when keeping the full camera frame but guaranteeing the saved
+    /// photo is upright for display, storage, and AI upload.
+    static func uprightImage(_ image: UIImage) -> UIImage {
+        normalizedUp(image)
+    }
+
     /// Redraws `image` so its pixel buffer is upright (`.up` orientation),
     /// letting the crop be expressed directly in display coordinates.
     private static func normalizedUp(_ image: UIImage) -> UIImage {

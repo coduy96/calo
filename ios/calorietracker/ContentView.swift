@@ -2023,9 +2023,6 @@ final class FoodCameraViewController: UIViewController, AVCapturePhotoCaptureDel
     private weak var overlay: CameraOverlayView?
     private let sessionQueue = DispatchQueue(label: "voidpen.food-camera.session")
     private var isConfigured = false
-    /// Aspect (w/h) of the on-screen preview at the moment of capture — used to
-    /// crop the photo to exactly the resizeAspectFill visible region.
-    private var captureAspect: CGFloat = 0
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -2093,7 +2090,10 @@ final class FoodCameraViewController: UIViewController, AVCapturePhotoCaptureDel
 
             DispatchQueue.main.async {
                 let previewLayer = AVCaptureVideoPreviewLayer(session: self.session)
-                previewLayer.videoGravity = .resizeAspectFill
+                // resizeAspect (not Fill): show the WHOLE 4:3 frame like the
+                // native 1× camera, so the saved photo is a normal-aspect image,
+                // not cropped to the tall screen shape.
+                previewLayer.videoGravity = .resizeAspect
                 previewLayer.frame = self.view.bounds
                 Self.applyPortrait(previewLayer.connection)
                 self.view.layer.insertSublayer(previewLayer, at: 0)
@@ -2119,8 +2119,6 @@ final class FoodCameraViewController: UIViewController, AVCapturePhotoCaptureDel
 
     private func capturePhoto() {
         guard isConfigured else { return }
-        let bounds = view.bounds
-        captureAspect = bounds.height > 0 ? bounds.width / bounds.height : 0
         overlay?.playCaptureFlash()
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         Self.applyPortrait(photoOutput.connection(with: .video))
@@ -2136,11 +2134,11 @@ final class FoodCameraViewController: UIViewController, AVCapturePhotoCaptureDel
             DispatchQueue.main.async { [weak self] in self?.onCancel?() }
             return
         }
-        // resizeAspectFill into the full-screen preview == aspect-fill the photo to
-        // the screen, which is exactly what cropToPreview computes — so the saved
-        // image matches the preview the user framed.
-        let cropped = CameraPreviewCrop.cropToPreview(image, screenAspect: captureAspect)
-        DispatchQueue.main.async { [weak self] in self?.onImage?(cropped) }
+        // Keep the whole 4:3 frame (the resizeAspect preview shows all of it);
+        // just bake orientation upright. The saved photo == the framed preview,
+        // at a normal photo aspect.
+        let result = CameraPreviewCrop.uprightImage(image)
+        DispatchQueue.main.async { [weak self] in self?.onImage?(result) }
     }
 }
 
