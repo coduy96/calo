@@ -19,6 +19,7 @@ struct InlinePaywallStepView: View {
                     personalizedHeader
                     planRecapCard
                     lossSection
+                    compactValueAnchor
                     tierCards
                     trustStrip
                     footerLinks
@@ -38,6 +39,7 @@ struct InlinePaywallStepView: View {
             }
 
             VStack(spacing: 10) {
+                RiskReversalLine(trialEligible: selectedProduct?.introOfferCopy != nil)
                 subscribeButton
                 trialFinePrint
             }
@@ -211,6 +213,22 @@ struct InlinePaywallStepView: View {
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }
+    }
+
+    // MARK: - Compact value anchor
+
+    private var compactValueAnchor: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(AppColors.calorie)
+            Text("Cheaper than a single nutritionist visit — for a whole month.")
+                .font(.system(.caption, design: .rounded, weight: .medium))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - Tier cards
