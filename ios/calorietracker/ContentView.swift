@@ -2164,14 +2164,29 @@ final class FoodCameraViewController: UIViewController, AVCapturePhotoCaptureDel
 
         sessionQueue.async {
             do { try device.lockForConfiguration() } catch { return }
-            if device.isFocusPointOfInterestSupported, device.isFocusModeSupported(.autoFocus) {
+
+            // Set point and mode INDEPENDENTLY. The old combined guard skipped
+            // focus entirely when a device didn't offer one-shot .autoFocus.
+            // Prefer continuous AF/AE so the camera visibly racks to the tapped
+            // point (a one-shot can complete imperceptibly).
+            if device.isFocusPointOfInterestSupported {
                 device.focusPointOfInterest = devicePoint
+            }
+            if device.isFocusModeSupported(.continuousAutoFocus) {
+                device.focusMode = .continuousAutoFocus
+            } else if device.isFocusModeSupported(.autoFocus) {
                 device.focusMode = .autoFocus
             }
-            if device.isExposurePointOfInterestSupported, device.isExposureModeSupported(.continuousAutoExposure) {
+
+            if device.isExposurePointOfInterestSupported {
                 device.exposurePointOfInterest = devicePoint
-                device.exposureMode = .continuousAutoExposure
             }
+            if device.isExposureModeSupported(.continuousAutoExposure) {
+                device.exposureMode = .continuousAutoExposure
+            } else if device.isExposureModeSupported(.autoExpose) {
+                device.exposureMode = .autoExpose
+            }
+
             device.unlockForConfiguration()
         }
     }
