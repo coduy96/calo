@@ -217,19 +217,19 @@ export function LandingPage({
               </div>
             </div>
 
-            {/* Real app home screen, framed in a phone */}
+            {/* Lifestyle hero scene — app + every way to log a meal */}
             <div className="hero-stage">
               <div className="hero-glow" />
-              <div className="hero-phone reveal d2">
+              <figure className="hero-scene reveal d2">
                 <Image
-                  src="/screenshots/hero-home.png"
+                  src="/screenshots/hero-scene.png"
                   alt={dict.alts.heroHome}
-                  width={1206}
-                  height={2622}
+                  width={1051}
+                  height={1015}
                   priority
-                  sizes="(max-width: 480px) 80vw, 300px"
+                  sizes="(max-width: 980px) 92vw, 520px"
                 />
-              </div>
+              </figure>
             </div>
           </div>
         </section>
