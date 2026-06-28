@@ -484,3 +484,42 @@ html { scroll-behavior: smooth; }
   .vp-landing .footer-grid { grid-template-columns: 1fr; }
   .vp-landing .hero-proof { flex-direction: column; }
 }
+
+/* ============================================================
+   LANGUAGE SWITCHER
+   ============================================================ */
+.vp-landing .lang-switch {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--card); color: var(--ink-2);
+  padding: 9px 12px; border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-body); font-weight: 600; font-size: .92rem;
+  transition: box-shadow .18s ease, transform .18s ease;
+}
+.vp-landing .lang-switch:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.vp-landing .lang-switch svg { width: 18px; height: 18px; flex: none; color: var(--ink-soft); }
+.vp-landing .lang-switch select {
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  background: transparent; border: none; outline: none;
+  font: inherit; color: inherit; cursor: pointer; padding: 0 2px;
+}
+/* Mobile menu: full-width row, matching the menu links */
+.vp-landing .mobile-menu .lang-switch {
+  margin-top: 14px; width: 100%; justify-content: center; padding: 14px; font-size: 1.05rem;
+}
+@media (max-width: 760px) {
+  /* Top-bar switcher hides on mobile (like the badge); the one in the
+     mobile menu takes over. */
+  .vp-landing .nav-cta .lang-switch { display: none; }
+}
+
+/* ============================================================
+   RTL (Arabic)
+   ============================================================ */
+.vp-landing[dir="rtl"] { text-align: right; }
+.vp-landing[dir="rtl"] .appstore .as-text { text-align: right; }
+.vp-landing[dir="rtl"] .step-num { right: auto; left: 22px; }
+.vp-landing[dir="rtl"] .stat + .stat { border-left: none; border-right: 1px solid var(--line); }
+@media (max-width: 1000px) {
+  .vp-landing[dir="rtl"] .flist { text-align: right; }
+}

@@ -1,0 +1,175 @@
+{
+  "meta": {
+    "title": "voidpen — KI-Kalorienzähler: Foto knipsen, Makros treffen",
+    "description": "Knipsen, sprechen, scannen oder tippen. voidpen erfasst dein Essen in Sekunden, trackt jedes Makro und coacht dich per KI zu deinen Zielen.",
+    "appDescription": "KI-Kalorienzähler fürs iPhone. Foto knipsen, sprechen, Etikett scannen oder tippen — voidpen erfasst Kalorien, Protein, Kohlenhydrate und Fett in Sekunden und synchronisiert mit Apple Health."
+  },
+  "nav": {
+    "features": "Funktionen",
+    "how": "So funktioniert's",
+    "coach": "KI-Coach",
+    "faq": "FAQ",
+    "blog": "Blog",
+    "language": "Sprache"
+  },
+  "appStore": {
+    "download": "Laden im",
+    "store": "App Store"
+  },
+  "hero": {
+    "eyebrow": "KI-Ernährungstracking",
+    "titleLine1": "Triff deine",
+    "titleHighlight": "Makros",
+    "titleLine3": "ganz mühelos",
+    "lead": "Kalorien, Protein, Kohlenhydrate und Fett auf einen Blick. Foto knipsen, laut aussprechen oder Etikett scannen — {brand} rechnet für dich.",
+    "ctaSecondary": "So funktioniert's",
+    "proof": "{rating} aus {count} Bewertungen"
+  },
+  "stats": {
+    "appStoreRating": "App-Store-Bewertung",
+    "mealsLogged": "Erfasste Mahlzeiten",
+    "avgLogTime": "Ø Erfassungszeit",
+    "foodsInDatabase": "Lebensmittel in der Datenbank"
+  },
+  "gallery": {
+    "eyebrow": "Für den echten Alltag gemacht",
+    "titleLine1": "Alles, was du brauchst,",
+    "titleHighlight": "nichts, was du nicht brauchst",
+    "lead": "Ein kompletter Blick auf die App — Essen erfassen, Makros tracken, mit deinem Coach chatten und echte Fortschritte wachsen sehen.",
+    "hint": "Wische, um jeden Screen zu entdecken"
+  },
+  "featureInput": {
+    "eyebrow": "Knipsen. Sprechen. Scannen. Tippen.",
+    "title": "Essen in Sekunden erfassen",
+    "lead": "Viele Wege zur Eingabe. Ein cleverer Weg zum Erfassen. Wie auch immer du isst — es gibt einen schnelleren Weg, es zu tracken. Ohne endloses Suchen.",
+    "items": [
+      {
+        "title": "Foto & Sprache",
+        "body": "Richte die Kamera auf den Teller oder beschreibe deine Mahlzeit einfach laut."
+      },
+      {
+        "title": "Barcode- & Etikett-Scan",
+        "body": "Scanne verpackte Lebensmittel und Nährwerttabellen für exakte Zahlen."
+      },
+      {
+        "title": "KI-Texteingabe",
+        "body": "Tippe „zwei Eier und Toast“ — die KI schätzt die Makros im Nu."
+      }
+    ]
+  },
+  "featureMacros": {
+    "eyebrow": "Triff deine Makros",
+    "titleLine1": "Dein ganzer Tag,",
+    "titleLine2": "ein Blick",
+    "lead": "Kalorien, Protein, Kohlenhydrate und Fett — alles auf einem wunderschönen Dashboard. Sieh sofort beim Öffnen, was dir für heute noch bleibt.",
+    "items": [
+      {
+        "title": "Live-Kalorienring",
+        "body": "Sieh zu, wie sich dein Budget in Echtzeit füllt, während du erfasst."
+      },
+      {
+        "title": "Aufschlüsselung pro Mahlzeit",
+        "body": "Tippe auf eine Mahlzeit und sieh genau, woher deine Makros kommen."
+      },
+      {
+        "title": "Homescreen-Widgets",
+        "body": "Behalte deine Ziele einen Tipp entfernt — direkt auf dem Sperrbildschirm."
+      }
+    ]
+  },
+  "steps": {
+    "eyebrow": "So funktioniert's",
+    "title": "In drei Tipps getrackt",
+    "lead": "Keine Küchenwaagen, keine Tabellen, kein schlechtes Gewissen. Einfach öffnen, erfassen und weitermachen.",
+    "items": [
+      {
+        "title": "Festhalten",
+        "body": "Foto knipsen, sprechen, Barcode scannen oder tippen. Was im Moment am schnellsten geht."
+      },
+      {
+        "title": "Die KI rechnet",
+        "body": "voidpen erkennt das Lebensmittel und füllt Kalorien und jedes Makro automatisch ein."
+      },
+      {
+        "title": "Fortschritt sehen",
+        "body": "Sieh, wie sich Gewicht, Kalorien und Trends über Wochen einpendeln — und bleib dauerhaft dran."
+      }
+    ]
+  },
+  "coach": {
+    "eyebrow": "Triff deinen KI-Coach",
+    "titleLine1": "Clevere Hilfe für",
+    "titleLine2": "Mahlzeiten, Ziele",
+    "titleHighlight": "& Gewohnheiten",
+    "lead": "Frag, was du willst. Dein Coach kennt deine Ziele und deine Historie — damit der Rat wirklich zu deinem Tag passt, nicht zu einem 08/15-Plan.",
+    "chips": ["Mein Protein-Ziel treffen", "Mahlzeiten vorschlagen", "Fortschritt tracken"]
+  },
+  "testimonials": {
+    "eyebrow": "Von Trackern geliebt",
+    "title": "Menschen bleiben dabei",
+    "quotes": [
+      {
+        "text": "Ich habe jeden Tracker da draußen ausprobiert. Ein Foto knipsen und in Sekunden die Makros zurückbekommen — nur deshalb logge ich seit 90 Tagen am Stück.",
+        "name": "Maya R.",
+        "caption": "14 lbs abgenommen"
+      },
+      {
+        "text": "Der KI-Coach fühlt sich an wie das Schreiben mit einer Ernährungsberaterin, die sich wirklich an meine Ziele erinnert. Sie hat mich angestupst, mein Protein zu fixen — und es hat funktioniert.",
+        "name": "Daniel K.",
+        "caption": "Lean Bulk, +6 lbs Muskeln"
+      },
+      {
+        "text": "Das Dashboard ist wunderschön und die Widgets halten mich ehrlich. Die erste App, bei der sich Tracken leicht anfühlt statt wie eine lästige Pflicht.",
+        "name": "Priya S.",
+        "caption": "Hält das Gewicht seit 1 Jahr"
+      }
+    ]
+  },
+  "faq": {
+    "eyebrow": "Fragen",
+    "title": "Gut zu wissen",
+    "items": [
+      {
+        "q": "Wie genau ist die Foto-Erfassung?",
+        "a": "Die KI von voidpen erkennt Tausende gängige Lebensmittel und schätzt die Portionsgröße aus dem Foto. Du kannst jederzeit antippen, um Gramm anzupassen oder einen genaueren Treffer zu wählen — und sie lernt die Lebensmittel, die du am häufigsten isst."
+      },
+      {
+        "q": "Gibt es eine kostenlose Version?",
+        "a": "Ja. Essen erfassen, Makros tracken und Widgets nutzen ist kostenlos. Der KI-Coach und unbegrenzte Foto-Erfassung gehören zu voidpen Pro — mit kostenloser Testphase zum Start."
+      },
+      {
+        "q": "Funktioniert es mit Apple Health?",
+        "a": "voidpen synchronisiert Gewicht, Kalorien und Aktivität mit Apple Health, sodass deine Ernährungsdaten direkt neben dem Rest deines Gesundheitsbilds liegen."
+      },
+      {
+        "q": "Kann es meine Makro-Ziele für mich festlegen?",
+        "a": "Absolut. Sag der App dein Ziel — abnehmen, halten oder zunehmen — und sie berechnet Kalorien- und Makro-Ziele und passt sie an, wenn sich deine Gewichtstrends ändern."
+      }
+    ]
+  },
+  "cta": {
+    "titleLine1": "Deine Makros,",
+    "titleLine2": "endlich im Griff",
+    "body": "Lade {brand} herunter und erfasse deine erste Mahlzeit in unter fünf Sekunden. Kostenlos zum Start."
+  },
+  "footer": {
+    "about": "KI-Ernährungstracking, das mit deinem echten Essalltag Schritt hält. Knipsen, sprechen, scannen oder tippen.",
+    "colProduct": "Produkt",
+    "colCompany": "Unternehmen",
+    "colSupport": "Support",
+    "download": "Download",
+    "contact": "Kontakt",
+    "helpCenter": "Hilfecenter",
+    "privacy": "Datenschutz",
+    "terms": "AGB",
+    "rights": "© 2026 {brand}. Alle Rechte vorbehalten."
+  },
+  "alts": {
+    "heroHome": "voidpen App-Startbildschirm — Kalorienring und Makro-Aufschlüsselung",
+    "macros": "Makro-Dashboard mit Kalorienring",
+    "input": "Mehrere Wege, Essen zu erfassen",
+    "coach": "KI-Coach-Chat",
+    "progress": "Fortschrittsdiagramme",
+    "widgets": "Homescreen-Widgets"
+  }
+}

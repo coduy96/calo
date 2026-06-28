@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getAllPosts } from "@/lib/blog";
+import { hrefLangAlternates } from "@/lib/i18n/config";
 
 const siteUrl = "https://voidpen.com";
 
@@ -11,7 +12,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
   return [
-    { url: `${siteUrl}/`, lastModified, priority: 1 },
+    {
+      // The landing page exists in 15 languages; declare them all as
+      // hreflang alternates of the canonical root so search engines cluster
+      // them. (/de, /fr, … are reachable from these alternates.)
+      url: `${siteUrl}/`,
+      lastModified,
+      priority: 1,
+      alternates: { languages: hrefLangAlternates() },
+    },
     { url: `${siteUrl}/blogs`, lastModified, priority: 0.8 },
     ...posts,
     { url: `${siteUrl}/support`, lastModified, priority: 0.9 },

@@ -1,0 +1,175 @@
+{
+  "meta": {
+    "title": "voidpen — Conta calorie AI: scatta una foto, centra i macro",
+    "description": "Scatta, parla, scansiona o scrivi. voidpen registra i tuoi pasti in pochi secondi, traccia ogni macro e ti guida verso i tuoi obiettivi con l'AI.",
+    "appDescription": "Conta calorie AI per iPhone. Scatta una foto, parla, scansiona un'etichetta o scrivi: voidpen registra calorie, proteine, carboidrati e grassi in pochi secondi e si sincronizza con Apple Health."
+  },
+  "nav": {
+    "features": "Funzioni",
+    "how": "Come funziona",
+    "coach": "Coach AI",
+    "faq": "FAQ",
+    "blog": "Blog",
+    "language": "Lingua"
+  },
+  "appStore": {
+    "download": "Scaricalo su",
+    "store": "App Store"
+  },
+  "hero": {
+    "eyebrow": "Tracciamento nutrizionale AI",
+    "titleLine1": "Centra i tuoi",
+    "titleHighlight": "macro",
+    "titleLine3": "senza fatica",
+    "lead": "Calorie, proteine, carboidrati e grassi a colpo d'occhio. Scatta una foto, dillo a voce o scansiona un'etichetta: ai conti ci pensa {brand}.",
+    "ctaSecondary": "Scopri come funziona",
+    "proof": "{rating} da {count} recensioni"
+  },
+  "stats": {
+    "appStoreRating": "Valutazione su App Store",
+    "mealsLogged": "Pasti registrati",
+    "avgLogTime": "Tempo medio di registrazione",
+    "foodsInDatabase": "Alimenti nel database"
+  },
+  "gallery": {
+    "eyebrow": "Pensato per la vita reale",
+    "titleLine1": "Tutto quello che ti serve,",
+    "titleHighlight": "niente di superfluo",
+    "lead": "Uno sguardo completo all'app: registra i pasti, traccia i macro, parla con il tuo coach e vedi i progressi crescere davvero.",
+    "hint": "Scorri per esplorare ogni schermata"
+  },
+  "featureInput": {
+    "eyebrow": "Scatta. Parla. Scansiona. Scrivi.",
+    "title": "Registra i pasti in pochi secondi",
+    "lead": "Tanti modi per inserire i dati. Uno solo, intelligente, per registrarli. Comunque tu mangi, c'è un modo più veloce per tracciarlo, senza ricerche infinite.",
+    "items": [
+      {
+        "title": "Foto e voce",
+        "body": "Inquadra il piatto con la fotocamera o descrivi il pasto a voce."
+      },
+      {
+        "title": "Scansione di codici a barre ed etichette",
+        "body": "Scansiona i cibi confezionati e le etichette nutrizionali per avere i numeri esatti."
+      },
+      {
+        "title": "Inserimento testo con AI",
+        "body": "Scrivi «due uova e un toast»: l'AI stima i macro all'istante."
+      }
+    ]
+  },
+  "featureMacros": {
+    "eyebrow": "Centra i tuoi macro",
+    "titleLine1": "Tutta la tua giornata,",
+    "titleLine2": "in un colpo d'occhio",
+    "lead": "Calorie, proteine, carboidrati e grassi: tutto in un'unica dashboard, bella da vedere. Vedi cosa ti resta per la giornata appena apri l'app.",
+    "items": [
+      {
+        "title": "Anello calorie in tempo reale",
+        "body": "Guarda il tuo budget riempirsi in tempo reale mentre registri."
+      },
+      {
+        "title": "Dettaglio per pasto",
+        "body": "Tocca qualsiasi pasto per vedere esattamente da dove arrivano i tuoi macro."
+      },
+      {
+        "title": "Widget nella schermata Home",
+        "body": "Tieni i tuoi obiettivi a un tocco di distanza, anche sulla schermata di blocco."
+      }
+    ]
+  },
+  "steps": {
+    "eyebrow": "Come funziona",
+    "title": "Tracciato in tre tocchi",
+    "lead": "Niente bilance da cucina, niente fogli di calcolo, niente sensi di colpa. Apri, registra e prosegui la tua giornata.",
+    "items": [
+      {
+        "title": "Cattura il pasto",
+        "body": "Scatta una foto, parla, scansiona un codice a barre o scrivi. Quello che è più veloce in quel momento."
+      },
+      {
+        "title": "Ai conti pensa l'AI",
+        "body": "voidpen riconosce l'alimento e compila calorie e ogni macro in automatico."
+      },
+      {
+        "title": "Vedi i progressi",
+        "body": "Vedi peso, calorie e tendenze allinearsi nel corso delle settimane, e resta in carreggiata per sempre."
+      }
+    ]
+  },
+  "coach": {
+    "eyebrow": "Ecco il tuo coach AI",
+    "titleLine1": "Un aiuto intelligente per",
+    "titleLine2": "pasti, obiettivi",
+    "titleHighlight": "e abitudini",
+    "lead": "Chiedi qualsiasi cosa. Il tuo coach conosce i tuoi obiettivi e la tua storia, così i consigli si adattano davvero alla tua giornata, non a un piano generico.",
+    "chips": ["Raggiungi il mio obiettivo di proteine", "Suggerisci dei pasti", "Traccia i miei progressi"]
+  },
+  "testimonials": {
+    "eyebrow": "Amato da chi traccia",
+    "title": "Le persone non lo mollano",
+    "quotes": [
+      {
+        "text": "Ho provato ogni app per tracciare là fuori. Scattare una foto e riavere i macro in pochi secondi è l'unico motivo per cui ho registrato 90 giorni di fila.",
+        "name": "Maya R.",
+        "caption": "−14 lbs"
+      },
+      {
+        "text": "Il coach AI è come scrivere a un nutrizionista che ricorda davvero i miei obiettivi. Mi ha spinto a sistemare le proteine e ha funzionato.",
+        "name": "Daniel K.",
+        "caption": "Massa pulita, +6 lbs di muscoli"
+      },
+      {
+        "text": "La dashboard è splendida e i widget mi tengono onesto. La prima app che ha reso il tracciamento leggero invece di una scocciatura.",
+        "name": "Priya S.",
+        "caption": "In mantenimento da 1 anno"
+      }
+    ]
+  },
+  "faq": {
+    "eyebrow": "Domande",
+    "title": "Cose utili da sapere",
+    "items": [
+      {
+        "q": "Quanto è accurata la registrazione tramite foto?",
+        "a": "L'AI di voidpen riconosce migliaia di alimenti comuni e stima la dimensione della porzione dalla foto. Puoi sempre toccare per regolare i grammi o scegliere una corrispondenza più precisa, e impara gli alimenti che mangi più spesso."
+      },
+      {
+        "q": "Esiste una versione gratuita?",
+        "a": "Sì. Puoi registrare i pasti, tracciare i macro e usare i widget gratuitamente. Il coach AI e la registrazione illimitata tramite foto fanno parte di voidpen Pro, con una prova gratuita per iniziare."
+      },
+      {
+        "q": "Funziona con Apple Health?",
+        "a": "voidpen sincronizza peso, calorie e attività con Apple Health, così i tuoi dati nutrizionali vivono accanto al resto del tuo quadro di salute."
+      },
+      {
+        "q": "Può impostare i miei obiettivi di macro al posto mio?",
+        "a": "Assolutamente. Indica all'app il tuo obiettivo — dimagrire, mantenere o aumentare — e calcola gli obiettivi di calorie e macro, poi li adatta man mano che cambiano le tendenze del tuo peso."
+      }
+    ]
+  },
+  "cta": {
+    "titleLine1": "I tuoi macro,",
+    "titleLine2": "finalmente gestiti",
+    "body": "Scarica {brand} e registra il tuo primo pasto in meno di cinque secondi. Gratis per iniziare."
+  },
+  "footer": {
+    "about": "Tracciamento nutrizionale AI che sta al passo con come mangi davvero. Scatta, parla, scansiona o scrivi.",
+    "colProduct": "Prodotto",
+    "colCompany": "Azienda",
+    "colSupport": "Assistenza",
+    "download": "Scarica",
+    "contact": "Contatti",
+    "helpCenter": "Centro assistenza",
+    "privacy": "Privacy",
+    "terms": "Termini",
+    "rights": "© 2026 {brand}. Tutti i diritti riservati."
+  },
+  "alts": {
+    "heroHome": "Schermata Home dell'app voidpen — anello calorie e dettaglio dei macro",
+    "macros": "Dashboard dei macro con anello calorie",
+    "input": "Tanti modi per registrare i pasti",
+    "coach": "Chat con il coach AI",
+    "progress": "Grafici dei progressi",
+    "widgets": "Widget nella schermata Home"
+  }
+}

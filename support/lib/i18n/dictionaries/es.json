@@ -1,0 +1,175 @@
+{
+  "meta": {
+    "title": "voidpen — Contador de calorías con IA: foto y a por tus macros",
+    "description": "Haz una foto, habla, escanea o escribe. voidpen registra tu comida en segundos, controla cada macro y te guía hacia tus objetivos con IA.",
+    "appDescription": "Contador de calorías con IA para iPhone. Haz una foto, habla, escanea una etiqueta o escribe: voidpen registra calorías, proteínas, carbohidratos y grasas en segundos y se sincroniza con Apple Health."
+  },
+  "nav": {
+    "features": "Funciones",
+    "how": "Cómo funciona",
+    "coach": "Coach con IA",
+    "faq": "Preguntas frecuentes",
+    "blog": "Blog",
+    "language": "Idioma"
+  },
+  "appStore": {
+    "download": "Descárgalo en el",
+    "store": "App Store"
+  },
+  "hero": {
+    "eyebrow": "Nutrición con IA",
+    "titleLine1": "Cumple tus",
+    "titleHighlight": "macros",
+    "titleLine3": "sin esfuerzo",
+    "lead": "Calorías, proteínas, carbohidratos y grasas de un vistazo. Haz una foto, dilo en voz alta o escanea una etiqueta: {brand} hace los cálculos.",
+    "ctaSecondary": "Mira cómo funciona",
+    "proof": "{rating} en {count} reseñas"
+  },
+  "stats": {
+    "appStoreRating": "Valoración en App Store",
+    "mealsLogged": "Comidas registradas",
+    "avgLogTime": "Tiempo medio de registro",
+    "foodsInDatabase": "Alimentos en la base de datos"
+  },
+  "gallery": {
+    "eyebrow": "Pensado para el día a día",
+    "titleLine1": "Todo lo que necesitas,",
+    "titleHighlight": "nada que sobre",
+    "lead": "Una visión completa de la app: registra comida, controla tus macros, habla con tu coach y mira cómo suma tu progreso real.",
+    "hint": "Desliza para explorar cada pantalla"
+  },
+  "featureInput": {
+    "eyebrow": "Foto. Voz. Escáner. Texto.",
+    "title": "Registra comida en segundos",
+    "lead": "Muchas formas de introducir datos. Una sola forma inteligente de registrar. Comas como comas, hay una manera más rápida de anotarlo, sin búsquedas interminables.",
+    "items": [
+      {
+        "title": "Foto y voz",
+        "body": "Apunta la cámara a un plato o simplemente describe tu comida en voz alta."
+      },
+      {
+        "title": "Código de barras y etiquetas",
+        "body": "Escanea alimentos envasados y etiquetas nutricionales para obtener cifras exactas."
+      },
+      {
+        "title": "Texto con IA",
+        "body": "Escribe «dos huevos y una tostada» y la IA estima los macros al instante."
+      }
+    ]
+  },
+  "featureMacros": {
+    "eyebrow": "Cumple tus macros",
+    "titleLine1": "Todo tu día,",
+    "titleLine2": "de un vistazo",
+    "lead": "Calorías, proteínas, carbohidratos y grasas, todo en un panel precioso. Mira lo que te queda del día en el momento en que abres la app.",
+    "items": [
+      {
+        "title": "Anillo de calorías en vivo",
+        "body": "Mira cómo se llena tu presupuesto en tiempo real a medida que registras."
+      },
+      {
+        "title": "Desglose por comida",
+        "body": "Toca cualquier comida para ver exactamente de dónde salen tus macros."
+      },
+      {
+        "title": "Widgets en la pantalla de inicio",
+        "body": "Ten tus objetivos a un toque, justo en tu pantalla de bloqueo."
+      }
+    ]
+  },
+  "steps": {
+    "eyebrow": "Cómo funciona",
+    "title": "Tres toques y listo",
+    "lead": "Sin básculas de comida, sin hojas de cálculo, sin culpa. Solo abre, registra y sigue con tu día.",
+    "items": [
+      {
+        "title": "Captúralo",
+        "body": "Haz una foto, habla, escanea un código de barras o escribe. Lo que sea más rápido en ese momento."
+      },
+      {
+        "title": "La IA hace los cálculos",
+        "body": "voidpen identifica el alimento y rellena las calorías y cada macro automáticamente."
+      },
+      {
+        "title": "Mira tu progreso",
+        "body": "Ve cómo se alinean peso, calorías y tendencias semana a semana, y mantente en el buen camino para siempre."
+      }
+    ]
+  },
+  "coach": {
+    "eyebrow": "Te presentamos a tu coach con IA",
+    "titleLine1": "Ayuda inteligente para",
+    "titleLine2": "comidas, objetivos",
+    "titleHighlight": "y hábitos",
+    "lead": "Pregunta lo que quieras. Tu coach conoce tus objetivos y tu historial, así que los consejos encajan de verdad con tu día, no con un plan genérico.",
+    "chips": ["Cumplir mi objetivo de proteína", "Sugerir comidas", "Seguir mi progreso"]
+  },
+  "testimonials": {
+    "eyebrow": "Adorado por quienes registran",
+    "title": "La gente no lo deja",
+    "quotes": [
+      {
+        "text": "He probado todos los contadores que existen. Hacer una foto y recibir los macros en segundos es la única razón por la que llevo 90 días seguidos registrando.",
+        "name": "Maya R.",
+        "caption": "−14 lbs"
+      },
+      {
+        "text": "El coach con IA es como mandarle un mensaje a un nutricionista que de verdad recuerda mis objetivos. Me animó a corregir mi proteína y funcionó.",
+        "name": "Daniel K.",
+        "caption": "Volumen limpio, +6 lbs de músculo"
+      },
+      {
+        "text": "El panel es precioso y los widgets me mantienen a raya. La primera app que hace que registrar se sienta ligero en vez de una tarea pesada.",
+        "name": "Priya S.",
+        "caption": "Manteniéndome 1 year"
+      }
+    ]
+  },
+  "faq": {
+    "eyebrow": "Preguntas",
+    "title": "Bueno saberlo",
+    "items": [
+      {
+        "q": "¿Qué precisión tiene el registro por foto?",
+        "a": "La IA de voidpen reconoce miles de alimentos comunes y estima el tamaño de la ración a partir de la foto. Siempre puedes tocar para ajustar los gramos o elegir una coincidencia más concreta, y aprende los alimentos que comes más a menudo."
+      },
+      {
+        "q": "¿Hay una versión gratuita?",
+        "a": "Sí. Puedes registrar comida, controlar tus macros y usar los widgets gratis. El coach con IA y el registro por foto ilimitado forman parte de voidpen Pro, con una prueba gratuita para empezar."
+      },
+      {
+        "q": "¿Funciona con Apple Health?",
+        "a": "voidpen sincroniza peso, calorías y actividad con Apple Health, así que tus datos de nutrición conviven con el resto de tu panorama de salud."
+      },
+      {
+        "q": "¿Puede fijar mis objetivos de macros por mí?",
+        "a": "Por supuesto. Dile a la app tu objetivo —perder, mantener o ganar— y calcula los objetivos de calorías y macros, y los ajusta a medida que cambia la tendencia de tu peso."
+      }
+    ]
+  },
+  "cta": {
+    "titleLine1": "Tus macros,",
+    "titleLine2": "por fin bajo control",
+    "body": "Descarga {brand} y registra tu primera comida en menos de cinco segundos. Gratis para empezar."
+  },
+  "footer": {
+    "about": "Nutrición con IA que sigue el ritmo de cómo comes de verdad. Haz una foto, habla, escanea o escribe.",
+    "colProduct": "Producto",
+    "colCompany": "Empresa",
+    "colSupport": "Soporte",
+    "download": "Descargar",
+    "contact": "Contacto",
+    "helpCenter": "Centro de ayuda",
+    "privacy": "Privacidad",
+    "terms": "Términos",
+    "rights": "© 2026 {brand}. Todos los derechos reservados."
+  },
+  "alts": {
+    "heroHome": "Pantalla de inicio de la app voidpen: anillo de calorías y desglose de macros",
+    "macros": "Panel de macros con anillo de calorías",
+    "input": "Varias formas de registrar comida",
+    "coach": "Chat con el coach con IA",
+    "progress": "Gráficas de progreso",
+    "widgets": "Widgets en la pantalla de inicio"
+  }
+}

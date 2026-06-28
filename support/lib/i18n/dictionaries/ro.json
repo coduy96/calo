@@ -1,0 +1,175 @@
+{
+  "meta": {
+    "title": "voidpen — Contor de calorii AI: o poză și îți atingi macros",
+    "description": "Fotografiază, vorbește, scanează sau scrie. voidpen îți înregistrează mâncarea în câteva secunde, urmărește fiecare macronutrient și te ghidează spre obiective cu AI.",
+    "appDescription": "Contor de calorii AI pentru iPhone. Fă o poză, vorbește, scanează o etichetă sau scrie — voidpen înregistrează calorii, proteine, carbohidrați și grăsimi în câteva secunde și se sincronizează cu Apple Health."
+  },
+  "nav": {
+    "features": "Funcții",
+    "how": "Cum funcționează",
+    "coach": "Antrenor AI",
+    "faq": "Întrebări frecvente",
+    "blog": "Blog",
+    "language": "Limbă"
+  },
+  "appStore": {
+    "download": "Descarcă din",
+    "store": "App Store"
+  },
+  "hero": {
+    "eyebrow": "Urmărire nutrițională cu AI",
+    "titleLine1": "Atinge-ți",
+    "titleHighlight": "macros",
+    "titleLine3": "fără efort",
+    "lead": "Calorii, proteine, carbohidrați și grăsimi dintr-o privire. Fă o poză, spune-o cu voce tare sau scanează o etichetă — {brand} face calculele.",
+    "ctaSecondary": "Vezi cum funcționează",
+    "proof": "{rating} din {count} recenzii"
+  },
+  "stats": {
+    "appStoreRating": "Notă pe App Store",
+    "mealsLogged": "Mese înregistrate",
+    "avgLogTime": "Timp mediu de înregistrare",
+    "foodsInDatabase": "Alimente în baza de date"
+  },
+  "gallery": {
+    "eyebrow": "Creat pentru viața reală",
+    "titleLine1": "Tot ce ai nevoie,",
+    "titleHighlight": "nimic în plus",
+    "lead": "O privire completă asupra aplicației — înregistrezi mâncarea, urmărești macros, discuți cu antrenorul tău și vezi cum se adună progresul real.",
+    "hint": "Glisează pentru a explora fiecare ecran"
+  },
+  "featureInput": {
+    "eyebrow": "Fotografiază. Vorbește. Scanează. Scrie.",
+    "title": "Înregistrează mâncarea în câteva secunde",
+    "lead": "Mai multe moduri de introducere. Un singur mod inteligent de înregistrare. Oricum ai mânca, există o cale mai rapidă să o urmărești — fără căutări nesfârșite.",
+    "items": [
+      {
+        "title": "Foto și voce",
+        "body": "Îndreaptă camera spre farfurie sau pur și simplu descrie-ți masa cu voce tare."
+      },
+      {
+        "title": "Scanare cod de bare și etichete",
+        "body": "Scanează alimente ambalate și etichete nutriționale pentru cifre exacte."
+      },
+      {
+        "title": "Introducere text cu AI",
+        "body": "Scrie „două ouă și o felie de pâine prăjită” — AI-ul estimează instant macros."
+      }
+    ]
+  },
+  "featureMacros": {
+    "eyebrow": "Atinge-ți macros",
+    "titleLine1": "Toată ziua ta,",
+    "titleLine2": "dintr-o privire",
+    "lead": "Calorii, proteine, carbohidrați și grăsimi — toate pe un singur tablou de bord superb. Vezi cât ți-a mai rămas pe ziua respectivă din clipa în care deschizi aplicația.",
+    "items": [
+      {
+        "title": "Inel de calorii în timp real",
+        "body": "Privește cum ți se umple bugetul în timp real, pe măsură ce înregistrezi."
+      },
+      {
+        "title": "Detaliere pe fiecare masă",
+        "body": "Apasă pe orice masă ca să vezi exact de unde au venit macros."
+      },
+      {
+        "title": "Widgeturi pe ecranul principal",
+        "body": "Ține-ți obiectivele la o atingere distanță, chiar pe ecranul de blocare."
+      }
+    ]
+  },
+  "steps": {
+    "eyebrow": "Cum funcționează",
+    "title": "Trei atingeri și gata",
+    "lead": "Fără cântare de bucătărie, fără tabele, fără vinovăție. Doar deschizi, înregistrezi și îți vezi de zi.",
+    "items": [
+      {
+        "title": "Surprinde momentul",
+        "body": "Fă o poză, vorbește, scanează un cod de bare sau scrie. Oricum e mai rapid pe moment."
+      },
+      {
+        "title": "AI-ul face calculele",
+        "body": "voidpen identifică alimentul și completează automat caloriile și fiecare macronutrient."
+      },
+      {
+        "title": "Urmărește progresul",
+        "body": "Vezi cum greutatea, caloriile și tendințele se aliniază de-a lungul săptămânilor — și rămâi pe drumul cel bun pe termen lung."
+      }
+    ]
+  },
+  "coach": {
+    "eyebrow": "Fă cunoștință cu antrenorul tău AI",
+    "titleLine1": "Ajutor inteligent pentru",
+    "titleLine2": "mese, obiective",
+    "titleHighlight": "și obiceiuri",
+    "lead": "Întreabă orice. Antrenorul tău îți cunoaște obiectivele și istoricul — așa că sfaturile se potrivesc cu adevărat zilei tale, nu unui plan generic.",
+    "chips": ["Atinge-mi obiectivul de proteine", "Sugerează mese", "Urmărește-mi progresul"]
+  },
+  "testimonials": {
+    "eyebrow": "Adorat de cei care își urmăresc alimentația",
+    "title": "Oamenii rămân fideli",
+    "quotes": [
+      {
+        "text": "Am încercat toate aplicațiile de pe piață. O poză și primesc macros înapoi în câteva secunde — e singurul motiv pentru care am înregistrat 90 de zile la rând.",
+        "name": "Maya R.",
+        "caption": "Minus 14 lbs"
+      },
+      {
+        "text": "Antrenorul AI e ca și cum i-ai scrie unui nutriționist care chiar își amintește obiectivele mele. M-a împins să-mi corectez proteinele și a funcționat.",
+        "name": "Daniel K.",
+        "caption": "Masă slabă, +6 lbs mușchi"
+      },
+      {
+        "text": "Tabloul de bord e superb, iar widgeturile mă țin onest. Prima aplicație care a făcut urmărirea să pară ușoară, nu o corvoadă.",
+        "name": "Priya S.",
+        "caption": "Mențin de 1 an"
+      }
+    ]
+  },
+  "faq": {
+    "eyebrow": "Întrebări",
+    "title": "Bine de știut",
+    "items": [
+      {
+        "q": "Cât de precisă este înregistrarea prin poză?",
+        "a": "AI-ul voidpen recunoaște mii de alimente uzuale și estimează porția din poză. Poți oricând să apeși pentru a ajusta gramele sau pentru a alege o potrivire mai exactă — iar aplicația învață alimentele pe care le mănânci cel mai des."
+      },
+      {
+        "q": "Există o versiune gratuită?",
+        "a": "Da. Poți înregistra mâncarea, urmări macros și folosi widgeturile gratuit. Antrenorul AI și înregistrarea nelimitată prin poză fac parte din voidpen Pro, cu o perioadă de probă gratuită pentru început."
+      },
+      {
+        "q": "Funcționează cu Apple Health?",
+        "a": "voidpen sincronizează greutatea, caloriile și activitatea cu Apple Health, astfel încât datele tale nutriționale stau alături de restul tabloului tău de sănătate."
+      },
+      {
+        "q": "Îmi poate stabili singură obiectivele de macros?",
+        "a": "Absolut. Spune-i aplicației obiectivul tău — să slăbești, să te menții sau să iei în greutate — și ea calculează țintele de calorii și macros, apoi le ajustează pe măsură ce evoluează tendințele greutății tale."
+      }
+    ]
+  },
+  "cta": {
+    "titleLine1": "Macros tale,",
+    "titleLine2": "în sfârșit sub control",
+    "body": "Descarcă {brand} și înregistrează-ți prima masă în mai puțin de cinci secunde. Gratuit la început."
+  },
+  "footer": {
+    "about": "Urmărire nutrițională cu AI care ține pasul cu felul în care mănânci de fapt. Fotografiază, vorbește, scanează sau scrie.",
+    "colProduct": "Produs",
+    "colCompany": "Companie",
+    "colSupport": "Asistență",
+    "download": "Descarcă",
+    "contact": "Contact",
+    "helpCenter": "Centru de ajutor",
+    "privacy": "Confidențialitate",
+    "terms": "Termeni",
+    "rights": "© 2026 {brand}. Toate drepturile rezervate."
+  },
+  "alts": {
+    "heroHome": "Ecranul principal al aplicației voidpen — inel de calorii și detalierea macros",
+    "macros": "Tablou de bord pentru macros cu inel de calorii",
+    "input": "Mai multe moduri de a înregistra mâncarea",
+    "coach": "Conversație cu antrenorul AI",
+    "progress": "Grafice de progres",
+    "widgets": "Widgeturi pe ecranul principal"
+  }
+}

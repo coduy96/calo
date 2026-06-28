@@ -1,0 +1,175 @@
+{
+  "meta": {
+    "title": "voidpen — AI Calorie Tracker: Snap a Photo, Hit Your Macros",
+    "description": "Snap, speak, scan or type. voidpen logs your food in seconds, tracks every macro, and coaches you to your goals with AI.",
+    "appDescription": "AI calorie tracker for iPhone. Snap a photo, speak, scan a label or type — voidpen logs calories, protein, carbs and fat in seconds and syncs with Apple Health."
+  },
+  "nav": {
+    "features": "Features",
+    "how": "How it works",
+    "coach": "AI Coach",
+    "faq": "FAQ",
+    "blog": "Blog",
+    "language": "Language"
+  },
+  "appStore": {
+    "download": "Download on the",
+    "store": "App Store"
+  },
+  "hero": {
+    "eyebrow": "AI nutrition tracking",
+    "titleLine1": "Hit your",
+    "titleHighlight": "macros",
+    "titleLine3": "effortlessly",
+    "lead": "Calories, protein, carbs and fat at a glance. Snap a photo, say it out loud, or scan a label — {brand} does the math.",
+    "ctaSecondary": "See how it works",
+    "proof": "{rating} from {count} reviews"
+  },
+  "stats": {
+    "appStoreRating": "App Store rating",
+    "mealsLogged": "Meals logged",
+    "avgLogTime": "Avg. log time",
+    "foodsInDatabase": "Foods in database"
+  },
+  "gallery": {
+    "eyebrow": "Built for real life",
+    "titleLine1": "Everything you need,",
+    "titleHighlight": "nothing you don’t",
+    "lead": "A complete look at the app — log food, track macros, chat with your coach and watch real progress add up.",
+    "hint": "Swipe to explore every screen"
+  },
+  "featureInput": {
+    "eyebrow": "Snap. Speak. Scan. Type.",
+    "title": "Log food in seconds",
+    "lead": "Multiple ways to input. One smart way to log. However you eat, there’s a faster way to track it — no endless searching.",
+    "items": [
+      {
+        "title": "Photo & voice",
+        "body": "Point your camera at a plate or just describe your meal out loud."
+      },
+      {
+        "title": "Barcode & label scan",
+        "body": "Scan packaged foods and nutrition labels for exact numbers."
+      },
+      {
+        "title": "AI text input",
+        "body": "Type “two eggs and toast” — the AI estimates the macros instantly."
+      }
+    ]
+  },
+  "featureMacros": {
+    "eyebrow": "Hit your macros",
+    "titleLine1": "Your whole day,",
+    "titleLine2": "one glance",
+    "lead": "Calories, protein, carbs and fat — all on one beautiful dashboard. See what’s left in your day the moment you open the app.",
+    "items": [
+      {
+        "title": "Live calorie ring",
+        "body": "Watch your budget fill up in real time as you log."
+      },
+      {
+        "title": "Per-meal breakdown",
+        "body": "Tap any meal to see exactly where your macros came from."
+      },
+      {
+        "title": "Home screen widgets",
+        "body": "Keep your targets one tap away, right on your lock screen."
+      }
+    ]
+  },
+  "steps": {
+    "eyebrow": "How it works",
+    "title": "Three taps to tracked",
+    "lead": "No food scales, no spreadsheets, no guilt. Just open, log, and get on with your day.",
+    "items": [
+      {
+        "title": "Capture it",
+        "body": "Snap a photo, speak, scan a barcode or type. Whatever’s fastest in the moment."
+      },
+      {
+        "title": "AI does the math",
+        "body": "voidpen identifies the food and fills in calories and every macro automatically."
+      },
+      {
+        "title": "Watch progress",
+        "body": "See weight, calories and trends line up over weeks — and stay on track for good."
+      }
+    ]
+  },
+  "coach": {
+    "eyebrow": "Meet your AI coach",
+    "titleLine1": "Smart help for",
+    "titleLine2": "meals, goals",
+    "titleHighlight": "& habits",
+    "lead": "Ask anything. Your coach knows your targets and your history — so the advice actually fits your day, not a generic plan.",
+    "chips": ["Hit my protein goal", "Suggest meals", "Track my progress"]
+  },
+  "testimonials": {
+    "eyebrow": "Loved by trackers",
+    "title": "People stick with it",
+    "quotes": [
+      {
+        "text": "I’ve tried every tracker out there. Snapping a photo and getting macros back in seconds is the only reason I’ve logged 90 days straight.",
+        "name": "Maya R.",
+        "caption": "Down 14 lbs"
+      },
+      {
+        "text": "The AI coach feels like texting a nutritionist who actually remembers my goals. It nudged me to fix my protein and it worked.",
+        "name": "Daniel K.",
+        "caption": "Lean bulk, +6 lbs muscle"
+      },
+      {
+        "text": "The dashboard is gorgeous and the widgets keep me honest. First app that’s made tracking feel light instead of like a chore.",
+        "name": "Priya S.",
+        "caption": "Maintaining for 1 year"
+      }
+    ]
+  },
+  "faq": {
+    "eyebrow": "Questions",
+    "title": "Good to know",
+    "items": [
+      {
+        "q": "How accurate is the photo logging?",
+        "a": "voidpen’s AI recognizes thousands of common foods and estimates portion size from the photo. You can always tap to adjust grams or pick a more specific match — and it learns the foods you eat most."
+      },
+      {
+        "q": "Is there a free version?",
+        "a": "Yes. You can log food, track macros and use widgets for free. The AI coach and unlimited photo logging are part of voidpen Pro, with a free trial to start."
+      },
+      {
+        "q": "Does it work with Apple Health?",
+        "a": "voidpen syncs weight, calories and activity with Apple Health, so your nutrition data lives alongside the rest of your health picture."
+      },
+      {
+        "q": "Can it set my macro targets for me?",
+        "a": "Absolutely. Tell the app your goal — lose, maintain or gain — and it calculates calorie and macro targets, then adjusts them as your weight trends change."
+      }
+    ]
+  },
+  "cta": {
+    "titleLine1": "Your macros,",
+    "titleLine2": "finally handled",
+    "body": "Download {brand} and log your first meal in under five seconds. Free to start."
+  },
+  "footer": {
+    "about": "AI nutrition tracking that keeps up with how you actually eat. Snap, speak, scan or type.",
+    "colProduct": "Product",
+    "colCompany": "Company",
+    "colSupport": "Support",
+    "download": "Download",
+    "contact": "Contact",
+    "helpCenter": "Help center",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "rights": "© 2026 {brand}. All rights reserved."
+  },
+  "alts": {
+    "heroHome": "voidpen app home screen — calorie ring and macro breakdown",
+    "macros": "Macro dashboard with calorie ring",
+    "input": "Multiple ways to log food",
+    "coach": "AI coach chat",
+    "progress": "Progress charts",
+    "widgets": "Home screen widgets"
+  }
+}

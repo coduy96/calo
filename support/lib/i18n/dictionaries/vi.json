@@ -1,0 +1,175 @@
+{
+  "meta": {
+    "title": "voidpen — Đếm calo bằng AI: Chụp ảnh, đủ macro",
+    "description": "Chụp, nói, quét hoặc gõ. voidpen ghi lại bữa ăn trong vài giây, theo dõi từng macro và đồng hành cùng bạn đến mục tiêu nhờ AI.",
+    "appDescription": "Ứng dụng đếm calo bằng AI cho iPhone. Chụp ảnh, nói, quét nhãn hoặc gõ chữ — voidpen ghi lại calo, protein, carb và chất béo trong vài giây và đồng bộ với Apple Health."
+  },
+  "nav": {
+    "features": "Tính năng",
+    "how": "Cách hoạt động",
+    "coach": "Huấn luyện viên AI",
+    "faq": "Hỏi đáp",
+    "blog": "Blog",
+    "language": "Ngôn ngữ"
+  },
+  "appStore": {
+    "download": "Tải về trên",
+    "store": "App Store"
+  },
+  "hero": {
+    "eyebrow": "Theo dõi dinh dưỡng bằng AI",
+    "titleLine1": "Đủ",
+    "titleHighlight": "macro",
+    "titleLine3": "thật nhẹ nhàng",
+    "lead": "Calo, protein, carb và chất béo trong nháy mắt. Chụp một tấm ảnh, nói thành tiếng, hoặc quét nhãn — {brand} lo phần tính toán.",
+    "ctaSecondary": "Xem cách hoạt động",
+    "proof": "{rating} từ {count} đánh giá"
+  },
+  "stats": {
+    "appStoreRating": "Điểm trên App Store",
+    "mealsLogged": "Bữa ăn đã ghi",
+    "avgLogTime": "Thời gian ghi trung bình",
+    "foodsInDatabase": "Món ăn trong dữ liệu"
+  },
+  "gallery": {
+    "eyebrow": "Sinh ra cho cuộc sống thật",
+    "titleLine1": "Đủ thứ bạn cần,",
+    "titleHighlight": "không thừa thứ gì",
+    "lead": "Toàn cảnh ứng dụng — ghi món ăn, theo dõi macro, trò chuyện cùng huấn luyện viên và nhìn tiến bộ thật tích lũy dần.",
+    "hint": "Vuốt để khám phá mọi màn hình"
+  },
+  "featureInput": {
+    "eyebrow": "Chụp. Nói. Quét. Gõ.",
+    "title": "Ghi món ăn trong vài giây",
+    "lead": "Nhiều cách nhập liệu. Một cách ghi thông minh. Dù bạn ăn kiểu gì, vẫn có cách theo dõi nhanh hơn — không phải tìm kiếm mỏi tay.",
+    "items": [
+      {
+        "title": "Ảnh & giọng nói",
+        "body": "Hướng camera vào đĩa thức ăn hoặc chỉ cần nói ra bữa ăn của bạn."
+      },
+      {
+        "title": "Quét mã vạch & nhãn",
+        "body": "Quét thực phẩm đóng gói và nhãn dinh dưỡng để có con số chính xác."
+      },
+      {
+        "title": "Nhập liệu bằng AI",
+        "body": "Gõ “hai quả trứng và bánh mì nướng” — AI ước tính macro ngay tức thì."
+      }
+    ]
+  },
+  "featureMacros": {
+    "eyebrow": "Đủ macro mỗi ngày",
+    "titleLine1": "Cả ngày của bạn,",
+    "titleLine2": "trong một cái nhìn",
+    "lead": "Calo, protein, carb và chất béo — tất cả trên một bảng điều khiển đẹp mắt. Thấy ngay còn lại bao nhiêu trong ngày khi vừa mở ứng dụng.",
+    "items": [
+      {
+        "title": "Vòng calo trực tiếp",
+        "body": "Nhìn hạn mức của bạn đầy dần theo thời gian thực khi ghi món ăn."
+      },
+      {
+        "title": "Chi tiết từng bữa",
+        "body": "Chạm vào bất kỳ bữa nào để thấy chính xác macro đến từ đâu."
+      },
+      {
+        "title": "Widget màn hình chính",
+        "body": "Giữ mục tiêu chỉ cách một chạm, ngay trên màn hình khóa."
+      }
+    ]
+  },
+  "steps": {
+    "eyebrow": "Cách hoạt động",
+    "title": "Ba chạm là xong",
+    "lead": "Không cần cân thực phẩm, không bảng tính, không mặc cảm. Chỉ cần mở, ghi và tiếp tục ngày của bạn.",
+    "items": [
+      {
+        "title": "Ghi lại",
+        "body": "Chụp ảnh, nói, quét mã vạch hoặc gõ chữ. Cách nào nhanh nhất lúc đó."
+      },
+      {
+        "title": "AI lo tính toán",
+        "body": "voidpen nhận diện món ăn và tự điền calo cùng mọi macro."
+      },
+      {
+        "title": "Theo dõi tiến bộ",
+        "body": "Thấy cân nặng, calo và xu hướng khớp nhau qua từng tuần — và đi đúng hướng dài lâu."
+      }
+    ]
+  },
+  "coach": {
+    "eyebrow": "Gặp huấn luyện viên AI của bạn",
+    "titleLine1": "Trợ giúp thông minh cho",
+    "titleLine2": "bữa ăn, mục tiêu",
+    "titleHighlight": "& thói quen",
+    "lead": "Hỏi bất cứ điều gì. Huấn luyện viên của bạn biết mục tiêu và lịch sử của bạn — nên lời khuyên thật sự hợp với ngày của bạn, không phải một kế hoạch chung chung.",
+    "chips": ["Đủ mục tiêu protein", "Gợi ý bữa ăn", "Theo dõi tiến bộ"]
+  },
+  "testimonials": {
+    "eyebrow": "Được người dùng yêu thích",
+    "title": "Mọi người gắn bó dài lâu",
+    "quotes": [
+      {
+        "text": "Tôi đã thử mọi ứng dụng theo dõi ngoài kia. Chụp một tấm ảnh và nhận lại macro trong vài giây là lý do duy nhất khiến tôi ghi đều 90 ngày liền.",
+        "name": "Maya R.",
+        "caption": "Giảm 14 lbs"
+      },
+      {
+        "text": "Huấn luyện viên AI cứ như đang nhắn tin với một chuyên gia dinh dưỡng thật sự nhớ mục tiêu của tôi. Nó nhắc tôi chỉnh lại protein và đã hiệu quả.",
+        "name": "Daniel K.",
+        "caption": "Tăng cơ gọn, +6 lbs cơ"
+      },
+      {
+        "text": "Bảng điều khiển đẹp tuyệt và widget giữ tôi trung thực. Ứng dụng đầu tiên khiến việc theo dõi nhẹ nhàng thay vì như một việc vặt.",
+        "name": "Priya S.",
+        "caption": "Duy trì được 1 year"
+      }
+    ]
+  },
+  "faq": {
+    "eyebrow": "Câu hỏi",
+    "title": "Nên biết",
+    "items": [
+      {
+        "q": "Ghi món bằng ảnh chính xác đến đâu?",
+        "a": "AI của voidpen nhận diện hàng nghìn món ăn quen thuộc và ước tính khẩu phần từ tấm ảnh. Bạn luôn có thể chạm để chỉnh số gram hoặc chọn món khớp hơn — và nó học dần những món bạn ăn nhiều nhất."
+      },
+      {
+        "q": "Có bản miễn phí không?",
+        "a": "Có. Bạn có thể ghi món ăn, theo dõi macro và dùng widget miễn phí. Huấn luyện viên AI và ghi món bằng ảnh không giới hạn nằm trong voidpen Pro, kèm bản dùng thử miễn phí để bắt đầu."
+      },
+      {
+        "q": "Có hoạt động với Apple Health không?",
+        "a": "voidpen đồng bộ cân nặng, calo và vận động với Apple Health, để dữ liệu dinh dưỡng của bạn nằm cạnh bức tranh sức khỏe tổng thể."
+      },
+      {
+        "q": "Nó có tự đặt mục tiêu macro giúp tôi không?",
+        "a": "Chắc chắn rồi. Hãy nói cho ứng dụng mục tiêu của bạn — giảm, duy trì hay tăng — và nó sẽ tính mục tiêu calo cùng macro, rồi điều chỉnh khi xu hướng cân nặng của bạn thay đổi."
+      }
+    ]
+  },
+  "cta": {
+    "titleLine1": "Macro của bạn,",
+    "titleLine2": "cuối cùng đã trong tầm tay",
+    "body": "Tải {brand} và ghi bữa ăn đầu tiên trong chưa đầy năm giây. Miễn phí để bắt đầu."
+  },
+  "footer": {
+    "about": "Theo dõi dinh dưỡng bằng AI bắt kịp cách bạn thật sự ăn uống. Chụp, nói, quét hoặc gõ.",
+    "colProduct": "Sản phẩm",
+    "colCompany": "Công ty",
+    "colSupport": "Hỗ trợ",
+    "download": "Tải về",
+    "contact": "Liên hệ",
+    "helpCenter": "Trung tâm trợ giúp",
+    "privacy": "Quyền riêng tư",
+    "terms": "Điều khoản",
+    "rights": "© 2026 {brand}. Bảo lưu mọi quyền."
+  },
+  "alts": {
+    "heroHome": "Màn hình chính của ứng dụng voidpen — vòng calo và chi tiết macro",
+    "macros": "Bảng điều khiển macro với vòng calo",
+    "input": "Nhiều cách ghi món ăn",
+    "coach": "Trò chuyện với huấn luyện viên AI",
+    "progress": "Biểu đồ tiến bộ",
+    "widgets": "Widget màn hình chính"
+  }
+}

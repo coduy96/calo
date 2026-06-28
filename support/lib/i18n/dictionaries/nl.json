@@ -1,0 +1,175 @@
+{
+  "meta": {
+    "title": "voidpen — AI-calorieënteller: foto maken, macro's halen",
+    "description": "Maak een foto, spreek in, scan of typ. voidpen logt je eten in seconden, houdt elke macro bij en coacht je naar je doelen met AI.",
+    "appDescription": "AI-calorieënteller voor iPhone. Maak een foto, spreek in, scan een etiket of typ — voidpen logt calorieën, eiwitten, koolhydraten en vetten in seconden en synct met Apple Health."
+  },
+  "nav": {
+    "features": "Functies",
+    "how": "Hoe het werkt",
+    "coach": "AI-coach",
+    "faq": "FAQ",
+    "blog": "Blog",
+    "language": "Taal"
+  },
+  "appStore": {
+    "download": "Download in de",
+    "store": "App Store"
+  },
+  "hero": {
+    "eyebrow": "AI-voedingstracking",
+    "titleLine1": "Haal je",
+    "titleHighlight": "macro's",
+    "titleLine3": "moeiteloos",
+    "lead": "Calorieën, eiwitten, koolhydraten en vetten in één oogopslag. Maak een foto, zeg het hardop of scan een etiket — {brand} rekent het uit.",
+    "ctaSecondary": "Bekijk hoe het werkt",
+    "proof": "{rating} uit {count} beoordelingen"
+  },
+  "stats": {
+    "appStoreRating": "App Store-beoordeling",
+    "mealsLogged": "Gelogde maaltijden",
+    "avgLogTime": "Gem. logtijd",
+    "foodsInDatabase": "Voedingsmiddelen in database"
+  },
+  "gallery": {
+    "eyebrow": "Gemaakt voor het echte leven",
+    "titleLine1": "Alles wat je nodig hebt,",
+    "titleHighlight": "niets dat je niet wilt",
+    "lead": "Een complete blik op de app — log eten, volg macro's, chat met je coach en zie echte vooruitgang oplopen.",
+    "hint": "Veeg om elk scherm te ontdekken"
+  },
+  "featureInput": {
+    "eyebrow": "Foto. Spraak. Scan. Tekst.",
+    "title": "Log eten in seconden",
+    "lead": "Meerdere manieren om in te voeren. Eén slimme manier om te loggen. Hoe je ook eet, er is een snellere manier om het bij te houden — geen eindeloos zoeken.",
+    "items": [
+      {
+        "title": "Foto en spraak",
+        "body": "Richt je camera op je bord of beschrijf je maaltijd gewoon hardop."
+      },
+      {
+        "title": "Barcode- en etiketscan",
+        "body": "Scan verpakte producten en voedingswaarde-etiketten voor exacte cijfers."
+      },
+      {
+        "title": "AI-tekstinvoer",
+        "body": "Typ “twee eieren en toast” — de AI schat de macro's meteen in."
+      }
+    ]
+  },
+  "featureMacros": {
+    "eyebrow": "Haal je macro's",
+    "titleLine1": "Je hele dag,",
+    "titleLine2": "in één oogopslag",
+    "lead": "Calorieën, eiwitten, koolhydraten en vetten — allemaal op één prachtig dashboard. Zie wat er nog over is in je dag zodra je de app opent.",
+    "items": [
+      {
+        "title": "Live calorieënring",
+        "body": "Zie je budget in realtime vollopen terwijl je logt."
+      },
+      {
+        "title": "Uitsplitsing per maaltijd",
+        "body": "Tik op een maaltijd om precies te zien waar je macro's vandaan kwamen."
+      },
+      {
+        "title": "Beginscherm-widgets",
+        "body": "Houd je doelen één tik weg, direct op je toegangsscherm."
+      }
+    ]
+  },
+  "steps": {
+    "eyebrow": "Hoe het werkt",
+    "title": "In drie tikken gelogd",
+    "lead": "Geen keukenweegschalen, geen spreadsheets, geen schuldgevoel. Gewoon openen, loggen en doorgaan met je dag.",
+    "items": [
+      {
+        "title": "Leg het vast",
+        "body": "Maak een foto, spreek in, scan een barcode of typ. Wat op dat moment het snelst is."
+      },
+      {
+        "title": "AI rekent het uit",
+        "body": "voidpen herkent het eten en vult calorieën en elke macro automatisch in."
+      },
+      {
+        "title": "Zie vooruitgang",
+        "body": "Zie gewicht, calorieën en trends week na week samenvallen — en blijf voorgoed op koers."
+      }
+    ]
+  },
+  "coach": {
+    "eyebrow": "Maak kennis met je AI-coach",
+    "titleLine1": "Slimme hulp bij",
+    "titleLine2": "maaltijden, doelen",
+    "titleHighlight": "en gewoontes",
+    "lead": "Vraag wat je wilt. Je coach kent je doelen en je geschiedenis — dus het advies past echt bij jouw dag, geen standaardplan.",
+    "chips": ["Mijn eiwitdoel halen", "Maaltijden voorstellen", "Mijn vooruitgang volgen"]
+  },
+  "testimonials": {
+    "eyebrow": "Geliefd bij trackers",
+    "title": "Mensen houden het vol",
+    "quotes": [
+      {
+        "text": "Ik heb elke tracker geprobeerd. Een foto maken en binnen seconden de macro's terugkrijgen is de enige reden dat ik 90 dagen op rij heb gelogd.",
+        "name": "Maya R.",
+        "caption": "14 lbs kwijt"
+      },
+      {
+        "text": "De AI-coach voelt als appen met een voedingsdeskundige die mijn doelen echt onthoudt. Hij gaf me een zetje om mijn eiwit op orde te krijgen en het werkte.",
+        "name": "Daniel K.",
+        "caption": "Lean bulk, +6 lbs spier"
+      },
+      {
+        "text": "Het dashboard is prachtig en de widgets houden me eerlijk. De eerste app die loggen licht laat voelen in plaats van een klus.",
+        "name": "Priya S.",
+        "caption": "1 year op gewicht"
+      }
+    ]
+  },
+  "faq": {
+    "eyebrow": "Vragen",
+    "title": "Goed om te weten",
+    "items": [
+      {
+        "q": "Hoe nauwkeurig is het loggen met foto's?",
+        "a": "De AI van voidpen herkent duizenden veelvoorkomende voedingsmiddelen en schat de portiegrootte uit de foto. Je kunt altijd tikken om de grammen aan te passen of een specifiekere match te kiezen — en de app leert de voedingsmiddelen die je het meest eet."
+      },
+      {
+        "q": "Is er een gratis versie?",
+        "a": "Ja. Je kunt eten loggen, macro's volgen en widgets gebruiken — helemaal gratis. De AI-coach en onbeperkt loggen met foto's horen bij voidpen Pro, met een gratis proefperiode om te beginnen."
+      },
+      {
+        "q": "Werkt het met Apple Health?",
+        "a": "voidpen synct gewicht, calorieën en activiteit met Apple Health, zodat je voedingsgegevens naast de rest van je gezondheidsbeeld staan."
+      },
+      {
+        "q": "Kan het mijn macrodoelen voor me instellen?",
+        "a": "Zeker. Vertel de app je doel — afvallen, op gewicht blijven of aankomen — en hij berekent calorie- en macrodoelen, en past ze aan naarmate je gewichtstrends veranderen."
+      }
+    ]
+  },
+  "cta": {
+    "titleLine1": "Je macro's,",
+    "titleLine2": "eindelijk geregeld",
+    "body": "Download {brand} en log je eerste maaltijd in minder dan vijf seconden. Gratis om te beginnen."
+  },
+  "footer": {
+    "about": "AI-voedingstracking die meegaat met hoe je echt eet. Foto maken, inspreken, scannen of typen.",
+    "colProduct": "Product",
+    "colCompany": "Bedrijf",
+    "colSupport": "Support",
+    "download": "Downloaden",
+    "contact": "Contact",
+    "helpCenter": "Helpcentrum",
+    "privacy": "Privacy",
+    "terms": "Voorwaarden",
+    "rights": "© 2026 {brand}. Alle rechten voorbehouden."
+  },
+  "alts": {
+    "heroHome": "Beginscherm van de voidpen-app — calorieënring en macro-uitsplitsing",
+    "macros": "Macrodashboard met calorieënring",
+    "input": "Meerdere manieren om eten te loggen",
+    "coach": "AI-coachchat",
+    "progress": "Voortgangsgrafieken",
+    "widgets": "Beginscherm-widgets"
+  }
+}
