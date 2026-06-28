@@ -1,5 +1,6 @@
 import SwiftUI
 import StoreKit
+import UIKit
 import RevenueCat
 
 enum RevenueCatConfig {
@@ -184,12 +185,44 @@ class StoreManager {
         do {
             let result = try await Purchases.shared.purchase(package: package)
             guard !result.userCancelled else { return false }
+            await settleAfterPurchaseUI()
             applyCustomerInfo(result.customerInfo, fallbackProductID: package.storeProduct.productIdentifier)
             return isSubscribed
         } catch {
             purchaseError = error.localizedDescription
             return false
         }
+    }
+
+    /// Apple's purchase/confirmation UI (the StoreKit sheet, then the sandbox
+    /// "You're all set" alert the user taps to dismiss) is presented over our
+    /// window and is still up when `purchase(...)` resumes. Publishing the
+    /// subscribed state here tears down whatever presented it — the onboarding
+    /// paywall swaps the entire root view, the hard paywall dismisses its
+    /// `fullScreenCover` — and if that system UI is still on screen the window
+    /// is orphaned into a black screen (the purchase itself completes fine).
+    ///
+    /// A fixed delay can't win this: the sandbox confirmation can linger or wait
+    /// for a tap. Instead we wait until nothing is presented over our scene,
+    /// with a hard cap so we never hang, then one more hop for the final
+    /// dismissal animation.
+    private func settleAfterPurchaseUI() async {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(15))
+        while ContinuousClock.now < deadline && isSystemUIPresented {
+            try? await Task.sleep(for: .milliseconds(120))
+        }
+        try? await Task.sleep(for: .milliseconds(200))
+    }
+
+    /// True while any view controller is presented over a window in our active
+    /// scene — i.e. Apple's purchase sheet / sandbox confirmation alert. At the
+    /// paywall step the app presents no sheet of its own, so anything here is
+    /// the system purchase UI.
+    private var isSystemUIPresented: Bool {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let scene = scenes.first { $0.activationState == .foregroundActive } ?? scenes.first
+        guard let scene else { return false }
+        return scene.windows.contains { $0.rootViewController?.presentedViewController != nil }
     }
 
     private func purchaseStoreKit(_ product: Product) async -> Bool {
@@ -199,6 +232,7 @@ class StoreManager {
             case .success(let verification):
                 let transaction = extractTransaction(verification)
                 let purchasedPlusSubscription = isActivePlusTransaction(transaction)
+                await settleAfterPurchaseUI()
                 if purchasedPlusSubscription {
                     applySubscriptionState(isSubscribed: true, productID: transaction.productID)
                 }
