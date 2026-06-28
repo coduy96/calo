@@ -137,14 +137,26 @@ struct CoachTools {
     private func getCalorieTotals(arguments: [String: Any]) -> String {
         let (from, to) = parseRange(arguments)
         let calendar = Calendar.current
-        var dailyKcal: [String: Int] = [:]
+        var dailyEntries: [String: [FoodEntry]] = [:]
         for food in foods where food.timestamp >= from && food.timestamp <= to {
             let day = Self.iso(calendar.startOfDay(for: food.timestamp))
-            dailyKcal[day, default: 0] += food.calories
+            dailyEntries[day, default: []].append(food)
         }
-        let totals = dailyKcal
+        let totals = dailyEntries
             .sorted { $0.key < $1.key }
-            .map { ["date": $0.key, "kcal": $0.value] }
+            .map { day, entries -> [String: Any] in
+                var row: [String: Any] = [
+                    "date": day,
+                    "kcal": entries.reduce(0) { $0 + $1.calories },
+                ]
+                // Daily quality grade alongside calories so trend questions can
+                // speak to nutrition quality over time, not just totals.
+                if let score = NutritionScoreEngine.dailyScore(for: entries) {
+                    row["nutrition_score"] = score.value
+                    row["nutrition_grade"] = score.grade.letter
+                }
+                return row
+            }
         return jsonString([
             "from": Self.iso(from),
             "to": Self.iso(to),
@@ -186,6 +198,14 @@ struct CoachTools {
             add("cholesterol_mg", entry.cholesterol)
             add("sodium_mg", entry.sodium)
             add("potassium_mg", entry.potassium)
+            // Vitamins & minerals (iron_mg / calcium_mg / vitamin_c_mg / vitamin_d_mcg).
+            if let micros = entry.micronutrients {
+                for (key, value) in micros { payload[key] = value }
+            }
+            // Per-food quality grade so the coach can reason about food quality history.
+            let score = NutritionScoreEngine.score(for: entry)
+            payload["nutrition_score"] = score.value
+            payload["nutrition_grade"] = score.grade.letter
             return payload
         }
         return jsonString([

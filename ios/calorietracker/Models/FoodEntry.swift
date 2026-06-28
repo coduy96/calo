@@ -124,6 +124,11 @@ struct FoodEntry: Identifiable, Codable {
     var selectedServingUnit: String?
     var selectedServingQuantity: Double?
 
+    /// Extra vitamins & minerals, keyed by `Micronutrient.storageKey`. Optional
+    /// dictionary so the field is additive (old rows decode to nil) and new
+    /// nutrients don't each need their own stored property.
+    var micronutrients: [String: Double]?
+
     var effectiveModifiedAt: Date { modifiedAt ?? .distantPast }
 
     init(
@@ -152,6 +157,7 @@ struct FoodEntry: Identifiable, Codable {
         servingUnitOptions: [ServingUnitOption] = [],
         selectedServingUnit: String? = nil,
         selectedServingQuantity: Double? = nil,
+        micronutrients: [String: Double]? = nil,
         modifiedAt: Date? = Date()
     ) {
         self.id = id
@@ -179,6 +185,7 @@ struct FoodEntry: Identifiable, Codable {
         self.servingUnitOptions = servingUnitOptions
         self.selectedServingUnit = selectedServingUnit
         self.selectedServingQuantity = selectedServingQuantity
+        self.micronutrients = micronutrients
         self.modifiedAt = modifiedAt
     }
 
@@ -191,6 +198,7 @@ struct FoodEntry: Identifiable, Codable {
         case monounsaturatedFat, polyunsaturatedFat
         case cholesterol, sodium, potassium, servingSizeGrams
         case servingUnitOptions, selectedServingUnit, selectedServingQuantity
+        case micronutrients
         case modifiedAt
     }
 
@@ -230,6 +238,7 @@ struct FoodEntry: Identifiable, Codable {
         servingUnitOptions = try container.decodeIfPresent([ServingUnitOption].self, forKey: .servingUnitOptions) ?? []
         selectedServingUnit = try container.decodeIfPresent(String.self, forKey: .selectedServingUnit)
         selectedServingQuantity = try container.decodeIfPresent(Double.self, forKey: .selectedServingQuantity)
+        micronutrients = try container.decodeIfPresent([String: Double].self, forKey: .micronutrients)
         modifiedAt = try container.decodeIfPresent(Date.self, forKey: .modifiedAt)
     }
 
@@ -263,6 +272,9 @@ struct FoodEntry: Identifiable, Codable {
         }
         try container.encodeIfPresent(selectedServingUnit, forKey: .selectedServingUnit)
         try container.encodeIfPresent(selectedServingQuantity, forKey: .selectedServingQuantity)
+        if let micronutrients, !micronutrients.isEmpty {
+            try container.encode(micronutrients, forKey: .micronutrients)
+        }
         try container.encodeIfPresent(modifiedAt, forKey: .modifiedAt)
     }
 
@@ -305,7 +317,8 @@ struct FoodEntry: Identifiable, Codable {
             servingSizeGrams: servingSizeGrams,
             servingUnitOptions: servingUnitOptions,
             selectedServingUnit: selectedServingUnit,
-            selectedServingQuantity: selectedServingQuantity
+            selectedServingQuantity: selectedServingQuantity,
+            micronutrients: micronutrients
         )
     }
 }

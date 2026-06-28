@@ -19,7 +19,7 @@ class HealthKitManager {
     /// Bump this when adding new HealthKit types so we can re-request authorization
     /// for users who already authorized the old set. Just an integer schema marker,
     /// not credentials — named to avoid CodeQL's "auth"-keyword heuristic false positive.
-    private let typesVersion = 2
+    private let typesVersion = 3
     private let typesVersionKey = "healthKitTypesVersion"
 
     private var dietaryShareTypes: Set<HKSampleType> {
@@ -38,6 +38,11 @@ class HealthKitManager {
             HKQuantityType(.dietaryCholesterol),
             HKQuantityType(.dietarySodium),
             HKQuantityType(.dietaryPotassium),
+            // Vitamins & minerals
+            HKQuantityType(.dietaryIron),
+            HKQuantityType(.dietaryCalcium),
+            HKQuantityType(.dietaryVitaminC),
+            HKQuantityType(.dietaryVitaminD),
         ]
     }
 
@@ -227,7 +232,27 @@ class HealthKitManager {
         if let v = entry.sodium { samples.append(makeSample(.dietarySodium, value: v, unit: .gramUnit(with: .milli), date: entry.timestamp, metadata: metadata)) }
         if let v = entry.potassium { samples.append(makeSample(.dietaryPotassium, value: v, unit: .gramUnit(with: .milli), date: entry.timestamp, metadata: metadata)) }
 
+        // Vitamins & minerals (optional)
+        if let micronutrients = entry.micronutrients {
+            for nutrient in Micronutrient.allCases {
+                guard let value = micronutrients[nutrient.storageKey], value > 0 else { continue }
+                let mapping = Self.healthKitMapping(for: nutrient)
+                samples.append(makeSample(mapping.id, value: value, unit: mapping.unit, date: entry.timestamp, metadata: metadata))
+            }
+        }
+
         healthStore.save(samples) { _, _ in }
+    }
+
+    /// HealthKit quantity type + unit for each tracked vitamin/mineral. Vitamin D
+    /// is in micrograms; the others in milligrams — a wrong unit is a 1000× error.
+    private static func healthKitMapping(for nutrient: Micronutrient) -> (id: HKQuantityTypeIdentifier, unit: HKUnit) {
+        switch nutrient {
+        case .iron: (.dietaryIron, .gramUnit(with: .milli))
+        case .calcium: (.dietaryCalcium, .gramUnit(with: .milli))
+        case .vitaminC: (.dietaryVitaminC, .gramUnit(with: .milli))
+        case .vitaminD: (.dietaryVitaminD, .gramUnit(with: .micro))
+        }
     }
 
     /// Deletes all nutrition samples written for this entry. Bypasses `healthKitEnabled` so
@@ -371,6 +396,7 @@ class HealthKitManager {
             .dietaryEnergyConsumed, .dietaryProtein, .dietaryCarbohydrates, .dietaryFatTotal,
             .dietarySugar, .dietaryFiber, .dietaryFatSaturated, .dietaryFatMonounsaturated,
             .dietaryFatPolyunsaturated, .dietaryCholesterol, .dietarySodium, .dietaryPotassium,
+            .dietaryIron, .dietaryCalcium, .dietaryVitaminC, .dietaryVitaminD,
         ]
         await withTaskGroup(of: Void.self) { group in
             for identifier in nutritionTypes {

@@ -366,7 +366,16 @@ private struct MockMeal {
             servingSizeGrams: servingGrams,
             servingUnitOptions: [ServingUnitOption(unit: servingUnit, gramsPerUnit: servingGrams, quantity: 1)],
             selectedServingUnit: servingUnit,
-            selectedServingQuantity: 1
+            selectedServingQuantity: 1,
+            // Plausible vitamins/minerals scaled to the meal's calories so the
+            // Nutrition Index surfaces (Progress "Vitamins & Minerals", per-food
+            // "More Nutrition") look realistic in screenshots.
+            micronutrients: [
+                "iron_mg": (Double(calories) * 0.011 * 10).rounded() / 10,
+                "calcium_mg": (Double(calories) * 0.45).rounded(),
+                "vitamin_c_mg": (Double(calories) * 0.06).rounded(),
+                "vitamin_d_mcg": (Double(calories) * 0.0045 * 10).rounded() / 10,
+            ]
         )
     }
 }

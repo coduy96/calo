@@ -135,7 +135,7 @@ struct ChatService {
         lines.append("- Treat \"today\" as \(currentDate) when choosing tool date ranges.")
         lines.append("")
         lines.append("## How to use the data tools")
-        lines.append("You have access to functions that fetch the user's history on demand. The user profile + formulas + forecast + today's logged foods below cover what's needed for most questions, including \"is my food today healthy?\", \"how many calories have I had today?\", and \"what's left in my budget?\" — answer those directly from the inline today data, do NOT call a tool. Call a tool ONLY when the user asks about specific past dates (not today), longer time ranges, or trends that need raw historical data. Examples:")
+        lines.append("You have access to functions that fetch the user's history on demand. The user profile + formulas + forecast + today's logged foods below (including today's Nutrition Score and micronutrient totals) cover what's needed for most questions, including \"is my food today healthy?\" (cite the Nutrition Score and its strengths/areas to improve), \"how many calories have I had today?\", \"am I low on any vitamins?\", and \"what's left in my budget?\" — answer those directly from the inline today data, do NOT call a tool. Call a tool ONLY when the user asks about specific past dates (not today), longer time ranges, or trends that need raw historical data. Examples:")
         lines.append("- \"How was my weight in March?\" → call get_weight_history(from, to)")
         lines.append("- \"What did I eat last Tuesday?\" → call get_food_entries(from, to)")
         lines.append("- \"What's my data range?\" → call get_data_summary")
@@ -185,6 +185,37 @@ struct ChatService {
             lines.append("- Entries:")
             for food in todaysFoods {
                 lines.append("  • \(food.mealType.rawValue): \(food.name) — \(food.calories) kcal, \(food.protein)g P / \(food.carbs)g C / \(food.fat)g F")
+            }
+            // Daily Nutrition Score (0–100 + A–E grade) so the coach can speak to
+            // food *quality*, not just amounts, and explain the why.
+            if let score = NutritionScoreEngine.dailyScore(for: todaysFoods) {
+                var scoreLine = "- Nutrition Score: \(score.value)/100 (grade \(score.grade.letter), \(score.grade.word))"
+                if score.isLimited { scoreLine += " — based on limited data" }
+                lines.append(scoreLine)
+                if !score.positives.isEmpty {
+                    lines.append("  Strengths: \(score.positives.map(\.label).joined(separator: ", "))")
+                }
+                if !score.negatives.isEmpty {
+                    lines.append("  Could improve: \(score.negatives.map(\.label).joined(separator: ", "))")
+                }
+            }
+            // Key micronutrient totals so the coach can flag vitamin/mineral gaps.
+            let fmtMicro: (Double) -> String = { $0 >= 10 ? String(Int($0.rounded())) : String(format: "%.1f", $0) }
+            var microParts: [String] = []
+            let fiberTotal = todaysFoods.reduce(0.0) { $0 + ($1.fiber ?? 0) }
+            let sugarTotal = todaysFoods.reduce(0.0) { $0 + ($1.sugar ?? 0) }
+            let sodiumTotal = todaysFoods.reduce(0.0) { $0 + ($1.sodium ?? 0) }
+            if fiberTotal > 0 { microParts.append("\(fmtMicro(fiberTotal))g fiber") }
+            if sugarTotal > 0 { microParts.append("\(fmtMicro(sugarTotal))g sugar") }
+            if sodiumTotal > 0 { microParts.append("\(fmtMicro(sodiumTotal))mg sodium") }
+            for nutrient in Micronutrient.allCases {
+                let total = todaysFoods.reduce(0.0) { $0 + ($1.micronutrients?[nutrient.storageKey] ?? 0) }
+                if total > 0 {
+                    microParts.append("\(fmtMicro(total))\(nutrient.unit) \(nutrient.displayName.lowercased()) (goal \(nutrient.defaultGoal)\(nutrient.unit))")
+                }
+            }
+            if !microParts.isEmpty {
+                lines.append("- Micronutrients so far: \(microParts.joined(separator: ", "))")
             }
         }
         lines.append("")

@@ -257,6 +257,125 @@ struct MacroProgressRow: View {
     }
 }
 
+// MARK: - Nutrition Score Trend
+
+struct NutritionScoreTrendSection: View {
+    let dailyScores: [(date: Date, score: NutritionScore)]
+    var dateRange: ClosedRange<Date>? = nil
+
+    private var average: Int? {
+        guard !dailyScores.isEmpty else { return nil }
+        return dailyScores.reduce(0) { $0 + $1.score.value } / dailyScores.count
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Nutrition Score")
+                    .font(.system(.headline, design: .rounded, weight: .semibold))
+                Spacer()
+                if let average {
+                    let grade = NutritionGrade(score: average)
+                    Text(String(format: String(localized: "Avg: %lld (%@)"), average, grade.letter))
+                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                        .foregroundStyle(grade.color)
+                }
+            }
+
+            if dailyScores.isEmpty {
+                emptyState(LocalizedStringKey("No food logged yet"))
+            } else {
+                Chart {
+                    ForEach(dailyScores, id: \.date) { item in
+                        BarMark(
+                            x: .value("Date", item.date, unit: .day),
+                            y: .value("Score", item.score.value)
+                        )
+                        .foregroundStyle(item.score.grade.color.gradient)
+                        .cornerRadius(4)
+                    }
+                }
+                .chartYScale(domain: 0...100)
+                .chartXScaleIfNeeded(dateRange)
+                .chartXAxis { adaptiveDateAxis(spanDays: chartSpanDays) }
+                .chartPlotStyle { $0.padding(.trailing, 6) }
+                .frame(height: 180)
+            }
+        }
+        .padding()
+        .background(AppColors.appCard)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var chartSpanDays: Int {
+        axisSpanDays(for: dateRange, fallback: dailyScores.map(\.date))
+    }
+}
+
+// MARK: - Micronutrient Averages Section
+
+struct MicronutrientAveragesSection: View {
+    /// Per-nutrient daily averages over the selected range.
+    let averages: [(nutrient: Micronutrient, value: Double)]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Vitamins & Minerals")
+                .font(.system(.headline, design: .rounded, weight: .semibold))
+
+            ForEach(averages, id: \.nutrient) { item in
+                MicronutrientProgressRow(nutrient: item.nutrient, average: item.value)
+            }
+        }
+        .padding()
+        .background(AppColors.appCard)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+}
+
+struct MicronutrientProgressRow: View {
+    let nutrient: Micronutrient
+    let average: Double
+
+    private var goal: Double { Double(nutrient.defaultGoal) }
+    private var progress: Double { goal > 0 ? min(average / goal, 1.0) : 0 }
+    private var formattedAverage: String {
+        average >= 10 ? String(Int(average.rounded())) : String(format: "%.1f", average)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Label {
+                    Text(nutrient.displayName)
+                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                } icon: {
+                    Image(systemName: nutrient.iconName)
+                        .font(.caption)
+                        .foregroundStyle(AppColors.calorie)
+                }
+                Spacer()
+                Text("\(formattedAverage) / \(nutrient.defaultGoal) \(nutrient.unit)")
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(AppColors.calorie.opacity(0.12))
+
+                    Capsule()
+                        .fill(LinearGradient(colors: AppColors.calorieGradient, startPoint: .leading, endPoint: .trailing))
+                        .frame(width: max(6, geo.size.width * progress))
+                        .shadow(color: AppColors.calorie.opacity(0.3), radius: 4, y: 2)
+                }
+            }
+            .frame(height: 8)
+        }
+    }
+}
+
 // MARK: - Stats Section
 
 struct StatsSection: View {

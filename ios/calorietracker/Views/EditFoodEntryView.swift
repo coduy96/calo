@@ -24,6 +24,7 @@ struct EditFoodEntryView: View {
     private let baseCholesterol: Double?
     private let baseSodium: Double?
     private let basePotassium: Double?
+    private let baseMicronutrients: [String: Double]?
     private let servingUnitOptions: [ServingUnitOption]
 
     @State private var name: String
@@ -53,11 +54,20 @@ struct EditFoodEntryView: View {
     private var scaledCholesterol: Double? { baseCholesterol.map { round($0 * scale * 10) / 10 } }
     private var scaledSodium: Double? { baseSodium.map { round($0 * scale * 10) / 10 } }
     private var scaledPotassium: Double? { basePotassium.map { round($0 * scale * 10) / 10 } }
+    private var scaledMicronutrients: [String: Double]? {
+        baseMicronutrients.map { $0.mapValues { round($0 * scale * 100) / 100 } }
+    }
     private var selectedServingOption: ServingUnitOption {
         ServingUnitOption.option(matching: selectedServingUnitID, in: servingUnitOptions)
     }
     private var selectedServingQuantity: Double? {
         Double(servingSizeText)
+    }
+
+    // The grade is serving-size independent (per-100g), so it's computed once
+    // from the entry and doesn't change as the quantity is edited.
+    private var nutritionScore: NutritionScore {
+        NutritionScoreEngine.score(for: entry)
     }
 
     init(entry: FoodEntry) {
@@ -82,6 +92,7 @@ struct EditFoodEntryView: View {
         self.baseCholesterol = entry.cholesterol
         self.baseSodium = entry.sodium
         self.basePotassium = entry.potassium
+        self.baseMicronutrients = entry.micronutrients
         self.servingUnitOptions = normalizedServingUnitOptions
         self._name = State(initialValue: entry.name)
         self._servingSizeGrams = State(initialValue: serving)
@@ -171,6 +182,8 @@ struct EditFoodEntryView: View {
                         }
                     }
 
+                    FoodNutritionScoreSection(score: nutritionScore)
+
                     Section("Nutrition") {
                         NutritionDisplayRow(label: "Calories", value: "\(scaledCalories)", unit: "kcal")
                         NutritionDisplayRow(label: "Protein", value: "\(scaledProtein)", unit: "g")
@@ -189,6 +202,13 @@ struct EditFoodEntryView: View {
                             OptionalNutritionDisplayRow(label: "Cholesterol", value: scaledCholesterol, unit: "mg")
                             OptionalNutritionDisplayRow(label: "Sodium", value: scaledSodium, unit: "mg")
                             OptionalNutritionDisplayRow(label: "Potassium", value: scaledPotassium, unit: "mg")
+                            ForEach(Micronutrient.allCases) { nutrient in
+                                OptionalNutritionDisplayRow(
+                                    label: nutrient.displayName,
+                                    value: scaledMicronutrients?[nutrient.storageKey],
+                                    unit: nutrient.unit
+                                )
+                            }
                         }
                         .tint(AppColors.calorie)
                     }
@@ -273,7 +293,8 @@ struct EditFoodEntryView: View {
             servingSizeGrams: servingSizeGrams,
             servingUnitOptions: servingUnitOptions,
             selectedServingUnit: servingUnitOptions.isEmpty ? nil : selectedServingOption.unit,
-            selectedServingQuantity: servingUnitOptions.isEmpty ? nil : selectedServingQuantity
+            selectedServingQuantity: servingUnitOptions.isEmpty ? nil : selectedServingQuantity,
+            micronutrients: scaledMicronutrients
         )
         foodStore.updateEntry(updated)
         dismiss()

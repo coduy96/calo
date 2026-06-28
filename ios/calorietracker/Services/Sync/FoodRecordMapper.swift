@@ -28,6 +28,12 @@ enum FoodRecordMapper {
         for (key, value) in optionals {
             if let value { record[key] = value }
         }
+        // CKRecord can't hold a dictionary — JSON-encode the extra
+        // vitamins/minerals into a single Data field.
+        if let micronutrients = entry.micronutrients, !micronutrients.isEmpty,
+           let data = try? JSONEncoder().encode(micronutrients) {
+            record["micronutrients"] = data
+        }
         if let filename = entry.imageFilename,
            let storeURL = FoodImageStore.shared.fileURL(for: filename),
            FileManager.default.fileExists(atPath: storeURL.path) {
@@ -59,6 +65,8 @@ enum FoodRecordMapper {
         }
 
         let mealType = MealType(rawValue: record["mealType"] as? String ?? "") ?? .other
+        let micronutrients: [String: Double]? = (record["micronutrients"] as? Data)
+            .flatMap { try? JSONDecoder().decode([String: Double].self, from: $0) }
         return FoodEntry(
             id: id, name: name, calories: calories, protein: protein, carbs: carbs, fat: fat,
             timestamp: timestamp, imageData: nil, imageFilename: imageFilename,
@@ -69,6 +77,7 @@ enum FoodRecordMapper {
             polyunsaturatedFat: record["polyunsaturatedFat"] as? Double,
             cholesterol: record["cholesterol"] as? Double, sodium: record["sodium"] as? Double,
             potassium: record["potassium"] as? Double, servingSizeGrams: record["servingSizeGrams"] as? Double,
+            micronutrients: micronutrients,
             modifiedAt: record["modifiedAt"] as? Date
         )
     }

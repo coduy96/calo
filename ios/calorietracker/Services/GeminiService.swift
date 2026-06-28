@@ -24,6 +24,7 @@ struct GeminiService {
         var cholesterol: Double?
         var sodium: Double?
         var potassium: Double?
+        var micronutrients: [String: Double]?
         var servingUnitOptions: [ServingUnitOption] = []
         var selectedServingUnit: String?
         var selectedServingQuantity: Double?
@@ -45,6 +46,7 @@ struct GeminiService {
         var cholesterolPer100g: Double?
         var sodiumPer100g: Double?
         var potassiumPer100g: Double?
+        var micronutrientsPer100g: [String: Double]?
         var servingUnitOptions: [ServingUnitOption] = []
 
         func scaled(to grams: Double) -> FoodAnalysis {
@@ -66,6 +68,9 @@ struct GeminiService {
                 cholesterol: cholesterolPer100g.map { round($0 * scale * 10) / 10 },
                 sodium: sodiumPer100g.map { round($0 * scale * 10) / 10 },
                 potassium: potassiumPer100g.map { round($0 * scale * 10) / 10 },
+                micronutrients: micronutrientsPer100g.map { dict in
+                    dict.mapValues { round($0 * scale * 100) / 100 }
+                },
                 servingUnitOptions: servingUnitOptions,
                 selectedServingUnit: selectedOption?.unit,
                 selectedServingQuantity: selectedOption?.quantity(for: grams)
@@ -106,8 +111,8 @@ struct GeminiService {
         Estimate the nutritional content for: \(description)
         Parse any quantities, brands, and multiple items from the text. If a brand is mentioned, use that brand's known nutritional data. If multiple items are described, sum up the total nutrition.
         Respond ONLY with JSON:
-        {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"emoji":"🍽️","sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0,"unit_options":[]}
-        Calories/protein/carbs/fat are integers. serving_size_grams is the estimated total weight in grams. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
+        {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"emoji":"🍽️","sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0,"iron":0.0,"calcium":0.0,"vitamin_c":0.0,"vitamin_d":0.0,"unit_options":[]}
+        Calories/protein/carbs/fat are integers. serving_size_grams is the estimated total weight in grams. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams). Also estimate iron, calcium, and vitamin C in milligrams, and vitamin D in micrograms.
         The [] in unit_options above is only a JSON shape placeholder; replace it with options when a non-gram unit is obvious.
         unit_options is required when the text names an obvious non-gram serving unit, and optional otherwise. Use slice/piece for pizza, cake, bread, cookies, fruit pieces, etc.; use ml/cup/fl oz for drinks, milk, soup, smoothies, sauces, etc.; use tbsp/tsp for spooned foods; use can/packet when packaged. Its quantity must describe the whole analyzed amount, not always 1. Do not copy any sample number; use the quantity stated or clearly implied by the meal. Use [] only when no non-gram unit is apparent. Do not include g/grams in unit_options.
         Include a single food emoji that best represents the food. Use null for any nutrient you cannot estimate.
@@ -126,8 +131,8 @@ struct GeminiService {
         If it's a nutrition label: read the values and calculate for one serving size as listed on the label.
 
         Respond ONLY with JSON:
-        {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0,"unit_options":[]}
-        Calories/protein/carbs/fat are integers. serving_size_grams is the estimated weight in grams of the serving. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
+        {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0,"iron":0.0,"calcium":0.0,"vitamin_c":0.0,"vitamin_d":0.0,"unit_options":[]}
+        Calories/protein/carbs/fat are integers. serving_size_grams is the estimated weight in grams of the serving. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams). Also estimate iron, calcium, and vitamin C in milligrams, and vitamin D in micrograms.
         The [] in unit_options above is only a JSON shape placeholder; replace it with options when a non-gram unit is obvious.
         unit_options is required for obvious non-gram units visible in the image or label. Use slice/piece for pizza, cake, bread, cookies, fruit pieces, etc.; use ml/cup/fl oz for drinks, milk, soup, smoothies, sauces, etc.; use tbsp/tsp for spooned foods; use can/packet when packaged. Its quantity must describe the whole analyzed amount, not always 1. For a whole or mostly-whole divisible food like cake, pie, or pizza, count the visible pieces/slices and derive grams_per_unit from serving_size_grams / quantity. If N slices are visible, return quantity N. Use quantity 1 only when a single piece/slice is actually the analyzed portion. Use [] only when no non-gram unit is apparent. Do not include g/grams in unit_options.
         Use null for any nutrient you cannot estimate.
@@ -143,9 +148,9 @@ struct GeminiService {
         Analyze this food image. Identify the food and estimate its nutritional content.
 
         Respond ONLY with a JSON object in this exact format, no other text:
-        {"name":"Food Name","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0,"unit_options":[]}
+        {"name":"Food Name","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0,"iron":0.0,"calcium":0.0,"vitamin_c":0.0,"vitamin_d":0.0,"unit_options":[]}
 
-        Calories/protein/carbs/fat are integers. serving_size_grams is the estimated weight in grams of the serving shown. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
+        Calories/protein/carbs/fat are integers. serving_size_grams is the estimated weight in grams of the serving shown. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams). Also estimate iron, calcium, and vitamin C in milligrams, and vitamin D in micrograms.
         The [] in unit_options above is only a JSON shape placeholder; replace it with options when a non-gram unit is obvious.
         unit_options is required for obvious non-gram units visible in the food. Use slice/piece for pizza, cake, bread, cookies, fruit pieces, etc.; use ml/cup/fl oz for drinks, milk, soup, smoothies, sauces, etc.; use tbsp/tsp for spooned foods; use can/packet when packaged. Its quantity must describe the whole analyzed amount, not always 1. For a whole or mostly-whole divisible food like cake, pie, or pizza, count the visible pieces/slices and derive grams_per_unit from serving_size_grams / quantity. If N slices are visible, return quantity N. Use quantity 1 only when a single piece/slice is actually the analyzed portion. Use [] only when no non-gram unit is apparent. Do not include g/grams in unit_options.
         Give your best estimate for the visible food amount shown in the image. For whole/mostly-whole cakes, pizzas, pies, loaves, or similar foods, estimate the total visible item/remaining item weight rather than defaulting to one slice. Use null for any nutrient you cannot estimate.
@@ -170,10 +175,10 @@ struct GeminiService {
         If no name is visible, describe the food type (e.g. "Protein Bar", "Yogurt", "Cereal").
 
         Respond ONLY with JSON:
-        {"name":"Product Name","calories_per_100g":0.0,"protein_per_100g":0.0,"carbs_per_100g":0.0,"fat_per_100g":0.0,"serving_size_grams":0.0,"sugar_per_100g":0.0,"added_sugar_per_100g":0.0,"fiber_per_100g":0.0,"saturated_fat_per_100g":0.0,"monounsaturated_fat_per_100g":0.0,"polyunsaturated_fat_per_100g":0.0,"cholesterol_per_100g":0.0,"sodium_per_100g":0.0,"potassium_per_100g":0.0,"unit_options":[]}
+        {"name":"Product Name","calories_per_100g":0.0,"protein_per_100g":0.0,"carbs_per_100g":0.0,"fat_per_100g":0.0,"serving_size_grams":0.0,"sugar_per_100g":0.0,"added_sugar_per_100g":0.0,"fiber_per_100g":0.0,"saturated_fat_per_100g":0.0,"monounsaturated_fat_per_100g":0.0,"polyunsaturated_fat_per_100g":0.0,"cholesterol_per_100g":0.0,"sodium_per_100g":0.0,"potassium_per_100g":0.0,"iron_per_100g":0.0,"calcium_per_100g":0.0,"vitamin_c_per_100g":0.0,"vitamin_d_per_100g":0.0,"unit_options":[]}
 
         The [] in unit_options above is only a JSON shape placeholder; replace it with options when a non-gram unit is visible.
-        All values should be numbers. If serving size or any nutrient is not available, use null. unit_options is required when a non-gram label serving unit is visible, such as slice, piece, tbsp, cup, ml, fl oz, can, or packet. Do not copy any sample number; use the quantity shown on the label. Use [] only when no non-gram unit is visible. Do not include g/grams in unit_options.
+        All values should be numbers (iron/calcium/vitamin C per 100g in milligrams, vitamin D per 100g in micrograms). If serving size or any nutrient is not available, use null. unit_options is required when a non-gram label serving unit is visible, such as slice, piece, tbsp, cup, ml, fl oz, can, or packet. Do not copy any sample number; use the quantity shown on the label. Use [] only when no non-gram unit is visible. Do not include g/grams in unit_options.
 
         \(languageDirective)
         For the `name` field: if a product/brand name is printed on the label, copy it verbatim regardless of script; otherwise translate the food type to the target language.
@@ -393,6 +398,7 @@ struct GeminiService {
             cholesterol: (json["cholesterol"] as? NSNumber)?.doubleValue,
             sodium: (json["sodium"] as? NSNumber)?.doubleValue,
             potassium: (json["potassium"] as? NSNumber)?.doubleValue,
+            micronutrients: parseMicronutrients(from: json),
             servingUnitOptions: unitOptions,
             selectedServingUnit: selectedOption?.unit,
             selectedServingQuantity: selectedOption?.quantity(for: servingSizeGrams)
@@ -423,8 +429,23 @@ struct GeminiService {
             cholesterolPer100g: (json["cholesterol_per_100g"] as? NSNumber)?.doubleValue,
             sodiumPer100g: (json["sodium_per_100g"] as? NSNumber)?.doubleValue,
             potassiumPer100g: (json["potassium_per_100g"] as? NSNumber)?.doubleValue,
+            micronutrientsPer100g: parseMicronutrients(from: json, suffix: "_per_100g"),
             servingUnitOptions: parseServingUnitOptions(from: json, servingSizeGrams: servingSizeGrams)
         )
+    }
+
+    /// Reads the optional vitamin/mineral keys into a `Micronutrient.storageKey`
+    /// dictionary. `suffix` is "" for per-serving food JSON and "_per_100g" for
+    /// nutrition-label JSON. Returns nil when none are present.
+    private static func parseMicronutrients(from json: [String: Any], suffix: String = "") -> [String: Double]? {
+        var result: [String: Double] = [:]
+        for nutrient in Micronutrient.allCases {
+            let key = nutrient.jsonKey + suffix
+            if let value = (json[key] as? NSNumber)?.doubleValue {
+                result[nutrient.storageKey] = value
+            }
+        }
+        return result.isEmpty ? nil : result
     }
 
     private static func parseOptionalNutrientGoals(

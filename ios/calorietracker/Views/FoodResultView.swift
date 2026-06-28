@@ -24,6 +24,7 @@ struct FoodResultView: View {
     let baseCholesterol: Double?
     let baseSodium: Double?
     let basePotassium: Double?
+    let baseMicronutrients: [String: Double]?
     let servingUnitOptions: [ServingUnitOption]
 
     @State var name: String
@@ -58,11 +59,40 @@ struct FoodResultView: View {
     private var scaledCholesterol: Double? { baseCholesterol.map { round($0 * scale * 10) / 10 } }
     private var scaledSodium: Double? { baseSodium.map { round($0 * scale * 10) / 10 } }
     private var scaledPotassium: Double? { basePotassium.map { round($0 * scale * 10) / 10 } }
+    private var scaledMicronutrients: [String: Double]? {
+        baseMicronutrients.map { $0.mapValues { round($0 * scale * 100) / 100 } }
+    }
     private var selectedServingOption: ServingUnitOption {
         ServingUnitOption.option(matching: selectedServingUnitID, in: servingUnitOptions)
     }
     private var selectedServingQuantity: Double? {
         Double(servingSizeText)
+    }
+
+    // Grade is serving-size independent (per-100g), so score the base values
+    // once — it stays stable as the user adjusts the quantity.
+    private var scoringEntry: FoodEntry {
+        FoodEntry(
+            name: name,
+            calories: baseCalories,
+            protein: baseProtein,
+            carbs: baseCarbs,
+            fat: baseFat,
+            source: source,
+            sugar: baseSugar,
+            addedSugar: baseAddedSugar,
+            fiber: baseFiber,
+            saturatedFat: baseSaturatedFat,
+            monounsaturatedFat: baseMonounsaturatedFat,
+            polyunsaturatedFat: basePolyunsaturatedFat,
+            cholesterol: baseCholesterol,
+            sodium: baseSodium,
+            potassium: basePotassium,
+            servingSizeGrams: baseServingSizeGrams
+        )
+    }
+    private var nutritionScore: NutritionScore {
+        NutritionScoreEngine.score(for: scoringEntry)
     }
 
     init(
@@ -84,6 +114,7 @@ struct FoodResultView: View {
         cholesterol: Double? = nil,
         sodium: Double? = nil,
         potassium: Double? = nil,
+        micronutrients: [String: Double]? = nil,
         servingUnitOptions: [ServingUnitOption] = [],
         selectedServingUnit: String? = nil,
         selectedServingQuantity: Double? = nil,
@@ -112,6 +143,7 @@ struct FoodResultView: View {
         self.baseCholesterol = cholesterol
         self.baseSodium = sodium
         self.basePotassium = potassium
+        self.baseMicronutrients = micronutrients
         self.servingUnitOptions = normalizedServingUnitOptions
         self._name = State(initialValue: name)
         self._servingSizeGrams = State(initialValue: servingSizeGrams)
@@ -201,6 +233,8 @@ struct FoodResultView: View {
                         }
                     }
 
+                    FoodNutritionScoreSection(score: nutritionScore)
+
                     Section("Nutrition") {
                         NutritionDisplayRow(label: "Calories", value: "\(scaledCalories)", unit: "kcal")
                         NutritionDisplayRow(label: "Protein", value: "\(scaledProtein)", unit: "g")
@@ -219,6 +253,13 @@ struct FoodResultView: View {
                             OptionalNutritionDisplayRow(label: "Cholesterol", value: scaledCholesterol, unit: "mg")
                             OptionalNutritionDisplayRow(label: "Sodium", value: scaledSodium, unit: "mg")
                             OptionalNutritionDisplayRow(label: "Potassium", value: scaledPotassium, unit: "mg")
+                            ForEach(Micronutrient.allCases) { nutrient in
+                                OptionalNutritionDisplayRow(
+                                    label: nutrient.displayName,
+                                    value: scaledMicronutrients?[nutrient.storageKey],
+                                    unit: nutrient.unit
+                                )
+                            }
                         }
                         .tint(AppColors.calorie)
                     }
@@ -295,7 +336,8 @@ struct FoodResultView: View {
             servingSizeGrams: servingSizeGrams,
             servingUnitOptions: servingUnitOptions,
             selectedServingUnit: servingUnitOptions.isEmpty ? nil : selectedServingOption.unit,
-            selectedServingQuantity: servingUnitOptions.isEmpty ? nil : selectedServingQuantity
+            selectedServingQuantity: servingUnitOptions.isEmpty ? nil : selectedServingQuantity,
+            micronutrients: scaledMicronutrients
         )
         onLog(entry)
         dismiss()

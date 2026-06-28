@@ -191,6 +191,11 @@ class FoodStore {
         entries(for: date).reduce(0) { $0 + ($1.potassium ?? 0) }
     }
 
+    /// Aggregated total for any extra vitamin/mineral on the given date.
+    func micronutrient(_ nutrient: Micronutrient, for date: Date) -> Double {
+        entries(for: date).reduce(0) { $0 + ($1.micronutrients?[nutrient.storageKey] ?? 0) }
+    }
+
     // MARK: - Recents / Frequent
 
     func recentEntries(limit: Int = 50) -> [FoodEntry] {

@@ -94,7 +94,6 @@ struct ContentView: View {
     @Environment(FoodStore.self) private var foodStore
     @AppStorage(AppThemeColor.storageKey) private var appThemeColorRaw = AppThemeColor.defaultColor.rawValue
     @State private var selectedTab: AppTab = .home
-    @State private var lastNonAddTab: AppTab = .home
     @State private var showAddOptions = false
     @State private var addFoodIntent = AddFoodIntent()
     @State private var addFoodPromptDismissedDay = ""
@@ -141,6 +140,23 @@ struct ContentView: View {
         return 52
     }
 
+    /// Tab selection that intercepts the Add "tab" so it presents the add-food
+    /// options sheet instead of navigating to an empty tab. Intercepting in the
+    /// binding setter (not onChange) is what makes the Add button fire reliably
+    /// on iOS 27 — the previous onChange + async-reset never triggered there.
+    private var tabSelection: Binding<AppTab> {
+        Binding(
+            get: { selectedTab },
+            set: { newValue in
+                if newValue == .add {
+                    showAddOptions = true
+                } else {
+                    selectedTab = newValue
+                }
+            }
+        )
+    }
+
     var body: some View {
         Group {
             if #available(iOS 26.0, *) {
@@ -159,16 +175,6 @@ struct ContentView: View {
         }
         .environment(addFoodIntent)
         .tint(AppThemeColor.color(for: appThemeColorRaw).color)
-        .onChange(of: selectedTab) { _, new in
-            if new == .add {
-                showAddOptions = true
-                DispatchQueue.main.async {
-                    selectedTab = lastNonAddTab
-                }
-            } else {
-                lastNonAddTab = new
-            }
-        }
         .sheet(isPresented: $showAddOptions) {
             AddFoodOptionsSheet(intent: addFoodIntent)
                 .presentationDetents([.medium, .large])
@@ -193,9 +199,23 @@ struct ContentView: View {
         }
     }
 
+    /// The detached "+" tab role. iOS 26 renders a `.search`-role tab as the
+    /// separated button beside the bar; iOS 27 collapses `.search` into a normal
+    /// inline tab and instead offers `.prominent` for a trailing-separated tab.
+    /// `.prominent` only exists in the iOS 27 SDK, so its reference is gated
+    /// behind `#if compiler(>=6.4)` (Xcode 27) to keep stable Xcode 26.5 builds
+    /// (Swift 6.3) compiling.
+    @available(iOS 26.0, *)
+    private var addTabRole: TabRole {
+        #if compiler(>=6.4)
+        if #available(iOS 27.0, *) { return .prominent }
+        #endif
+        return .search
+    }
+
     @available(iOS 26.0, *)
     private var modernTabView: some View {
-        TabView(selection: $selectedTab) {
+        TabView(selection: tabSelection) {
             Tab("Home", systemImage: "house.fill", value: AppTab.home) {
                 HomeView()
             }
@@ -205,7 +225,7 @@ struct ContentView: View {
             Tab("Progress", systemImage: "chart.bar.fill", value: AppTab.progress) {
                 ProgressTabView()
             }
-            Tab("Add", systemImage: "plus", value: AppTab.add, role: .search) {
+            Tab("Add", systemImage: "plus", value: AppTab.add, role: addTabRole) {
                 Color.clear
             }
         }
@@ -213,7 +233,7 @@ struct ContentView: View {
     }
 
     private var legacyTabView: some View {
-        TabView(selection: $selectedTab) {
+        TabView(selection: tabSelection) {
             HomeView()
                 .tag(AppTab.home)
                 .tabItem {
@@ -787,6 +807,7 @@ struct HomeView: View {
                             cholesterol: result.cholesterol,
                             sodium: result.sodium,
                             potassium: result.potassium,
+                            micronutrients: result.micronutrients,
                             servingUnitOptions: result.servingUnitOptions,
                             selectedServingUnit: result.selectedServingUnit,
                             selectedServingQuantity: result.selectedServingQuantity,
@@ -828,6 +849,7 @@ struct HomeView: View {
                         cholesterol: entry.cholesterol,
                         sodium: entry.sodium,
                         potassium: entry.potassium,
+                        micronutrients: entry.micronutrients,
                         servingUnitOptions: entry.servingUnitOptions,
                         selectedServingUnit: entry.selectedServingUnit,
                         selectedServingQuantity: entry.selectedServingQuantity
@@ -1258,6 +1280,15 @@ private enum OpenFoodFactsService {
         let name = productName(from: product, barcode: barcode)
         let servingOption = ServingUnitOption(unit: "serving", gramsPerUnit: servingGrams, quantity: 1)
 
+        // Open Food Facts stores vitamins/minerals in grams; convert to each
+        // nutrient's tracked unit (mg or µg).
+        var micronutrients: [String: Double] = [:]
+        for nutrient in Micronutrient.allCases {
+            guard let grams = servingValue(nutrient.openFoodFactsKey, in: nutriments, scale: scale) else { continue }
+            let value = round(grams * nutrient.gramsToUnitFactor * 100) / 100
+            if value > 0 { micronutrients[nutrient.storageKey] = value }
+        }
+
         return GeminiService.FoodAnalysis(
             name: name,
             calories: Int(round(calories ?? 0)),
@@ -1275,6 +1306,7 @@ private enum OpenFoodFactsService {
             cholesterol: milligrams(servingValue("cholesterol", in: nutriments, scale: scale)),
             sodium: milligrams(servingValue("sodium", in: nutriments, scale: scale)),
             potassium: milligrams(servingValue("potassium", in: nutriments, scale: scale)),
+            micronutrients: micronutrients.isEmpty ? nil : micronutrients,
             servingUnitOptions: [servingOption],
             selectedServingUnit: servingOption.unit,
             selectedServingQuantity: 1
@@ -1439,6 +1471,9 @@ struct NutritionDetailView: View {
     private var userProfile: UserProfile { profileStore.profile }
     private var optionalNutrientGoals: OptionalNutrientGoals { OptionalNutrientGoals.decoded(from: optionalNutrientGoalsData) }
     private var homeTopNutrients: [HomeTopNutrient] { HomeTopNutrient.selection(from: homeTopNutrientsRaw) }
+    private var dailyScore: NutritionScore? {
+        NutritionScoreEngine.dailyScore(for: foodStore.entries(for: date))
+    }
     private var homeTopNutrientNames: String {
         homeTopNutrients
             .map(\.displayName)
@@ -1449,6 +1484,25 @@ struct NutritionDetailView: View {
         let _ = profileStore.profile
         return NavigationStack {
             List {
+                if let score = dailyScore {
+                    Section("Nutrition Score") {
+                        HStack(spacing: 16) {
+                            NutritionScoreBadge(score: score, size: .large)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(score.grade.word)
+                                    .font(.system(.title3, design: .rounded, weight: .bold))
+                                    .foregroundStyle(score.grade.color)
+                                Text("Daily quality grade")
+                                    .font(.system(.caption, design: .rounded))
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        NutritionScoreBreakdown(score: score)
+                    }
+                    .listRowBackground(AppColors.appCard)
+                }
+
                 Section {
                     Button {
                         showHomeNutrientPicker = true
@@ -1488,6 +1542,15 @@ struct NutritionDetailView: View {
                     optionalNutritionRow(.cholesterol, value: foodStore.cholesterol(for: date))
                     optionalNutritionRow(.sodium, value: foodStore.sodium(for: date))
                     optionalNutritionRow(.potassium, value: foodStore.potassium(for: date))
+                    ForEach(Micronutrient.allCases) { nutrient in
+                        NutritionDetailRow(
+                            icon: nutrient.iconName,
+                            label: nutrient.displayName,
+                            value: formatMicro(foodStore.micronutrient(nutrient, for: date)),
+                            unit: nutrient.unit,
+                            goal: "\(nutrient.defaultGoal)"
+                        )
+                    }
                 }
                 .listRowBackground(AppColors.appCard)
             }
@@ -2521,6 +2584,8 @@ struct FoodRow: View {
                 }
 
                 HStack(spacing: 6) {
+                    NutritionScoreBadge(score: NutritionScoreEngine.score(for: entry), size: .chip)
+
                     Text("\(entry.calories) kcal")
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(AppColors.calorie)
@@ -2625,8 +2690,42 @@ struct ProgressTabView: View {
         return (totalP / count, totalC / count, totalF / count)
     }
 
+    /// Per-day Nutrition Score over the selected range (days with food only).
+    private var dailyNutritionScores: [(date: Date, score: NutritionScore)] {
+        let calendar = Calendar.current
+        let days = timeRange.days
+        let today = calendar.startOfDay(for: .now)
+        return (0..<days).compactMap { offset in
+            guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { return nil }
+            let dayEntries = foodStore.entries(for: date)
+            guard let score = NutritionScoreEngine.dailyScore(for: dayEntries) else { return nil }
+            return (date: date, score: score)
+        }.reversed()
+    }
+
+    /// Average daily vitamin/mineral intake across days that have any food.
+    private var micronutrientAverages: [(nutrient: Micronutrient, value: Double)] {
+        let calendar = Calendar.current
+        let days = timeRange.days
+        let today = calendar.startOfDay(for: .now)
+        var totals: [Micronutrient: Double] = [:]
+        var count = 0
+        for offset in 0..<days {
+            guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { continue }
+            let dayEntries = foodStore.entries(for: date)
+            if dayEntries.isEmpty { continue }
+            for nutrient in Micronutrient.allCases {
+                totals[nutrient, default: 0] += dayEntries.reduce(0) { $0 + ($1.micronutrients?[nutrient.storageKey] ?? 0) }
+            }
+            count += 1
+        }
+        guard count > 0 else { return [] }
+        return Micronutrient.allCases.map { (nutrient: $0, value: (totals[$0] ?? 0) / Double(count)) }
+    }
+
     var body: some View {
         let _ = profileStore.profile
+        let micros = micronutrientAverages
         return NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
@@ -2674,6 +2773,13 @@ struct ProgressTabView: View {
                     )
                     .padding(.horizontal)
 
+                    // Nutrition Score Trend
+                    NutritionScoreTrendSection(
+                        dailyScores: dailyNutritionScores,
+                        dateRange: timeRange == .allTime ? nil : dateRange
+                    )
+                    .padding(.horizontal)
+
                     // Macro Averages
                     MacroAveragesSection(
                         avgProtein: macroAverages.protein,
@@ -2685,7 +2791,11 @@ struct ProgressTabView: View {
                     )
                     .padding(.horizontal)
 
-
+                    // Vitamins & Minerals (only when there's any logged data)
+                    if micros.contains(where: { $0.value > 0 }) {
+                        MicronutrientAveragesSection(averages: micros)
+                            .padding(.horizontal)
+                    }
                 }
                 .padding(.vertical)
             }
